@@ -20,7 +20,8 @@
 
 namespace {
 
-static const long CELL_END = -1;
+// Type of each cell inside the cell list
+using cell_t = std::vector<long>;
 
 template<class T, size_t box_dimension>
 struct periodic_policy_check_helper {
@@ -38,58 +39,23 @@ struct periodic_policy_check {
 };
 
 /**
- * this iterator facilitates looping through the atoms in a cell.
- */
-template<size_t ndim>
-class AtomInCellIterator {
-private:
-    std::vector<long> const * m_atoms;
-    long m_current_atom;
-
-public:
-    AtomInCellIterator(std::vector<long> const * atoms, long first_atom)
-        : m_atoms(atoms),
-          m_current_atom(first_atom)
-    {}
-
-    /**
-     * return the current atom
-     */
-    inline long operator*() const
-    {
-        return m_current_atom;
-    }
-
-    /**
-     * advance to the next atom
-     *
-     * This will seg fault if we go past the end of the list.  It
-     * is up to the user to ensure that doesn't happen.
-     */
-    inline void operator++()
-    {
-        m_current_atom = (*m_atoms)[m_current_atom];
-    }
-};
-
-/**
  * container for the cell lists
  */
 template<size_t ndim>
 class CellListsContainer {
 protected:
-    /** Construct m_cells for each subdomain
+    /** Construct m_cell_atoms for each subdomain
      */
     void setup_cells(const size_t nsubdoms, const std::vector<size_t> subdom_ncells) {
         #ifdef _OPENMP
         #pragma omp parallel
     	{
             size_t isubdom = omp_get_thread_num();
-            m_cells[isubdom] = std::vector<long>(subdom_ncells[isubdom], CELL_END);
+            m_cell_atoms[isubdom] = std::vector<cell_t>(subdom_ncells[isubdom]);
     	}
         #else
         for (size_t isubdom = 0; isubdom < nsubdoms; ++isubdom) {
-            m_cells[isubdom] = std::vector<long>(subdom_ncells[isubdom], CELL_END);
+            m_cell_atoms[isubdom] = std::vector<cell_t>(subdom_ncells[isubdom]);
     	}
         #endif
 
@@ -97,41 +63,35 @@ protected:
         for (size_t subdom_ncell : subdom_ncells) {
             total_cells += subdom_ncell;
         }
-        m_cell_neighbors = std::vector< std::vector<long*> >(total_cells);
-        for (std::vector<long*> neighbors : m_cell_neighbors) {
-            neighbors = std::vector<long*>();
+        m_cell_neighbors = std::vector< std::vector<cell_t*> >(total_cells);
+        for (std::vector<cell_t*> neighbors : m_cell_neighbors) {
+            neighbors = std::vector<cell_t*>();
         }
     }
 
 public:
-    /**
-     * m_atoms is a vector of atom indices.
-     *
-     * Each atom index points to the next atom index in the same cell.
-     * If there are no more atoms in this cell, the value is set to CELL_END.
-     */
-    std::vector<long> m_atoms;
 
     /**
-     * m_cells is a vector of vectors of atom indices.
+     * m_cell_atoms is a vector of vectors with vectors of atom indices.
      *
-     * Each atom index corresponds to the first atom in this cell. The atom index also
-     * serves as index in m_atoms, where the next atom index in this cell is saved.
-     * If there are no atoms in this cell, the value is set to CELL_END.
+     * The uppermost layer corresponds to different subdomains
+     * (each subdomain belongs to one OMP thread).
+     * The second layer corresponds to the cells belonging to each thread.
+     * The last layer contains all atoms in the corresponding cell.
      */
-    std::vector< std::vector<long> > m_cells;
+    std::vector< std::vector<cell_t> > m_cell_atoms;
 
     /** vectors of pairs of neighboring cells inside each subdomain*/
-    std::vector< std::vector< std::array<long*, 2> > > m_cell_neighbor_pairs_inner;
+    std::vector< std::vector< std::array<cell_t*, 2> > > m_cell_neighbor_pairs_inner;
 
     /** vectors of pairs of neighboring cells between subdomains*/
-    std::vector< std::vector< std::array<long*, 2> > > m_cell_neighbor_pairs_boundary;
+    std::vector< std::vector< std::array<cell_t*, 2> > > m_cell_neighbor_pairs_boundary;
 
     /** vectors of neighboring cells for each cell */
-    std::vector< std::vector<long*> > m_cell_neighbors;
+    std::vector< std::vector<cell_t*> > m_cell_neighbors;
 
     CellListsContainer(const std::vector<size_t> subdom_ncells)
-        : m_cells(subdom_ncells.size()),
+        : m_cell_atoms(subdom_ncells.size()),
           m_cell_neighbor_pairs_inner(subdom_ncells.size()),
           m_cell_neighbor_pairs_boundary(subdom_ncells.size())
     {
@@ -143,9 +103,10 @@ public:
      */
     void reset()
     {
-        m_atoms.assign(m_atoms.size(), CELL_END);
-        for (auto subdom_cells : m_cells) {
-            subdom_cells.assign(subdom_cells.size(), CELL_END);
+        for (auto subdom_cell_atoms : m_cell_atoms) {
+            for (auto & v : subdom_cell_atoms) {
+                v.clear();
+            }
         }
     }
 
@@ -154,57 +115,26 @@ public:
      */
     inline void add_atom_to_cell(const long iatom, const size_t icell, const size_t isubdom)
     {
-        m_atoms[iatom] = m_cells[isubdom][icell];
-        m_cells[isubdom][icell] = iatom;
+        m_cell_atoms[isubdom][icell].push_back(iatom);
     }
 
     /**
-     * remove an atom from a cell using its and its parent's index
+     * remove an atom from a cell using its index within that cell
      */
-    inline void remove_atom_from_cell(const long parent_index, const long index,
-                                      const size_t icell, const size_t isubdom)
+    inline void remove_atom_from_cell_ind(const size_t index, const size_t icell, const size_t isubdom)
     {
-        if (parent_index == CELL_END) {
-            // Remove first atom in cell
-            m_cells[isubdom][icell] = m_atoms[index];
-        } else {
-            // Remove any other atom in cell
-            m_atoms[parent_index] = m_atoms[index];
-        }
+        std::swap(m_cell_atoms[isubdom][icell][index], m_cell_atoms[isubdom][icell].back());
+        m_cell_atoms[isubdom][icell].pop_back();
     }
 
     /**
-     * remove an atom from a cell using only its own index
+     * remove an atom from a cell
      */
-    inline void remove_atom_from_cell(const long index, const size_t icell, const size_t isubdom)
+    inline void remove_atom_from_cell(const size_t iatom, const size_t icell, const size_t isubdom)
     {
-        long parent_index = CELL_END;
-        for (auto cell_iter = getIterator(icell, isubdom);
-             *cell_iter != CELL_END;
-             ++cell_iter) {
-            if (*cell_iter == index) {
-                remove_atom_from_cell(parent_index, index, icell, isubdom);
-                break;
-            } else {
-                parent_index = *cell_iter;
-            }
-        }
-    }
-
-    /**
-     * return an iterator over the atoms in cell `icell` of subdomain `isubdom`
-     */
-    AtomInCellIterator<ndim> getIterator(const size_t icell, const size_t isubdom) const
-    {
-        return AtomInCellIterator<ndim>(&m_atoms, m_cells[isubdom][icell]);
-    }
-
-    /**
-     * return an iterator over the atoms in cell
-     */
-    AtomInCellIterator<ndim> getIterator(const long* cell_ptr) const
-    {
-        return AtomInCellIterator<ndim>(&m_atoms, *cell_ptr);
+        auto atom_ptr = std::find(m_cell_atoms[isubdom][icell].begin(), m_cell_atoms[isubdom][icell].end(), iatom);
+        std::swap(*atom_ptr, m_cell_atoms[isubdom][icell].back());
+        m_cell_atoms[isubdom][icell].pop_back();
     }
 };
 
@@ -572,10 +502,10 @@ public:
      * return a list of all pairs of neighboring cells
      */
     void find_neighbor_pairs(
-        std::vector< std::vector< std::array<long*, 2> > > & cell_neighbors_inner,
-        std::vector< std::vector< std::array<long*, 2> > > & cell_neighbors_boundary,
-        std::vector< std::vector<long*> > & cell_neighbors,
-        std::vector< std::vector<long> > & cells) const
+        std::vector< std::vector< std::array<cell_t*, 2> > > & cell_neighbors_inner,
+        std::vector< std::vector< std::array<cell_t*, 2> > > & cell_neighbors_boundary,
+        std::vector< std::vector<cell_t*> > & cell_neighbors,
+        std::vector< std::vector<cell_t> > & cells) const
     {
         #ifdef _OPENMP
         #pragma omp parallel
@@ -596,14 +526,14 @@ public:
      * return a list of all pairs of neighboring cells originating from a subdomain
      */
     void find_neighbor_pairs_subdom(
-        std::vector< std::array<long*, 2> > & neighbor_pairs_inner,
-        std::vector< std::array<long*, 2> > & neighbor_pairs_boundary,
-        std::vector< std::vector<long*> > & cell_neighbors,
-        std::vector< std::vector<long> > & cells,
+        std::vector< std::array<cell_t*, 2> > & neighbor_pairs_inner,
+        std::vector< std::array<cell_t*, 2> > & neighbor_pairs_boundary,
+        std::vector< std::vector<cell_t*> > & cell_neighbors,
+        std::vector< std::vector<cell_t> > & cells,
         const size_t isubdom) const
     {
-        neighbor_pairs_inner = std::vector< std::array<long*, 2> >();
-        neighbor_pairs_boundary = std::vector< std::array<long*, 2> >();
+        neighbor_pairs_inner = std::vector< std::array<cell_t*, 2> >();
+        neighbor_pairs_boundary = std::vector< std::array<cell_t*, 2> >();
 
         // Reserve memory for the cell neighbors (only for performance)
         // This calculates the exact number of cells if ncellx_scale <= 1
@@ -631,13 +561,13 @@ public:
                 if(isubdom == jsubdom)
                 {
                     if (local_jcell >= local_icell) { // avoid duplicates
-                        std::array<long*, 2> neighbors = {&cells[isubdom][local_icell],
+                        std::array<cell_t*, 2> neighbors = {&cells[isubdom][local_icell],
                                                             &cells[jsubdom][local_jcell]};
                         neighbor_pairs_inner.push_back(neighbors);
                     }
                 } else {
                     if(pos_direction_y(global_icell, global_jcell)) { // avoid duplicates, balance load
-                        std::array<long*, 2> neighbors = {&cells[isubdom][local_icell],
+                        std::array<cell_t*, 2> neighbors = {&cells[isubdom][local_icell],
                                                             &cells[jsubdom][local_jcell]};
                         neighbor_pairs_boundary.push_back(neighbors);
                     }
@@ -686,20 +616,18 @@ protected:
     LatticeNeighbors<distance_policy> m_lattice_tool;
 
     virtual void loop_cell_pairs(
-        std::vector< std::array<long*, 2> >
-        const & neighbor_pairs, size_t isubdom)
+        std::vector< std::array<cell_t*, 2> > const & neighbor_pairs,
+        size_t isubdom)
     {
         for (auto const & ijpair : neighbor_pairs) {
+            cell_t* icell = ijpair[0];
+            cell_t* jcell = ijpair[1];
             // do double loop through atoms, avoiding duplicate pairs
-            for (auto icell_iter = m_container.getIterator(ijpair[0]);
-                 *icell_iter != CELL_END;
-                 ++icell_iter) {
+            for (auto iatom = icell->begin(); iatom != icell->end(); ++iatom) {
                 // if icell==jcell we need to avoid duplicate atom pairs
-                auto jend = (ijpair[0] == ijpair[1]) ? *icell_iter : CELL_END;
-                for (auto jcell_iter = m_container.getIterator(ijpair[1]);
-                     *jcell_iter != jend;
-                     ++jcell_iter) {
-                    m_visitor.insert_atom_pair(*icell_iter, *jcell_iter, isubdom);
+                auto jend = (icell == jcell) ? iatom : jcell->end();
+                for (auto jatom = jcell->begin(); jatom != jend; ++jatom) {
+                    m_visitor.insert_atom_pair(*iatom, *jatom, isubdom);
                 }
             }
         }
@@ -709,12 +637,10 @@ protected:
     {
         for (size_t i = 0; i < icells.size(); ++i) {
             size_t isubdom = m_lattice_tool.get_subdomain(icells[i]);
-            for (long* jcell : m_container.m_cell_neighbors[icells[i]]) {
-                for (auto jcell_iter = m_container.getIterator(jcell);
-                     *jcell_iter != CELL_END;
-                     ++jcell_iter) {
-                    if (iatoms[i] != *jcell_iter) {
-                        m_visitor.insert_atom_pair(iatoms[i], *jcell_iter, isubdom);
+            for (cell_t* jcell : m_container.m_cell_neighbors[icells[i]]) {
+                for (auto jatom = jcell->begin(); jatom != jcell->end(); ++jatom) {
+                    if (iatoms[i] != *jatom) {
+                        m_visitor.insert_atom_pair(iatoms[i], *jatom, isubdom);
                     }
                 }
             }
@@ -742,7 +668,7 @@ public:
             loop_cell_pairs(m_container.m_cell_neighbor_pairs_boundary[isubdom], isubdom);
         }
         #else
-        size_t nsubdoms = m_container.m_cells.size();
+        size_t nsubdoms = m_container.m_cell_atoms.size();
         for (size_t isubdom = 0; isubdom < nsubdoms; ++isubdom) {
             loop_cell_pairs(m_container.m_cell_neighbor_pairs_inner[isubdom], isubdom);
             loop_cell_pairs(m_container.m_cell_neighbor_pairs_boundary[isubdom], isubdom);
@@ -821,18 +747,16 @@ public:
      */
     size_t get_nr_cellsx() const { return m_lattice_tool.m_ncells_vec[0]; }
 
-    pele::Array<size_t> get_order() const
+    pele::Array<size_t> get_order(const size_t natoms) const
     {
-        auto order = pele::Array<size_t>(m_container.m_atoms.size());
+        auto order = pele::Array<size_t>(natoms);
 
         size_t ind = 0;
-        for (size_t isubdom = 0; isubdom < m_lattice_tool.m_nsubdoms; ++isubdom) {
-            for (size_t icell = 0; icell < m_lattice_tool.m_subdom_ncells[isubdom]; ++icell) {
-                for (auto cell_iter = m_container.getIterator(icell, isubdom);
-                     *cell_iter != CELL_END;
-                     ++cell_iter) {
-                    order[ind] = *cell_iter;
-                    ++ind;
+        for (auto const & cell_atoms : m_container.m_cell_atoms) {
+            for (auto const & atoms : cell_atoms) {
+                for (auto const & iatom : atoms) {
+                    order[ind] = iatom;
+                    ind++;
                 }
             }
         }
@@ -978,7 +902,7 @@ void CellLists<distance_policy>::build_cell_neighbors_list()
         m_container.m_cell_neighbor_pairs_inner,
         m_container.m_cell_neighbor_pairs_boundary,
         m_container.m_cell_neighbors,
-        m_container.m_cells);
+        m_container.m_cell_atoms);
 }
 
 /**
@@ -987,9 +911,8 @@ void CellLists<distance_policy>::build_cell_neighbors_list()
 template <typename distance_policy>
 void CellLists<distance_policy>::reset_container(pele::Array<double> const & coords)
 {
-    size_t natoms = coords.size() / m_ndim;
-    m_container.m_atoms = std::vector<long>(natoms);
     m_container.reset();
+    size_t natoms = coords.size() / m_ndim;
     for(long iatom = 0; iatom < natoms; ++iatom) {
         const double * const x = coords.data() + m_ndim * iatom;
         size_t icell, isubdom;
@@ -1009,16 +932,14 @@ void CellLists<distance_policy>::update_container(pele::Array<double> const & co
     {
         size_t isubdom = omp_get_thread_num();
         for (size_t icell = 0; icell < m_lattice_tool.m_subdom_ncells[isubdom]; ++icell) {
-            long parent_iatom = CELL_END;
-            AtomInCellIterator<m_ndim> cell_iterator = m_container.getIterator(icell, isubdom);
-            while (*cell_iterator != CELL_END) {
-                long iatom = *cell_iterator;
+            size_t atom_nr = 0;
+            while (atom_nr < m_container.m_cell_atoms[isubdom][icell].size()) {
+                long iatom = m_container.m_cell_atoms[isubdom][icell][atom_nr];
                 const double * const new_x = coords.data() + m_ndim * iatom;
                 size_t new_cell, new_subdom;
                 m_lattice_tool.position_to_local_ind(new_x, new_cell, new_subdom);
                 if (new_cell != icell || new_subdom != isubdom) {
-                    ++cell_iterator;
-                    m_container.remove_atom_from_cell(parent_iatom, iatom, icell, isubdom);
+                    m_container.remove_atom_from_cell_ind(atom_nr, icell, isubdom);
                     if (isubdom == new_subdom) {
                         m_container.add_atom_to_cell(iatom, new_cell, isubdom);
                     } else {
@@ -1026,8 +947,7 @@ void CellLists<distance_policy>::update_container(pele::Array<double> const & co
                         add_atom_queue[new_subdom].push(add_info);
                     }
                 } else {
-                    ++cell_iterator;
-                    parent_iatom = iatom;
+                    ++atom_nr;
                 }
             }
         }
@@ -1043,20 +963,17 @@ void CellLists<distance_policy>::update_container(pele::Array<double> const & co
     #else
     for (size_t isubdom = 0; isubdom < m_lattice_tool.m_nsubdoms; ++isubdom) {
         for (size_t icell = 0; icell < m_lattice_tool.m_subdom_ncells[isubdom]; ++icell) {
-            long parent_iatom = CELL_END;
-            AtomInCellIterator<m_ndim> cell_iterator = m_container.getIterator(icell, isubdom);
-            while (*cell_iterator != CELL_END) {
-                long iatom = *cell_iterator;
+            size_t atom_nr = 0;
+            while (atom_nr < m_container.m_cell_atoms[isubdom][icell].size()) {
+                long iatom = m_container.m_cell_atoms[isubdom][icell][atom_nr];
                 const double * const new_x = coords.data() + m_ndim * iatom;
                 size_t new_cell, new_subdom;
                 m_lattice_tool.position_to_local_ind(new_x, new_cell, new_subdom);
                 if (new_cell != icell || new_subdom != isubdom) {
-                    ++cell_iterator;
-                    m_container.remove_atom_from_cell(parent_iatom, iatom, icell, isubdom);
+                    m_container.remove_atom_from_cell_ind(atom_nr, icell, isubdom);
                     m_container.add_atom_to_cell(iatom, new_cell, new_subdom);
                 } else {
-                    ++cell_iterator;
-                    parent_iatom = iatom;
+                    ++atom_nr;
                 }
             }
         }

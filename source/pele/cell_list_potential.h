@@ -629,7 +629,7 @@ public:
         }
 
         update_iterator(coords);
-        return m_cell_lists.get_order();
+        return m_cell_lists.get_order(natoms);
     }
 
     virtual inline size_t get_ndim() const { return m_ndim; }

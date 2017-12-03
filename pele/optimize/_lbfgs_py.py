@@ -13,7 +13,7 @@ _logger = logging.getLogger("pele.optimize")
 class LBFGS(object):
     """
     minimize a function using the LBFGS routine
-    
+
     Parameters
     ----------
     X : array
@@ -38,14 +38,14 @@ class LBFGS(object):
         to rise during a step
     H0 : float
         the initial guess for the inverse diagonal Hessian.  This particular
-        implementation of LBFGS takes all the inverse diagonal components to be the same. 
+        implementation of LBFGS takes all the inverse diagonal components to be the same.
     events : list of callables
         these are called after each iteration.  events can also be added using
         attachEvent()
     alternate_stop_criterion : callable
         this criterion will be used rather than rms gradiant to determine when
         to stop the iteration
-    debug : 
+    debug :
         print debugging information
     logger : logger object
         messages will be passed to this logger rather than the default
@@ -54,35 +54,35 @@ class LBFGS(object):
         energy and gradient of the initial point will not be calculated, saving
         one potential call.
     armijo : bool
-        Use the Armijo criterion instead of maxErise as the criterion for 
+        Use the Armijo criterion instead of maxErise as the criterion for
         accepting a step size.  The Armijo criterion is the first wolfe criterion
         and is a condition that the energy decrease sufficiently
     armijo_c : float
-        This adjusts how strong the armijo rule is.  0 < armijo_c < 1.  Default 
+        This adjusts how strong the armijo rule is.  0 < armijo_c < 1.  Default
         1e-4
     fortran : bool
         use the fortran version of the LBFGS.  Only the step which computes
         the step size and direction from the memory is in fortran.
-         
+
     Notes
     -----
-    This each iteration of this minimization routine is composed of the 
+    This each iteration of this minimization routine is composed of the
     following parts
-    
+
     1. determine a step size and direction using the LBFGS algorithm
-    
+
     2. ensure the step size is appropriate (see maxErise and maxstep).
        Reduce the step size until conditions are satisfied.
-    
+
     3. take step
 
     http://dx.doi.org/10.1007/BF01589116
-    
+
     See Also
     --------
     MYLBFGS : this implemented in a compiled language
     lbfgs_py : a function wrapper
-    
+
     """
 
     def __init__(self, X, pot, maxstep=0.1, maxErise=1e-4, M=4,
@@ -183,9 +183,9 @@ class LBFGS(object):
 
     def update_coords(self, X, E, G):
         """change the location of the minimizer manually
-        
+
         If the position change is too great the LBFGS memory will not accurately
-        represent the local curvature. 
+        represent the local curvature.
         """
         self.X = X.copy()
         self.energy = float(E)
@@ -195,12 +195,12 @@ class LBFGS(object):
     def _add_step_to_memory(self, dX, dG):
         """
         add a step to the LBFGS memory
-        
+
         Parameters
         ----------
         dX : ndarray
             the step: X - Xold
-        dG : ndarray 
+        dG : ndarray
             the change in gradient along the step: G - Gold
         """
         klocal = (self.k + self.M) % self.M  # =k  cyclical
@@ -216,8 +216,8 @@ class LBFGS(object):
 
         # update the approximation for the diagonal inverse hessian
         # scale H0 according to
-        # H_k = YS/YY * H_0 
-        # this is described in Liu and Nocedal 1989 
+        # H_k = YS/YY * H_0
+        # this is described in Liu and Nocedal 1989
         # http://dx.doi.org/10.1007/BF01589116
         # note: for this step we assume H0 is always the identity
         # js850: This ability to update H0 is what sets LBFGS apart from BFGS
@@ -285,9 +285,9 @@ class LBFGS(object):
 
     def getStep(self, X, G):
         """update the LBFGS memory and compute a step direction and size
-        
+
         http://en.wikipedia.org/wiki/Limited-memory_BFGS
-        
+
         Liu and Nocedal 1989
         http://dx.doi.org/10.1007/BF01589116
         """
@@ -301,27 +301,27 @@ class LBFGS(object):
 
     def adjustStepSize(self, X, E, G, stp):
         """
-        We now have a proposed step.  This function will make sure it is 
+        We now have a proposed step.  This function will make sure it is
         a good step and then take it.  This is known as a Backtracking linesearch
-        
+
         http://en.wikipedia.org/wiki/Backtracking_line_search
-        
-        1) if the step is not anti-aligned with the gradient (i.e. downhill), 
+
+        1) if the step is not anti-aligned with the gradient (i.e. downhill),
            then reverse the step
-        
+
         2) if the step is larger than maxstep, then rescale the step
-        
+
         3) calculate the energy and gradient of the new position
-        
-        4) if the step increases the energy by more than maxErise, 
+
+        4) if the step increases the energy by more than maxErise,
             then reduce the step size and go to 3)
-        
-        5) if the step is reduced more than 10 times and the energy is still 
-           not acceptable, then increment nfail, reset the lbfgs optimizer and 
+
+        5) if the step is reduced more than 10 times and the energy is still
+           not acceptable, then increment nfail, reset the lbfgs optimizer and
            continue
-            
+
         6) if nfail is greater than 5 abort the quench
-                
+
         """
         f = 1.
         X0 = X.copy()
@@ -362,7 +362,7 @@ class LBFGS(object):
             if self.nfailed > 10:
                 raise (LineSearchError("lbfgs: too many failures in adjustStepSize, exiting"))
 
-            # abort the linesearch, reset the memory and reset the coordinates            
+            # abort the linesearch, reset the memory and reset the coordinates
             self.logger.warning("lbfgs: having trouble finding a good step size. %s %s, resetting the minimizer",
                                 f * stepsize, stepsize)
             self.reset()
@@ -381,7 +381,7 @@ class LBFGS(object):
         elif self._armijo:
             return self._armijo_condition(Enew, Eold, Gold, step)
         else:
-            # get the increase in energy            
+            # get the increase in energy
             if self.rel_energy:
                 if Eold == 0:
                     Eold = 1e-100
@@ -394,8 +394,8 @@ class LBFGS(object):
 
     def _armijo_condition(self, Enew, Eold, Gold, step, return_overlap=False):
         """test if the armijo condition is satisfied
-        
-        The energy cannot rise more than an amount dependent on the 
+
+        The energy cannot rise more than an amount dependent on the
         dot product of the gradient and the step
         """
         overlap_old = np.dot(Gold, step)
@@ -409,12 +409,12 @@ class LBFGS(object):
 
     def _wolfe_conditions(self, Enew, Eold, Gnew, Gold, step, strong=False):
         """return True if the Wolfe conditions are satisfied, False otherwise
-        
-        wolfe1 : the energy cannot rise more than an amount dependent on the 
+
+        wolfe1 : the energy cannot rise more than an amount dependent on the
                  dot product of the gradient and the step
-        
-        wolfe2 : the overlap of the gradient with the step direction cannot 
-        decrease by more than a given factor 
+
+        wolfe2 : the overlap of the gradient with the step direction cannot
+        decrease by more than a given factor
         """
         armijo, overlap_old = self._armijo_condition(Enew, Eold, Gold, step, return_overlap=True)
         if not armijo:
@@ -473,10 +473,10 @@ class LBFGS(object):
 
     def run(self):
         """run the LBFGS minimizer
-        
-        stop when the stop criterion is satisfied or  when the maximum number 
+
+        stop when the stop criterion is satisfied or  when the maximum number
         of steps is reached
-        
+
         Returns
         -------
         return a results object
@@ -520,14 +520,14 @@ class LBFGS(object):
 #        from pele.utils.xyz import write_xyz
 #        write_xyz(self.fout, coords)
 #        self.coordslist.append( coords.copy() )
-#        
-#    
 #
-#def test(pot, natoms = 100, iprint=-1):    
+#
+#
+#def test(pot, natoms = 100, iprint=-1):
 #    #X = bfgs.getInitialCoords(natoms, pot)
 #    #X += np.random.uniform(-1,1,[3*natoms]) * 0.3
 #    X = np.random.uniform(-1,1,[natoms*3])*(1.*natoms)**(1./3)*.5
-#    
+#
 #    runtest(X, pot, natoms, iprint)
 #
 #def runtest(X, pot, natoms = 100, iprint=-1):
@@ -536,32 +536,32 @@ class LBFGS(object):
 #    Xinit = np.copy(X)
 #    e, g = pot.getEnergyGradient(X)
 #    print "energy", e
-#    
+#
 #    lbfgs = LBFGS(X, pot, maxstep = 0.1, tol=tol, iprint=iprint, nsteps=10000)
 #    printevent = PrintEvent( "debugout.xyz")
 #    lbfgs.attachEvent(printevent)
-#    
+#
 #    ret = lbfgs.run()
 #    print "done", ret
-#    
+#
 #    print "now do the same with scipy lbfgs"
 #    from pele.optimize import lbfgs_scipy as quench
 #    ret = quench(Xinit, pot, tol = tol)
-#    print ret 
-#    
+#    print ret
+#
 #    if False:
 #        print "now do the same with scipy bfgs"
 #        from pele.optimize import bfgs as oldbfgs
 #        ret = oldbfgs(Xinit, pot, tol = tol)
-#        print ret    
-#    
+#        print ret
+#
 #    if False:
 #        print "now do the same with gradient + linesearch"
 #        import _bfgs
-#        gpl = _bfgs.GradientPlusLinesearch(Xinit, pot, maxstep = 0.1)  
+#        gpl = _bfgs.GradientPlusLinesearch(Xinit, pot, maxstep = 0.1)
 #        ret = gpl.run(1000, tol = 1e-6)
-#        print ret 
-#            
+#        print ret
+#
 #    if False:
 #        print "calling from wrapper function"
 #        from pele.optimize import lbfgs_py
@@ -578,14 +578,14 @@ class LBFGS(object):
 #    except ImportError:
 #        print "error loading pymol"
 #
-#        
+#
 #if __name__ == "__main__":
 #    from pele.potentials.lj import LJ
 #    from pele.potentials.ATLJ import ATLJ
 #    pot = ATLJ()
 #
 #    #test(pot, natoms=3, iprint=1)
-#    
+#
 ##    coords = np.loadtxt("coords")
 #    natoms = 10
 #    coords = np.random.uniform(-1,1,natoms*3)
@@ -593,15 +593,6 @@ class LBFGS(object):
 #    coords = np.reshape(coords, coords.size)
 #    print coords
 #    runtest(coords, pot, natoms=3, iprint=1)
-#    
 #
 #
-
-
-
-
-
-
-
-
-
+#

@@ -740,19 +740,19 @@ TEST_F(LatticeNeighborsTest, LargeRcut_Works)
     std::set<size_t> s(neibs.begin(), neibs.end());
     ASSERT_EQ(neibs.size(), s.size());
 
-    std::vector< std::vector< std::array<long*, 2> > > pairs_inner(lattice.m_nsubdoms);
-    std::vector< std::vector< std::array<long*, 2> > > pairs_boundary(lattice.m_nsubdoms);
-    std::vector< std::vector<long> > cells(lattice.m_nsubdoms);
+    std::vector< std::vector< std::array<std::vector<long>*, 2> > > pairs_inner(lattice.m_nsubdoms);
+    std::vector< std::vector< std::array<std::vector<long>*, 2> > > pairs_boundary(lattice.m_nsubdoms);
+    std::vector< std::vector<std::vector<long>> > cells(lattice.m_nsubdoms);
     for (size_t isubdom = 0; isubdom < lattice.m_nsubdoms; isubdom++) {
-        cells[isubdom] = std::vector<long>(lattice.cell_vec_to_global_ind(ncells_vec) / lattice.m_nsubdoms);
+        cells[isubdom] = std::vector<std::vector<long>>(lattice.cell_vec_to_global_ind(ncells_vec) / lattice.m_nsubdoms);
     }
     size_t total_cells = 0;
     for (size_t subdom_ncell : lattice.m_subdom_ncells) {
         total_cells += subdom_ncell;
     }
-    std::vector< std::vector<long*> > cell_neighbors(total_cells);
-    for (std::vector<long*> neighbors : cell_neighbors) {
-        neighbors = std::vector<long*>();
+    std::vector< std::vector<std::vector<long>*> > cell_neighbors(total_cells);
+    for (std::vector<std::vector<long>*> neighbors : cell_neighbors) {
+        neighbors = std::vector<std::vector<long>*>();
     }
     lattice.find_neighbor_pairs(pairs_inner, pairs_boundary, cell_neighbors, cells);
     size_t count_neighbors = 0;
@@ -788,19 +788,19 @@ TEST_F(LatticeNeighborsTest, SmallRcut_Works2)
     std::set<size_t> s(neibs.begin(), neibs.end());
     ASSERT_EQ(neibs.size(), s.size());
 
-    std::vector< std::vector< std::array<long*, 2> > > pairs_inner(lattice.m_nsubdoms);
-    std::vector< std::vector< std::array<long*, 2> > > pairs_boundary(lattice.m_nsubdoms);
-    std::vector< std::vector<long> > cells(lattice.m_nsubdoms);
+    std::vector< std::vector< std::array<std::vector<long>*, 2> > > pairs_inner(lattice.m_nsubdoms);
+    std::vector< std::vector< std::array<std::vector<long>*, 2> > > pairs_boundary(lattice.m_nsubdoms);
+    std::vector< std::vector<std::vector<long>> > cells(lattice.m_nsubdoms);
     for (size_t isubdom = 0; isubdom < lattice.m_nsubdoms; isubdom++) {
-        cells[isubdom] = std::vector<long>(lattice.cell_vec_to_global_ind(ncells_vec) / lattice.m_nsubdoms);
+        cells[isubdom] = std::vector<std::vector<long>>(lattice.cell_vec_to_global_ind(ncells_vec) / lattice.m_nsubdoms);
     }
     size_t total_cells = 0;
     for (size_t subdom_ncell : lattice.m_subdom_ncells) {
         total_cells += subdom_ncell;
     }
-    std::vector< std::vector<long*> > cell_neighbors(total_cells);
-    for (std::vector<long*> neighbors : cell_neighbors) {
-        neighbors = std::vector<long*>();
+    std::vector< std::vector<std::vector<long>*> > cell_neighbors(total_cells);
+    for (std::vector<std::vector<long>*> neighbors : cell_neighbors) {
+        neighbors = std::vector<std::vector<long>*>();
     }
     lattice.find_neighbor_pairs(pairs_inner, pairs_boundary, cell_neighbors, cells);
     size_t count_neighbors = 0;
