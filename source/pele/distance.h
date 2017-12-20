@@ -287,22 +287,13 @@ struct meta_leesedwards_distance<2> {
         r_ij[0] = r1[0] - r2[0];
         r_ij[1] = r1[1] - r2[1];
 
-        // Calculate distance to image in ghost cell in y-direction
+        // Apply Lees-Edwards boundary conditions in y-direction
         double round_y = round_fast(r_ij[1] * ibox[1]);
-        double tmp_ij[2] = {r_ij[0] - round_y * dx,
-                            r_ij[1] - round_y * box[1]};
+        r_ij[0] = r_ij[0] - round_y * dx;
+        r_ij[1] = r_ij[1] - round_y * box[1];
 
         // Apply periodic boundary conditions in x-direction
-        // Due to higher-order sheared images, these need to be calculated separately
         r_ij[0] -= round_fast(r_ij[0] * ibox[0]) * box[0];
-        tmp_ij[0] -= round_fast(tmp_ij[0] * ibox[0]) * box[0];
-
-        // Check if the image is closer
-        if(r_ij[0] * r_ij[0] + r_ij[1] * r_ij[1]
-            > tmp_ij[0] * tmp_ij[0] + tmp_ij[1] * tmp_ij[1]) {
-            r_ij[0] = tmp_ij[0];
-            r_ij[1] = tmp_ij[1];
-        }
     }
 };
 
@@ -428,7 +419,7 @@ public:
     static const size_t _ndim = ndim;   //!< Number of box dimensions
 
     leesedwards_distance(Array<double> const box, const double shear)
-        : m_dx(shear * box[1])
+        : m_dx(fmod(shear, 1.0) * box[1])
     {
         static_assert(ndim >= 2, "box dimension must be at least 2 for lees-edwards boundary conditions");
         if (box.size() != ndim) {
@@ -436,7 +427,7 @@ public:
         }
         for (size_t i = 0; i < ndim; ++i) {
             m_box[i] = box[i];
-            m_ibox[i] = 1 / box[i];
+            m_ibox[i] = 1.0 / box[i];
         }
     }
 

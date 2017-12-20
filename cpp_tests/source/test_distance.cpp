@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include "pele/distance.h"
+#include "test_utils.hpp"
 
 using pele::Array;
 using pele::periodic_distance;
@@ -428,96 +429,67 @@ dtype norm(const dtype (&vec)[length]) {
 /** Check the Lees Edward-distances by comparison with distances computed
  *  using cartesian_distance, periodic_distance and direct calculations.
  */
-TEST_F(DistanceTest, LeesEdwards_Shear)
-{
-    // Set up boxes
-    pele::Array<double> bv2(2, BOX_LENGTH);
-    pele::Array<double> bv3(3, BOX_LENGTH);
-    pele::Array<double> bv42(42, BOX_LENGTH);
+ TEST_F(DistanceTest, LeesEdwards_Shear)
+ {
+     // Set up boxes
+     pele::Array<double> bv2(2, BOX_LENGTH);
+     pele::Array<double> bv3(3, BOX_LENGTH);
+     pele::Array<double> bv42(42, BOX_LENGTH);
 
-    for(double shear = 0.1; shear <= 1.0; shear += 0.1) {
-        for(size_t i_repeat = 0; i_repeat < TEST_REPEAT; i_repeat++) {
+     for(double shear = 0.1; shear <= 1.0; shear += 0.1) {
+         for(size_t i_repeat = 0; i_repeat < TEST_REPEAT; i_repeat++) {
 
-            // Compute distance with leesedwards_distance
-            double dx_leesedwards_2d[2];
-            double dx_leesedwards_3d[3];
-            double dx_leesedwards_42d[42];
-            leesedwards_distance<2>(bv2, shear).get_rij(dx_leesedwards_2d, x2[i_repeat].data(), y2[i_repeat].data());
-            leesedwards_distance<3>(bv3, shear).get_rij(dx_leesedwards_3d, x3[i_repeat].data(), y3[i_repeat].data());
-            leesedwards_distance<42>(bv42, shear).get_rij(dx_leesedwards_42d, x42[i_repeat].data(), y42[i_repeat].data());
+             // Compute distance with leesedwards_distance
+             double dx_leesedwards_2d[2];
+             double dx_leesedwards_3d[3];
+             double dx_leesedwards_42d[42];
+             leesedwards_distance<2>(bv2, shear).get_rij(dx_leesedwards_2d, x2[i_repeat].data(), y2[i_repeat].data());
+             leesedwards_distance<3>(bv3, shear).get_rij(dx_leesedwards_3d, x3[i_repeat].data(), y3[i_repeat].data());
+             leesedwards_distance<42>(bv42, shear).get_rij(dx_leesedwards_42d, x42[i_repeat].data(), y42[i_repeat].data());
 
-            // Compute distance with periodic_distance
-            double dx_periodic_2d[2];
-            double dx_periodic_3d[3];
-            double dx_periodic_42d[42];
-            periodic_distance<2>(bv2).get_rij(dx_periodic_2d, x2[i_repeat].data(), y2[i_repeat].data());
-            periodic_distance<3>(bv3).get_rij(dx_periodic_3d, x3[i_repeat].data(), y3[i_repeat].data());
-            periodic_distance<42>(bv42).get_rij(dx_periodic_42d, x42[i_repeat].data(), y42[i_repeat].data());
+             // Compute distance with periodic_distance
+             double dx_periodic_2d[2];
+             double dx_periodic_3d[3];
+             double dx_periodic_42d[42];
+             periodic_distance<2>(bv2).get_rij(dx_periodic_2d, x2[i_repeat].data(), y2[i_repeat].data());
+             periodic_distance<3>(bv3).get_rij(dx_periodic_3d, x3[i_repeat].data(), y3[i_repeat].data());
+             periodic_distance<42>(bv42).get_rij(dx_periodic_42d, x42[i_repeat].data(), y42[i_repeat].data());
 
-            // Compute distance with cartesian_distance
-            double dx_cartesian_2d[2];
-            double dx_cartesian_3d[3];
-            double dx_cartesian_42d[42];
-            cartesian_distance<2>().get_rij(dx_cartesian_2d, x2[i_repeat].data(), y2[i_repeat].data());
-            cartesian_distance<3>().get_rij(dx_cartesian_3d, x3[i_repeat].data(), y3[i_repeat].data());
-            cartesian_distance<42>().get_rij(dx_cartesian_42d, x42[i_repeat].data(), y42[i_repeat].data());
+             // Compute distance with cartesian_distance
+             double dx_cartesian_2d[2];
+             double dx_cartesian_3d[3];
+             double dx_cartesian_42d[42];
+             cartesian_distance<2>().get_rij(dx_cartesian_2d, x2[i_repeat].data(), y2[i_repeat].data());
+             cartesian_distance<3>().get_rij(dx_cartesian_3d, x3[i_repeat].data(), y3[i_repeat].data());
+             cartesian_distance<42>().get_rij(dx_cartesian_42d, x42[i_repeat].data(), y42[i_repeat].data());
 
-            // Get unshifted distance (Cartesian in y-direction)
-            double dx_unshifted_2d[2] = {dx_periodic_2d[0], dx_cartesian_2d[1]};
-            double dx_unshifted_3d[2] = {dx_periodic_3d[0], dx_cartesian_3d[1]};
-            double dx_unshifted_42d[2] = {dx_periodic_42d[0], dx_cartesian_42d[1]};
+             // Get minimum of shifted and unshifted distances
+             double* dx_final_2d;
+             dx_final_2d = dx_periodic_2d;
+             dx_final_2d[0] = dx_periodic_2d[0] - round(dx_cartesian_2d[1] / BOX_LENGTH) * shear * BOX_LENGTH;
+             dx_final_2d[1] = dx_cartesian_2d[1] - round(dx_cartesian_2d[1] / BOX_LENGTH) * BOX_LENGTH;
+             dx_final_2d[0] = dx_final_2d[0] - round(dx_final_2d[0] / BOX_LENGTH) * BOX_LENGTH;
+             double* dx_final_3d;
+             dx_final_3d = dx_periodic_3d;
+             dx_final_3d[0] = dx_periodic_3d[0] - round(dx_cartesian_3d[1] / BOX_LENGTH) * shear * BOX_LENGTH;
+             dx_final_3d[1] = dx_cartesian_3d[1] - round(dx_cartesian_3d[1] / BOX_LENGTH) * BOX_LENGTH;
+             dx_final_3d[0] = dx_final_3d[0] - round(dx_final_3d[0] / BOX_LENGTH) * BOX_LENGTH;
+             double* dx_final_42d;
+             dx_final_42d = dx_periodic_42d;
+             dx_final_42d[0] = dx_periodic_42d[0] - round(dx_cartesian_42d[1] / BOX_LENGTH) * shear * BOX_LENGTH;
+             dx_final_42d[1] = dx_cartesian_42d[1] - round(dx_cartesian_42d[1] / BOX_LENGTH) * BOX_LENGTH;
+             dx_final_42d[0] = dx_final_42d[0] - round(dx_final_42d[0] / BOX_LENGTH) * BOX_LENGTH;
 
-            // Get distance using the shifted image in y-direction
-            double dx_shifted_2d[2] =
-                    {dx_cartesian_2d[0] - round(dx_cartesian_2d[1] / BOX_LENGTH) * shear * BOX_LENGTH,
-                     dx_cartesian_2d[1] - round(dx_cartesian_2d[1] / BOX_LENGTH) * BOX_LENGTH};
-            dx_shifted_2d[0] -= round(dx_shifted_2d[0] / BOX_LENGTH) * BOX_LENGTH;
-            double dx_shifted_3d[2] =
-                    {dx_cartesian_3d[0] - round(dx_cartesian_3d[1] / BOX_LENGTH) * shear * BOX_LENGTH,
-                     dx_cartesian_3d[1] - round(dx_cartesian_3d[1] / BOX_LENGTH) * BOX_LENGTH};
-            dx_shifted_3d[0] -= round(dx_shifted_3d[0] / BOX_LENGTH) * BOX_LENGTH;
-            double dx_shifted_42d[2] =
-                    {dx_cartesian_42d[0] - round(dx_cartesian_42d[1] / BOX_LENGTH) * shear * BOX_LENGTH,
-                     dx_cartesian_42d[1] - round(dx_cartesian_42d[1] / BOX_LENGTH) * BOX_LENGTH};
-            dx_shifted_42d[0] -= round(dx_shifted_42d[0] / BOX_LENGTH) * BOX_LENGTH;
-
-            // Get minimum of shifted and unshifted distances
-            double* dx_final_2d;
-            if(norm(dx_shifted_2d) < norm(dx_unshifted_2d)) {
-                dx_final_2d = dx_shifted_2d;
-            } else {
-                dx_final_2d = dx_unshifted_2d;
-            }
-            double* dx_final_3d;
-            dx_final_3d = dx_periodic_3d;
-            if(norm(dx_shifted_3d) < norm(dx_unshifted_3d)) {
-                dx_final_3d[0] = dx_shifted_3d[0];
-                dx_final_3d[1] = dx_shifted_3d[1];
-            } else {
-                dx_final_3d[0] = dx_unshifted_3d[0];
-                dx_final_3d[1] = dx_unshifted_3d[1];
-            }
-            dx_final_3d[2] = dx_leesedwards_3d[2];
-            double* dx_final_42d;
-            dx_final_42d = dx_periodic_42d;
-            if(norm(dx_shifted_42d) < norm(dx_unshifted_42d)) {
-                dx_final_42d[0] = dx_shifted_42d[0];
-                dx_final_42d[1] = dx_shifted_42d[1];
-            } else {
-                dx_final_42d[0] = dx_unshifted_42d[0];
-                dx_final_42d[1] = dx_unshifted_42d[1];
-            }
-
-            // Compare distances
-            for(size_t i = 0; i < 2; i++) {
-                ASSERT_DOUBLE_EQ(dx_final_2d[i], dx_leesedwards_2d[i]);
-            }
-            for(size_t i = 0; i < 3; i++) {
-                ASSERT_DOUBLE_EQ(dx_final_3d[i], dx_leesedwards_3d[i]);
-            }
-            for(size_t i = 0; i < 42; i++) {
-                ASSERT_DOUBLE_EQ(dx_final_42d[i], dx_leesedwards_42d[i]);
-            }
-        }
-    }
-}
+             // Compare distances
+             for(size_t i = 0; i < 2; i++) {
+                 EXPECT_TRUE(almostEqual(dx_final_2d[i], dx_leesedwards_2d[i], 8));
+             }
+             for(size_t i = 0; i < 3; i++) {
+                 EXPECT_TRUE(almostEqual(dx_final_3d[i], dx_leesedwards_3d[i], 8));
+             }
+             for(size_t i = 0; i < 42; i++) {
+                 EXPECT_TRUE(almostEqual(dx_final_42d[i], dx_leesedwards_42d[i], 8));
+             }
+         }
+     }
+ }
