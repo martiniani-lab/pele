@@ -129,19 +129,18 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
     double gij;
     double dr[m_ndim];
 
-//    grad.assign(0.);
-
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
         const size_t i1 = m_ndim * atom_i;
         for (size_t atom_j=0; atom_j<atom_i; ++atom_j) {
             const size_t j1 = m_ndim * atom_j;
 
             _dist->get_rij(dr, &x[i1], &x[j1]);
-
             double r2 = 0;
+            #pragma unroll
             for (size_t k=0; k<m_ndim; ++k) {
                 r2 += dr[k]*dr[k];
             }
+
             e += _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j));
             if (gij != 0) {
                 #pragma unroll
@@ -173,19 +172,17 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     if (hess.size() != x.size() * x.size()) {
         throw std::invalid_argument("the Hessian has the wrong size");
     }
-//    hess.assign(0.);
-//    grad.assign(0.);
 
     double e = 0.;
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
         size_t i1 = m_ndim * atom_i;
-        for (size_t atom_j=0;atom_j<atom_i;++atom_j){
+        for (size_t atom_j=0; atom_j<atom_i; ++atom_j){
             size_t j1 = m_ndim * atom_j;
 
             _dist->get_rij(dr, &x[i1], &x[j1]);
-
             double r2 = 0;
-            for (size_t k=0;k<m_ndim;++k) {
+            #pragma unroll
+            for (size_t k=0; k<m_ndim; ++k) {
                 r2 += dr[k]*dr[k];
             }
 
@@ -200,6 +197,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
             }
 
             if (hij != 0) {
+                #pragma unroll
                 for (size_t k=0; k<m_ndim; ++k){
                     //diagonal block - diagonal terms
                     double Hii_diag = (hij+gij)*dr[k]*dr[k]/r2 - gij;
@@ -209,6 +207,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
                     double Hij_diag = -Hii_diag;
                     hess[N*(i1+k)+j1+k] = Hij_diag;
                     hess[N*(j1+k)+i1+k] = Hij_diag;
+                    #pragma unroll
                     for (size_t l = k+1; l<m_ndim; ++l){
                         //diagonal block - off diagonal terms
                         double Hii_off = (hij+gij)*dr[k]*dr[l]/r2;
@@ -246,11 +245,12 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ge
             size_t j1 = m_ndim * atom_j;
 
             _dist->get_rij(dr, &x[i1], &x[j1]);
-
             double r2 = 0;
-            for (size_t k=0;k<m_ndim;++k) {
+            #pragma unroll
+            for (size_t k=0; k<m_ndim; ++k) {
                 r2 += dr[k]*dr[k];
             }
+
             e += _interaction->energy(r2, sum_radii(atom_i, atom_j));
         }
     }
@@ -303,12 +303,13 @@ void SimplePairwisePotential<pairwise_interaction, distance_policy>::get_neighbo
                     size_t j1 = m_ndim * atom_j;
 
                     _dist->get_rij(dr.data(), &coords[i1], &coords[j1]);
-
                     double r2 = 0;
-                    for (size_t k=0;k<m_ndim;++k) {
+                    #pragma unroll
+                    for (size_t k=0; k<m_ndim; ++k) {
                         r2 += dr[k]*dr[k];
                         neg_dr[k] = -dr[k];
                     }
+
                     const double r_H = sum_radii(atom_i, atom_j);
                     const double r_S = cutoff_sca * r_H;
                     const double r_S2 = r_S * r_S;
@@ -345,11 +346,12 @@ std::vector<size_t> SimplePairwisePotential<pairwise_interaction, distance_polic
             size_t j1 = m_ndim * atom_j;
 
             _dist->get_rij(dr.data(), &coords[i1], &coords[j1]);
-
             double r2 = 0;
-            for (size_t k=0;k<m_ndim;++k) {
+            #pragma unroll
+            for (size_t k=0; k<m_ndim; ++k) {
                 r2 += dr[k]*dr[k];
             }
+
             const double r_H = sum_radii(atom_i, atom_j);
             const double r_H2 = r_H * r_H;
             if(r2 <= r_H2) {

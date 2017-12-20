@@ -49,6 +49,7 @@ double inline BaseHarmonic::get_energy_gradient(pele::Array<double> const & x, p
 {
     assert(grad.size() == _origin.size());
     this->_get_distance(x);
+    #pragma simd
     for (size_t i = 0; i < x.size(); ++i) {
         grad[i] = _k * _distance[i];
     }
@@ -66,6 +67,7 @@ public:
     virtual void inline _get_distance(const pele::Array<double>& x)
     {
         assert(x.size() == _origin.size());
+        #pragma simd
         for (size_t i = 0; i < x.size(); ++i) {
             _distance[i] = x[i] - _origin[i];
         }
