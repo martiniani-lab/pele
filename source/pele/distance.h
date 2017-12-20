@@ -91,6 +91,10 @@ struct cartesian_distance {
     * The particles can't be outside the box when
     * using cartesian distance with cell lists.
     */
+    inline void put_atom_in_box(double * const xnew, const double* x) const
+    {
+        // throw std::runtime_error("Cartesian distance, CellLists: coords are outside of boxvector");
+    }
     inline void put_atom_in_box(double * const x) const
     {
         // throw std::runtime_error("Cartesian distance, CellLists: coords are outside of boxvector");
@@ -141,8 +145,26 @@ struct meta_periodic_distance<1> {
  */
 template<size_t IDX>
 struct meta_image {
-    static void f(double *const x, const double* _ibox, const double* _box)
-    {
+        static void f(double *const xnew, const double* x, const double* _ibox,
+                      const double* _box)
+        {
+            const static size_t k = IDX - 1;
+            xnew[k] = x[k] - round_fast(x[k] * _ibox[k]) * _box[k];
+
+            // Correction for values close to the box boundary
+            double half_box = 0.5 * _box[k];
+            if (__builtin_expect(xnew[k] > half_box, 0)) {
+                xnew[k] -= _box[k];
+            }
+            if (__builtin_expect(xnew[k] < -half_box, 0)) {
+                xnew[k] += _box[k];
+            }
+            meta_image<k>::f(xnew, x, _ibox, _box);
+        }
+
+        static void f(double *const x, const double* _ibox,
+                      const double* _box)
+        {
         const static size_t k = IDX - 1;
         x[k] -= round_fast(x[k] * _ibox[k]) * _box[k];
 
@@ -160,8 +182,24 @@ struct meta_image {
 
 template<>
 struct meta_image<1> {
-    static void f(double *const x, const double* _ibox, const double* _box)
-    {
+        static void f(double *const xnew, const double* x, const double* _ibox,
+                      const double* _box)
+        {
+            xnew[0] = x[0] - round_fast(x[0] * _ibox[0]) * _box[0];
+
+            // Correction for values close to the box boundary
+            double half_box = 0.5 * _box[0];
+            if (__builtin_expect(xnew[0] > half_box, 0)) {
+                xnew[0] -= _box[0];
+            }
+            if (__builtin_expect(xnew[0] < -half_box, 0)) {
+                xnew[0] += _box[0];
+            }
+        }
+
+        static void f(double *const x, const double* _ibox,
+                      const double* _box)
+        {
         x[0] -= round_fast(x[0] * _ibox[0]) * _box[0];
 
         // Correction for values close to the box boundary
@@ -206,6 +244,10 @@ public:
         meta_periodic_distance<ndim>::f(r_ij, r1, r2, _box, _ibox);
     }
 
+    inline void put_atom_in_box(double * const xnew, const double* x) const
+    {
+        meta_image<ndim>::f(xnew, x, _ibox, _box);
+    }
     inline void put_atom_in_box(double * const x) const
     {
         meta_image<ndim>::f(x, _ibox, _box);
@@ -270,8 +312,26 @@ struct meta_leesedwards_distance<2> {
  */
 template<size_t IDX>
 struct meta_leesedwards_image {
-    static void f(double *const x, const double* ibox, const double* box, const double& dx)
-    {
+        static void f(double *const xnew, const double* x, const double* ibox,
+                      const double* box, const double dx)
+        {
+            const static size_t k = IDX - 1;
+            xnew[k] = x[k] - round_fast(x[k] * ibox[k]) * box[k];
+
+            // Correction for values close to the box boundary
+            double half_box = 0.5 * box[k];
+            if (__builtin_expect(xnew[k] > half_box, 0)) {
+                xnew[k] -= box[k];
+            }
+            if (__builtin_expect(xnew[k] < -half_box, 0)) {
+                xnew[k] += box[k];
+            }
+
+            meta_leesedwards_image<k>::f(xnew, x, ibox, box, dx);
+        }
+        static void f(double *const x, const double* ibox, const double* box,
+                      const double dx)
+        {
         const static size_t k = IDX - 1;
         x[k] -= round_fast(x[k] * ibox[k]) * box[k];
 
@@ -290,8 +350,40 @@ struct meta_leesedwards_image {
 
 template<>
 struct meta_leesedwards_image<2> {
-    static void f(double *const x, const double* ibox, const double* box, const double& dx)
-    {
+        static void f(double *const xnew, const double* x, const double* ibox,
+                      const double* box, const double dx)
+        {
+            // Apply Lees-Edwards boundary conditions in y-direction
+            double round_y = round_fast(x[1] * ibox[1]);
+            xnew[0] = x[0] - round_y * dx;
+            xnew[1] = x[1] - round_y * box[1];
+
+            // Correction for values close to the box boundary
+            double half_box = 0.5 * box[1];
+            if (__builtin_expect(xnew[1] > half_box, 0)) {
+                xnew[0] -= dx;
+                xnew[1] -= box[1];
+            }
+            if (__builtin_expect(xnew[1] < -half_box, 0)) {
+                xnew[0] += dx;
+                xnew[1] += box[1];
+            }
+
+            // Apply periodic boundary conditions in x-direction
+            xnew[0] -= round_fast(x[0] * ibox[0]) * box[0];
+
+            // Correction for values close to the box boundary
+            half_box = 0.5 * box[0];
+            if (__builtin_expect(xnew[0] > half_box, 0)) {
+                xnew[0] -= box[0];
+            }
+            if (__builtin_expect(xnew[0] < -half_box, 0)) {
+                xnew[0] += box[0];
+            }
+        }
+        static void f(double *const x, const double* ibox, const double* box,
+                      const double dx)
+        {
         // Apply Lees-Edwards boundary conditions in y-direction
         double round_y = round_fast(x[1] * ibox[1]);
         x[0] -= round_y * dx;
@@ -360,6 +452,10 @@ public:
         meta_leesedwards_distance<ndim>::f(r_ij, r1, r2, m_box, m_ibox, m_dx);
     }
 
+    inline void put_atom_in_box(double * const xnew, const double* x) const
+    {
+        meta_leesedwards_image<ndim>::f(xnew, x, m_ibox, m_box, m_dx);
+    }
     inline void put_atom_in_box(double * const x) const
     {
         meta_leesedwards_image<ndim>::f(x, m_ibox, m_box, m_dx);

@@ -315,8 +315,7 @@ public:
     cell_vec_t position_to_cell_vec(const double * const x) const
     {
         double x_in_box[ndim];
-        std::copy(x, x + ndim, x_in_box);
-        m_dist->put_atom_in_box(x_in_box);
+        m_dist->put_atom_in_box(x_in_box, x);
 
         cell_vec_t cell_vec;
         for(size_t idim = 0; idim < ndim; ++idim) {
