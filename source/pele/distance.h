@@ -108,22 +108,22 @@ struct cartesian_distance {
 template<size_t IDX>
 struct  meta_periodic_distance {
     static void f(double * const r_ij, double const * const r1,
-                  double const * const r2, const double* _box, const double* _ibox)
+                  double const * const r2, const double* box, const double* ibox)
     {
         const static size_t k = IDX - 1;
         r_ij[k] = r1[k] - r2[k];
-        r_ij[k] -= round_fast(r_ij[k] * _ibox[k]) * _box[k];
-        meta_periodic_distance<k>::f(r_ij, r1, r2, _box, _ibox);
+        r_ij[k] -= round_fast(r_ij[k] * ibox[k]) * box[k];
+        meta_periodic_distance<k>::f(r_ij, r1, r2, box, ibox);
     }
 };
 
 template<>
 struct meta_periodic_distance<1> {
     static void f(double * const r_ij, double const * const r1,
-                  double const * const r2, const double* _box, const double* _ibox)
+                  double const * const r2, const double* box, const double* ibox)
     {
         r_ij[0] = r1[0] - r2[0];
-        r_ij[0] -= round_fast(r_ij[0] * _ibox[0]) * _box[0];
+        r_ij[0] -= round_fast(r_ij[0] * ibox[0]) * box[0];
     }
 };
 
@@ -139,77 +139,63 @@ struct meta_periodic_distance<1> {
  * The function f of meta_image translates x[k] such that its new value
  * is in the range [-box[k]/2, box[k]/2].
  * To see this, consider the behavior of std::round.
- * E.g. if the input is x[k] == -0.7 _box[k], then
- * round_fast(x[k] * _ibox[k]) == -1 and finally
- * x[k] -= -1 * _box[k] == 0.3 * _box[k]
+ * E.g. if the input is x[k] == -0.7 box[k], then
+ * round_fast(x[k] * ibox[k]) == -1 and finally
+ * (x[k] -= -1 * box[k]) == 0.3 * box[k]
  */
 template<size_t IDX>
 struct meta_image {
-        static void f(double *const xnew, const double* x, const double* _ibox,
-                      const double* _box)
+        static void f(double *const xnew, const double* x, const double* ibox,
+                      const double* box)
         {
             const static size_t k = IDX - 1;
-            xnew[k] = x[k] - round_fast(x[k] * _ibox[k]) * _box[k];
+            xnew[k] = x[k] - round_fast(x[k] * ibox[k]) * box[k];
 
             // Correction for values close to the box boundary
-            double half_box = 0.5 * _box[k];
-            if (__builtin_expect(xnew[k] > half_box, 0)) {
-                xnew[k] -= _box[k];
-            }
-            if (__builtin_expect(xnew[k] < -half_box, 0)) {
-                xnew[k] += _box[k];
-            }
-            meta_image<k>::f(xnew, x, _ibox, _box);
+            double half_box = 0.5 * box[k];
+            int outside = (xnew[k] < -half_box) - (xnew[k] > half_box);
+            xnew[k] += box[k] * outside;
+
+            meta_image<k>::f(xnew, x, ibox, box);
         }
 
-        static void f(double *const x, const double* _ibox,
-                      const double* _box)
+        static void f(double *const x, const double* ibox,
+                      const double* box)
         {
         const static size_t k = IDX - 1;
-        x[k] -= round_fast(x[k] * _ibox[k]) * _box[k];
+        x[k] -= round_fast(x[k] * ibox[k]) * box[k];
 
         // Correction for values close to the box boundary
-        double half_box = 0.5 * _box[k];
-        if (__builtin_expect(x[k] > half_box, 0)) {
-            x[k] -= _box[k];
-        }
-        if (__builtin_expect(x[k] < -half_box, 0)) {
-            x[k] += _box[k];
-        }
-        meta_image<k>::f(x, _ibox, _box);
+        double half_box = 0.5 * box[k];
+        int outside = (x[k] < -half_box) - (x[k] > half_box);
+        x[k] += box[k] * outside;
+
+        meta_image<k>::f(x, ibox, box);
     }
 };
 
 template<>
 struct meta_image<1> {
-        static void f(double *const xnew, const double* x, const double* _ibox,
-                      const double* _box)
+        static void f(double *const xnew, const double* x, const double* ibox,
+                      const double* box)
         {
-            xnew[0] = x[0] - round_fast(x[0] * _ibox[0]) * _box[0];
+            xnew[0] = x[0] - round_fast(x[0] * ibox[0]) * box[0];
 
             // Correction for values close to the box boundary
-            double half_box = 0.5 * _box[0];
-            if (__builtin_expect(xnew[0] > half_box, 0)) {
-                xnew[0] -= _box[0];
-            }
-            if (__builtin_expect(xnew[0] < -half_box, 0)) {
-                xnew[0] += _box[0];
-            }
+            double half_box = 0.5 * box[0];
+            int outside = (xnew[0] < -half_box) - (xnew[0] > half_box);
+            xnew[0] += box[0] * outside;
         }
 
-        static void f(double *const x, const double* _ibox,
-                      const double* _box)
+        static void f(double *const x, const double* ibox,
+                      const double* box)
         {
-        x[0] -= round_fast(x[0] * _ibox[0]) * _box[0];
+        x[0] -= round_fast(x[0] * ibox[0]) * box[0];
 
         // Correction for values close to the box boundary
-        double half_box = 0.5 * _box[0];
-        if (__builtin_expect(x[0] > half_box, 0)) {
-            x[0] -= _box[0];
-        }
-        if (__builtin_expect(x[0] < -half_box, 0)) {
-            x[0] += _box[0];
-        }
+        double half_box = 0.5 * box[0];
+        int outside = (x[0] < -half_box) - (x[0] > half_box);
+        x[0] += box[0] * outside;
     }
 };
 
@@ -217,8 +203,8 @@ template<size_t ndim>
 class periodic_distance {
 public:
     static const size_t _ndim = ndim;
-    double _box[ndim];
-    double _ibox[ndim];
+    double m_box[ndim];
+    double m_ibox[ndim];
 
     periodic_distance(Array<double> const box)
     {
@@ -227,8 +213,8 @@ public:
             throw std::invalid_argument("box.size() must be equal to ndim");
         }
         for (size_t i = 0; i < ndim; ++i) {
-            _box[i] = box[i];
-            _ibox[i] = 1 / box[i];
+            m_box[i] = box[i];
+            m_ibox[i] = 1 / box[i];
         }
     }
 
@@ -241,16 +227,16 @@ public:
     inline void get_rij(double * const r_ij, double const * const r1,
                         double const * const r2) const
     {
-        meta_periodic_distance<ndim>::f(r_ij, r1, r2, _box, _ibox);
+        meta_periodic_distance<ndim>::f(r_ij, r1, r2, m_box, m_ibox);
     }
 
     inline void put_atom_in_box(double * const xnew, const double* x) const
     {
-        meta_image<ndim>::f(xnew, x, _ibox, _box);
+        meta_image<ndim>::f(xnew, x, m_ibox, m_box);
     }
     inline void put_atom_in_box(double * const x) const
     {
-        meta_image<ndim>::f(x, _ibox, _box);
+        meta_image<ndim>::f(x, m_ibox, m_box);
     }
     inline void put_in_box(Array<double>& coords) const
     {
@@ -311,12 +297,8 @@ struct meta_leesedwards_image {
 
             // Correction for values close to the box boundary
             double half_box = 0.5 * box[k];
-            if (__builtin_expect(xnew[k] > half_box, 0)) {
-                xnew[k] -= box[k];
-            }
-            if (__builtin_expect(xnew[k] < -half_box, 0)) {
-                xnew[k] += box[k];
-            }
+            int outside = (xnew[k] < -half_box) - (xnew[k] > half_box);
+            xnew[k] += box[k] * outside;
 
             meta_leesedwards_image<k>::f(xnew, x, ibox, box, dx);
         }
@@ -328,12 +310,8 @@ struct meta_leesedwards_image {
 
         // Correction for values close to the box boundary
         double half_box = 0.5 * box[k];
-        if (__builtin_expect(x[k] > half_box, 0)) {
-            x[k] -= box[k];
-        }
-        if (__builtin_expect(x[k] < -half_box, 0)) {
-            x[k] += box[k];
-        }
+        int outside = (x[k] < -half_box) - (x[k] > half_box);
+        x[k] += box[k] * outside;
 
         meta_leesedwards_image<k>::f(x, ibox, box, dx);
     }
@@ -351,26 +329,17 @@ struct meta_leesedwards_image<2> {
 
             // Correction for values close to the box boundary
             double half_box = 0.5 * box[1];
-            if (__builtin_expect(xnew[1] > half_box, 0)) {
-                xnew[0] -= dx;
-                xnew[1] -= box[1];
-            }
-            if (__builtin_expect(xnew[1] < -half_box, 0)) {
-                xnew[0] += dx;
-                xnew[1] += box[1];
-            }
+            int outside = (xnew[1] < -half_box) - (xnew[1] > half_box);
+            xnew[1] += box[1] * outside;
+            xnew[0] += dx * outside;
 
             // Apply periodic boundary conditions in x-direction
             xnew[0] -= round_fast(x[0] * ibox[0]) * box[0];
 
             // Correction for values close to the box boundary
             half_box = 0.5 * box[0];
-            if (__builtin_expect(xnew[0] > half_box, 0)) {
-                xnew[0] -= box[0];
-            }
-            if (__builtin_expect(xnew[0] < -half_box, 0)) {
-                xnew[0] += box[0];
-            }
+            outside = (xnew[0] < -half_box) - (xnew[0] > half_box);
+            xnew[0] += box[0] * outside;
         }
         static void f(double *const x, const double* ibox, const double* box,
                       const double dx)
@@ -382,26 +351,17 @@ struct meta_leesedwards_image<2> {
 
         // Correction for values close to the box boundary
         double half_box = 0.5 * box[1];
-        if (__builtin_expect(x[1] > half_box, 0)) {
-            x[0] -= dx;
-            x[1] -= box[1];
-        }
-        if (__builtin_expect(x[1] < -half_box, 0)) {
-            x[0] += dx;
-            x[1] += box[1];
-        }
+        int outside = (x[1] < -half_box) - (x[1] > half_box);
+        x[1] += box[1] * outside;
+        x[0] += dx * outside;
 
         // Apply periodic boundary conditions in x-direction
         x[0] -= round_fast(x[0] * ibox[0]) * box[0];
 
         // Correction for values close to the box boundary
         half_box = 0.5 * box[0];
-        if (__builtin_expect(x[0] > half_box, 0)) {
-            x[0] -= box[0];
-        }
-        if (__builtin_expect(x[0] < -half_box, 0)) {
-            x[0] += box[0];
-        }
+        outside = (x[0] < -half_box) - (x[0] > half_box);
+        x[0] += box[0] * outside;
     }
 };
 
