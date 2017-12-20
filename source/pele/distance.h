@@ -59,7 +59,7 @@ namespace pele {
 template<size_t IDX>
 struct meta_dist {
     static void f(double * const r_ij, double const * const r1,
-            double const * const r2)
+                  double const * const r2)
     {
         const static size_t k = IDX - 1;
         r_ij[k] = r1[k] - r2[k];
@@ -70,7 +70,7 @@ struct meta_dist {
 template<>
 struct meta_dist<1> {
     static void f(double * const r_ij, double const * const r1,
-            double const * const r2)
+                  double const * const r2)
     {
         r_ij[0] = r1[0] - r2[0];
     }
@@ -80,7 +80,7 @@ template<size_t ndim>
 struct cartesian_distance {
     static const size_t _ndim = ndim;
     inline void get_rij(double * const r_ij, double const * const r1,
-            double const * const r2) const
+                        double const * const r2) const
     {
         static_assert(ndim > 0, "illegal box dimension");
         meta_dist<ndim>::f(r_ij, r1, r2);
@@ -104,7 +104,7 @@ struct cartesian_distance {
 template<size_t IDX>
 struct  meta_periodic_distance {
     static void f(double * const r_ij, double const * const r1,
-                 double const * const r2, const double* _box, const double* _ibox)
+                  double const * const r2, const double* _box, const double* _ibox)
     {
         const static size_t k = IDX - 1;
         r_ij[k] = r1[k] - r2[k];
@@ -116,7 +116,7 @@ struct  meta_periodic_distance {
 template<>
 struct meta_periodic_distance<1> {
     static void f(double * const r_ij, double const * const r1,
-                 double const * const r2, const double* _box, const double* _ibox)
+                  double const * const r2, const double* _box, const double* _ibox)
     {
         r_ij[0] = r1[0] - r2[0];
         r_ij[0] -= round_fast(r_ij[0] * _ibox[0]) * _box[0];
@@ -185,7 +185,7 @@ public:
     periodic_distance(Array<double> const box)
     {
         static_assert(ndim > 0, "illegal box dimension");
-        if (box.size() != _ndim) {
+        if (box.size() != ndim) {
             throw std::invalid_argument("box.size() must be equal to ndim");
         }
         for (size_t i = 0; i < ndim; ++i) {
@@ -201,7 +201,7 @@ public:
     }
 
     inline void get_rij(double * const r_ij, double const * const r1,
-                 double const * const r2) const
+                        double const * const r2) const
     {
         meta_periodic_distance<ndim>::f(r_ij, r1, r2, _box, _ibox);
     }
@@ -213,7 +213,7 @@ public:
     inline void put_in_box(Array<double>& coords) const
     {
         const size_t N = coords.size();
-        for (size_t i = 0; i < N; i += _ndim){
+        for (size_t i = 0; i < N; i += ndim){
             put_atom_in_box(&coords[i]);
         }
     }
@@ -225,7 +225,8 @@ public:
 template<size_t IDX>
 struct  meta_leesedwards_distance {
     static void f(double * const r_ij, double const * const r1,
-                 double const * const r2, const double* box, const double* ibox, const double& dx)
+                  double const * const r2, const double* box, const double* ibox,
+                  const double& dx)
     {
         const static size_t k = IDX - 1;
         r_ij[k] = r1[k] - r2[k];
@@ -237,7 +238,8 @@ struct  meta_leesedwards_distance {
 template<>
 struct meta_leesedwards_distance<2> {
     static void f(double * const r_ij, double const * const r1,
-                 double const * const r2, const double* box, const double* ibox, const double& dx)
+                  double const * const r2, const double* box, const double* ibox,
+                  const double& dx)
     {
         // Calculate difference
         r_ij[0] = r1[0] - r2[0];
@@ -353,7 +355,7 @@ public:
     }
 
     inline void get_rij(double * const r_ij, double const * const r1,
-                 double const * const r2) const
+                        double const * const r2) const
     {
         meta_leesedwards_distance<ndim>::f(r_ij, r1, r2, m_box, m_ibox, m_dx);
     }
@@ -380,7 +382,8 @@ public:
 class DistanceInterface{
 protected:
 public:
-    virtual void get_rij(double * const r_ij, double const * const r1, double const * const r2) const =0;
+    virtual void get_rij(double * const r_ij, double const * const r1,
+                         double const * const r2) const =0;
     virtual ~DistanceInterface(){ }
 };
 
@@ -391,7 +394,7 @@ protected:
 public:
     static const size_t _ndim = ndim;
     inline void get_rij(double * const r_ij, double const * const r1,
-            double const * const r2) const
+                        double const * const r2) const
     {
         _dist.get_rij(r_ij, r1, r2);
     }
@@ -408,7 +411,7 @@ public:
     {};
 
     inline void get_rij(double * const r_ij, double const * const r1,
-            double const * const r2) const
+                        double const * const r2) const
     {
         _dist.get_rij(r_ij, r1, r2);
     }
@@ -425,7 +428,7 @@ public:
     {};
 
     inline void get_rij(double * const r_ij, double const * const r1,
-            double const * const r2) const
+                        double const * const r2) const
     {
         _dist.get_rij(r_ij, r1, r2);
     }

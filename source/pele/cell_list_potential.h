@@ -554,7 +554,7 @@ public:
                                 pele::Array<std::vector<std::vector<double>>> & neighbor_distss,
                                 const double cutoff_factor = 1.0)
     {
-        size_t natoms = coords.size() / m_ndim;
+        const size_t natoms = coords.size() / m_ndim;
         pele::Array<short> include_atoms(natoms, 1);
         get_neighbors_picky(coords, neighbor_indss, neighbor_distss, include_atoms, cutoff_factor);
     }

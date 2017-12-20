@@ -10,11 +10,11 @@ class PairwisePotentialInterface : public BasePotential {
 protected:
     const Array<double> m_radii;
 
-    double sum_radii(const size_t atomi, const size_t atomj) const {
+    double sum_radii(const size_t atom_i, const size_t atom_j) const {
         if(m_radii.size() == 0) {
             return 0;
         } else {
-            return m_radii[atomi] + m_radii[atomj];
+            return m_radii[atom_i] + m_radii[atom_j];
         }
     }
 public:
@@ -30,9 +30,13 @@ public:
         }
     }
 
+    virtual ~PairwisePotentialInterface() {}
+
+    /**
+     * Return the radii (if the interaction potential actually uses radii).
+     */
     virtual pele::Array<double> get_radii() { return m_radii.copy();}
 
-    virtual ~PairwisePotentialInterface() {}
     /**
      * Return the number of dimensions (box dimensions).
      * Ideally this should be overloaded.

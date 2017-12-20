@@ -23,21 +23,6 @@ namespace {
 // Type of each cell inside the cell list
 using cell_t = std::vector<long>;
 
-template<class T, size_t box_dimension>
-struct periodic_policy_check_helper {
-    const static bool is_periodic = false;
-};
-
-template<size_t box_dimension>
-struct periodic_policy_check_helper<pele::periodic_distance<box_dimension>, box_dimension > {
-    const static bool is_periodic = true;
-};
-
-template<class T>
-struct periodic_policy_check {
-    const static bool is_periodic = periodic_policy_check_helper<T, T::_ndim>::is_periodic;
-};
-
 /**
  * container for the cell lists
  */
@@ -204,9 +189,9 @@ public:
     size_t m_subdom_avg_len; //!< Average subdomain length. Only used in balanced case, therefore integer.
 
     LatticeNeighbors(std::shared_ptr<distance_policy> const & dist,
-            pele::Array<double> const & boxvec,
-            const double rcut,
-            pele::Array<size_t> const & ncells_vec)
+                     pele::Array<double> const & boxvec,
+                     const double rcut,
+                     pele::Array<size_t> const & ncells_vec)
         : m_dist(dist),
           m_boxvec(boxvec),
           m_rcut(rcut),
@@ -700,8 +685,8 @@ template<typename distance_policy = periodic_distance<3> >
 class CellLists{
 public:
     static const size_t m_ndim = distance_policy::_ndim;
-protected:
 
+protected:
     bool m_initialized; // flag for whether the cell lists have been initialized with coordinates
     pele::LatticeNeighbors<distance_policy> m_lattice_tool;
     std::vector<SafePushQueue<std::array<long, 2>>> add_atom_queue;
@@ -870,7 +855,7 @@ void CellLists<distance_policy>::update(pele::Array<double> const & coords)
         update_container(coords);
     } else {
         m_initialized = true;
-        size_t natoms = coords.size() / m_ndim;
+        const size_t natoms = coords.size() / m_ndim;
         print_warnings(natoms);
         reset_container(coords);
     }
@@ -912,7 +897,7 @@ template <typename distance_policy>
 void CellLists<distance_policy>::reset_container(pele::Array<double> const & coords)
 {
     m_container.reset();
-    size_t natoms = coords.size() / m_ndim;
+    const size_t natoms = coords.size() / m_ndim;
     for(long iatom = 0; iatom < natoms; ++iatom) {
         const double * const x = coords.data() + m_ndim * iatom;
         size_t icell, isubdom;
