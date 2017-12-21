@@ -33,7 +33,7 @@ class EnergyAccumulator {
 public:
     ~EnergyAccumulator()
     {
-        for(auto energy : m_energies) {
+        for(auto & energy : m_energies) {
             delete energy;
         }
     }
@@ -116,7 +116,7 @@ public:
 
     ~EnergyGradientAccumulator()
     {
-        for(auto energy : m_energies) {
+        for(auto & energy : m_energies) {
             delete energy;
         }
     }
@@ -209,7 +209,7 @@ public:
 
     ~EnergyGradientHessianAccumulator()
     {
-        for(auto energy : m_energies) {
+        for(auto & energy : m_energies) {
             delete energy;
         }
     }

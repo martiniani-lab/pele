@@ -45,11 +45,11 @@ protected:
         #endif
 
         size_t total_cells = 0;
-        for (size_t subdom_ncell : subdom_ncells) {
+        for (const size_t subdom_ncell : subdom_ncells) {
             total_cells += subdom_ncell;
         }
         m_cell_neighbors = std::vector< std::vector<cell_t*> >(total_cells);
-        for (std::vector<cell_t*> neighbors : m_cell_neighbors) {
+        for (std::vector<cell_t*> & neighbors : m_cell_neighbors) {
             neighbors = std::vector<cell_t*>();
         }
     }
@@ -88,7 +88,7 @@ public:
      */
     void reset()
     {
-        for (auto subdom_cell_atoms : m_cell_atoms) {
+        for (auto & subdom_cell_atoms : m_cell_atoms) {
             for (auto & v : subdom_cell_atoms) {
                 v.clear();
             }
@@ -538,7 +538,7 @@ public:
         for (size_t local_icell = 0; local_icell < m_subdom_ncells[isubdom]; ++local_icell) {
             size_t global_icell = local_ind_to_global_ind(local_icell, isubdom);
             auto global_neighbors = find_all_global_neighbor_inds(global_icell);
-            for (size_t global_jcell : global_neighbors) {
+            for (const size_t global_jcell : global_neighbors) {
                 size_t local_jcell, jsubdom;
                 global_ind_to_local_ind(global_jcell, local_jcell, jsubdom);
                 cell_neighbors[global_icell].push_back(&cells[jsubdom][local_jcell]);
