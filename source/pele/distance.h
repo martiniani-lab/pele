@@ -302,6 +302,7 @@ struct meta_leesedwards_image {
 
             meta_leesedwards_image<k>::f(xnew, x, ibox, box, dx);
         }
+
         static void f(double *const x, const double* ibox, const double* box,
                       const double dx)
         {
@@ -334,13 +335,14 @@ struct meta_leesedwards_image<2> {
             xnew[0] += dx * outside;
 
             // Apply periodic boundary conditions in x-direction
-            xnew[0] -= round_fast(x[0] * ibox[0]) * box[0];
+            xnew[0] -= round_fast(xnew[0] * ibox[0]) * box[0];
 
             // Correction for values close to the box boundary
             half_box = 0.5 * box[0];
             outside = (xnew[0] < -half_box) - (xnew[0] > half_box);
             xnew[0] += box[0] * outside;
         }
+
         static void f(double *const x, const double* ibox, const double* box,
                       const double dx)
         {
