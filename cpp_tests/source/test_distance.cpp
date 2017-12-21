@@ -171,8 +171,12 @@ TEST_F(DistanceTest, PeriodicPutAtomInBox_BoxBoundaryWorks)
     for (int i = -20; i <= 20; i++) {
         for (int j = -20; j <= 20; j++) {
             pele::Array<double> coords(2, 0);
+            pele::Array<double> new_coords(2, 0);
             coords[0] = i * boxboundary + j * std::numeric_limits<double>::epsilon();
+            periodic_distance<2>(boxvec).put_atom_in_box(new_coords.data(), coords.data());
             periodic_distance<2>(boxvec).put_atom_in_box(coords.data());
+            EXPECT_LE(new_coords[0], boxboundary);
+            EXPECT_GE(new_coords[0], -boxboundary);
             EXPECT_LE(coords[0], boxboundary);
             EXPECT_GE(coords[0], -boxboundary);
         }
@@ -191,6 +195,7 @@ TEST_F(DistanceTest, LeesEdwardsPutAtomInBox_BoxBoundaryWorks)
         for (int j_x = -20; j_x <= 20; j_x++) {
             for (int i_y = -21; i_y <= 21; i_y += 2) {
                 for (int j_y = -20; j_y <= 20; j_y++) {
+                    pele::Array<double> new_coords(2, 0);
                     pele::Array<double> coords(2, 0);
                     double shear_corr;
                     if ((i_y < 0 && j_y > 0) || (i_y > 0 && j_y > 0)) {
@@ -202,7 +207,12 @@ TEST_F(DistanceTest, LeesEdwardsPutAtomInBox_BoxBoundaryWorks)
                                 + j_x * std::numeric_limits<double>::epsilon()
                                 + shear_corr;
                     coords[1] = i_y * boxboundary + j_y * std::numeric_limits<double>::epsilon();
+                    leesedwards_distance<2>(boxvec, shear).put_atom_in_box(new_coords.data(), coords.data());
                     leesedwards_distance<2>(boxvec, shear).put_atom_in_box(coords.data());
+                    EXPECT_LE(new_coords[0], boxboundary);
+                    EXPECT_GE(new_coords[0], -boxboundary);
+                    EXPECT_LE(new_coords[1], boxboundary);
+                    EXPECT_GE(new_coords[1], -boxboundary);
                     EXPECT_LE(coords[0], boxboundary);
                     EXPECT_GE(coords[0], -boxboundary);
                     EXPECT_LE(coords[1], boxboundary);
@@ -260,13 +270,16 @@ TEST_F(DistanceTest, LeesEdwards_Image_Y)
 
     // Set up test coordinates
     double r_test[][2] = {{3.7, 6.5}, {-2.2, 8.5}, {3.8, -7.7}, {-2.2, -6.9}, {4.8, -8.5}};
+    double r_new[5][2];
     double r_exp[][2] = {{2.7, -3.5}, {-3.2, -1.5}, {4.8, 2.3}, {-1.2, 3.1}, {-4.2, 1.5}};
 
     // Compute images using Lees-Edwards
     for(int i = 0; i < 4; i++) {
 
+        leesedwards_distance<2>(bv2, shear).put_atom_in_box(r_new[i], r_test[i]);
         leesedwards_distance<2>(bv2, shear).put_atom_in_box(r_test[i]);
         for(int j = 0; j < 2; j++) {
+            ASSERT_DOUBLE_EQ(r_exp[i][j], r_new[i][j]);
             ASSERT_DOUBLE_EQ(r_exp[i][j], r_test[i][j]);
         }
 
@@ -281,6 +294,10 @@ TEST_F(DistanceTest, LeesEdwards_Image_NotY)
     pele::Array<double> bv2(2, BOX_LENGTH);
     pele::Array<double> bv3(3, BOX_LENGTH);
     pele::Array<double> bv42(42, BOX_LENGTH);
+
+    pele::Array<double> x2_new = pele::Array<double>(2);
+    pele::Array<double> x3_new = pele::Array<double>(3);
+    pele::Array<double> x42_new = pele::Array<double>(42);
 
     for(size_t i_repeat = 0; i_repeat < TEST_REPEAT; i_repeat++)  {
 
@@ -302,6 +319,9 @@ TEST_F(DistanceTest, LeesEdwards_Image_NotY)
 
 
         // Compute image with leesedwards_distance
+        leesedwards_distance<2>(bv2, 0).put_atom_in_box(x2_new.data(), x2[i_repeat].data());
+        leesedwards_distance<3>(bv3, 0).put_atom_in_box(x3_new.data(), x3[i_repeat].data());
+        leesedwards_distance<42>(bv42, 0).put_atom_in_box(x42_new.data(), x42[i_repeat].data());
         leesedwards_distance<2>(bv2, 0).put_atom_in_box(x2[i_repeat].data());
         leesedwards_distance<3>(bv3, 0).put_atom_in_box(x3[i_repeat].data());
         leesedwards_distance<42>(bv42, 0).put_atom_in_box(x42[i_repeat].data());
@@ -310,18 +330,30 @@ TEST_F(DistanceTest, LeesEdwards_Image_NotY)
         pele::Array<double> x_periodic_2d = x2[i_repeat].copy();
         pele::Array<double> x_periodic_3d = x3[i_repeat].copy();
         pele::Array<double> x_periodic_42d = x42[i_repeat].copy();
+        pele::Array<double> x_periodic_2d_new = pele::Array<double>(2);
+        pele::Array<double> x_periodic_3d_new = pele::Array<double>(3);
+        pele::Array<double> x_periodic_42d_new = pele::Array<double>(42);
+        periodic_distance<2>(bv2).put_atom_in_box(x_periodic_2d_new.data(), x_periodic_2d.data());
+        periodic_distance<3>(bv3).put_atom_in_box(x_periodic_3d_new.data(), x_periodic_3d.data());
+        periodic_distance<42>(bv42).put_atom_in_box(x_periodic_42d_new.data(), x_periodic_42d.data());
         periodic_distance<2>(bv2).put_atom_in_box(x_periodic_2d.data());
         periodic_distance<3>(bv3).put_atom_in_box(x_periodic_3d.data());
         periodic_distance<42>(bv42).put_atom_in_box(x_periodic_42d.data());
 
         // Compare distances
         for(size_t i = 0; i < 2; i++) {
+            ASSERT_DOUBLE_EQ(x2_new[i], x2[i_repeat].data()[i]);
+            ASSERT_DOUBLE_EQ(x_periodic_2d_new[i], x_periodic_2d[i]);
             ASSERT_DOUBLE_EQ(x_periodic_2d[i], x2[i_repeat].data()[i]);
         }
         for(size_t i = 0; i < 3; i++) {
+            ASSERT_DOUBLE_EQ(x3_new[i], x3[i_repeat].data()[i]);
+            ASSERT_DOUBLE_EQ(x_periodic_3d_new[i], x_periodic_3d[i]);
             ASSERT_DOUBLE_EQ(x_periodic_3d[i], x3[i_repeat].data()[i]);
         }
         for(size_t i = 0; i < 42; i++) {
+            ASSERT_DOUBLE_EQ(x42_new[i], x42[i_repeat].data()[i]);
+            ASSERT_DOUBLE_EQ(x_periodic_42d_new[i], x_periodic_42d[i]);
             ASSERT_DOUBLE_EQ(x_periodic_42d[i], x42[i_repeat].data()[i]);
         }
     }
