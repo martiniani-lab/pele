@@ -601,7 +601,7 @@ protected:
 
     virtual void loop_cell_pairs(
         std::vector< std::array<cell_t*, 2> > const & neighbor_pairs,
-        size_t isubdom)
+        const size_t isubdom)
     {
         for (auto const & ijpair : neighbor_pairs) {
             cell_t* icell = ijpair[0];
