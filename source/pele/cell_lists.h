@@ -851,7 +851,11 @@ template <typename distance_policy>
 void CellLists<distance_policy>::update(pele::Array<double> const & coords)
 {
     if (m_initialized) {
-        update_container(coords);
+        if (m_lattice_tool.m_nsubdoms == 1) {
+            reset_container(coords);
+        } else {
+            update_container(coords);
+        }
     } else {
         m_initialized = true;
         const size_t natoms = coords.size() / m_ndim;
