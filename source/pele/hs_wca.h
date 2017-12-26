@@ -38,7 +38,7 @@ namespace pele {
 template<size_t exp=6>
 class sf_HS_WCA_interaction : BaseInteraction {
     const double m_eps;
-    const double m_alpha;
+    const double m_alpha1_2;
     const double m_delta;
     const double m_prfac;
     constexpr static double m_grad_prfac  = 4 * 2 * exp;
@@ -60,9 +60,9 @@ public:
 template<size_t exp>
 sf_HS_WCA_interaction<exp>::sf_HS_WCA_interaction(const double eps, const double alpha, const double delta)
     : m_eps(eps),
-      m_alpha(alpha),
+      m_alpha1_2(pos_int_pow<2>(alpha + 1)),
       m_delta(delta),
-      m_prfac(0.5 * pos_int_pow<exp>((2 + m_alpha) * m_alpha))
+      m_prfac(0.5 * pos_int_pow<exp>((2 + alpha) * alpha))
 {
     if (eps < 0) {
         throw std::runtime_error("HS_WCA: illegal input: eps");
@@ -75,8 +75,8 @@ sf_HS_WCA_interaction<exp>::sf_HS_WCA_interaction(const double eps, const double
 template<size_t exp>
 double sf_HS_WCA_interaction<exp>::energy(const double r2, const double radius_sum) const
 {
-    const double r_S = (1 + m_alpha) * radius_sum;
-    const double r_S2 = pos_int_pow<2>(r_S);
+    const double r_H2 = pos_int_pow<2>(radius_sum);
+    const double r_S2 = m_alpha1_2 * r_H2;
     if (r2 > r_S2) {
         // Energy: separation larger than soft shell.
         return 0;
@@ -84,7 +84,6 @@ double sf_HS_WCA_interaction<exp>::energy(const double r2, const double radius_s
     // r2 <= r_S2: we have to compute the remaining quantities.
     const double r_X = radius_sum + m_delta;
     const double r_X2 = pos_int_pow<2>(r_X);
-    const double r_H2 = pos_int_pow<2>(radius_sum);
     if (__builtin_expect(r2 > r_X2, 1)) {
         // Energy: separation in fHS-WCA regime.
         const double dr = r2 - r_H2;
@@ -92,7 +91,7 @@ double sf_HS_WCA_interaction<exp>::energy(const double r2, const double radius_s
         const double r_H2_ir = r_H2 * ir;
         const double C_ir_m = m_prfac * pos_int_pow<exp>(r_H2_ir);
         const double C_ir_2m = C_ir_m * C_ir_m;
-        return std::max<double>(0, 4. * m_eps * (-C_ir_m + C_ir_2m) + m_eps);
+        return std::max<double>(0, 4. * m_eps * (C_ir_2m - C_ir_m) + m_eps);
     }
     // r2 <= r_X2
     // Energy: separation in linear regime.
@@ -101,16 +100,16 @@ double sf_HS_WCA_interaction<exp>::energy(const double r2, const double radius_s
     const double r_H2_ir = r_H2 * ir;
     const double C_ir_m = m_prfac * pos_int_pow<exp>(r_H2_ir);
     const double C_ir_2m = C_ir_m * C_ir_m;
-    const double EX = std::max<double>(0, 4. * m_eps * (-C_ir_m + C_ir_2m) + m_eps);
-    const double GX = (m_eps * (-m_grad_prfac * C_ir_m + m_grad_prfac2 * C_ir_2m) * ir) * (-r_X);
+    const double EX = std::max<double>(0, 4. * m_eps * (C_ir_2m - C_ir_m) + m_eps);
+    const double GX = (m_eps * (m_grad_prfac2 * C_ir_2m - m_grad_prfac * C_ir_m) * ir) * (-r_X);
     return EX + GX * (std::sqrt(r2) - r_X);
 }
 
 template<size_t exp>
 double sf_HS_WCA_interaction<exp>::energy_gradient(const double r2, double *const gij, const double radius_sum) const
 {
-    const double r_S = (1 + m_alpha) * radius_sum;
-    const double r_S2 = pos_int_pow<2>(r_S);
+    const double r_H2 = pos_int_pow<2>(radius_sum);
+    const double r_S2 = m_alpha1_2 * r_H2;
     if (r2 > r_S2) {
         // Energy, gradient: separation larger than soft shell.
         *gij = 0;
@@ -119,7 +118,6 @@ double sf_HS_WCA_interaction<exp>::energy_gradient(const double r2, double *cons
     // r2 <= r_S2: we have to compute the remaining quantities.
     const double r_X = radius_sum + m_delta;
     const double r_X2 = pos_int_pow<2>(r_X);
-    const double r_H2 = pos_int_pow<2>(radius_sum);
     if (__builtin_expect(r2 > r_X2, 1)) {
         // Energy, gradient: separation in fHS-WCA regime.
         const double dr = r2 - r_H2;
@@ -127,8 +125,8 @@ double sf_HS_WCA_interaction<exp>::energy_gradient(const double r2, double *cons
         const double r_H2_ir = r_H2 * ir;
         const double C_ir_m = m_prfac * pos_int_pow<exp>(r_H2_ir);
         const double C_ir_2m = C_ir_m * C_ir_m;
-        *gij = m_eps * (-m_grad_prfac * C_ir_m + m_grad_prfac2 * C_ir_2m) * ir;
-        return std::max<double>(0, 4. * m_eps * (-C_ir_m + C_ir_2m) + m_eps);
+        *gij = m_eps * (m_grad_prfac2 * C_ir_2m - m_grad_prfac * C_ir_m) * ir;
+        return std::max<double>(0, 4. * m_eps * (C_ir_2m - C_ir_m) + m_eps);
     }
     // r2 <= r_X2
     // Energy, gradient: separation in linear regime.
@@ -137,8 +135,8 @@ double sf_HS_WCA_interaction<exp>::energy_gradient(const double r2, double *cons
     const double r_H2_ir = r_H2 * ir;
     const double C_ir_m = m_prfac * pos_int_pow<exp>(r_H2_ir);
     const double C_ir_2m = C_ir_m * C_ir_m;
-    const double EX = std::max<double>(0, 4. * m_eps * (-C_ir_m + C_ir_2m) + m_eps);
-    *gij = m_eps * (-m_grad_prfac * C_ir_m + m_grad_prfac2 * C_ir_2m) * ir;
+    const double EX = std::max<double>(0, 4. * m_eps * (C_ir_2m - C_ir_m) + m_eps);
+    *gij = m_eps * (m_grad_prfac2 * C_ir_2m - m_grad_prfac * C_ir_m) * ir;
     const double GX = *gij * (-r_X);
     return EX + GX * (std::sqrt(r2) - r_X);
 }
@@ -147,8 +145,8 @@ template<size_t exp>
 double sf_HS_WCA_interaction<exp>::energy_gradient_hessian(const double r2, double *const gij,
         double *const hij, const double radius_sum) const
 {
-    const double r_S = (1 + m_alpha) * radius_sum;
-    const double r_S2 = pos_int_pow<2>(r_S);
+    const double r_H2 = pos_int_pow<2>(radius_sum);
+    const double r_S2 = m_alpha1_2 * r_H2;
     if (r2 > r_S2) {
         // Energy, gradient, hessian: separation larger than soft shell.
         *gij = 0;
@@ -158,7 +156,6 @@ double sf_HS_WCA_interaction<exp>::energy_gradient_hessian(const double r2, doub
     // r2 <= r_S2: we have to compute the remaining quantities.
     const double r_X = radius_sum + m_delta;
     const double r_X2 = pos_int_pow<2>(r_X);
-    const double r_H2 = pos_int_pow<2>(radius_sum);
     if (__builtin_expect(r2 > r_X2, 1)) {
         // Energy, gradient, hessian: separation in fHS-WCA regime.
         const double dr = r2 - r_H2;
@@ -166,9 +163,9 @@ double sf_HS_WCA_interaction<exp>::energy_gradient_hessian(const double r2, doub
         const double r_H2_ir = r_H2 * ir;
         const double C_ir_m = m_prfac * pos_int_pow<exp>(r_H2_ir);
         const double C_ir_2m = C_ir_m * C_ir_m;
-        *gij = m_eps * (-m_grad_prfac * C_ir_m + m_grad_prfac2 * C_ir_2m) * ir;
-        *hij = -*gij + m_eps * ( -m_hessian_prfac * C_ir_m + m_hessian_prfac2 * C_ir_2m) * r2 * ir * ir;
-        return std::max<double>(0, 4. * m_eps * (-C_ir_m + C_ir_2m) + m_eps);
+        *gij = m_eps * (m_grad_prfac2 * C_ir_2m - m_grad_prfac * C_ir_m) * ir;
+        *hij = -*gij + m_eps * (m_hessian_prfac2 * C_ir_2m - m_hessian_prfac * C_ir_m) * r2 * ir * ir;
+        return std::max<double>(0, 4. * m_eps * (C_ir_2m - C_ir_m) + m_eps);
     }
     // r2 <= r_X2
     // Energy, gradient, hessian: separation in linear regime.
@@ -177,8 +174,8 @@ double sf_HS_WCA_interaction<exp>::energy_gradient_hessian(const double r2, doub
     const double r_H2_ir = r_H2 * ir;
     const double C_ir_m = m_prfac * pos_int_pow<exp>(r_H2_ir);
     const double C_ir_2m = C_ir_m * C_ir_m;
-    const double EX = std::max<double>(0, 4. * m_eps * (-C_ir_m + C_ir_2m) + m_eps);
-    *gij = m_eps * (-m_grad_prfac * C_ir_m + m_grad_prfac2 * C_ir_2m) * ir;
+    const double EX = std::max<double>(0, 4. * m_eps * (C_ir_2m - C_ir_m) + m_eps);
+    *gij = m_eps * (m_grad_prfac2 * C_ir_2m - m_grad_prfac * C_ir_m) * ir;
     const double GX = *gij * (-r_X);
     *hij = 0;
     return EX + GX * (std::sqrt(r2) - r_X);
