@@ -88,11 +88,21 @@ public:
      */
     void reset()
     {
-        for (auto & subdom_cell_atoms : m_cell_atoms) {
-            for (auto & v : subdom_cell_atoms) {
+        #ifdef _OPENMP
+        #pragma omp parallel
+        {
+            size_t isubdom = omp_get_thread_num();
+            for (auto & v : m_cell_atoms[isubdom]) {
                 v.clear();
             }
         }
+        #else
+        for (size_t isubdom = 0; isubdom < nsubdoms; ++isubdom) {
+            for (auto & v : m_cell_atoms[isubdom]) {
+                v.clear();
+            }
+        }
+        #endif
     }
 
     /**
