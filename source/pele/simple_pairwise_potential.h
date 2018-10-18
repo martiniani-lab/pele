@@ -99,7 +99,6 @@ public:
         const size_t natoms = x.size() / m_ndim;
 
         double max_x = 0;
-        #pragma simd reduction(max : max_x)
         for (size_t atom_i = 0;  atom_i < natoms; ++atom_i) {
             double atom_x = 0;
             #pragma unroll
