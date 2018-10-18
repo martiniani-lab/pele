@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <vector>
-#include <cmath>
 
 #include "pairwise_potential_interface.h"
 #include "array.h"
@@ -110,18 +109,6 @@ public:
         }
         return sqrt(max_x);
     }
-
-    inline double neumaier_sum(
-        double & sum, double & comp, const double input)
-    {
-        double tmp = sum + input;
-        if (std::abs(sum) >= std::abs(input)) {
-            comp += (sum - tmp) + input;
-        } else {
-            comp += (input - tmp) + sum;
-        }
-        sum = tmp;
-    }
 };
 
 template<typename pairwise_interaction, typename distance_policy>
@@ -140,8 +127,6 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
     double e = 0.;
     double gij;
     double dr[m_ndim];
-    double comp_e = 0;
-    Array<double> comp_grad(m_ndim * natoms);
 
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
         const size_t i1 = m_ndim * atom_i;
@@ -155,23 +140,18 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
                 r2 += dr[k]*dr[k];
             }
 
-            double next_e = _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j));
-            neumaier_sum(e, comp_e, next_e);
+            e += _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j));
             if (gij != 0) {
                 #pragma unroll
                 for (size_t k=0; k<m_ndim; ++k) {
                     dr[k] *= gij;
-                    neumaier_sum(grad[i1+k], comp_grad[i1+k], -dr[k]);
-                    neumaier_sum(grad[j1+k], comp_grad[j1+k], dr[k]);
+                    grad[i1+k] -= dr[k];
+                    grad[j1+k] += dr[k];
                 }
             }
         }
     }
-
-    for (size_t i = 0; i < grad.size(); ++i) {
-        grad[i] += comp_grad[i];
-    }
-    return e + comp_e;
+    return e;
 }
 
 template<typename pairwise_interaction, typename distance_policy>
@@ -192,9 +172,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
         throw std::invalid_argument("the Hessian has the wrong size");
     }
 
-    double e = 0, comp_e = 0;
-    Array<double> comp_grad(m_ndim * natoms);
-
+    double e = 0.;
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
         size_t i1 = m_ndim * atom_i;
         for (size_t atom_j=0; atom_j<atom_i; ++atom_j){
@@ -207,15 +185,13 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
                 r2 += dr[k]*dr[k];
             }
 
-            double next_e = _interaction->energy_gradient_hessian(r2, &gij, &hij, sum_radii(atom_i, atom_j));
-            neumaier_sum(e, comp_e, next_e);
+            e += _interaction->energy_gradient_hessian(r2, &gij, &hij, sum_radii(atom_i, atom_j));
 
             if (gij != 0) {
                 #pragma unroll
                 for (size_t k=0; k<m_ndim; ++k) {
-                    double tmp = dr[k] * gij;
-                    neumaier_sum(grad[i1+k], comp_grad[i1+k], -tmp);
-                    neumaier_sum(grad[j1+k], comp_grad[j1+k], tmp);
+                    grad[i1+k] -= gij * dr[k];
+                    grad[j1+k] += gij * dr[k];
                 }
             }
 
@@ -249,11 +225,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
             }
         }
     }
-
-    for (size_t i = 0; i < grad.size(); ++i) {
-        grad[i] += comp_grad[i];
-    }
-    return e + comp_e;
+    return e;
 }
 
 template<typename pairwise_interaction, typename distance_policy>
@@ -263,7 +235,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ge
     if (m_ndim * natoms != x.size()) {
         throw std::runtime_error("x.size() is not divisible by the number of dimensions");
     }
-    double e = 0, comp_e = 0;
+    double e=0.;
     double dr[m_ndim];
 
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
@@ -278,11 +250,10 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ge
                 r2 += dr[k]*dr[k];
             }
 
-            double next_e = _interaction->energy(r2, sum_radii(atom_i, atom_j));
-            neumaier_sum(e, comp_e, next_e);
+            e += _interaction->energy(r2, sum_radii(atom_i, atom_j));
         }
     }
-    return e + comp_e;
+    return e;
 }
 
 template<typename pairwise_interaction, typename distance_policy>
