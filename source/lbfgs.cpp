@@ -19,7 +19,7 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       gold(x_.size()),
       step(x_.size())
 {
-    // set the precision of the printing
+    // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
 
     inv_sqrt_size = 1 / sqrt(x_.size());
