@@ -812,7 +812,7 @@ CellLists<distance_policy>::CellLists(
     }
     #endif
     size_t ncell_min = *std::min_element(m_lattice_tool.m_ncells_vec.begin(), m_lattice_tool.m_ncells_vec.end());
-    if (ncell_min < 5) {
+    if ((m_ndim == 2 && ncell_min <= 4) || (m_ndim == 3 && ncell_min <= 3)) {
         // If there are only a few cells in any direction then it doesn't make sense to use cell lists
         // because so many cells will be neighbors with each other.
         // It would be better to use simple loops over atom pairs.
