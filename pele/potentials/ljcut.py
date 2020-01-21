@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from past.utils import old_div
 import numpy as np
 
-from . import fortran.ljcut as _ljcut
+from .fortran import ljcut as _ljcut
 from pele.potentials.potential import BasePotentialAtomistic
 
 __all__ = ["LJCut"]

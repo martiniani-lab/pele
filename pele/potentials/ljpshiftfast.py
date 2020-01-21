@@ -2,7 +2,7 @@ from __future__ import division
 from __future__ import absolute_import
 from builtins import object
 from past.utils import old_div
-from . import fortran.ljpshiftfort as ljpshiftfort
+from .fortran import ljpshiftfort as ljpshiftfort
 
 from pele.potentials import BasePotential
 

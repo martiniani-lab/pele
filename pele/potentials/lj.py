@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import numpy as np
 
 from pele.potentials import BasePotential
-from . import fortran.lj as ljf
+from .fortran import lj as ljf
 
 
 __all__ = ["LJ"]
