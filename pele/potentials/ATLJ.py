@@ -1,8 +1,13 @@
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
+from past.utils import old_div
 import numpy as np
 
 from pele.potentials import LJ
 from pele.potentials import BasePotential
-import fortran.AT as ATfort
+from . import fortran.AT as ATfort
 
 __all__ = ["ATLJ"]
 
@@ -28,7 +33,7 @@ class ATLJ(BasePotential):
     def getEnergySlow(self, coords):
         Elj = self.lj.getEnergy(coords)
 
-        natoms = coords.size / 3
+        natoms = old_div(coords.size, 3)
         X = np.reshape(coords, [natoms, 3])
         Z = self.Z
         energy = 0.
@@ -41,11 +46,10 @@ class ATLJ(BasePotential):
                     rij = np.linalg.norm(drij)
                     rik = np.linalg.norm(drik)
                     rjk = np.linalg.norm(drjk)
-                    energy += (Z * (1. + 3. *
+                    energy += (old_div(Z * (1. + 3. *
                                     np.dot(drij, -drjk) *
                                     np.dot(-drij, -drik) *
-                                    np.dot(drik, drjk) / (rij * rik * rjk) ** 2)
-                               / (rij * rik * rjk) ** 3 )
+                                    np.dot(drik, drjk) / (rij * rik * rjk) ** 2), (rij * rik * rjk) ** 3) )
         energy += Elj
         return energy
 
@@ -79,19 +83,19 @@ def testing():  # pragma: no cover
     lj = ATLJ(Z=1.)
 
     E = lj.getEnergy(coords)
-    print "E", E
+    print("E", E)
     E, V = lj.getEnergyGradient(coords)
-    print "E", E
-    print "V"
-    print V
+    print("E", E)
+    print("V")
+    print(V)
 
-    print "try a quench"
+    print("try a quench")
     from pele.optimize import mylbfgs as quench
 
     ret = quench(coords, lj, iprint=-1)
-    print "energy ", ret.energy
-    print "rms gradient", ret.rms
-    print "number of function calls", ret.nfev
+    print("energy ", ret.energy)
+    print("rms gradient", ret.rms)
+    print("number of function calls", ret.nfev)
 
     from pele.utils.xyz import write_xyz
 
@@ -101,7 +105,7 @@ def testing():  # pragma: no cover
         ret = quench(coords, lj.getEnergyGradient, iprint=-1)
         coords = ret.coords
         X = np.reshape(coords, [natoms, 3])
-        com = X.sum(0) / natoms
+        com = old_div(X.sum(0), natoms)
         X[:, :] -= com[np.newaxis, :]
         printlist.append(np.reshape(X, natoms * 3))
 

@@ -1,5 +1,10 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import copy
-from itertools import izip
+
 from collections import deque
 
 import numpy as np
@@ -178,7 +183,7 @@ class DGTree(Tree):
         tset = set()
         for tree in self.get_all_trees():
             if tree in tset:
-                print "tree is touched twice"
+                print("tree is touched twice")
                 return False
             tset.add(tree)
         return True
@@ -186,7 +191,7 @@ class DGTree(Tree):
 
 class UnionFind(nx.utils.UnionFind):
     def groups_iter(self):
-        return (c for c, c1 in self.parents.iteritems() if c == c1)
+        return (c for c, c1 in self.parents.items() if c == c1)
 
 
 class _MakeTree(object):
@@ -247,7 +252,7 @@ class _MakeTree(object):
     def make_tree(self):
         """make the disconnectivity tree"""
         # make list of transition states sorted so that lower energies are to the right
-        tslist = filter(lambda ts: ts.minimum1 != ts.minimum2, self.transition_states)
+        tslist = [ts for ts in self.transition_states if ts.minimum1 != ts.minimum2]
         # remove duplicate entries and sort
         tslist = list(set(tslist))
         tslist.sort(key=lambda ts: -self.get_energy(ts))
@@ -274,7 +279,7 @@ class _MakeTree(object):
 
         if False:
             res = self.tree._test_tree()
-            print "tree test result", res
+            print("tree test result", res)
 
         return self.tree
 
@@ -328,7 +333,7 @@ class _MakeTree(object):
             parent = color_to_tree[c]
             if tree.number_of_branches() == 1:
                 # remove linear parentage.
-                subtree = iter(tree.subtrees).next()
+                subtree = next(iter(tree.subtrees))
                 parent.add_branch(subtree)
             else:
                 parent.add_branch(tree)
@@ -364,7 +369,7 @@ class ColorDGraphByGroups(object):
         # set the colors
         self._minimum_to_color = dict()
         self.color_list = self.get_list_of_colors(len(groups), colors=colors)
-        for color, group in izip(self.color_list, groups):
+        for color, group in zip(self.color_list, groups):
             for minimum in group:
                 self._minimum_to_color[minimum] = color
         self._tree_to_colors = dict()
@@ -394,8 +399,8 @@ class ColorDGraphByGroups(object):
         try:
             import brewer2mpl
         except ImportError:
-            print "could not import brewer2mpl."
-            print "install package brewer2mpl for a nicer color scheme"
+            print("could not import brewer2mpl.")
+            print("install package brewer2mpl for a nicer color scheme")
             return self.get_list_of_colors_mpl(number)
         if number <= 12:
             bnumber = max(3, number)
@@ -492,7 +497,7 @@ class ColorDGraphByValue(object):
         if normalize_values:
             values = [self.minimum_to_value(leaf.data["minimum"])
                       for leaf in self.tree_graph.leaf_iterator()]
-            values = filter(lambda v: v is not None, values)
+            values = [v for v in values if v is not None]
             self.maxval = max(values)
             self.minval = min(values)
         else:
@@ -509,7 +514,7 @@ class ColorDGraphByValue(object):
         if self.minval is None:
             vnorm = value
         else:
-            vnorm = (value - self.minval) / (self.maxval - self.minval)
+            vnorm = old_div((value - self.minval), (self.maxval - self.minval))
         return self.colormap(vnorm)
 
     def tree_get_value(self, tree):
@@ -684,7 +689,7 @@ class DisconnectivityGraph(object):
     def _make_tree(self, graph, energy_levels):
         """make the disconnectivity graph tree
         """
-        transition_states = nx.get_edge_attributes(graph, "ts").values()
+        transition_states = list(nx.get_edge_attributes(graph, "ts").values())
         minima = graph.nodes()
         maketree = _MakeTree(minima, transition_states, energy_levels,
                              get_energy=self._getEnergy)
@@ -867,7 +872,7 @@ class DisconnectivityGraph(object):
                 # change the x position so that the angle of the line
                 # doesn't change
                 if not "_x_updated" in tree.data:
-                    dxdy = (xself - xparent) / eoffset
+                    dxdy = old_div((xself - xparent), eoffset)
                     xself = dxdy * (yparent - yself) + xparent
                     tree.data['x'] = xself
                     tree.data["_x_updated"] = True
@@ -878,7 +883,7 @@ class DisconnectivityGraph(object):
             #                print "coloring vertical line", tree
 
             # draw the diagonal line
-            if not tree.parent.data.has_key("children_not_connected"):
+            if "children_not_connected" not in tree.parent.data:
                 line_segments.append(([xself, xparent], [yhigh, yparent]))
                 line_colours.append(color)
 
@@ -918,8 +923,8 @@ class DisconnectivityGraph(object):
         if len(rmlist) > 0:
             if self.gmin0 is not None:
                 if self.gmin0 in rmlist:
-                    print "global minimum has", graph.degree(self.gmin0), "edges, not showing in graph"
-            print "removing", len(rmlist), "minima from graph with fewer than", nmin, "edges"
+                    print("global minimum has", graph.degree(self.gmin0), "edges, not showing in graph")
+            print("removing", len(rmlist), "minima from graph with fewer than", nmin, "edges")
             for n in rmlist:
                 graph.remove_node(n)
         return graph
@@ -929,7 +934,7 @@ class DisconnectivityGraph(object):
         if emax is None: return graph
         rmlist = [m for m in graph.nodes() if self._getEnergy(m) > emax]
         if len(rmlist) > 0:
-            print "removing %d nodes with energy higher than" % len(rmlist), emax
+            print("removing %d nodes with energy higher than" % len(rmlist), emax)
         for m in rmlist:
             graph.remove_node(m)
         return graph
@@ -939,7 +944,7 @@ class DisconnectivityGraph(object):
         rmlist = [edge for edge in graph.edges() \
                   if self._getEnergy(self._getTS(edge[0], edge[1])) > emax]
         if len(rmlist) > 0:
-            print "removing %d edges with energy higher than" % len(rmlist), emax
+            print("removing %d edges with energy higher than" % len(rmlist), emax)
         for edge in rmlist:
             graph.remove_edge(edge[0], edge[1])
         return graph
@@ -955,7 +960,7 @@ class DisconnectivityGraph(object):
                 if len(nodes) > 2:
                     used_nodes += nodes
                 else:
-                    print "dgraph: too few nodes connected to", min0  
+                    print("dgraph: too few nodes connected to", min0)  
         if len(used_nodes) == 0: 
             # use the biggest connected cluster
             cc = sorted(nx.connected_components(graph), key=len, reverse=True)
@@ -1015,7 +1020,7 @@ class DisconnectivityGraph(object):
             emax = max(elist)
         else:
             emax = self.Emax
-        de = (emax - emin) / (self.nlevels - 1)
+        de = old_div((emax - emin), (self.nlevels - 1))
         # the upper edge of the bins
         elower = [emin + de * i for i in range(self.nlevels)]
         # elevels = elower.append(emin + de * self.nlevels)
@@ -1138,7 +1143,7 @@ class DisconnectivityGraph(object):
             kwargs["marker"] = "o"
 
         xpos, minlist = self.get_minima_layout()
-        m2dist = dict((izip(minlist, xpos)))
+        m2dist = dict((zip(minlist, xpos)))
 
         minima = list(minima)
         xpos = [m2dist[m] for m in minima]
@@ -1241,10 +1246,9 @@ class DisconnectivityGraph(object):
             try:
                 ax = self.axes
             except AttributeError:
-                print "you must call plot() before label_minima()"
+                print("you must call plot() before label_minima()")
                 raise
-        leaves = filter(lambda leaf: leaf.data["minimum"] in minima_labels,
-                        self.tree_graph.leaf_iterator())
+        leaves = [leaf for leaf in self.tree_graph.leaf_iterator() if leaf.data["minimum"] in minima_labels]
         xpos = [leaf.data["x"] for leaf in leaves]
         labels = [minima_labels[leaf.data["minimum"]] for leaf in leaves]
         ax.set_xticks(xpos)

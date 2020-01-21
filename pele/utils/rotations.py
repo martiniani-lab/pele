@@ -29,6 +29,9 @@ Warning, they have not all been tested in this format.
     q_slerp
 
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import numpy as np
 from pele.utils._cpp_utils import rotate_aa, mx2aa, aa2q, aa2mx, \
     rot_mat_derivatives
@@ -67,13 +70,13 @@ def q2aa(qin):
     if s < rot_epsilon:
         p = 2. * q[1:4]
     else:
-        p = q[1:4] / s * theta
+        p = old_div(q[1:4], s * theta)
     return p
 
 
 def q2mx(qin):
     """quaternion to rotation matrix"""
-    Q = qin / np.linalg.norm(qin)
+    Q = old_div(qin, np.linalg.norm(qin))
     RMX = np.zeros([3, 3], np.float64)
     Q2Q3 = Q[1] * Q[2]
     Q1Q4 = Q[0] * Q[3]
@@ -107,26 +110,26 @@ def mx2q(mi):
     if trace > 0.:
         s = np.sqrt(trace + 1.0) * 2.0
         q[0] = 0.25 * s
-        q[1] = (m[1, 2] - m[2, 1]) / s
-        q[2] = (m[2, 0] - m[0, 2]) / s
-        q[3] = (m[0, 1] - m[1, 0]) / s
+        q[1] = old_div((m[1, 2] - m[2, 1]), s)
+        q[2] = old_div((m[2, 0] - m[0, 2]), s)
+        q[3] = old_div((m[0, 1] - m[1, 0]), s)
     elif (m[0, 0] > m[1, 1]) and (m[0, 0] > m[2, 2]):
         s = np.sqrt(1.0 + m[0, 0] - m[1, 1] - m[2, 2]) * 2.0
-        q[0] = (m[1, 2] - m[2, 1]) / s
+        q[0] = old_div((m[1, 2] - m[2, 1]), s)
         q[1] = 0.25 * s
-        q[2] = (m[1, 0] + m[0, 1]) / s
-        q[3] = (m[2, 0] + m[0, 2]) / s
+        q[2] = old_div((m[1, 0] + m[0, 1]), s)
+        q[3] = old_div((m[2, 0] + m[0, 2]), s)
     elif m[1, 1] > m[2, 2]:
         s = np.sqrt(1.0 + m[1, 1] - m[0, 0] - m[2, 2]) * 2.0
-        q[0] = (m[2, 0] - m[0, 2]) / s
-        q[1] = (m[1, 0] + m[0, 1]) / s
+        q[0] = old_div((m[2, 0] - m[0, 2]), s)
+        q[1] = old_div((m[1, 0] + m[0, 1]), s)
         q[2] = 0.25 * s
-        q[3] = (m[2, 1] + m[1, 2]) / s
+        q[3] = old_div((m[2, 1] + m[1, 2]), s)
     else:
         s = np.sqrt(1.0 + m[2, 2] - m[0, 0] - m[1, 1]) * 2.0
-        q[0] = (m[0, 1] - m[1, 0]) / s
-        q[1] = (m[2, 0] + m[0, 2]) / s
-        q[2] = (m[2, 1] + m[1, 2]) / s
+        q[0] = old_div((m[0, 1] - m[1, 0]), s)
+        q[1] = old_div((m[2, 0] + m[0, 2]), s)
+        q[2] = old_div((m[2, 1] + m[1, 2]), s)
         q[3] = 0.25 * s
 
     if q[0] < 0:
@@ -270,7 +273,7 @@ def q_slerp(a, b, t):
 
     theta = np.arccos(costheta)
 
-    return (np.sin((1.0 - t) * theta) * a + np.sin(t * theta) * c) / np.sin(theta)
+    return old_div((np.sin((1.0 - t) * theta) * a + np.sin(t * theta) * c), np.sin(theta))
 
 
 #

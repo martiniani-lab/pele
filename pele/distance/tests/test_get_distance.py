@@ -1,4 +1,6 @@
 from __future__ import division
+from builtins import zip
+from builtins import range
 import unittest
 import numpy as np
 from pele.distance import get_distance, Distance
@@ -41,7 +43,7 @@ class TestGetDistance(unittest.TestCase):
 
     # Method for manually calculating the distance
     def _distance (self, coord1, coord2, ndim, use_leesedwards=False, shear=0.):
-        return [self._distance_1d(coord1, coord2, dim, use_leesedwards, shear) for dim in xrange(ndim)]
+        return [self._distance_1d(coord1, coord2, dim, use_leesedwards, shear) for dim in range(ndim)]
 
 
     def setUp(self):

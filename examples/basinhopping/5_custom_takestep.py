@@ -2,6 +2,8 @@
 Example 5: Adding a custom takestep routine.  This example
 takes 100 monte carlo steps as one basin hopping step
 """
+from __future__ import print_function
+from builtins import object
 from pele.systems import LJCluster
 from pele.takestep import RandomDisplacement
 from pele.mc import MonteCarlo
@@ -38,5 +40,5 @@ step = TakeStepMonteCarlo(potential)
 
 bh = system.get_basinhopping(database=db, takestep=step)
 bh.run(niter)
-print "the lowest energy found after", niter, " basinhopping steps is", db.minima()[0].energy
-print ""
+print("the lowest energy found after", niter, " basinhopping steps is", db.minima()[0].energy)
+print("")

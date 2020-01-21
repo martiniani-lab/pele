@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from past.utils import old_div
+from builtins import object
 import numpy as np
 
 from pele.transition_states import FindLowestEigenVector
@@ -187,9 +191,9 @@ def compare_HEF(x0, evec0, system, **kwargs):  # pragma: no cover
 
     pot = PotWrapper(system.get_potential())
     ret = findTransitionState(x0, pot, eigenvec0=evec0, orthogZeroEigs=None, **kwargs)
-    print ret.eigenval
-    print pot.nfev
-    print ret.rms
+    print(ret.eigenval)
+    print(pot.nfev)
+    print(ret.rms)
 
 
 def get_x0():  # pragma: no cover
@@ -206,7 +210,7 @@ def get_x0():  # pragma: no cover
     m1, m2 = db.minima()[:4]
     d, x1, x2 = mindist(m1.coords, m2.coords)
 
-    x0 = (x1 + x2) / 2
+    x0 = old_div((x1 + x2), 2)
     evec0 = x2 - x1
 
     return system, x0, evec0
@@ -223,11 +227,11 @@ def test():  # pragma: no cover
     )
     ret = dimer.run()
 
-    print "eigenvalue", ret.eigenval
-    print "function evaluations", ret.nfev
-    print "rms", ret.rms
+    print("eigenvalue", ret.eigenval)
+    print("function evaluations", ret.nfev)
+    print("rms", ret.rms)
 
-    print "\n\nnow with hybrid eigenvector following"
+    print("\n\nnow with hybrid eigenvector following")
     compare_HEF(x0, evec0, system, nsteps_tangent1=5, nsteps_tangent2=5,
                 lowestEigenvectorQuenchParams={"nsteps": 20, "tol": 1e-4}, iprint=10)
 

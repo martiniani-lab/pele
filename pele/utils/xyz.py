@@ -9,7 +9,11 @@ tools for reading from and writing to .xyz files
     read_xyz
     write_xyz
 """
+from __future__ import division
 
+from builtins import zip
+from builtins import map
+from past.utils import old_div
 import numpy as np
 from itertools import cycle
 from collections import namedtuple
@@ -43,7 +47,7 @@ def read_xyz(fin):
     for x in coords:
         line = fin.readline().split()
         atomtypes.append(line[0])
-        x[:] = map(float, line[1:4])
+        x[:] = list(map(float, line[1:4]))
 
     return namedtuple("XYZFile", ["coords", "title", "atomtypes"]) \
         (coords, title, atomtypes)
@@ -75,7 +79,7 @@ def write_xyz(fout, coords, title="", atomtypes=("A",)):
     read_xyz
 
     """
-    fout.write("%d\n%s\n" % (coords.size / 3, title))
+    fout.write("%d\n%s\n" % (old_div(coords.size, 3), title))
     for x, atomtype in zip(coords.reshape(-1, 3), cycle(atomtypes)):
         fout.write("%s %.18g %.18g %.18g\n" % (atomtype, x[0], x[1], x[2]))
  

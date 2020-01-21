@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+from past.utils import old_div
 import unittest
 import numpy as np
 from pele.potentials import LJ, ATLJ
@@ -35,13 +38,13 @@ class TestATLJ(unittest.TestCase):
 
         e, Gf = atlj.getEnergyGradientFortran(coords)
         Gn = atlj.NumericalDerivative(coords)
-        print Gf
-        print Gn
+        print(Gf)
+        print(Gn)
         maxdiff = np.max(np.abs(Gf - Gn))
-        maxnorm = np.max(np.abs(Gf + Gn)) / 2
-        maxrel = np.max(np.abs((Gf - Gn) / (Gf + Gn) * 2.))
-        print "maximum relative difference in gradients", maxdiff, maxdiff / maxnorm
-        self.assertTrue(maxdiff / maxnorm < 1e-4, "ATLJ: gradient differs from numerical gradient by %g" % maxdiff)
+        maxnorm = old_div(np.max(np.abs(Gf + Gn)), 2)
+        maxrel = np.max(np.abs(old_div((Gf - Gn), (Gf + Gn) * 2.)))
+        print("maximum relative difference in gradients", maxdiff, old_div(maxdiff, maxnorm))
+        self.assertTrue(old_div(maxdiff, maxnorm) < 1e-4, "ATLJ: gradient differs from numerical gradient by %g" % maxdiff)
 
 
 if __name__ == "__main__":

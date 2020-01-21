@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 import numpy as np
 
 from pele.potentials import BasePotential
@@ -16,8 +20,8 @@ def makeplot2d(f, nx=100, xmin=None, xmax=None, zlim=None, show=True):  # pragma
     if xmax is None:
         xmax = f.xmax[:2]
     xmax, ymax = xmax
-    x = np.arange(xmin, xmax, (xmax - xmin) / nx)
-    y = np.arange(ymin, ymax, (ymax - ymin) / ny)
+    x = np.arange(xmin, xmax, old_div((xmax - xmin), nx))
+    y = np.arange(ymin, ymax, old_div((ymax - ymin), ny))
     X, Y = np.meshgrid(x, y)
     Z = np.zeros(X.shape)
     for i in range(x.size):
@@ -83,7 +87,7 @@ def add_minimizer(pot, ax, minimizer, x0, **kwargs):  # pragma: no cover
 
     def cb(coords=None, energy=None, rms=None, **kwargs):
         xcb.append(coords.copy())
-        print "energy", energy, rms
+        print("energy", energy, rms)
 
     minimizer(x0, pot, events=[cb], **kwargs)
     xcb = np.array(xcb)
@@ -116,7 +120,7 @@ def test1():  # pragma: no cover
     s = BealeSystem()
     f = s.get_potential()
     f.test_potential(f.target_coords)
-    print ""
+    print("")
     f.test_potential(s.get_random_configuration())
     f.test_potential(np.array([1., 1.]))  # , print_grads=True)
 

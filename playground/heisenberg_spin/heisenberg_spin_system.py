@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 import numpy as np
 
 from pele.potentials import HeisenbergModelRA, HeisenbergModel
@@ -21,21 +25,21 @@ def interpolate_spin(v1, v2, t):
     vx = np.cross(v2, v1)
     theta = np.arccos(np.dot(v1, v2))
     theta *= (1.0 - t)
-    aa = theta * vx / np.linalg.norm(vx)
+    aa = old_div(theta * vx, np.linalg.norm(vx))
     mx = rotations.aa2mx(aa)
     v3 = np.dot(mx, v2)
-    return v3 / np.linalg.norm(v3)
+    return old_div(v3, np.linalg.norm(v3))
 
 def interpolate_spins(initial, final, t, i3=None, f3=None):
     if i3 is None:
         i3 = hs.coords2ToCoords3(initial)
     if f3 is None:
         f3 = hs.coords2ToCoords3(final)
-    nspins = i3.size / 3
+    nspins = old_div(i3.size, 3)
     i3 = i3.reshape([-1,3])
     f3 = f3.reshape([-1,3])
     xnew = np.zeros(i3.shape)
-    for i in xrange(nspins):
+    for i in range(nspins):
         xnew[i,:] = interpolate_spin(i3[i,:], f3[i,:], t)
     return hs.coords3ToCoords2(xnew.reshape(-1)).reshape(-1)
 
@@ -80,7 +84,7 @@ def spin3d_mindist_norot(xa, xb):
     # get an array of the dot product between the spins
     dots = np.sum(sa * sb, axis=1)
     angles = np.arccos(dots)
-    dist = angles.sum() / np.pi
+    dist = old_div(angles.sum(), np.pi)
 #    dist = np.linalg.norm(sb - sa)
     return dist, xa, xb
 
@@ -103,7 +107,7 @@ def spin3d_distance(xa, xb, distance=True, grad=True):
     from pele.angleaxis import _aadist
     dist, temp1, temp2 = spin3d_mindist_norot(xa, xb)
     S = np.eye(3)
-    print "THIS IS WHAT I WAS DOING BEFORE I WENT TO THE PUB"
+    print("THIS IS WHAT I WAS DOING BEFORE I WENT TO THE PUB")
     xa = normalize_2dspins(xa)
     xb = normalize_2dspins(xb)
     grad = xa - xb
@@ -201,7 +205,7 @@ class HeisenbergSystem(BaseSystem):
             coords = self.coords_converter.get_full_coords(coords)
         d = .4
         r = .04
-        nspins = coords.size / 2
+        nspins = old_div(coords.size, 2)
         com = sum(self.node2xyz(node) for node in self.pot.G.nodes())
         com /= nspins
         coords = coords.reshape([-1,2])
@@ -242,8 +246,8 @@ def test_eigs():
     ret = findLowestEigenVector(x, pot, orthogZeroEigs=None)
     hess = pot.getHessian(x)
     freq, modes = normalmodes(hess, metric=None)
-    print "lowest eig from hess", freq[0]
-    print "lowest eig from RR  ", ret.eigenval
+    print("lowest eig from hess", freq[0])
+    print("lowest eig from RR  ", ret.eigenval)
     
 
 def test_pot():
@@ -253,27 +257,27 @@ def test_pot():
     pot = system.get_potential()
     x = system.get_random_configuration()
     opt = system.get_minimizer(iprint=1)
-    print opt
+    print(opt)
     from pele.optimize import lbfgs_py as optimizer
     from pele.optimize import lbfgs_cpp as optimizer
     from pele.optimize import mylbfgs as optimizer
     opt = lambda coords: optimizer(coords, system.get_potential(), iprint=1)
     ret = opt(x)
     xnew = ret.coords
-    print ret.energy
-    print ret.grad
-    print ret
+    print(ret.energy)
+    print(ret.grad)
+    print(ret)
 #    print ret.coords
-    print "computed grad", pot.getGradient(xnew)
+    print("computed grad", pot.getGradient(xnew))
     
     
     pot.test_potential(xnew)
     
         
 if __name__ == "__main__":
-    print np.arccos(-.99)
-    print np.arccos(0.99)
-    print np.arccos(0.0)
+    print(np.arccos(-.99))
+    print(np.arccos(0.99))
+    print(np.arccos(0.0))
     np.random.seed(0)
 #    test_pot()
 #    test_eigs()

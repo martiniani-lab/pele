@@ -1,3 +1,8 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import numpy as np
 
 from pele.rates._rate_calculations import GraphReduction
@@ -16,10 +21,10 @@ def weighted_pick(weights):
     """
     if len(weights) == 0:
         raise ValueError("weights must not have zero length")
-    r = np.random.uniform(0., sum(weights.itervalues()))
+    r = np.random.uniform(0., sum(weights.values()))
     s = 0.0
 #    print r, len(weights)    
-    for u, w in weights.iteritems():
+    for u, w in weights.items():
         s += w
         if r < s: return u
     return u
@@ -79,14 +84,14 @@ class KineticMonteCarlo(object):
             total_time += time
             niter += 1
             if niter >= maxiter:
-                print "KMC: error: first_passage maxiter reached"
+                print("KMC: error: first_passage maxiter reached")
             
         
         if self.debug:
-            print path[0],
+            print(path[0], end=' ')
             for u in path[1:]:
-                print "->", u,
-            print ""
+                print("->", u, end=' ')
+            print("")
         
         return total_time, niter
             
@@ -95,7 +100,7 @@ class KineticMonteCarlo(object):
         """compute the mean first passage time from node a to nodes B
         """
         tavg = 0.
-        for i in xrange(niter):
+        for i in range(niter):
             time, count = self.first_passage(a, B)
     #        print time
             tavg += time
@@ -128,7 +133,7 @@ class KineticMonteCarlo(object):
             return np.mean(1./mfpt)
         else:
             weights = np.array([weights[a] for a in A])
-            return np.sum(weights / mfpt) / weights.sum()
+            return old_div(np.sum(old_div(weights, mfpt)), weights.sum())
 
     def committor(self, x, A, B, maxiter=100000):
         """starting from x return True if the trajectory ends up B before it enters A
@@ -154,7 +159,7 @@ class KineticMonteCarlo(object):
     
     def committor_probability(self, x, A, B, niter=1000):
         nB = 0
-        for i in xrange(niter):
+        for i in range(niter):
             result = self.committor(x, A, B)
             if result:
                 nB += 1

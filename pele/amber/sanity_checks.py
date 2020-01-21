@@ -8,23 +8,28 @@ top   : open mm topology object created from prmtop file as
         prmtop = AmberPrmtopFile('../../examples/amber/coords.prmtop')
         top = prmtop.topology  
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
+from past.utils import old_div
+from builtins import object
 import numpy as np
 
 __all__ = ["sanity_check"]
 
 
-class sanity_check():
+class sanity_check(object):
     def __init__(self, top):
 
         """
         top = OpenMM topology
 
         """
-        print 'in sanity check init'
+        print('in sanity check init')
         self.topology = top
 
-        import measure
+        from . import measure
 
         self.measure = measure.Measure()
 
@@ -62,9 +67,9 @@ class sanity_check():
             if listofO.__contains__(i + 1) and listofN.__contains__(i + 2) and listofH.__contains__(i + 3):
                 self.peptideBondAtoms.append([i, i + 1, i + 2, i + 3])
 
-        print '\nPeptide bond atom numbers (C,O,N,H, in order):  '
+        print('\nPeptide bond atom numbers (C,O,N,H, in order):  ')
         for i in self.peptideBondAtoms:
-            print i
+            print(i)
 
     def populate_CAneighborList(self):
         listofCA = []
@@ -122,9 +127,9 @@ class sanity_check():
             self.CAneighborList.append(nn)
 
             # atoms numbers start at 0
-        print '\nCA neighbors atom numbers (CA,C(=O),CB, N, in order):  '
+        print('\nCA neighbors atom numbers (CA,C(=O),CB, N, in order):  ')
         for i in self.CAneighborList:
-            print i
+            print(i)
 
     def check_cistrans(self, coords):
         """ 
@@ -207,21 +212,21 @@ if __name__ == "__main__":
 
     pdb = openmmpdbReader.PDBFile('../../examples/amber/coords.pdb')  # todo: coords.pdb is hardcoded 
 
-    coords = pdb.getPositions() / openmm_angstrom
+    coords = old_div(pdb.getPositions(), openmm_angstrom)
     coords = np.reshape(np.transpose(coords), 3 * len(coords), 1)
 
     # test 
     if scheck.check_CAchirality(coords):
-        print '\nCA chirality test passed (all L)'
+        print('\nCA chirality test passed (all L)')
     else:
-        print '\nCA chirality test passed (atleast one D-amino acid)'
+        print('\nCA chirality test passed (atleast one D-amino acid)')
 
     if scheck.check_cistrans(coords):
-        print '\npeptide cis-trans test passed (all trans)'
+        print('\npeptide cis-trans test passed (all trans)')
     else:
-        print '\npeptide cis-trans test failed (atleast one cis)'
+        print('\npeptide cis-trans test failed (atleast one cis)')
 
-    import coords2pdb
+    from . import coords2pdb
 
     coords2pdb.coords2pdb(coords, prmtop.topology, 'temp.pdb')
     

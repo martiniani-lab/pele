@@ -65,6 +65,7 @@ You can access other attributes of the :class:`.Minimum` as `minimum.coords` in 
 
 
 """
+from __future__ import print_function
 def bh_with_system_class():
     from pele.systems import LJCluster
     natoms = 17
@@ -92,7 +93,7 @@ def bh_no_system_class():
     bh.run(10)
     
     for m in database.minima():
-        print m.energy
+        print(m.energy)
 
 if __name__ == "__main__":
     bh_no_system_class()

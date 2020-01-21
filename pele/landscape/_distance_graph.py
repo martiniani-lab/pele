@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 import networkx as nx
 import logging
 
@@ -208,7 +210,7 @@ class _DistanceGraph(object):
         rebuild the graph with min2 deleted and 
         everything pointing to min1 pointing to min2 instead
         """
-        for m, data in self.Gdist[min2].iteritems():
+        for m, data in self.Gdist[min2].items():
             if m == min1:
                 continue
             # if not self.Gdist.has_edge(min1, m):

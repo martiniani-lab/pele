@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import potentials.potential
 import numpy as np
 import pele
@@ -23,7 +26,7 @@ class PatchyParticle(potentials.potential.potential):
 
         # transform gradient to reduced units
         m = self.getLatticeMatrix(coords)        
-        natoms = (coords.size - 3)/6
+        natoms = old_div((coords.size - 3),6)
         grad[0:3*natoms] = np.dot(grad[0:3*natoms].reshape([natoms,3]), m).reshape(3*natoms)
 
 # the lower part would calculate numerical lattice gradient        
@@ -63,7 +66,7 @@ class PatchyParticle(potentials.potential.potential):
         
     # to to reduced coordinates
     def toReduced(self, coords):
-        natoms = (coords.size - 3)/6
+        natoms = old_div((coords.size - 3),6)
         m = self.getInverseLatticeMatrix(coords)
         x = coords.copy()
         x[0:3*natoms] = np.dot(coords[0:3*natoms].reshape([natoms,3]), m).reshape(3*natoms)
@@ -72,7 +75,7 @@ class PatchyParticle(potentials.potential.potential):
     
     # go to real cartesian coordinates
     def toReal(self, coords):
-        natoms = (coords.size - 3)/6
+        natoms = old_div((coords.size - 3),6)
         m = self.getLatticeMatrix(coords)
         x = coords.copy()
         x[0:3*natoms] = np.dot(coords[0:3*natoms].reshape([natoms,3]), m).reshape(3*natoms)
@@ -85,7 +88,7 @@ def steep(coords, pot):
     work = coords.copy()
     Elast = pot(work)
     step=0.0001  
-    for i in xrange(10000):        
+    for i in range(10000):        
         nsteps=i
         E,grad = pot(work)
         

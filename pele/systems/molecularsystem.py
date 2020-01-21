@@ -1,3 +1,4 @@
+from builtins import object
 from pele.systems import BaseSystem
 
 

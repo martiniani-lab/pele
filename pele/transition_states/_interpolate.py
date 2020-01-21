@@ -1,6 +1,8 @@
 """
 tool for creating interpolated paths as input to NEB
 """
+from __future__ import print_function
+from builtins import object
 import numpy as np
 
 from pele.mindist import MeasureAtomicCluster
@@ -127,7 +129,7 @@ class InterpolatedPath(object):
         def __iter__(self):
             return self
 
-        def next(self):
+        def __next__(self):
             if self.index == self.path.nimages - 1:
                 raise StopIteration
             self.index += 1
@@ -139,10 +141,10 @@ class InterpolatedPath(object):
 
 if __name__ == "__main__":
     path = InterpolatedPath(0., 1., 10)
-    print len(path)
-    print path[5]
+    print(len(path))
+    print(path[5])
 
     i = 0
     for x in path:
-        print i, x
+        print(i, x)
         i += 1

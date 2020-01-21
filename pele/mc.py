@@ -1,6 +1,10 @@
 # -*- coding: iso-8859-1 -*-
+from __future__ import absolute_import
+from builtins import str
+from builtins import range
+from builtins import object
 import sys
-import accept_tests.metropolis as metropolis
+from . import accept_tests.metropolis as metropolis
 import copy
 import numpy as np
 from pele.optimize import Result
@@ -168,7 +172,7 @@ class MonteCarlo(object):
     def run(self, nsteps):
         """do multiple iterations"""
         # take nsteps
-        for istep in xrange(nsteps):
+        for istep in range(nsteps):
             self.takeOneStep()
     
     def takeOneStep(self):

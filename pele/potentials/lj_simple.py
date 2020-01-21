@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 import numpy as np
 
 from pele.potentials import BasePotential
@@ -14,35 +18,35 @@ class LJ(BasePotential):
         self.eps = eps
 
     def vij(self, r):
-        return 4. * self.eps * ( (self.sig / r) ** 12 - (self.sig / r) ** 6 )
+        return 4. * self.eps * ( (old_div(self.sig, r)) ** 12 - (old_div(self.sig, r)) ** 6 )
 
     def dvij(self, r):
-        return 4. * self.eps * ( -12. / self.sig * (self.sig / r) ** 13 + 6. / self.sig * (self.sig / r) ** 7 )
+        return 4. * self.eps * ( old_div(-12., self.sig * (old_div(self.sig, r)) ** 13) + 6. / self.sig * (old_div(self.sig, r)) ** 7 )
 
     def getEnergy(self, coords):
-        natoms = coords.size / 3
+        natoms = old_div(coords.size, 3)
         coords = np.reshape(coords, [natoms, 3])
         energy = 0.
-        for i in xrange(natoms):
-            for j in xrange(i + 1, natoms):
+        for i in range(natoms):
+            for j in range(i + 1, natoms):
                 dr = coords[j, :] - coords[i, :]
                 r = np.linalg.norm(dr)
                 energy += self.vij(r)
         return energy
 
     def getEnergyGradient(self, coords):
-        natoms = coords.size / 3
+        natoms = old_div(coords.size, 3)
         coords = np.reshape(coords, [natoms, 3])
         energy = 0.
         V = np.zeros([natoms, 3])
-        for i in xrange(natoms):
-            for j in xrange(i + 1, natoms):
+        for i in range(natoms):
+            for j in range(i + 1, natoms):
                 dr = coords[j, :] - coords[i, :]
                 r = np.linalg.norm(dr)
                 energy += self.vij(r)
                 g = self.dvij(r)
-                V[i, :] += -g * dr / r
-                V[j, :] += g * dr / r
+                V[i, :] += old_div(-g * dr, r)
+                V[j, :] += old_div(g * dr, r)
         V = V.reshape([natoms * 3])
         return energy, V
 
@@ -58,20 +62,20 @@ def main():  # pragma: no cover
 
     lj = LJ()
     E = lj.getEnergy(coords)
-    print "E", E
+    print("E", E)
     E, V = lj.getEnergyGradient(coords)
-    print "E", E
-    print "V"
-    print V
+    print("E", E)
+    print("V")
+    print(V)
 
-    print "try a quench"
+    print("try a quench")
     from pele.optimize import mylbfgs as quench
 
     ret = quench(coords, lj, iprint=-1)
     #quench( coords, lj.getEnergyGradientNumerical, iprint=1 )
-    print "energy ", ret.energy
-    print "rms gradient", ret.rms
-    print "number of function calls", ret.nfev
+    print("energy ", ret.energy)
+    print("rms gradient", ret.rms)
+    print("number of function calls", ret.nfev)
 
 
 if __name__ == "__main__":

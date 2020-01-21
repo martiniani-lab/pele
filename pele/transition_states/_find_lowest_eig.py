@@ -1,7 +1,12 @@
 """tools for finding the smallest eigenvalue and associated eigenvector
 using Rayleigh-Ritz minimization
 """
+from __future__ import division
+from __future__ import print_function
 
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import numpy as np
 import logging
 
@@ -72,7 +77,7 @@ class LowestEigPot(BasePotential):
                 self.true_gradient = gradient.copy()
             else:
                 if self.verbosity > 1:
-                    print "possibly computing gradient unnecessarily"
+                    print("possibly computing gradient unnecessarily")
                 true_energy, self.true_gradient = self._get_true_energy_gradient(self.coords)
 
     def getEnergy(self, vec_in):
@@ -80,19 +85,19 @@ class LowestEigPot(BasePotential):
         if self.orthogZeroEigs is not None:
             vec_in /= np.linalg.norm(vec_in)
             vec_in = self.orthogZeroEigs(vec_in, self.coords)
-        vec = vec_in / np.linalg.norm(vec_in)
+        vec = old_div(vec_in, np.linalg.norm(vec_in))
 
         coordsnew = self.coords + self.diff * vec
         Eplus, Gplus = self._get_true_energy_gradient(coordsnew)
 
         if self.first_order:
-            curvature = np.dot((Gplus - self.true_gradient), vec) / self.diff
+            curvature = old_div(np.dot((Gplus - self.true_gradient), vec), self.diff)
 
         else:
             coordsnew = self.coords - self.diff * vec
             Eminus, Gminus = self._get_true_energy_gradient(coordsnew)
 
-            curvature = np.dot((Gplus - Gminus), vec) / (2.0 * self.diff)
+            curvature = old_div(np.dot((Gplus - Gminus), vec), (2.0 * self.diff))
         return curvature
 
 
@@ -106,17 +111,17 @@ class LowestEigPot(BasePotential):
         if self.orthogZeroEigs is not None:
             vec_in /= np.linalg.norm(vec_in)
             vec_in = self.orthogZeroEigs(vec_in, self.coords)
-        vec = vec_in / np.linalg.norm(vec_in)
+        vec = old_div(vec_in, np.linalg.norm(vec_in))
 
         coordsnew = self.coords + self.diff * vec
         Eplus, Gplus = self._get_true_energy_gradient(coordsnew)
         if self.first_order:
-            curvature = np.dot((Gplus - self.true_gradient), vec) / self.diff
+            curvature = old_div(np.dot((Gplus - self.true_gradient), vec), self.diff)
         else:
             coordsnew = self.coords - self.diff * vec
             Eminus, Gminus = self._get_true_energy_gradient(coordsnew)
             # use second order central difference method.
-            curvature = np.dot((Gplus - Gminus), vec) / (2.0 * self.diff)
+            curvature = old_div(np.dot((Gplus - Gminus), vec), (2.0 * self.diff))
 
         # higher order central differences would be more accurate but it cannot be differentiated analytically
         # DIAG = (EPLUS + EMINUS - 2. * ENERGY) / (self.diff)
@@ -127,9 +132,9 @@ class LowestEigPot(BasePotential):
         # compute the analytical derivative of the curvature with respect to vec        
         # GL(J1)=(GRAD1(J1)-GRAD2(J1))/(ZETA*VECL**2)-2.0D0*DIAG2*LOCALV(J1)/VECL**2
         if self.first_order:
-            grad = (Gplus - self.true_gradient) * 2.0 / self.diff - 2. * curvature * vec
+            grad = old_div((Gplus - self.true_gradient) * 2.0, self.diff) - 2. * curvature * vec
         else:
-            grad = (Gplus - Gminus) / (self.diff * vecl ** 2) - 2.0 * curvature * vec / vecl ** 2
+            grad = old_div((Gplus - Gminus), (self.diff * vecl ** 2)) - 2.0 * curvature * vec / vecl ** 2
         if self.orthogZeroEigs is not None:
             grad = self.orthogZeroEigs(grad, self.coords)
 
@@ -179,7 +184,7 @@ class FindLowestEigenVector(object):
         if eigenvec0 is None:
             # this random vector should be distributed uniformly on a hypersphere.
             eigenvec0 = rotations.vec_random_ndim(coords.shape)
-        eigenvec0 = eigenvec0 / np.linalg.norm(eigenvec0)
+        eigenvec0 = old_div(eigenvec0, np.linalg.norm(eigenvec0))
 
         # change some default in the minimizer unless manually set
         if "nsteps" not in minimizer_kwargs:
@@ -216,7 +221,7 @@ class FindLowestEigenVector(object):
             self.minimizer.run()
             return self.get_result()
         else:
-            for i in xrange(niter):
+            for i in range(niter):
                 if self.minimizer.stop_criterion_satisfied():
                     break
                 self.one_iteration()
@@ -226,7 +231,7 @@ class FindLowestEigenVector(object):
         """return the results object"""
         res = self.minimizer.get_result()
         res.eigenval = res.energy
-        res.eigenvec = res.coords / np.linalg.norm(res.coords)
+        res.eigenvec = old_div(res.coords, np.linalg.norm(res.coords))
         delattr(res, "energy")
         delattr(res, "coords")
         # res.minimizer_state = self.minimizer.get_state()

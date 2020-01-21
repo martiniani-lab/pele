@@ -1,4 +1,9 @@
 # -*- coding: iso-8859-1 -*-
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import numpy as np
 import multiprocessing as mp
 
@@ -9,7 +14,7 @@ def getTemps(Tmin, Tmax, nreplicas):
     distribute them exponentially
     """
     #dT = (Tmax - Tmin) / (nreplicas-1)
-    CTE = np.exp( np.log( Tmax / Tmin ) / (nreplicas-1) )
+    CTE = np.exp( old_div(np.log( old_div(Tmax, Tmin) ), (nreplicas-1)) )
     Tlist = [Tmin* CTE**i for i in range(nreplicas)]
     return Tlist
 
@@ -27,7 +32,7 @@ class MCProcess(mp.Process):
             message = self.conn.recv()
             #print "message", message
             if message[0] == "kill":
-                print "terminating", self.name
+                print("terminating", self.name)
                 return
             elif message[0] == "return system":
                 #sending the system doesn't work
@@ -48,8 +53,8 @@ class MCProcess(mp.Process):
                 self.mcsys.markovE = message[1]
                 self.mcsys.coords= message[2].copy()
             else:
-                print "unknown message:"
-                print message
+                print("unknown message:")
+                print(message)
 
 
 class PTMC(object):
@@ -83,7 +88,7 @@ class PTMC(object):
         for conn in self.communicators:
             conn.send(("return system",))
             rep = conn.recv()
-            print "getSystems E", rep.markovE
+            print("getSystems E", rep.markovE)
             self.replicas_final.append(rep)
        
     def end(self):
@@ -101,7 +106,7 @@ class PTMC(object):
             #print "waiting for 'done'"
             message = conn.recv()
             if message != "done":
-                print "runNoExchanges> received unexpected message", message
+                print("runNoExchanges> received unexpected message", message)
             #else:
                 #print "received message", message
          
@@ -245,7 +250,7 @@ class PTExchangeIndependent(object):
         self.beta  = np.array(beta)
         self.energies = np.array(energies)
         self.nreps = len(self.beta)
-        self.replicas = np.array(range(self.nreps))
+        self.replicas = np.array(list(range(self.nreps)))
         self.nsteps = self.nreps**3 #this is rule of thumb
         self.naccept = 0
         self.acccount = np.zeros(self.nreps)
@@ -262,8 +267,8 @@ class PTExchangeIndependent(object):
         for i in range(nsteps):
             self.mcstep()
         #print self.replicas
-        print "accept ratio", float(self.naccept) / nsteps, nsteps, self.naccept
-        print self.acccount
+        print("accept ratio", float(self.naccept) / nsteps, nsteps, self.naccept)
+        print(self.acccount)
 
     def getPair(self):
         i=0

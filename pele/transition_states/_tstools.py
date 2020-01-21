@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+from past.utils import old_div
 import numpy as np
 import logging
 
@@ -14,8 +17,8 @@ def determine_pushoff(
     """apply the pushoff along the direction vec
     """
     if unused_kwargs:
-        print "keywords:", unused_kwargs.keys(), "are obsolete and ignored in determine_pushoff"
-    return coords + stepmin * vec / np.linalg.norm(vec)
+        print("keywords:", list(unused_kwargs.keys()), "are obsolete and ignored in determine_pushoff")
+    return coords + old_div(stepmin * vec, np.linalg.norm(vec))
 
 #    if grad is None:
 #        _, grad = pot.getEnergyGradient(coords)

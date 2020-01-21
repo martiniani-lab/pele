@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import unittest
 
 import numpy as np
@@ -8,7 +11,7 @@ from pele.potentials.lj import LJ
 class LJTest(unittest.TestCase):
     def setUp(self):
         self.natoms = 10
-        self.coords = np.random.uniform(-1, 1., 3 * self.natoms) * self.natoms ** (-1. / 3)
+        self.coords = np.random.uniform(-1, 1., 3 * self.natoms) * self.natoms ** (old_div(-1., 3))
         self.pot = LJ()
         self.E = self.pot.getEnergy(self.coords)
         self.Egrad, self.grad = self.pot.getEnergyGradient(self.coords)
@@ -32,7 +35,7 @@ class LJTest(unittest.TestCase):
     def test_lists_eg(self):
         e, g = self.pot.getEnergyGradientList(self.coords, self.ilist)
         self.assertAlmostEqual(self.E, e, 7)
-        gdiffmax = np.max(np.abs(g - self.grad)) / np.max(np.abs(self.grad))
+        gdiffmax = old_div(np.max(np.abs(g - self.grad)), np.max(np.abs(self.grad)))
         self.assertLess(gdiffmax, 1e-7)
 
 
@@ -44,7 +47,7 @@ class TestLJAfterQuench(unittest.TestCase):
         from pele.optimize import mylbfgs
 
         self.natoms = 10
-        self.coords = np.random.uniform(-1, 1., 3 * self.natoms) * self.natoms ** (-1. / 3)
+        self.coords = np.random.uniform(-1, 1., 3 * self.natoms) * self.natoms ** (old_div(-1., 3))
         self.pot = LJ()
         ret = mylbfgs(self.coords, self.pot, tol=2.)
         self.coords = ret.coords
@@ -58,7 +61,7 @@ class TestLJAfterQuench(unittest.TestCase):
         maxg = np.max(np.abs(g))
         maxgdiff = np.max(np.abs(g - gnum))
         self.assertAlmostEqual(e0, e, 5)
-        self.assertLess(maxgdiff / maxg, 1e-5)
+        self.assertLess(old_div(maxgdiff, maxg), 1e-5)
 
     def test_hessian(self):
         e, g, hess = self.pot.getEnergyGradientHessian(self.coords)
@@ -73,7 +76,7 @@ class TestLJAfterQuench(unittest.TestCase):
         #        print "diff", (hess[:2,:2] - nhess[:2,:2])/maxhess
         #        print "diff", (hess - nhess)/maxhess
         #        print np.max(np.abs((hess-nhess)/nhess))
-        self.assertLess(maxdiff / maxhess, 1e-5)
+        self.assertLess(old_div(maxdiff, maxhess), 1e-5)
 
 
 if __name__ == "__main__":

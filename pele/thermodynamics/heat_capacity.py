@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+from past.utils import old_div
 import numpy as np
 from collections import namedtuple
 
@@ -73,16 +76,16 @@ def minima_to_cv(minima, kT, k):
     nminima_old = len(minima)
     minima = [m for m in minima if not m.invalid]
     if len(minima) != nminima_old:
-        print "ignoring %s invalid minima" % (nminima_old - len(minima))
+        print("ignoring %s invalid minima" % (nminima_old - len(minima)))
     energies = np.array([m.energy for m in minima])
 
     # compute the log of the terms in the partition function
     try:
         lZterms = np.array([-beta * m.energy - 0.5 * m.fvib - np.log(m.pgorder) for m in minima])
     except TypeError or AttributeError:
-        print "Error reading thermodynamic data from minima.  Have you computed the normal mode" \
+        print("Error reading thermodynamic data from minima.  Have you computed the normal mode" \
               " frequencies and point group order for all the minima?  See pele.thermodynamics " \
-              " for more information"
+              " for more information")
         raise
     lZterms = lZterms.transpose()
     assert lZterms.shape == (len(beta), len(minima))
@@ -107,7 +110,7 @@ def minima_to_cv(minima, kT, k):
     Cv += 0.5 * k
 
     # compute the mean potential energy 
-    U2 = V2 + V * k / beta + (0.5 * k + 0.25 * k ** 2) / beta ** 2
+    U2 = V2 + old_div(V * k, beta) + old_div((0.5 * k + 0.25 * k ** 2), beta ** 2)
     U = V + 0.5 * k / beta
 
     lZ = np.log(Z) + lZmax

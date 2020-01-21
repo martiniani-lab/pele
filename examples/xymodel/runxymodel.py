@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+from past.utils import old_div
 import numpy as np
 from numpy import cos, sin
 from copy import copy
@@ -23,10 +26,10 @@ nspins = L ** 2
 pot = XYModel(dim=[L, L], phi=np.pi)
 
 angles = np.random.uniform(-pi, pi, nspins)
-print angles
+print(angles)
 
 e = pot.getEnergy(angles)
-print "energy ", e
+print("energy ", e)
 
 
 
@@ -36,7 +39,7 @@ if False:
 
     ret = mylbfgs(angles, pot)
 
-    print ret
+    print(ret)
 
 
 # set up and run basin hopping
@@ -48,17 +51,17 @@ from pele.storage import savenlowest
 
 # should probably use a different take step routine  which takes into account
 # the cyclical periodicity of angles
-takestep = RandomDisplacement(stepsize=np.pi / 4)
+takestep = RandomDisplacement(stepsize=old_div(np.pi, 4))
 takestepa = AdaptiveStepsize(takestep, frequency=20)
 storage = savenlowest.SaveN(500)
 
 bh = BasinHopping(angles, pot, takestepa, temperature=1.01, storage=storage)
 bh.run(400)
 
-print "minima found"
+print("minima found")
 with open("out.spin", "w") as fout:
     for min in storage.data:
-        print "energy", min.energy
+        print("energy", min.energy)
         fout.write("# %g\n" % (min.energy))
         printspins(fout, pot, min.coords)
         fout.write('\n\n')
@@ -87,6 +90,6 @@ try:
     a.set_ylim([-1, max(y) + 1])
     plt.show()
 except:
-    print "problem ploting with matplotlib"
+    print("problem ploting with matplotlib")
 
 

@@ -1,4 +1,5 @@
-from xy_model_system import XYModlelSystem
+from __future__ import absolute_import
+from .xy_model_system import XYModlelSystem
 
 def run_gui_nodisorder(L=24):
     from pele.gui import run_gui

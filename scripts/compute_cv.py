@@ -1,7 +1,12 @@
 """
 a script to calculate Cv from the Harmonic Superposition Approximation
 """
+from __future__ import division
+from __future__ import print_function
 
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import argparse
 import numpy as np
 from pele.thermodynamics import minima_to_cv
@@ -31,8 +36,8 @@ if __name__ == "__main__":
     parser.add_argument("--OPTIM", action="store_true", help="read data from a min.data file instead."
                         "fname should be the filename of the min.data file")
     args = parser.parse_args()
-    print args.fname
-    print args
+    print(args.fname)
+    print(args)
     k = args.k
     
     # get the list of minima
@@ -47,16 +52,16 @@ if __name__ == "__main__":
         db = Database(dbfname, createdb=False)
         minima = [m for m in db.minima() if m.fvib is not None and m.pgorder is not None]
         if len(minima) == 0:
-            print "There are not minima with the necessary thermodynamic information in the database.  Have you computed the normal mode"\
+            print("There are not minima with the necessary thermodynamic information in the database.  Have you computed the normal mode"\
                   " frequencies and point group order for all the minima?  See pele.thermodynamics "\
-                  " for more information"
+                  " for more information")
             exit(1)
-    print "computing heat capacity from", len(minima), "minima"
+    print("computing heat capacity from", len(minima), "minima")
 
     Tmin = args.Tmin
     Tmax = args.Tmax
     nT = args.Tcount
-    dT = (Tmax-Tmin) / nT
+    dT = old_div((Tmax-Tmin), nT)
     
     T = np.array([Tmin + dT*i for i in range(nT)])
     Z, U, U2, Cv = minima_to_cv(minima, T, k)

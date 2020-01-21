@@ -1,4 +1,5 @@
 # -*- coding: iso-8859-1 -*-
+from builtins import str
 import sys
 from pele.mc import MonteCarlo
 from pele.optimize import mylbfgs

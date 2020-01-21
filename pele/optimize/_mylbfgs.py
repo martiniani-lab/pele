@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import numpy as np
 import logging
 from collections import namedtuple
 
 from pele.optimize import LBFGS
-from mylbfgs_updatestep import mylbfgs_updatestep
+from .mylbfgs_updatestep import mylbfgs_updatestep
 
 __all__ = ["MYLBFGS"]
 

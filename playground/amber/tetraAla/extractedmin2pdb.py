@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 import sys
 import string
 
@@ -28,7 +32,7 @@ q3 = f.index("%FLAG RESIDUE_POINTER                                             
 
 atomNumber = int(string.split(f[q0+2])[0])
 
-print atomNumber 
+print(atomNumber) 
 
 atomName = []
 residueLabel = []
@@ -45,7 +49,7 @@ while (an<atomNumber):
   line += 1
 
 for i in range(q3-q2-2):
-  for j in range((len(f[q2+2+i])+1)/4):
+  for j in range(old_div((len(f[q2+2+i])+1),4)):
     residueLabel.append(string.strip(f[q2+2+i][j*4:4*(j+1)]))
 
 info = open("path.info").read()
@@ -53,11 +57,11 @@ ff = string.split(info, "\n")
 
 xyz = open('path_all.pdb','w')
 
-for i in range(len(ff)/(atomNumber)):
+for i in range(old_div(len(ff),(atomNumber))):
     m = atomNumber  # number of lines for each stationary points
     l = 0       # number of lines before coordinates
     mm = 1                 # number of residue
-    print i 
+    print(i) 
     for j in range(atomNumber):
 #        print j
         x = float(string.split(ff[m*i+l+j])[0])

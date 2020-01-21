@@ -1,3 +1,4 @@
+from builtins import range
 import random
 import pickle
 from pele.storage.database import Database
@@ -20,7 +21,7 @@ from_nlowest = max(from_nlowest, len(minima))
 step = OXDNATakestep(displace=0.0, rotate=0.8, rotate_around_backbone=False)
 
 trial_configurations = []
-for i in xrange(nconf):
+for i in range(nconf):
     x = random.choice(minima[0:nconf])
     coords = x.coords.copy()
     step.takeStep(coords)

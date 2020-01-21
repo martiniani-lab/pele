@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 import numpy as np
 from numpy import cos, sin, pi
 
@@ -30,7 +34,7 @@ class OTPBulk(RBSystem):
     def make_otp(self):
         """this constructs a single OTP molecule"""
         otp = RigidFragmentBulk(self.boxvec)   # sn402: changed
-        otp.add_atom("O", np.array([0.0, -2./3 * np.sin( 7.*pi/24.), 0.0]), 1.)
+        otp.add_atom("O", np.array([0.0, old_div(-2.,3 * np.sin( 7.*pi/24.)), 0.0]), 1.)
         otp.add_atom("O", np.array([cos( 7.*pi/24.),  1./3. * sin( 7.* pi/24.), 0.0]), 1.)
         otp.add_atom("O", np.array([-cos( 7.* pi/24.),  1./3. * sin( 7.*pi/24), 0.0]), 1.)
         otp.finalize_setup()
@@ -40,13 +44,13 @@ class OTPBulk(RBSystem):
         """this sets up the topology for the whole rigid body system"""
         topology = RBTopologyBulk(self.boxvec)
  
-        topology.add_sites([self.make_otp() for i in xrange(self.nrigid)])
+        topology.add_sites([self.make_otp() for i in range(self.nrigid)])
         
         self.render_scale = 0.2
         self.atom_types = topology.get_atomtypes()
         
         self.draw_bonds = []
-        for i in xrange(self.nrigid):
+        for i in range(self.nrigid):
             self.draw_bonds.append((3*i, 3*i+1))
             self.draw_bonds.append((3*i, 3*i+2))
         
@@ -56,8 +60,8 @@ class OTPBulk(RBSystem):
     def get_random_configuration(self):
         """ Returns an array containing random periodic com/aa coordinates."""
         x = np.zeros([self.nrigid*2,3])
-        for i in xrange(self.nrigid):
-            for j in xrange(3):
+        for i in range(self.nrigid):
+            for j in range(3):
                 x[i][j] = np.random.uniform(-self.boxvec[j]/2., self.boxvec[j]/2.)
         for i in range(self.nrigid,2*self.nrigid):
             x[i] = 5.*np.random.random(3)
@@ -155,19 +159,19 @@ def test_bh():  # pragma: no cover
     # this file when it's time to specify the initial coordinates of OTP.
     bh.run(100)
     m1 = db.minima()[0]
-    print m1.coords
+    print(m1.coords)
     for x in m1.coords:
-        print "%.12f," % x,
-    print ""
+        print("%.12f," % x, end=' ')
+    print("")
     m2 = db.minima()[1]
-    print m2.coords
+    print(m2.coords)
     for x in m2.coords:
-        print "%.12f," % x,
-    print ""   
+        print("%.12f," % x, end=' ')
+    print("")   
     
-    print m1.energy
-    print db.minima()[1].energy
-    print db.minima()[2].energy      
+    print(m1.energy)
+    print(db.minima()[1].energy)
+    print(db.minima()[2].energy)      
  
 
 def test_gui():  # pragma: no cover
@@ -192,7 +196,7 @@ def test_mindist():  # pragma: no cover
     import pele.angleaxis.aaperiodicttransforms as pd
     a = pd.MeasurePeriodicRigid(boxvec, system.aatopology)
     b = a.get_dist(coords1, coords2)
-    print b
+    print(b)
     
 def test_connect():  # pragma: no cover
 

@@ -20,6 +20,7 @@ or connect jobs:
 
     python parallel_pele.py my_system.py --connect --uri=`<my_copied_uri>`
 """
+from __future__ import print_function
 
 import argparse
 import Pyro4
@@ -41,7 +42,7 @@ Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
 #    return system
 
 def start_server(create_system, dbname, server_name=None, host=None, port=None):
-    print "setting up system class with database", dbname
+    print("setting up system class with database", dbname)
     system = create_system()
     db = system.create_database(dbname)
     
@@ -49,14 +50,14 @@ def start_server(create_system, dbname, server_name=None, host=None, port=None):
                                          host=host, port=port)
 
     if db.number_of_minima() == 0:
-        print "there are no minima in the database.  Start a basinhopping run to generate minima"
+        print("there are no minima in the database.  Start a basinhopping run to generate minima")
     else:
-        print "Working on %d minima" % db.number_of_minima()
+        print("Working on %d minima" % db.number_of_minima())
     
-    print "to start searching for minima:"
-    print "    python start_basinhopping_worker.py"
-    print "to start connecting minima:"
-    print "    python start_connect_worker.py"
+    print("to start searching for minima:")
+    print("    python start_basinhopping_worker.py")
+    print("to start connecting minima:")
+    print("    python start_connect_worker.py")
             
     
     connect_manager.run()

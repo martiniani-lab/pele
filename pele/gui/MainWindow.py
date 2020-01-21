@@ -7,6 +7,8 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+from __future__ import absolute_import
+from builtins import object
 from PyQt4 import QtCore, QtGui
 
 try:
@@ -324,5 +326,5 @@ class Ui_MainWindow(object):
         self.action_merge_minima.setText(QtGui.QApplication.translate("MainWindow", "Merge Minima", None, QtGui.QApplication.UnicodeUTF8))
         self.action_compute_thermodynamic_info.setText(QtGui.QApplication.translate("MainWindow", "Compute thermodynamic info", None, QtGui.QApplication.UnicodeUTF8))
 
-from show3d_with_slider import Show3DWithSlider
+from .show3d_with_slider import Show3DWithSlider
 from pele.gui.show3d import Show3D

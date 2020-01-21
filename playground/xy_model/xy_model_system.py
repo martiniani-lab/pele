@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+from past.utils import old_div
 import numpy as np
 
 from pele.potentials import XYModel
@@ -8,20 +11,20 @@ from pele.utils.frozen_atoms import FrozenPotWrapper
 
 def normalize_spins(x):
     L = 2. * np.pi
-    x -= L * np.floor(x / L)
+    x -= L * np.floor(old_div(x, L))
     return x
 
 def spin_distance_1d(x1, x2):
     dx = x1 - x2
     # apply periodic boundary conditions
     L = 2. * np.pi
-    dx -=  L * np.round(dx / L)
+    dx -=  L * np.round(old_div(dx, L))
     return np.linalg.norm(dx)
 
 def spin_mindist_1d(x1, x2):
     # apply periodic boundary conditions
     L = 2. * np.pi
-    offset = L * np.round((x1 - x2) / L)
+    offset = L * np.round(old_div((x1 - x2), L))
     x2 += offset
     assert np.max(np.abs(x1-x2)) <= L/2.
     return np.linalg.norm(x1-x2), x1, x2
@@ -71,7 +74,7 @@ class XYModlelSystem(BaseSystem):
             frozen_node = (0,0)
             frozen_index = base_pot.indices[frozen_node]
             frozen_dof = np.array([frozen_index])
-            print "making frozen spin at", self.node2xyz(base_pot.index2node[frozen_index])
+            print("making frozen spin at", self.node2xyz(base_pot.index2node[frozen_index]))
 #                self.coords_converter = FrozenCoordsConverter(reference_coords, frozen_dof)
             self.pot = FrozenPotWrapper(base_pot, reference_coords, frozen_dof)
 #            self.coords_converter = self.pot.coords_converter
@@ -133,7 +136,7 @@ class XYModlelSystem(BaseSystem):
             return super(XYModlelSystem, self).get_takestep(**kwargs)
         # if no disorder, turn off adaptive step and temperature.
         from pele.takestep import RandomDisplacement
-        kwargs = dict(self.params["takestep"].items() + kwargs.items())
+        kwargs = dict(list(self.params["takestep"].items()) + list(kwargs.items()))
         try:
             stepsize = kwargs.pop("stepsize")
         except KeyError:
@@ -165,7 +168,7 @@ class XYModlelSystem(BaseSystem):
 def normalize_spins_db(db):
     for m in db.minima():
         x = normalize_spins(m.coords)
-        print np.max(x), np.min(x)
+        print(np.max(x), np.min(x))
         m.coords = x
     db.session.commit()
     

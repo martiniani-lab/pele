@@ -1,6 +1,11 @@
 """
 routines for computing rates from one subset of a graph to another
 """
+from __future__ import division
+from __future__ import print_function
+from builtins import str
+from builtins import object
+from past.utils import old_div
 import itertools
 from collections import defaultdict
 
@@ -36,20 +41,20 @@ def kmcgraph_from_rates(rates):
     sumk = defaultdict(lambda: 0.)
     
     # compute the sum of the outgoing rates for each node
-    for edge, rate in rates.iteritems():
+    for edge, rate in rates.items():
         u, v = edge
         sumk[u] += rate
     
     
     # add nodes to the rate graph and assign waiting time and Puu
-    for u, sumk_u in sumk.iteritems():
+    for u, sumk_u in sumk.items():
         tau = 1. / sumk_u
         Puu = 0.
         graph.add_node(u, tau=tau)
         graph.add_edge(u, u, P=Puu)
     
     # add edges to rate graph and assign transition probabilities
-    for edge, rate in rates.iteritems():
+    for edge, rate in rates.items():
         u, v = edge
         tau_u = graph.node[u]["tau"]
         Puv =  rate * tau_u
@@ -124,10 +129,10 @@ class GraphReduction(object):
     
     def _get_final_rate(self, group):
         # should maybe be careful when Pxx is very close to 1.
-        rate = sum(( (1.-self._final_Pxx[x]) / self._final_tau[x] * self.weights[x]
+        rate = sum(( old_div((1.-self._final_Pxx[x]), self._final_tau[x] * self.weights[x])
                      for x in group))
         norm = sum((self.weights[x] for x in group))
-        return rate / norm
+        return old_div(rate, norm)
     
     def get_committor_probabilityAB(self, x):
         """return the committor probability for node x
@@ -172,9 +177,9 @@ class GraphReduction(object):
             PaB = sum((data["P"] for x, b, data in self.graph.out_edges(a, data=True)
                        if b in self.B
                        ))
-            rate += PaB * self.weights[a] / self._initial_tau[a]
+            rate += old_div(PaB * self.weights[a], self._initial_tau[a])
         norm = sum((self.weights[x] for x in self.A))
-        return rate / norm
+        return old_div(rate, norm)
             
 
     def _reduce_all_iterator(self, nodes, restore_graph=True):
@@ -223,7 +228,7 @@ class GraphReduction(object):
             # 1-Pxx as sum_j Pxj if Pxx > .99
             Paa = self._get_edge_data(a, a)["P"]
             if Paa > 0.999:
-                print "warning, Pxx is very large (%s), numerical precision problems might be in your future" % Paa
+                print("warning, Pxx is very large (%s), numerical precision problems might be in your future" % Paa)
             self._final_Pxx[a] = Paa
 
             self._final_tau[a] = adata["tau"]
@@ -256,7 +261,7 @@ class GraphReduction(object):
             
     def _add_edge(self, u, v):
         """add an edge to the graph and initialize it with the appropriate data"""
-        if self.debug: print "  creating edge", u, v
+        if self.debug: print("  creating edge", u, v)
         self.graph.add_edge(u, v, P=0.)
         return self._get_edge_data(u, v)
     
@@ -291,10 +296,10 @@ class GraphReduction(object):
             Puvold = uvdata["P"]
         
         # update transition probability
-        uvdata["P"] += Pux * Pxv / (1.-Pxx)
+        uvdata["P"] += old_div(Pux * Pxv, (1.-Pxx))
         
         if self.debug:
-            print "  updating edge", u, "->", v, ":", Puvold, "->", uvdata["P"]
+            print("  updating edge", u, "->", v, ":", Puvold, "->", uvdata["P"])
     
     def _update_node(self, u, x, tau_x, Pxx):
         """
@@ -314,10 +319,10 @@ class GraphReduction(object):
             tauold = udata["tau"]
 
         # update the waiting time at u
-        udata["tau"] += Pux * tau_x / (1.-Pxx)
+        udata["tau"] += old_div(Pux * tau_x, (1.-Pxx))
         
         if self.debug:
-            print "  updating node data", u, "tau", tauold, "->", udata["tau"]
+            print("  updating node data", u, "tau", tauold, "->", udata["tau"])
 
     def _remove_node(self, x):
         """
@@ -330,10 +335,10 @@ class GraphReduction(object):
         # 1-Pxx as sum_j Pxj if Pxx > .99         
         Pxx = self._get_edge_data(x, x)["P"]
         if Pxx > 0.999:
-            print "warning, Pxx is very large (%s), numerical precision problems might be in your future" % Pxx
+            print("warning, Pxx is very large (%s), numerical precision problems might be in your future" % Pxx)
         
         if self.debug:
-            print "removing node", x, tau_x, Pxx
+            print("removing node", x, tau_x, Pxx)
 
         # update node data
         for u in neibs:
@@ -347,18 +352,18 @@ class GraphReduction(object):
         self.graph.remove_node(x)
 
     def _print_node_data(self, u): # pragma: no cover
-        print "data from node x =", u
+        print("data from node x =", u)
         udata = self.graph.node[u]  
 #        print "checking node", u
-        print "  taux",  udata["tau"]
+        print("  taux",  udata["tau"])
 
         total_prob = 0.
         for x, v, uvdata in self.graph.out_edges(u, data=True):
             Puv = uvdata["P"]
-            print "  Pxv", Puv, ": v =", v
+            print("  Pxv", Puv, ": v =", v)
             total_prob += Puv
         
-        print "  total prob", total_prob
+        print("  total prob", total_prob)
 
     def _check_node(self, u, verbose=True):
         udata = self.graph.node[u]  
@@ -383,20 +388,20 @@ class GraphReduction(object):
         sizes = [len(ca) for ca in ca_intersections if len(ca) > 0]
         if len(sizes) != 1:
             assert len(sizes) != 0
-            print "warning, the reactant set (A) is not fully connected"
-            print "   ", [c for c in ca_intersections if len(c) > 0]
+            print("warning, the reactant set (A) is not fully connected")
+            print("   ", [c for c in ca_intersections if len(c) > 0])
             raise ValueError("the reactant set (A) is not fully connected")
 
         # check to make sure all the nodes in B are connected
         sizes = [len(cb) for cb in cb_intersections if len(cb) > 0]
         if len(sizes) != 1:
             assert len(sizes) != 0
-            print "warning, the product set (B) is not fully connected"
-            print "   ", [c for c in cb_intersections if len(c) > 0]
+            print("warning, the product set (B) is not fully connected")
+            print("   ", [c for c in cb_intersections if len(c) > 0])
             raise ValueError("the product set (B) is not fully connected")
         
         AB_connected = False
-        for ca, cb in itertools.izip(ca_intersections, cb_intersections):
+        for ca, cb in zip(ca_intersections, cb_intersections):
             if len(ca) > 0 and len(cb) > 0:
                 AB_connected = True
                 break
@@ -413,11 +418,11 @@ class GraphReduction(object):
             else:
                 remaining_components.append(c)
         if unconnected_nodes:
-            print "removing", len(unconnected_nodes), "nodes from the graph because they're not connected to A or to B"
+            print("removing", len(unconnected_nodes), "nodes from the graph because they're not connected to A or to B")
             self.graph.remove_nodes_from(unconnected_nodes)
         
         if len(remaining_components) > 1:
-            print "warning, graph is not fully connected.  There are", len(remaining_components), "components"
+            print("warning, graph is not fully connected.  There are", len(remaining_components), "components")
                 
         
         return False
@@ -468,12 +473,12 @@ class GraphReduction(object):
         # These will not necessarily sum to 1 because of the self transition probabilities,
         sum_prob = PxA + PxB
         if sum_prob == 0.:
-            print "x", x
-            print PxA, PxB
-            print self.graph.edges(x, data=True)
+            print("x", x)
+            print(PxA, PxB)
+            print(self.graph.edges(x, data=True))
             raise Exception
             return 0.
-        return PxB / (PxA + PxB)
+        return old_div(PxB, (PxA + PxB))
 
     def compute_committor_probability(self, x):
         """compute the probability that trajectory starting from x reaches B before it reaches A

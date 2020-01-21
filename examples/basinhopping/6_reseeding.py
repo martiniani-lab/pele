@@ -2,6 +2,8 @@
 Example 5: if the energy doesn't improve after 20 basinhopping steps
 then do a short monte carlo run at a very high temperature.
 """
+from __future__ import print_function
+from builtins import object
 from pele.systems import LJCluster
 from pele.takestep import RandomDisplacement, Reseeding
 from pele.mc import MonteCarlo
@@ -39,7 +41,7 @@ stepGroup = Reseeding(takestep, reseed, maxnoimprove=20)
 db = system.create_database()
 bh = system.get_basinhopping(database=db, takestep=stepGroup)
 bh.run(niter)
-print "the lowest energy found after", niter, " basinhopping steps is", db.minima()[0].energy
-print ""
+print("the lowest energy found after", niter, " basinhopping steps is", db.minima()[0].energy)
+print("")
 
 

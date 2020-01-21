@@ -1,6 +1,11 @@
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
+from past.utils import old_div
 import numpy as np
 
-from _orthogoptf import orthogopt as orthogoptf
+from ._orthogoptf import orthogopt as orthogoptf
 
 __all__ = ["orthogopt", "orthogopt_translation_only"]
 
@@ -55,8 +60,8 @@ def _subcross(vec3, redcoords, n):
     dummy2 = np.sum((redcoords[:, i]) ** 2 + (redcoords[:, j]) ** 2)
     vdot = 0.
     if dummy2 > 0.:
-        vdot = np.abs(dummy1) / np.sqrt(dummy2)
-        dummy3 = dummy1 / dummy2
+        vdot = old_div(np.abs(dummy1), np.sqrt(dummy2))
+        dummy3 = old_div(dummy1, dummy2)
         # print "dummy1, dummy2", dummy1, dummy2, dummy3
         vec3[:, i] -= pm * dummy3 * redcoords[:, j]
         vec3[:, j] += pm * dummy3 * redcoords[:, i]
@@ -73,7 +78,7 @@ def orthogopt_slow(vec, coords, otest=False):
 
     coords = np.reshape(coords, [-1, 3])
     natoms = len(coords[:, 0])
-    com = coords.sum(0) / natoms
+    com = old_div(coords.sum(0), natoms)
 
     vec3 = np.reshape(vec, [-1, 3])
     redcoords = coords - com
@@ -81,12 +86,12 @@ def orthogopt_slow(vec, coords, otest=False):
     vdot = np.zeros(3)
     vdottol = 1e-6
 
-    for ncheck in xrange(100):
+    for ncheck in range(100):
         vdot[:] = 0.
         ncheck += 1
 
         for i in range(3):
-            veccom = vec3[:, i].sum() / natoms
+            veccom = old_div(vec3[:, i].sum(), natoms)
             vdot[i] = veccom * np.sqrt(float(natoms))
             # print "vdot translation", vdot[i], i
             vec3[:, i] -= veccom
@@ -105,8 +110,8 @@ def orthogopt_slow(vec, coords, otest=False):
             break
 
     if np.max(vdot) > vdottol:
-        print "WARNING, cannot orthogonalise to known eigenvectors in ORTHOGOPT"
-        print "         max(vdot)", np.max(vdot)
+        print("WARNING, cannot orthogonalise to known eigenvectors in ORTHOGOPT")
+        print("         max(vdot)", np.max(vdot))
 
     vec = np.reshape(vec3, [-1])
     return vec
@@ -120,6 +125,6 @@ if __name__ == "__main__":
     vold = v.copy()
     v1 = orthogopt(v, x, True)
     v2 = orthogopt_slow(vold, x, True)
-    print v1 - v2
-    print "max difference between two methods", np.max(np.abs(v1 - v2))
+    print(v1 - v2)
+    print("max difference between two methods", np.max(np.abs(v1 - v2)))
     

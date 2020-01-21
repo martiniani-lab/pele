@@ -13,6 +13,7 @@ License: MIT
 
 """
 
+from builtins import object
 import inspect
 from weakref import WeakSet, WeakKeyDictionary
 
@@ -58,7 +59,7 @@ class Signal(object):
             func(*args, **kargs)
 
         # Call handler methods
-        for obj, funcs in self._methods.items():
+        for obj, funcs in list(self._methods.items()):
             for func in funcs:
                 func(obj, *args, **kargs)
 

@@ -3,6 +3,8 @@
 # Example 5: Adding a custom takestep routine.  This example
 # takes 100 monte carlo steps as one basin hopping step
 # ###########################################################
+from __future__ import print_function
+from builtins import object
 import numpy as np
 import pele.potentials.lj as lj
 import pele.basinhopping as bh
@@ -11,7 +13,7 @@ from pele.takestep import group
 from pele.mc import MonteCarlo
 
 
-class TakeStepMonteCarlo:
+class TakeStepMonteCarlo(object):
     def __init__(self, pot, T=10., nsteps=100, stepsize=0.1):
         self.potential = pot
         self.T = T
@@ -51,4 +53,4 @@ try:
     pym.start()
     pym.draw_spheres(opt.coords, "A", 1)
 except:
-    print "Could not draw using pymol, skipping this step"
+    print("Could not draw using pymol, skipping this step")

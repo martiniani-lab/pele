@@ -22,6 +22,7 @@ Last Updated:
  23 Mar 2014 
 
 """
+from __future__ import print_function
 # OpenMM 
 from simtk.openmm.app import AmberPrmtopFile, AmberInpcrdFile, Simulation
 from simtk.openmm.app import pdbfile as openmmpdb
@@ -54,8 +55,8 @@ ener2 = simulation2.context.getState(getEnergy=True).getPotentialEnergy()
 
 # print all energies 
 
-print "Energies (kJ/mol)"
-print "inpcrd/prmtop   pdb (+built-in amb99sb)  "
-print "-------------------------------------------------------- "
-print ener1,  ener2 
+print("Energies (kJ/mol)")
+print("inpcrd/prmtop   pdb (+built-in amb99sb)  ")
+print("-------------------------------------------------------- ")
+print(ener1,  ener2) 
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import ambgmin_ as GMIN
 import pele.potentials.gminpotential as gminpot
 
@@ -62,19 +63,19 @@ state2 = simulation2.context.getState(getForces=True)
 force2 = state2.getForces(asNumpy=True) 
 
 # print all energies 
-print "Energies (kJ/mol)"
-print "AMBGMIN        OpenMM inpcrd/prmtop   OpenMM pdb/amb99sb  "
-print "-------------------------------------------------------- "
-print enerGmin , ener1,  ener2 
+print("Energies (kJ/mol)")
+print("AMBGMIN        OpenMM inpcrd/prmtop   OpenMM pdb/amb99sb  ")
+print("-------------------------------------------------------- ")
+print(enerGmin , ener1,  ener2) 
 
-print "\nForces"
-print force1[0,:]
-print force2[0,:]
-print gminEGrad[0:3]*4.184*10
+print("\nForces")
+print(force1[0,:])
+print(force2[0,:])
+print(gminEGrad[0:3]*4.184*10)
 
-print "\ncoordinates"
-print inpcrd.positions[0] 
-print pdb.positions[0] 
+print("\ncoordinates")
+print(inpcrd.positions[0]) 
+print(pdb.positions[0]) 
 
 #Output: 
 #Energies (kJ/mol)

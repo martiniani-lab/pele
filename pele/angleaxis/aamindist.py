@@ -1,6 +1,10 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import zip
+from past.utils import old_div
 from math import sqrt
 from math import pi
-from itertools import izip
+
 
 import numpy as np
 
@@ -116,7 +120,7 @@ class MeasureAngleAxisCluster(MeasurePolicy):
             raise NotImplementedError
         
         if ca.nrigid > 0:
-            com = ca.posRigid.sum(0) / ca.nrigid
+            com = old_div(ca.posRigid.sum(0), ca.nrigid)
         # note: js850> This is treating all rigid bodies as if the have the same mass.  This
         # is probably a bug and should be updated.  However we might actually want the
         # center of geometry, so maybe we should add a new function get_cog().
@@ -130,7 +134,7 @@ class MeasureAngleAxisCluster(MeasurePolicy):
         c2 = self.topology.coords_adapter(coords2)
         
         # now account for inner-molecular symmetry
-        for p1, p2, site in izip(c1.rotRigid,c2.rotRigid, self.topology.sites):
+        for p1, p2, site in zip(c1.rotRigid,c2.rotRigid, self.topology.sites):
             theta_min = 10.
             mx2 = rotations.aa2mx(p2)
             mx1 = rotations.aa2mx(p1).transpose()
@@ -143,7 +147,7 @@ class MeasureAngleAxisCluster(MeasurePolicy):
                 theta = np.linalg.norm(rotations.mx2aa(mx_diff))
                 
                 # remove any extra factors of 2*pi
-                theta -= int(theta / (2.*pi)) * 2.*pi
+                theta -= int(old_div(theta, (2.*pi))) * 2.*pi
                 if theta < theta_min:
                     theta_min = theta
                     rot_best = rot
@@ -249,7 +253,7 @@ class MinPermDistAACluster(MinPermDistCluster):
         if np.abs(dist - self.distbest) > 1e-6:
             raise RuntimeError        
         if self.verbose:
-            print "final dist", dist, "minimum dist", self.distbest
+            print("final dist", dist, "minimum dist", self.distbest)
 
         return dist, self.x2_best
         

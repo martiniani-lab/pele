@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 import numpy as np
 from numpy import cos, sin, pi
 
@@ -9,7 +13,7 @@ from pele.angleaxis import RBTopology, RBSystem, RigidFragment, RBPotentialWrapp
 def make_otp():
     """this constructs a single OTP molecule"""
     otp = RigidFragment()
-    otp.add_atom("O", np.array([0.0, -2./3 * np.sin( 7.*pi/24.), 0.0]), 1.)
+    otp.add_atom("O", np.array([0.0, old_div(-2.,3 * np.sin( 7.*pi/24.)), 0.0]), 1.)
     otp.add_atom("O", np.array([cos( 7.*pi/24.),  1./3. * sin( 7.* pi/24.), 0.0]), 1.)
     otp.add_atom("O", np.array([-cos( 7.* pi/24.),  1./3. * sin( 7.*pi/24), 0.0]), 1.)
     otp.finalize_setup()
@@ -31,13 +35,13 @@ class OTPCluster(RBSystem):
     def setup_aatopology(self):
         """this sets up the topology for the whole rigid body system"""
         topology = RBTopology()
-        topology.add_sites([make_otp() for _ in xrange(self.nrigid)])
+        topology.add_sites([make_otp() for _ in range(self.nrigid)])
         
         self.render_scale = 0.2
         self.atom_types = topology.get_atomtypes()
         
         self.draw_bonds = []
-        for i in xrange(self.nrigid):
+        for i in range(self.nrigid):
             self.draw_bonds.append((3*i, 3*i+1))
             self.draw_bonds.append((3*i, 3*i+2))
         
@@ -93,11 +97,11 @@ def test_bh():
     bh = system.get_basinhopping(db)
     bh.run(100)
     m1 = db.minima()[0]
-    print m1.coords
+    print(m1.coords)
     for x in m1.coords:
-        print "%.12f," % x,
-    print ""
-    print m1.energy
+        print("%.12f," % x, end=' ')
+    print("")
+    print(m1.energy)
     
 
 def test_gui():

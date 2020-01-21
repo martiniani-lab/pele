@@ -1,9 +1,14 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import string
 
 __all__ = ["readAmberParam"]
 
 
-class readAmberParam:
+class readAmberParam(object):
     """Extract info from coords.prmtop
     
     prmtop:
@@ -38,7 +43,7 @@ class readAmberParam:
                 bondBlock.append(int(j))
                 tt += 1
 
-        print 'bonds containing hydrogen read'
+        print('bonds containing hydrogen read')
 
         # bonds without hydrogen         
         q0 = self.prmtopLines.index("%FLAG BONDS_WITHOUT_HYDROGEN                                                    ")
@@ -49,10 +54,10 @@ class readAmberParam:
                 bondBlock.append(int(j))
                 tt += 1
 
-        print 'bonds without hydrogen read'
+        print('bonds without hydrogen read')
 
         # total number of bonds 
-        Nbonds = tt / 3
+        Nbonds = old_div(tt, 3)
 
         # now populate bondConn 
         for i in range(Nbonds):
@@ -60,11 +65,11 @@ class readAmberParam:
             ta2 = bondBlock[3 * i + 1]
             # good idea to sort it 
             if ta1 > ta2:
-                self.bondConn.append((ta2 / 3 + 1, ta1 / 3 + 1))
+                self.bondConn.append((old_div(ta2, 3) + 1, old_div(ta1, 3) + 1))
             else:
-                self.bondConn.append((ta1 / 3 + 1, ta2 / 3 + 1))
+                self.bondConn.append((old_div(ta1, 3) + 1, old_div(ta2, 3) + 1))
 
-        print 'bond connectivity read'
+        print('bond connectivity read')
 
         # atom index in bondList starts from 1 
 
@@ -77,11 +82,11 @@ class readAmberParam:
         # the atom numbers in the following arrays that describe bonds, angles, and #dihedrals are coordinate array indexes for runtime speed. The true atom number #equals the absolute value of the number divided by three, plus one.
 
     def printBondConn(self):
-        print 'printing list of bonds'
-        print len(self.bondConn)
+        print('printing list of bonds')
+        print(len(self.bondConn))
 
         for i in self.bondConn:
-            print i
+            print(i)
 
 
 if __name__ == "__main__":

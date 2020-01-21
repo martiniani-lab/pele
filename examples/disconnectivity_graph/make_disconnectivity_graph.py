@@ -1,3 +1,4 @@
+from __future__ import print_function
 from pele.landscape import database2graph
 from pele.utils.disconnectivity_graph import DisconnectivityGraph
 from pele.storage import Database
@@ -36,7 +37,7 @@ def make_graph(database):
                               order_by_energy=True)
     dg.calculate()
 
-    print "number of minima:", dg.tree_graph.number_of_leaves()
+    print("number of minima:", dg.tree_graph.number_of_leaves())
     dg.plot()
     dg.show()
 

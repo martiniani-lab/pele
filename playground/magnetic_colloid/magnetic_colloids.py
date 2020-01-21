@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 
 from pele.potentials import BasePotential
@@ -53,10 +54,10 @@ if __name__ == "__main__":
     
     pot = MagneticColloidPotential(natoms, box)
     coords = np.random.uniform(0, 1, 3*natoms) * 2. 
-    print "starting potential"
+    print("starting potential")
     e, grad = pot.getEnergyGradient(coords)
-    print "finished potential"
-    print e
+    print("finished potential")
+    print(e)
     
     pot.test_potential(coords)
     

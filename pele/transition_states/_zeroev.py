@@ -3,7 +3,12 @@ Created on 2 Aug 2012
 
 @author: ruehle
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
+from builtins import range
+from past.utils import old_div
 import numpy as np
 
 __all__ = ["zeroEV_translation", "zeroEV_rotation", "zeroEV_cluster", "gramm_schmidt"]
@@ -19,7 +24,7 @@ def zeroEV_translation(coords):
     x1.reshape(-1, 3)[:, 0] = 1.
     x2.reshape(-1, 3)[:, 1] = 1.
     x3.reshape(-1, 3)[:, 2] = 1.
-    return [x1 / np.linalg.norm(x1), x2 / np.linalg.norm(x2), x3 / np.linalg.norm(x3)]
+    return [old_div(x1, np.linalg.norm(x1)), old_div(x2, np.linalg.norm(x2)), old_div(x3, np.linalg.norm(x3))]
 
 
 def zeroEV_rotation(coords):
@@ -42,14 +47,14 @@ def zeroEV_rotation(coords):
     Rz = np.array([[0., 1., 0.],
                    [-1., 0., 0.],
                    [0., 0., 0.]])
-    x = coords.reshape(coords.size / 3, 3)
-    com = x.sum(0) / x.shape[0]
+    x = coords.reshape(old_div(coords.size, 3), 3)
+    com = old_div(x.sum(0), x.shape[0])
 
     r1 = np.dot(Rx, (x - com).transpose()).transpose().reshape(coords.shape)
     r2 = np.dot(Ry, (x - com).transpose()).transpose().reshape(coords.shape)
     r3 = np.dot(Rz, (x - com).transpose()).transpose().reshape(coords.shape)
 
-    return [r1 / np.linalg.norm(r1), r2 / np.linalg.norm(r2), r3 / np.linalg.norm(r3)]
+    return [old_div(r1, np.linalg.norm(r1)), old_div(r2, np.linalg.norm(r2)), old_div(r3, np.linalg.norm(r3))]
 
 
 def zeroEV_cluster(coords):
@@ -93,13 +98,13 @@ def orthogonalize(v, ozev):
 #
 
 def test():  # pragma: no cover
-    from _orthogopt import orthogopt_slow, orthogopt
+    from ._orthogopt import orthogopt_slow, orthogopt
 
     natoms = 105
-    for i in xrange(1):
+    for i in range(1):
         x = np.random.random(3 * natoms) * 5
         xx = x.reshape(-1, 3)
-        com = xx.sum(0) / xx.shape[0]
+        com = old_div(xx.sum(0), xx.shape[0])
         xx -= com
         v = np.random.random(3 * natoms)
         test1 = orthogopt_slow(v.copy(), x.copy())
@@ -107,7 +112,7 @@ def test():  # pragma: no cover
 
         orthogonalize(v, ozev)
 
-        print np.linalg.norm(v - test1)
+        print(np.linalg.norm(v - test1))
     exit()
 
     from pele.potentials import lj
@@ -115,18 +120,18 @@ def test():  # pragma: no cover
     pot = lj.LJ()
     x = np.array([-1., 0., 0., 1., 0., 0., 0., 1., 1., 0., -1., -1.])
     x = np.random.random(x.shape)
-    print x
+    print(x)
     v = zeroEV_cluster(x)
-    print np.dot(v[0], v[1]), np.dot(v[0], v[2]), np.dot(v[1], v[2])
-    print np.dot(v[3], v[4]), np.dot(v[3], v[5]), np.dot(v[5], v[4])
+    print(np.dot(v[0], v[1]), np.dot(v[0], v[2]), np.dot(v[1], v[2]))
+    print(np.dot(v[3], v[4]), np.dot(v[3], v[5]), np.dot(v[5], v[4]))
     u = gramm_schmidt(zeroEV_cluster(x))
     for i in u:
-        print (pot.getEnergy(x + 1e-4 * i) - pot.getEnergy(x)) / 1e-4, i
-    print np.dot(u[3], u[4]), np.dot(u[3], u[5]), np.dot(u[5], u[4])
-    print "########################"
+        print(old_div((pot.getEnergy(x + 1e-4 * i) - pot.getEnergy(x)), 1e-4), i)
+    print(np.dot(u[3], u[4]), np.dot(u[3], u[5]), np.dot(u[5], u[4]))
+    print("########################")
 
     r = np.random.random(x.shape)
-    print orthogopt(r.copy(), x.copy()) - orthogonalize(r.copy(), u)
+    print(orthogopt(r.copy(), x.copy()) - orthogonalize(r.copy(), u))
 
 
 if __name__ == '__main__':

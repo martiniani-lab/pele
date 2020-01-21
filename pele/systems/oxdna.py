@@ -1,3 +1,7 @@
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import numpy as np
 from pele import takestep
 from math import pi
@@ -15,7 +19,7 @@ def choose_bond(N, P_mid=0.):
     while True:
         i = np.random.randint(N)
         dist = float(min(i, N - i - 1))
-        if (1. - P_mid) * dist / mid < np.random.random():
+        if old_div((1. - P_mid) * dist, mid) < np.random.random():
             return i
 
 
@@ -29,7 +33,7 @@ class OXDNATakestep(takestep.TakestepInterface):
 
     def takeStep(self, coords, **kwargs):
         # easy access to coordinates
-        ca = CoordsAdapter(nrigid=coords.size / 6, coords=coords)
+        ca = CoordsAdapter(nrigid=old_div(coords.size, 6), coords=coords)
 
         # random displacement for positions
         ca.posRigid[:] += 2. * self.displace * (np.random.random(ca.posRigid.shape) - 0.5)
@@ -66,16 +70,16 @@ class OXDNAScrewStep(takestep.TakestepInterface):
 
     def takeStep(self, coords, **kwargs):
         # easy access to coordinates
-        ca = CoordsAdapter(nrigid=coords.size / 6, coords=coords)
+        ca = CoordsAdapter(nrigid=old_div(coords.size, 6), coords=coords)
 
-        for i in xrange(ca.nrigid):
+        for i in range(ca.nrigid):
             a = np.dot(rotations.aa2mx(ca.rotRigid[i]), np.array([1., 0., 0.]))
             a *= 2. * (np.random.random() - 0.5) * self.rotate_base
             ca.rotRigid[i] = rotations.rotate_aa(ca.rotRigid[i], a)
 
             # random rotation for angle-axis vectors
         if self.rotate_backbone != 0.:
-            for j in xrange(self.ntorsionmoves):
+            for j in range(self.ntorsionmoves):
                 # choose bond to rotate around, index is first bead that changes
                 index = choose_bond(ca.nrigid - 1, self.P_mid) + 1
 
@@ -95,7 +99,7 @@ class OXDNAScrewStep(takestep.TakestepInterface):
                 center = 0.5 * (x1 + x2)
 
                 # apply rotation to positions and orientations
-                for i in xrange(index, ca.nrigid):
+                for i in range(index, ca.nrigid):
                     a = np.dot(rotations.aa2mx(ca.rotRigid[i]), np.array([1., 0., 0.]))
                     ca.rotRigid[i] = rotations.rotate_aa(ca.rotRigid[i], p)
                     x = ca.posRigid[i] - 0.4 * a
@@ -121,7 +125,7 @@ class OXDNAReseed(takestep.TakestepInterface):
 
     def takeStep(self, coords, **kwargs):
         # easy access to coordinates
-        ca = CoordsAdapter(nrigid=coords.size / 6, coords=coords)
+        ca = CoordsAdapter(nrigid=old_div(coords.size, 6), coords=coords)
 
         # random displacement for positions
         ca.posRigid[:] = 2. * self.radius * (np.random.random(ca.posRigid.shape) - 0.5)
@@ -138,7 +142,7 @@ class OXDNAReseedRandomwalk(takestep.TakestepInterface):
 
     def takeStep(self, coords, **kwargs):
         # easy access to coordinates
-        ca = CoordsAdapter(nrigid=coords.size / 6, coords=coords)
+        ca = CoordsAdapter(nrigid=old_div(coords.size, 6), coords=coords)
 
         backbone = np.zeros(3)
 
@@ -155,9 +159,9 @@ class OXDNAReseedRandomwalk(takestep.TakestepInterface):
 
 
 def export_xyz(fl, coords):
-    ca = CoordsAdapter(nrigid=coords.size / 6, coords=coords)
+    ca = CoordsAdapter(nrigid=old_div(coords.size, 6), coords=coords)
     fl.write("%d\n\n" % (2 * ca.nrigid))
-    for i in xrange(ca.nrigid):
+    for i in range(ca.nrigid):
         a = np.dot(rotations.aa2mx(ca.rotRigid[i]), np.array([1., 0., 0.]))
         x_back = ca.posRigid[i] - 0.4 * a  # backbone bead
         x_stack = ca.posRigid[i] + 0.4 * a

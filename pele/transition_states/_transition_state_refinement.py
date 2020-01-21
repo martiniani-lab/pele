@@ -1,3 +1,8 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import numpy as np
 import logging
 
@@ -138,15 +143,15 @@ class FindTransitionState(object):
         if tangentSpaceQuenchParams is None:
             self.tangent_space_quench_params = dict()
         else:
-            self.tangent_space_quench_params = dict(tangentSpaceQuenchParams.items())
+            self.tangent_space_quench_params = dict(list(tangentSpaceQuenchParams.items()))
         self.demand_initial_negative_vec = demand_initial_negative_vec
-        self.npositive_max = max(10, self.nsteps / 5)
+        self.npositive_max = max(10, old_div(self.nsteps, 5))
         self.check_negative = check_negative
         self.negatives_before_check = negatives_before_check
         self.invert_gradient = invert_gradient
         self.hessian_diagonalization = hessian_diagonalization
         if self.verbosity > 0:
-            print "will compute the lowest eigenvector by diagonalizing the Hessian"
+            print("will compute the lowest eigenvector by diagonalizing the Hessian")
 
 
         self.rmsnorm = 1. / np.sqrt(float(len(coords)))
@@ -189,7 +194,7 @@ class FindTransitionState(object):
         self._max_uphill_max = max_uphill_step
         self._max_uphill_min = .01
         if self._max_uphill_min >= self._max_uphill_max:
-            self._max_uphill_min = self._max_uphill_max / 5
+            self._max_uphill_min = old_div(self._max_uphill_max, 5)
         self._max_uphill = min(max_uphill_step_initial, self._max_uphill_max)
 
         self._transverse_walker = None
@@ -265,7 +270,7 @@ class FindTransitionState(object):
 
         self._compute_gradients(coords)
         iend = 0
-        for i in xrange(self.nsteps):
+        for i in range(self.nsteps):
             iend = i
             # get the lowest eigenvalue and eigenvector
             self.overlap = self._getLowestEigenVector(coords, i)
@@ -283,7 +288,7 @@ class FindTransitionState(object):
                     all_ok = True
             if not all_ok:
                 if self.negatives_before_check > 0 and not self.demand_initial_negative_vec:
-                    print "  positive before check. setting all ok"
+                    print("  positive before check. setting all ok")
                     all_ok = True
 
             # if everything is OK, then continue, else revert the step
@@ -316,7 +321,7 @@ class FindTransitionState(object):
             E = self.get_energy()
             grad = self.get_gradient()
             rms = np.linalg.norm(grad) * self.rmsnorm
-            gradpar = np.dot(grad, self.eigenvec) / np.linalg.norm(self.eigenvec)
+            gradpar = old_div(np.dot(grad, self.eigenvec), np.linalg.norm(self.eigenvec))
 
             if self.iprint > 0:
                 if (i + 1) % self.iprint == 0:
@@ -388,7 +393,7 @@ class FindTransitionState(object):
         else:
             niter = 100
             if self.verbosity > 3:
-                print "Using default of", niter, "steps for finding lowest eigenvalue"
+                print("Using default of", niter, "steps for finding lowest eigenvalue")
         optimizer = FindLowestEigenVector(coords, self.pot,
                                           eigenvec0=self.eigenvec,
                                           orthogZeroEigs=self.orthogZeroEigs,
@@ -398,7 +403,7 @@ class FindTransitionState(object):
         res = optimizer.run(niter)
         if res.nsteps == 0:
             if self.verbosity > 2:
-                print "eigenvector converged, but doing one iteration anyway"
+                print("eigenvector converged, but doing one iteration anyway")
             optimizer.one_iteration()
             res = optimizer.get_result()
         self.H0_leig = res.H0
@@ -410,7 +415,7 @@ class FindTransitionState(object):
         This scales as N**3, so can be very slow for large systems.
         """
         if self.verbosity > 3:
-            print "computing the lowest eigenvector by diagonalizing the Hessian"
+            print("computing the lowest eigenvector by diagonalizing the Hessian")
         hess = self.pot.getHessian(coords)
         eigenval, evec = get_smallest_eig(hess)
         res = Result()
@@ -510,19 +515,19 @@ class FindTransitionState(object):
         """use a trust radius to update the maximum uphill step size"""
         Fnew = np.dot(self.eigenvec, self.get_gradient())
         # EPER=MIN(DABS(1.0D0-(FOBNEW-FOB)/(PSTEP*EVALMIN)),DABS(1.0D0-(-FOBNEW-FOB)/(PSTEP*EVALMIN)))
-        a1 = 1. - (Fnew - Fold) / (stepsize * self.eigenval)
-        a2 = 1. - (-Fnew - Fold) / (stepsize * self.eigenval)
+        a1 = 1. - old_div((Fnew - Fold), (stepsize * self.eigenval))
+        a2 = 1. - old_div((-Fnew - Fold), (stepsize * self.eigenval))
         eper = min(np.abs(a1), np.abs(a2))
         if eper > self._trust_radius:
             # reduce the maximum step size
             self._max_uphill = max(self._max_uphill / 1.1, self._max_uphill_min)
             if self.verbosity > 2:
-                print "decreasing max uphill step to", self._max_uphill, "Fold", Fold, "Fnew", Fnew, "eper", eper, "eval", self.eigenval
+                print("decreasing max uphill step to", self._max_uphill, "Fold", Fold, "Fnew", Fnew, "eper", eper, "eval", self.eigenval)
         else:
             # increase the maximum step size
             self._max_uphill = min(self._max_uphill * 1.1, self._max_uphill_max)
             if self.verbosity > 2:
-                print "increasing max uphill step to", self._max_uphill, "Fold", Fold, "Fnew", Fnew, "eper", eper, "eval", self.eigenval
+                print("increasing max uphill step to", self._max_uphill, "Fold", Fold, "Fnew", Fnew, "eper", eper, "eval", self.eigenval)
 
 
     def _stepUphill(self, coords):
@@ -539,7 +544,7 @@ class FindTransitionState(object):
         # the energy and gradient are already known
         grad = self.get_gradient()
         F = np.dot(grad, self.eigenvec)
-        h = 2. * F / np.abs(self.eigenval) / (1. + np.sqrt(1. + 4. * (F / self.eigenval) ** 2))
+        h = 2. * F / np.abs(self.eigenval) / (1. + np.sqrt(1. + 4. * (old_div(F, self.eigenval)) ** 2))
 
         if self.eigenval > 0 and self.verbosity >= 2:
             logger.warn("eigenvalue is positive, but stepping uphill along the lowest curvature mode anyway")
@@ -552,7 +557,7 @@ class FindTransitionState(object):
         if np.abs(h) > maxstep:
             if self.verbosity >= 5:
                 logger.debug("reducing uphill step from %s %s %s", h, "to", maxstep)
-            h *= maxstep / np.abs(h)
+            h *= old_div(maxstep, np.abs(h))
         self.uphill_step_size = h
         coords += h * self.eigenvec
 

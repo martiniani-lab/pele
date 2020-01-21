@@ -18,7 +18,13 @@
     can serve as a base for further necessary modifications of the AtomicCluster
     class and related classes.
  '''
+from __future__ import division
+from __future__ import print_function
 
+from builtins import zip
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from pele.mindist._minpermdist_policies import MeasureAtomicCluster, TransformAtomicCluster
 from pele.mindist.permutational_alignment import _make_cost_matrix, _find_permutations, find_permutations_hungarian
 from pele.mindist import MinPermDistCluster, ExactMatchCluster
@@ -51,12 +57,12 @@ class MolecularCluster(AtomicCluster):
         return self.nmolecules*self.molecule.masses
 
     def get_metric_tensor(self, coords):
-        return np.eye(self.natoms)/self.masses
+        return old_div(np.eye(self.natoms),self.masses)
 
     def get_permlist(self):
         m=self.molecule.natoms
         n=self.nmolecules
-        l=range(self.natoms)
+        l=list(range(self.natoms))
         permlist=[[l[i::m] for i in range(m)]]
         for mp in self.molecule.permlist:
             permlist+=[[x+m*i for x in mp] for i in range(n)] 
@@ -124,9 +130,9 @@ def find_best_permutation_molecular(X1, X2, permlist=None, user_algorithm=None,
         X2=X2.reshape([-1, 3])
 
     if permlist is None:
-        permlist=[range(len(X1))]
+        permlist=[list(range(len(X1)))]
 
-    newperm=range(len(X1))
+    newperm=list(range(len(X1)))
     disttot=0.
 
     for atomlists in permlist:
@@ -146,13 +152,13 @@ def find_best_permutation_molecular(X1, X2, permlist=None, user_algorithm=None,
 
         disttot += dist ** 2
         temp=deepcopy(newperm)
-        for atom, i in zip(atomlist, xrange(len(atomlist))):
+        for atom, i in zip(atomlist, range(len(atomlist))):
             temp[atom]=newperm[atomlist[perm[i]]]
         newperm=deepcopy(temp)
         if sets:
             for s in associated:
                 temp=deepcopy(newperm)
-                for atom, i in zip(s, xrange(len(s))):
+                for atom, i in zip(s, range(len(s))):
                     temp[atom]=newperm[s[perm[i]]]
                 newperm=deepcopy(temp)
 
@@ -167,15 +173,15 @@ def permlist_water(nmol):
     expected to be ordered as follows:
         [ O1, 1H1, 2H1, O2, 1H2, 2H2, ..., ON, 1HN, 2HN ] 
     '''
-    permlist=[[range(0,nmol*3,3),range(1,nmol*3,3),range(2,nmol*3,3)]]
-    permlist+=[list(x) for x in zip(range(1,nmol*3,3),range(2,nmol*3,3))]
+    permlist=[[list(range(0,nmol*3,3)),list(range(1,nmol*3,3)),list(range(2,nmol*3,3))]]
+    permlist+=[list(x) for x in zip(list(range(1,nmol*3,3)),list(range(2,nmol*3,3)))]
     #permlist=[[range(nmol), range(nmol, 3*nmol, 2), range(nmol+1, 3*nmol, 2)]]
     #permlist += [list(x) for x in zip(range(nmol, 3*nmol, 2), range(nmol+1, 3*nmol, 2))]
     return permlist
 
 def permute_water(nmol,coords):
     from random import shuffle
-    water=range(nmol)
+    water=list(range(nmol))
     shuffle(water)
     # permute molecules
     coords[:]=coords.reshape([-1,9])[water].flatten()
@@ -195,16 +201,16 @@ def main():
     permlist=permlist_water(nmol)
     compare=ExactMatchMolecularCluster(permlist)
     iterations=100
-    for i in xrange(iterations):
+    for i in range(iterations):
         X1=np.random.random(nmol*9)
         X2=X1.copy()
         permute_water(nmol,X2)
         if not compare(X1,X2):
             break
     if i < iterations-1:
-        print "failure at iteration {}".format(i)
+        print("failure at iteration {}".format(i))
     else:
-        print "excellent success!" 
+        print("excellent success!") 
 
 if __name__=="__main__":
     main()

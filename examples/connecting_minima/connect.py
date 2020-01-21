@@ -5,6 +5,9 @@ We will do the connections for a cluster of 38 Lennard-Jones atoms.
 We will load two sets of coordinates from a file, minimize them, and try to find
 a connected set of minima and transition states betweeen them.
 """
+from __future__ import division
+from __future__ import print_function
+from past.utils import old_div
 import numpy as np
 
 from pele.systems import LJCluster
@@ -33,13 +36,13 @@ connect = system.get_double_ended_connect(min1, min2, db)
 connect.connect()
 success = connect.success()
 if not success:
-    print "failed to find connection"
+    print("failed to find connection")
 else:
     mints, S, energies = connect.returnPath()
-    nts = (len(mints) - 1) / 2
-    print "found a path with", nts, "transition states"
+    nts = old_div((len(mints) - 1), 2)
+    print("found a path with", nts, "transition states")
 
-    print "plotting energies along the path"
+    print("plotting energies along the path")
     import pylab as pl
 
     pl.plot(S, energies, '-')

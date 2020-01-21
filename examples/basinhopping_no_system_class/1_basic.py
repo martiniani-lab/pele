@@ -2,6 +2,7 @@
 ############################################################
 # Example 1: Simple basin hopping
 ############################################################
+from __future__ import print_function
 import numpy as np
 
 import pele.potentials.lj as lj
@@ -25,4 +26,4 @@ try:
     pym.start()
     pym.draw_spheres(opt.coords, "A", 1)
 except:
-    print "Could not draw using pymol, skipping this step"
+    print("Could not draw using pymol, skipping this step")

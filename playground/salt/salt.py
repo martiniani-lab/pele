@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import str
+from past.utils import old_div
 import potentials.salt as salt
 import numpy as np
 import basinhopping as bh
@@ -29,17 +33,17 @@ x[-2]=3.
 #print "start"
 #x[1]=0.0
 e,g = pot.getEnergyGradient(x)
-print e,pot.getEnergy(x)
-print g
+print(e,pot.getEnergy(x))
+print(g)
 #print "numerical"
 gn = pot.NumericalDerivative(x, 1e-6)
-print gn
+print(gn)
 #print "difference"
-print (g-gn)/g
+print(old_div((g-gn),g))
 #exit()
 a=x.copy()
 pot.toReal(a)
-print a
+print(a)
 #exit()
 # use adaptive step size, 0.3 start, acceptance rate 0.5, adjust every 20
 manstep = adaptive_step.manageStepSize (.1, 0.3, 20)    
@@ -66,7 +70,7 @@ opt.run(100)
 
 a = minima.data[0][1].copy()
 pot.toReal(a)
-print a
+print(a)
 # save the minima
 with open("pylowest.xyz", "w") as fout:
   for i in minima.data:
@@ -74,7 +78,7 @@ with open("pylowest.xyz", "w") as fout:
       fout.write( "Energy = " + str(i[0]) + "\n")
       tmp=i[1].copy()
       pot.toReal(tmp)
-      for atom in tmp.reshape(x.size/3, 3)[0:natoms/2]:
+      for atom in tmp.reshape(old_div(x.size,3), 3)[0:old_div(natoms,2)]:
           fout.write("A " + str(atom[0]) + " " + str(atom[1]) + " " + str(atom[2]) + "\n")
-      for atom in tmp.reshape(x.size/3, 3)[natoms/2:natoms]:
+      for atom in tmp.reshape(old_div(x.size,3), 3)[old_div(natoms,2):natoms]:
           fout.write("B " + str(atom[0]) + " " + str(atom[1]) + " " + str(atom[2]) + "\n")

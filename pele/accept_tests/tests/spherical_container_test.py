@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import unittest
 import math
 import numpy as np
@@ -12,7 +15,7 @@ class TestSphericalContainer(unittest.TestCase):
         and corresponding spherical container tests
         """
         # Coordinates
-        self.coords = [np.random.uniform(-1.0, 1.0) / math.sqrt(3) for _ in range(30)]
+        self.coords = [old_div(np.random.uniform(-1.0, 1.0), math.sqrt(3)) for _ in range(30)]
         self.coords_0_1 = [x * 0.1 for x in self.coords]
         self.coords_10 = [x * 10 for x in self.coords]
         self.coords_20 = [x * 20 for x in self.coords]

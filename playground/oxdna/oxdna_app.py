@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 import numpy as np
 from pele.application import AppBasinHopping
@@ -93,11 +94,11 @@ class AppOXDNA(AppBasinHopping):
  
     def check_converged(self, E, coords):
         if(E<(self.target+EDIFF)):
-            print "#found minimum"
+            print("#found minimum")
             t1= time.clock()
             timespent= t1 - t0
-            print "quenches functioncalls timespent"
-            print "%d %d %f"%(self.opt.stepnum, self.potential.ncalls, timespent)
+            print("quenches functioncalls timespent")
+            print("%d %d %f"%(self.opt.stepnum, self.potential.ncalls, timespent))
             exit()
 
 

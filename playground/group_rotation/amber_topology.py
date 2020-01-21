@@ -1,3 +1,9 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import map
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import re
 import exceptions as exc
   
@@ -9,7 +15,7 @@ data_casts = {"a": str,
               "i": int,
               "I": int}
  
-class AmberTopology():
+class AmberTopology(object):
     def __init__(self, *args, **kwargs):
         pass
     def import_from_file(self, filename):
@@ -35,7 +41,7 @@ class AmberTopology():
                 current_data_type   = re.findall("[a-zA-Z]", current_format)[0]
             else:
                 split_line = [line[i:i+current_data_length] for i in range(0, len(line), current_data_length)]
-                formatted_line = map(data_casts[current_data_type], split_line)
+                formatted_line = list(map(data_casts[current_data_type], split_line))
                 self.topology_data[current_flag] += formatted_line
         return self.topology_data
     def bonds(self, by_type):
@@ -45,14 +51,14 @@ class AmberTopology():
         topology_bonds_list = topology_data["BONDS_INC_HYDROGEN"] + topology_data["BONDS_WITHOUT_HYDROGEN"]
         if by_type is True:
             while topology_bonds_list:
-                atom_1    = topology_bonds_list.pop(0) / 3
-                atom_2    = topology_bonds_list.pop(0) / 3
+                atom_1    = old_div(topology_bonds_list.pop(0), 3)
+                atom_2    = old_div(topology_bonds_list.pop(0), 3)
                 bond_type = topology_bonds_list.pop(0)
                 self.bonds.append((atom_1, atom_2, bond_type))
         else:
             while topology_bonds_list:
-                atom_1    = topology_bonds_list.pop(0) / 3
-                atom_2    = topology_bonds_list.pop(0) / 3
+                atom_1    = old_div(topology_bonds_list.pop(0), 3)
+                atom_2    = old_div(topology_bonds_list.pop(0), 3)
                 bond_type = topology_bonds_list.pop(0)
                 self.bonds.append((atom_1, atom_2))
         return self.bonds
@@ -63,16 +69,16 @@ class AmberTopology():
         topology_angles_list = topology_data["ANGLES_INC_HYDROGEN"] + topology_data["ANGLES_WITHOUT_HYDROGEN"]
         if by_type is True:
             while topology_angles_list:
-                atom_1    = topology_angles_list.pop(0) / 3
-                atom_2    = topology_angles_list.pop(0) / 3
-                atom_3    = topology_angles_list.pop(0) / 3
+                atom_1    = old_div(topology_angles_list.pop(0), 3)
+                atom_2    = old_div(topology_angles_list.pop(0), 3)
+                atom_3    = old_div(topology_angles_list.pop(0), 3)
                 bond_type = topology_angles_list.pop(0)
                 self.angles.append((atom_1, atom_2, atom_3, bond_type))
         else:
             while topology_angles_list:
-                atom_1    = topology_angles_list.pop(0) / 3
-                atom_2    = topology_angles_list.pop(0) / 3
-                atom_3    = topology_angles_list.pop(0) / 3
+                atom_1    = old_div(topology_angles_list.pop(0), 3)
+                atom_2    = old_div(topology_angles_list.pop(0), 3)
+                atom_3    = old_div(topology_angles_list.pop(0), 3)
                 bond_type = topology_angles_list.pop(0)
                 self.angles.append((atom_1, atom_2, atom_3))
         return self.angles
@@ -83,18 +89,18 @@ class AmberTopology():
         topology_dihedrals_list = topology_data["DIHEDRALS_INC_HYDROGEN"] + topology_data["DIHEDRALS_WITHOUT_HYDROGEN"]
         if by_type is True:
             while topology_dihedrals_list:
-                atom_1    = topology_dihedrals_list.pop(0) / 3
-                atom_2    = topology_dihedrals_list.pop(0) / 3
-                atom_3    = topology_dihedrals_list.pop(0) / 3
-                atom_4    = topology_dihedrals_list.pop(0) / 3
+                atom_1    = old_div(topology_dihedrals_list.pop(0), 3)
+                atom_2    = old_div(topology_dihedrals_list.pop(0), 3)
+                atom_3    = old_div(topology_dihedrals_list.pop(0), 3)
+                atom_4    = old_div(topology_dihedrals_list.pop(0), 3)
                 bond_type = topology_dihedrals_list.pop(0)
                 self.dihedrals.append((atom_1, atom_2, atom_3, atom_4, bond_type))
         else:
             while topology_dihedrals_list:
-                atom_1    = topology_dihedrals_list.pop(0) / 3
-                atom_2    = topology_dihedrals_list.pop(0) / 3
-                atom_3    = topology_dihedrals_list.pop(0) / 3
-                atom_4    = topology_dihedrals_list.pop(0) / 3
+                atom_1    = old_div(topology_dihedrals_list.pop(0), 3)
+                atom_2    = old_div(topology_dihedrals_list.pop(0), 3)
+                atom_3    = old_div(topology_dihedrals_list.pop(0), 3)
+                atom_4    = old_div(topology_dihedrals_list.pop(0), 3)
                 bond_type = topology_dihedrals_list.pop(0)
                 self.dihedrals.append((atom_1, atom_2, atom_3, atom_4))
         return self.dihedrals
@@ -107,8 +113,8 @@ if __name__ == "__main__":
 #     for key in topology_data:
 #         print key, topology_data[key]
     for bond in amber_top.bonds(by_type = True):
-        print bond
+        print(bond)
     for angle in amber_top.angles(by_type = True):
-        print angle
+        print(angle)
     for dihedral in amber_top.dihedrals(by_type = True):
-        print dihedral
+        print(dihedral)

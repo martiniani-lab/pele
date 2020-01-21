@@ -6,9 +6,13 @@ To be consistent with GMIN, units are kcal/mol and angstroms
 Requires: 
          coords.inpcrd and coords.prmtop 
 """
+from __future__ import division
+from __future__ import print_function
 
 
 # TODO: if BasePotential is imported after simtk imports, it gives a seg fault!! 
+from builtins import range
+from past.utils import old_div
 from simtk.openmm.app import AmberPrmtopFile, AmberInpcrdFile, Simulation
 from simtk.openmm import *
 from simtk.unit import kilocalories_per_mole, kilojoules_per_mole, nanometer, angstrom, picosecond
@@ -47,8 +51,8 @@ class OpenMMAmberPotential(BasePotential):
         # simulation.context.setPositions(pdb.positions)
 
         # remove units 
-        self.localCoords = self.inpcrd.positions / angstrom
-        self.kJtokCal = kilocalories_per_mole / kilojoules_per_mole
+        self.localCoords = old_div(self.inpcrd.positions, angstrom)
+        self.kJtokCal = old_div(kilocalories_per_mole, kilojoules_per_mole)
 
     # '''  ------------------------------------------------------------------- '''
     def copyToLocalCoords(self, coords):
@@ -72,7 +76,7 @@ class OpenMMAmberPotential(BasePotential):
         potE = self.simulation.context.getState(getEnergy=True).getPotentialEnergy()
 
         # remove units from potE and then convert to kcal/mol to be consistent with GMIN   
-        ee = potE / kilojoules_per_mole / self.kJtokCal
+        ee = old_div(potE, kilojoules_per_mole / self.kJtokCal)
         return float(ee)
 
     # '''  ------------------------------------------------------------------- '''
@@ -85,11 +89,11 @@ class OpenMMAmberPotential(BasePotential):
         # get pot energy 
         potE = self.simulation.context.getState(getEnergy=True).getPotentialEnergy()
 
-        E = potE / kilojoules_per_mole / self.kJtokCal
+        E = old_div(potE, kilojoules_per_mole / self.kJtokCal)
         # get forces  
         forcee = self.simulation.context.getState(getForces=True).getForces(asNumpy=True)
         # xply to -1 to convert gradient ; divide by 10 to convert to kJ/mol/angstroms 
-        grad = -forcee / ( kilojoules_per_mole / nanometer ) / 10 / self.kJtokCal  # todo - 10 is hardcoded
+        grad = old_div(-forcee, ( old_div(kilojoules_per_mole, nanometer) ) / 10 / self.kJtokCal)  # todo - 10 is hardcoded
 
         # remove units before returning  
         grad = np.array(grad, dtype=float)
@@ -109,29 +113,29 @@ if __name__ == "__main__":
 
     pdb = openmmpdb.PDBFile('../../examples/amber/aladipep/coords.pdb')
 
-    coords = pdb.getPositions() / angstrom
+    coords = old_div(pdb.getPositions(), angstrom)
     coords = numpy.reshape(numpy.transpose(coords), 3 * len(coords), 1)
 
     # compute energy and gradients       
     e = pot.getEnergy(coords)
-    print 'Energy (kJ/mol) = '
-    print e
+    print('Energy (kJ/mol) = ')
+    print(e)
 
     e, g = pot.getEnergyGradient(coords)
     gnum = pot.NumericalDerivative(coords, eps=1e-6)
 
-    print 'Energy (kJ/mol) = '
-    print e
-    print 'Analytic Gradient = '
-    print g[60:65]
-    print 'Numerical Gradient = '
-    print gnum[60:65]
+    print('Energy (kJ/mol) = ')
+    print(e)
+    print('Analytic Gradient = ')
+    print(g[60:65])
+    print('Numerical Gradient = ')
+    print(gnum[60:65])
 
     import numpy as np
 
-    print 'Num vs Analytic Gradient ='
-    print np.max(np.abs(gnum - g)), np.max(np.abs(gnum))
-    print np.max(np.abs(gnum - g)) / np.max(np.abs(gnum))
+    print('Num vs Analytic Gradient =')
+    print(np.max(np.abs(gnum - g)), np.max(np.abs(gnum)))
+    print(old_div(np.max(np.abs(gnum - g)), np.max(np.abs(gnum))))
 
 
 # $ python openmm_potential.py

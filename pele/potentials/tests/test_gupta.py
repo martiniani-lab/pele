@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import unittest
 import numpy as np
 
 from pele.potentials._gupta import gupta
 
-import _base_test
+from . import _base_test
 
 
 _x = np.array([0.7869137533, -0.4286528603, -0.2291436461,

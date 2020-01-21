@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 import unittest
 import random
 import pele.exceptions as exc
@@ -118,10 +120,10 @@ class TestDontLeaveBasinTest(unittest.TestCase):
         Eold = Enew - 1.0 / random.random()
         self.assertTrue(not self.dlb_e_0.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_0.acceptReject(Enew, Eold))
-        Eold = Enew - 1.0e-4 / random.random()
+        Eold = Enew - old_div(1.0e-4, random.random())
         self.assertTrue(not self.dlb_e_4.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_4.acceptReject(Enew, Eold))
-        Eold = Enew - 1.0e-6 / random.random()
+        Eold = Enew - old_div(1.0e-6, random.random())
         self.assertTrue(not self.dlb_e_6.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_6.acceptReject(Enew, Eold))
 
@@ -135,10 +137,10 @@ class TestDontLeaveBasinTest(unittest.TestCase):
         Eold = Enew + 1.0 / random.random()
         self.assertTrue(not self.dlb_e_0.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_0.acceptReject(Enew, Eold))
-        Eold = Enew + 1.0e-4 / random.random()
+        Eold = Enew + old_div(1.0e-4, random.random())
         self.assertTrue(not self.dlb_e_4.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_4.acceptReject(Enew, Eold))
-        Eold = Enew + 1.0e-6 / random.random()
+        Eold = Enew + old_div(1.0e-6, random.random())
         self.assertTrue(not self.dlb_e_6.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_6.acceptReject(Enew, Eold))
 
@@ -172,10 +174,10 @@ class TestDontLeaveBasinTest(unittest.TestCase):
         Enew = 1.0 / random.random()
         self.assertTrue(not self.dlb_e_0.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_0.acceptReject(Enew, Eold))
-        Enew = 1.0e-4 / random.random()
+        Enew = old_div(1.0e-4, random.random())
         self.assertTrue(not self.dlb_e_4.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_4.acceptReject(Enew, Eold))
-        Enew = 1.0e-6 / random.random()
+        Enew = old_div(1.0e-6, random.random())
         self.assertTrue(not self.dlb_e_6.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_6.acceptReject(Enew, Eold))
 
@@ -183,16 +185,16 @@ class TestDontLeaveBasinTest(unittest.TestCase):
         # test that cases when one energy is zero and the other is negative 
         # and over the threshold are rejected
         Eold = 0
-        Enew = -100.0 / random.random()
+        Enew = old_div(-100.0, random.random())
         self.assertTrue(not self.dlb_e_plus2.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_plus2.acceptReject(Enew, Eold))
-        Enew = -1.0 / random.random()
+        Enew = old_div(-1.0, random.random())
         self.assertTrue(not self.dlb_e_0.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_0.acceptReject(Enew, Eold))
-        Enew = -1.0e-4 / random.random()
+        Enew = old_div(-1.0e-4, random.random())
         self.assertTrue(not self.dlb_e_4.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_4.acceptReject(Enew, Eold))
-        Enew = -1.0e-6 / random.random()
+        Enew = old_div(-1.0e-6, random.random())
         self.assertTrue(not self.dlb_e_6.acceptReject(Eold, Enew))
         self.assertTrue(not self.dlb_e_6.acceptReject(Enew, Eold))
 

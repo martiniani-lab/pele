@@ -3,7 +3,9 @@ Created on Jun 7, 2012
 
 @author: vr274
 """
+from __future__ import print_function
 
+from builtins import str
 from pele.takestep import TakestepInterface
 
 __all__ = ["GroupSteps", "BlockMoves", "Reseeding"]
@@ -116,8 +118,8 @@ class Reseeding(TakestepInterface):
 
     def takeStep(self, coords, **kwargs):
         if self._noimprove >= self.maxnoimprove:
-            print "The energy did not improve after " + str(self._noimprove) + \
-                  " steps, reseeding"
+            print("The energy did not improve after " + str(self._noimprove) + \
+                  " steps, reseeding")
             self.reseed.takeStep(coords, **kwargs)
             kwargs['driver'].acceptTest.forceAccept()
             self.lowest = None

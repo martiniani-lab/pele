@@ -1,3 +1,4 @@
+from __future__ import print_function
 from numpy.distutils.core import setup
 from numpy.distutils.core import Extension
 import os

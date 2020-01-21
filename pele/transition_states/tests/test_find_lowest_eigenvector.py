@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 import unittest
 import numpy as np
 
@@ -24,13 +26,13 @@ class TestFindLowestEigenvector(unittest.TestCase):
     def test(self):
         lval, lvec = analyticalLowestEigenvalue(self.x, self.pot)
         ret = self.finder.run(100)
-        self.assertLess(np.abs(ret.eigenval - lval) / np.abs(lval), 1e-2)
+        self.assertLess(old_div(np.abs(ret.eigenval - lval), np.abs(lval)), 1e-2)
     
         
     def test2(self):
         lval, lvec = analyticalLowestEigenvalue(self.x, self.pot)
         ret = findLowestEigenVector(self.x.copy(), self.pot)
-        self.assertLess(np.abs(ret.eigenval - lval) / np.abs(lval), 1e-2)
+        self.assertLess(old_div(np.abs(ret.eigenval - lval), np.abs(lval)), 1e-2)
 
 class TestFindLowestEigenvector_NFEV(unittest.TestCase):
     def setUp(self, **kwargs):

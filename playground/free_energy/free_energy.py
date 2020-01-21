@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+from past.utils import old_div
 import scipy
 import numpy as np
 from pele.systems import LJCluster
@@ -17,9 +20,9 @@ bh.run(50)
 
 min1 = db.minima()[0]
 coords = min1.coords
-print
-print "Done with basinghopping, performing frequency analysis"
-print
+print()
+print("Done with basinghopping, performing frequency analysis")
+print()
 #min1 = db.transition_states()[0]
 
 
@@ -27,7 +30,7 @@ print
 determine_pgorder = PointGroupOrderCluster(system.get_compare_exact())
 pgorder = determine_pgorder(min1.coords)
 # free energy from symmetry
-Fpg = np.log(pgorder)/beta
+Fpg = old_div(np.log(pgorder),beta)
 
 # get the hession
 e, g, hess = pot.getEnergyGradientHessian(min1.coords)
@@ -43,12 +46,12 @@ Ffrq = (n*np.log(beta) + 0.5*lnf /beta)
 
 # print a short summary
 E = pot.getEnergy(coords)
-print "point group order:", pgorder 
-print "number of zero eigenvalues:", (np.abs(freqs2) < 1e-4).sum()
-print "number of negative eigenvalues:", (freqs2 < -1e-4).sum()
-print "free energy at beta=%f:"%beta, E + Ffrq + Fpg
-print "contributions from"
-print "potential energy", E
-print "frequencies", Ffrq
-print "point group order", Fpg
+print("point group order:", pgorder) 
+print("number of zero eigenvalues:", (np.abs(freqs2) < 1e-4).sum())
+print("number of negative eigenvalues:", (freqs2 < -1e-4).sum())
+print("free energy at beta=%f:"%beta, E + Ffrq + Fpg)
+print("contributions from")
+print("potential energy", E)
+print("frequencies", Ffrq)
+print("point group order", Fpg)
 

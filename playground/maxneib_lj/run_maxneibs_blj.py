@@ -1,8 +1,10 @@
+from __future__ import division
+from past.utils import old_div
 from pele.potentials.maxneib_blj import MaxNeibsBLJ, MaxNeibsBLJSystem
 from pele.gui import run_gui
 
 natoms = 20
-ntypeA = natoms/2
+ntypeA = old_div(natoms,2)
 max_neibs = 4.5
 system = MaxNeibsBLJSystem(natoms, ntypeA=ntypeA, max_neibs=max_neibs, rneib=1.7, 
                            epsneibs=12., epsAB=1., epsB=0.01, epsA=0.01,

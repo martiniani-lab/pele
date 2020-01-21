@@ -1,6 +1,8 @@
 """
 Example 3: Saving all minima found to an xyz file
 """
+from __future__ import print_function
+from builtins import str
 from pele.systems import LJCluster
 from pele.utils.xyz import write_xyz
 
@@ -28,4 +30,4 @@ try:
         pym.draw_spheres(minimum.coords.reshape(-1, 3), "A", frame)
         frame += 1
 except:
-    print "Could not draw using pymol, skipping this step" 
+    print("Could not draw using pymol, skipping this step") 

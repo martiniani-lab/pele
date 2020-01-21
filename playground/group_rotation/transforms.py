@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 import numpy as np
 import exceptions as exc
 
@@ -98,7 +102,7 @@ def proper_rotation(axis, angle, affine = False, right_handed = True):
     and returns a LinearTransform object.
     """
     # Create the matrices used in the matrix form of Rodrigues' rotation formula
-    u = axis / np.linalg.norm(axis)
+    u = old_div(axis, np.linalg.norm(axis))
     identity = np.identity(3)
     tensor_prod = np.array([[u[0]*u[0], u[0]*u[1], u[0]*u[2]],
                             [u[1]*u[0], u[1]*u[1], u[1]*u[2]],
@@ -129,7 +133,7 @@ def reflection(plane_normal, affine = False):
     in a plane with normal plane_normal and contains the origin. By default, this
     returns a LinearTransform object.
     """
-    v = np.matrix(plane_normal / np.linalg.norm(plane_normal))
+    v = np.matrix(old_div(plane_normal, np.linalg.norm(plane_normal)))
     identity = np.identity(3)
     reflection_matrix = identity - 2 * v.T * v
     lin_reflection_transform = LinearTransform(reflection_matrix, orthogonal = True)
@@ -183,5 +187,5 @@ if __name__ == "__main__":
     trans_forward = translation(trans)
     trans_back = translation(-trans)
     dihedral_move = trans_back * proper * trans_forward
-    print inverse(coords)
-    print improper(coords)
+    print(inverse(coords))
+    print(improper(coords))

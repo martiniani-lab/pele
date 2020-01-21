@@ -1,9 +1,15 @@
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import numpy as np
 import pele.potentials.lj as lj
 #import potentials.ljcpp as lj
 from pele.mc import MonteCarlo 
 from pele.takestep import RandomDisplacement, AdaptiveStepsize
-from ptmc import PTMC, getTemps
+from .ptmc import PTMC, getTemps
 import copy
 from pele.utils.histogram import EnergyHistogram, PrintHistogram
 from pele.optimize import mylbfgs as quench
@@ -17,7 +23,7 @@ def runptmc(nsteps_tot = 100000):
     
     nsteps_equil = 10000
     nsteps_tot   = 100000
-    histiprint  =  nsteps_tot / 10
+    histiprint  =  old_div(nsteps_tot, 10)
     exchange_frq = 100*nreplicas
     
     coords=np.random.random(3*natoms)
@@ -100,20 +106,20 @@ def runptmc(nsteps_tot = 100000):
     
     
     if False: #this doesn't work
-        print "final energies"
+        print("final energies")
         for rep in ptmc.replicas:
-            print rep.temperature, rep.markovE
+            print(rep.temperature, rep.markovE)
         for rep in ptmc.replicas_par:
-            print rep.mcsys.markovE
+            print(rep.mcsys.markovE)
         for k in range(nreplicas):
             e,T = ptmc.getRepEnergyT(k)
-            print T, e
+            print(T, e)
     
     if False: #this doesn't work
-        print "histograms"
+        print("histograms")
         for i,hist in enumerate(histograms):
             fname = "hist." + str(i)
-            print fname
+            print(fname)
             with open(fname, "w") as fout:
                 for (e, visits) in hist:
                     fout.write( "%g %d\n" % (e, visits) )
@@ -122,9 +128,9 @@ def runptmc(nsteps_tot = 100000):
     
 def getReplicaPath(fname = "exchanges", nreps = 4):
     paths = [ [i] for i in range(nreps)]
-    positions = np.array(range(nreps))
-    newpositions = np.array(range(nreps))
-    oldpositions = np.array(range(nreps))
+    positions = np.array(list(range(nreps)))
+    newpositions = np.array(list(range(nreps)))
+    oldpositions = np.array(list(range(nreps)))
     with open(fname, "r") as fin:
         for line in fin:
             sline = line.split()
@@ -134,23 +140,23 @@ def getReplicaPath(fname = "exchanges", nreps = 4):
                 oldpositions[newposition] = oldposition
                 #replica = position2replica[oldposition]
                 #newpositions[replica] =
-            print oldpositions 
-            print positions
+            print(oldpositions) 
+            print(positions)
             #positions[:] = positions[newpositions]
             positions[:] = positions[oldpositions]
-            print positions
+            print(positions)
             #print ""
             for i, j in enumerate(positions):
                 paths[i].append(j)
     if True:
         import matplotlib.pyplot as plt
         nppaths = np.array(paths)
-        print np.shape(nppaths)
+        print(np.shape(nppaths))
         for i in range(4):
             plt.subplot(2,2,i+1)
             plt.plot( nppaths[i,:])
         plt.show()
-        print paths[0]
+        print(paths[0])
             
 
 

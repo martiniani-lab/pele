@@ -3,7 +3,9 @@ Created on Apr 18, 2012
 
 @author: vr274
 """
+from __future__ import print_function
 
+from builtins import object
 import threading
 import operator
 
@@ -98,5 +100,5 @@ if __name__ == "__main__":
     save.insert(2., np.random.random(10))
     save.insert(1.001, np.random.random(10))
     for i in save.data:
-        print i.energy, i.coords
+        print(i.energy, i.coords)
         

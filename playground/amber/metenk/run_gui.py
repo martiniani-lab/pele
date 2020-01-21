@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 import numpy as np
 
 import pele.utils.readAmberParam as readAmb
@@ -9,7 +12,7 @@ from pele.NEB import NEB
 from pele.takestep import displace
 
 
-class molSystem:
+class molSystem(object):
     def __init__(self):
         self.storage = savenlowest.SaveN(10)
         GMIN.initialize()
@@ -30,7 +33,7 @@ class molSystem:
         p = X2-X1 #desired cylinder orientation
         r = np.linalg.norm(p)
         t = np.cross(z,p)  #angle about which to rotate
-        a = np.arccos( np.dot( z,p) / r ) #rotation angle
+        a = np.arccos( old_div(np.dot( z,p), r) ) #rotation angle
         a *= (180. / np.pi)  #change units to angles
         GL.glPushMatrix()
         GL.glTranslate( X1[0], X1[1], X1[2] )
@@ -41,7 +44,7 @@ class molSystem:
         
     def draw(self, coordsl, index):
         from OpenGL import GL,GLUT
-        coords=coordsl.reshape(coordsl.size/3,3)
+        coords=coordsl.reshape(old_div(coordsl.size,3),3)
         #coords = coords.reshape(GMIN.getNAtoms, 3)
         com=np.mean(coords, axis=0)                  
         for xx in coords:

@@ -1,3 +1,8 @@
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
+from past.utils import old_div
 import unittest
 import numpy as np
 
@@ -5,7 +10,7 @@ from pele.rates._kmc import KineticMonteCarlo
 from pele.rates._rate_calculations import GraphReduction
 from pele.rates._rates_linalg import TwoStateRates
 
-from test_graph_transformation import _MakeRandomGraph, _three_state_graph
+from .test_graph_transformation import _MakeRandomGraph, _three_state_graph
 
 np.random.seed(0)
 
@@ -21,7 +26,7 @@ class TestKMC(unittest.TestCase):
 
 class TestKMC_GraphReduction(unittest.TestCase):
     def compare(self, A, B, nnodes=10, nedges=20, weights=None, x=1):
-        print ""
+        print("")
         maker = _MakeRandomGraph(nnodes=nnodes, nedges=nedges, node_set=A+B+[x])
         graph = maker.run()
         graph_backup = graph.copy()
@@ -31,8 +36,8 @@ class TestKMC_GraphReduction(unittest.TestCase):
         # test compute_committor_probability()
         PxB = reducer.compute_committor_probability(x)
         PxB_kmc = kmc.committor_probability(x, A, B, niter=1000)
-        print "committor probability    ", x, "->", B, "=", PxB
-        print "committor probability kmc", x, "->", B, "=", PxB_kmc
+        print("committor probability    ", x, "->", B, "=", PxB)
+        print("committor probability kmc", x, "->", B, "=", PxB_kmc)
         self.assertAlmostEqual(PxB, PxB_kmc, delta=.1)
         
         reducer.compute_rates()
@@ -54,24 +59,24 @@ class TestKMC_GraphReduction(unittest.TestCase):
          
         rAB_KMC = kmc.mean_rate(A, B, niter=1000, weights=weights)
         
-        print "NGT rate A->B", rAB
-        print "KMC rate A->B", rAB_KMC
-        print "normalized difference", (rAB - rAB_KMC)/rAB 
-        print "normalized difference to linalg", (rAB - rAB_LA)/rAB 
-        self.assertLess(abs(rAB - rAB_KMC)/rAB, .1)
-        self.assertLess(abs(rAB - rAB_LA)/rAB, .00001)
+        print("NGT rate A->B", rAB)
+        print("KMC rate A->B", rAB_KMC)
+        print("normalized difference", old_div((rAB - rAB_KMC),rAB)) 
+        print("normalized difference to linalg", old_div((rAB - rAB_LA),rAB)) 
+        self.assertLess(old_div(abs(rAB - rAB_KMC),rAB), .1)
+        self.assertLess(old_div(abs(rAB - rAB_LA),rAB), .00001)
 
 
         rBA_KMC = kmc.mean_rate(B, A, niter=1000, weights=weights)
          
-        print "NGT rate B->A", rBA
-        print "KMC rate B->A", rBA_KMC
-        print "normalized difference", (rBA - rBA_KMC)/rBA
-        self.assertLess(abs(rBA - rBA_KMC)/rBA, .1)
+        print("NGT rate B->A", rBA)
+        print("KMC rate B->A", rBA_KMC)
+        print("normalized difference", old_div((rBA - rBA_KMC),rBA))
+        self.assertLess(old_div(abs(rBA - rBA_KMC),rBA), .1)
         
         paB = kmc.committor_probability(A[0], [A[0]], B, niter=1000)
-        print "the committor probability a->B", paB
-        print "graph reduction committor prob", reducer.get_committor_probabilityAB(A[0])
+        print("the committor probability a->B", paB)
+        print("graph reduction committor prob", reducer.get_committor_probabilityAB(A[0]))
         self.assertAlmostEqual(paB, reducer.get_committor_probabilityAB(A[0]), delta=.1)
 
     def test(self):
@@ -94,7 +99,7 @@ class TestKMC_GraphReduction(unittest.TestCase):
 
 
     def test_big_group(self, nnodes=10, nedges=20):
-        A = range(8)
+        A = list(range(8))
         B = [9]
         self.compare(A, B)
     

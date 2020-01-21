@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 import unittest
 import numpy as np
 
@@ -17,7 +19,7 @@ class TestLBFGS_CPP(unittest.TestCase):
         e, g = self.pot.getEnergyGradient(ret.coords)
         self.assertAlmostEqual(e, ret.energy, delta=1e-6)
         self.assertLess(np.max(np.abs(g - ret.grad)), 1e-6)
-        rms = np.linalg.norm(g) / np.sqrt(g.size)
+        rms = old_div(np.linalg.norm(g), np.sqrt(g.size))
         self.assertAlmostEqual(rms, ret.rms, 1e-6)
         
         self.assertGreater(ret.nfev, 0)

@@ -2,6 +2,8 @@
 an example for finding the minimum distance and best alignment
 between two lennard jones clusters
 """
+from __future__ import print_function
+from builtins import range
 import numpy as np
 
 from pele.potentials.lj import LJ
@@ -21,10 +23,10 @@ coords1 = ret1.coords
 coords2 = ret2.coords
 
 # all the atoms are permutable
-permlist = [range(natoms)]
+permlist = [list(range(natoms))]
 
 mindist = MinPermDistAtomicCluster(niter=100, permlist=permlist, verbose=False)
 dist, newcoords1, newcoords2 = mindist(coords1, coords2)
 
-print ""
-print "dist =", dist
+print("")
+print("dist =", dist)

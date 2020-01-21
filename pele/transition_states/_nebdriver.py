@@ -1,9 +1,15 @@
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import logging
 import numpy as np
 
 from pele.transition_states import NEB
 from pele.transition_states._NEB import distance_cart
-from _interpolate import InterpolatedPath, interpolate_linear
+from ._interpolate import InterpolatedPath, interpolate_linear
 from pele.utils.events import Signal
 
 __all__ = ["NEBDriver"]
@@ -148,7 +154,7 @@ class NEBDriver(object):
             energies.append(self.potential.getEnergy(x))
 
         distances = []
-        for i in xrange(len(self.path) - 1):
+        for i in range(len(self.path) - 1):
             distances.append(np.sqrt(self.distance(self.path[i], self.path[i + 1])[0]))
 
         self.update_event(path=np.array(self.path), energies=np.array(energies),
@@ -206,7 +212,7 @@ class NEBDriver(object):
 
             # get the distances between each of the images
             distances = []
-            for i in xrange(len(res.path) - 1):
+            for i in range(len(res.path) - 1):
                 distances.append(np.sqrt(self.distance(res.path[i], res.path[i + 1])[0]))
 
             # reinterplate the path based on the distances
@@ -238,7 +244,7 @@ class NEBDriver(object):
 
     def _reinterpolate(self, path, distances):
         average_d = np.average(distances)
-        deviation = np.abs((distances - average_d) / average_d)
+        deviation = np.abs(old_div((distances - average_d), average_d))
         avdev = np.average(deviation)
 
         acc_dist = np.sum(distances)
@@ -253,7 +259,7 @@ class NEBDriver(object):
         # only reinterpolate if above tolerance
         if (avdev < self.reinterpolate_tol and
                     abs(float(nimages - len(path)) / float(nimages)) < self.reinterpolate_tol):
-            print "no reinterpolation needed"
+            print("no reinterpolation needed")
             return path
 
         newpath = []
@@ -263,14 +269,14 @@ class NEBDriver(object):
         s_cur = 0.
         s_next = distances[icur]
 
-        for i in xrange(1, nimages - 1):
+        for i in range(1, nimages - 1):
             s = float(i) * acc_dist / (nimages - 1)
             while s > s_next:
                 icur += 1
                 s_cur = s_next
                 s_next += distances[icur]
 
-            t = (s - s_cur) / (s_next - s_cur)
+            t = old_div((s - s_cur), (s_next - s_cur))
             newpath.append(self.interpolator(path[icur], path[icur + 1], t))
         newpath.append(path[-1].copy())
         return newpath
@@ -282,7 +288,7 @@ class NEBDriver(object):
 
     def _send_finish_event(self, res):
         distances = []
-        for i in xrange(len(res.path) - 1):
+        for i in range(len(res.path) - 1):
             distances.append(np.sqrt(self.distance(res.path[i], res.path[i + 1])[0]))
 
         self.update_event(path=res.path, energies=res.energy,

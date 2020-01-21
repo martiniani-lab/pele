@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 import numpy as np
 from copy import copy
 from numpy import sin, cos
@@ -20,7 +24,7 @@ def make3dVector(u):
     vec[1] = sinphi * sin(u[0])
     vec[2] = cos(u[1])
     if np.abs(np.linalg.norm(vec) - 1) > 1e-5:
-        print "make3dVector: vector not normalized", u, vec, np.linalg.norm(vec)
+        print("make3dVector: vector not normalized", u, vec, np.linalg.norm(vec))
     return vec
 
 
@@ -36,7 +40,7 @@ def make2dVector(u):
 
 def coords2ToCoords3(coords2):
     if len(np.shape(coords2)) == 1:
-        nvec = len(coords2) / 2
+        nvec = old_div(len(coords2), 2)
         coords2 = np.reshape(coords2, [nvec, 2])
     else:
         nvec = len(coords2[:, 0])
@@ -48,7 +52,7 @@ def coords2ToCoords3(coords2):
 
 def coords3ToCoords2(coords3):
     if len(np.shape(coords3)) == 1:
-        nvec = len(coords3) / 3
+        nvec = old_div(len(coords3), 3)
         coords3 = np.reshape(coords3, [nvec, 3])
     else:
         nvec = len(coords3[:, 0])
@@ -72,7 +76,7 @@ def makeGrad2(vec2, grad3):
 
 def grad3ToGrad2(coords2, grad3):
     if len(np.shape(grad3)) == 1:
-        nvec = len(grad3) / 3
+        nvec = old_div(len(grad3), 3)
         grad3 = np.reshape(grad3, [nvec, 3])
     else:
         nvec = len(grad3[:, 0])
@@ -178,7 +182,7 @@ class HeisenbergModel(BasePotential):
 def normalize_spins(v3):
     v = v3.reshape([-1, 3])
     norms = np.sqrt((v * v).sum(1))
-    v = v / norms[:, np.newaxis]
+    v = old_div(v, norms[:, np.newaxis])
     v = v.reshape(-1)
     v3[:] = v[:]
 
@@ -188,7 +192,7 @@ def test_basin_hopping(pot, angles):  # pragma: no cover
     from pele.takestep.displace import RandomDisplacement
     from pele.takestep.adaptive import AdaptiveStepsize
 
-    takestep = RandomDisplacement(stepsize=np.pi / 4)
+    takestep = RandomDisplacement(stepsize=old_div(np.pi, 4))
     takestepa = AdaptiveStepsize(takestep, frequency=20)
 
     bh = BasinHopping(angles, pot, takestepa, temperature=1.01)

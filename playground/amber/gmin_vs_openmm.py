@@ -12,6 +12,7 @@ Strangely the second calculation is in better agreement with GMIN energy!
 Amber system class in not used here. So this script would be a good starting point to understand how OpenMM and GMIN function calls work. 
 
 """
+from __future__ import print_function
 
 import ambgmin_ as GMIN
 import pele.potentials.gminpotential as gminpot
@@ -56,8 +57,8 @@ ener2 = simulation2.context.getState(getEnergy=True).getPotentialEnergy()
 
 # print all energies 
 
-print "Energies (kJ/mol)"
-print "AMBGMIN        OpenMM inpcrd/prmtop   OpenMM pdb/amb99sb  "
-print "-------------------------------------------------------- "
-print enerGmin , ener1,  ener2 
+print("Energies (kJ/mol)")
+print("AMBGMIN        OpenMM inpcrd/prmtop   OpenMM pdb/amb99sb  ")
+print("-------------------------------------------------------- ")
+print(enerGmin , ener1,  ener2) 
 

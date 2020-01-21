@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import numpy as np
 
 try:
@@ -100,13 +103,13 @@ def draw_atomic_binary_polydisperse(coordslinear, index, bdim=3, subtract_com=Fa
     """
     assert (radii is not None)
     if Batoms is None:
-        Batoms = np.ones(len(coordslinear) / bdim)
+        Batoms = np.ones(old_div(len(coordslinear), bdim))
 
     if bdim == 2:
         # insert 0 every 2 coordinates
         j = 0
         coordslinear = coordslinear.tolist()
-        for i in xrange(2, len(coordslinear) + 1, 2):
+        for i in range(2, len(coordslinear) + 1, 2):
             coordslinear.insert(i + j, 0.0)
             j += 1
         coordslinear = np.array(coordslinear)
@@ -142,7 +145,7 @@ def draw_cone(X1, X2, rbase=0.1, rtop=0.0, color=None):
     p = X2 - X1  # desired cylinder orientation
     r = np.linalg.norm(p)
     t = np.cross(z, p)  # angle about which to rotate
-    a = np.arccos(np.dot(z, p) / r)  # rotation angle
+    a = np.arccos(old_div(np.dot(z, p), r))  # rotation angle
     a *= (180. / np.pi)  # change units to angles
     GL.glPushMatrix()
     GL.glTranslate(X1[0], X1[1], X1[2])
@@ -165,7 +168,7 @@ def draw_box(boxvec, radius=0.05):
     from itertools import product
     corners = [np.array(x) for x in product([0,1], repeat=3)]
     
-    x0 = - boxvec / 2
+    x0 = old_div(- boxvec, 2)
     for i, c1 in enumerate(corners):
         for c2 in corners[:i]:
             if np.sum(np.abs(c1-c2)) == 1:

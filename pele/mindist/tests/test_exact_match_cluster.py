@@ -1,3 +1,4 @@
+from builtins import range
 import unittest
 import numpy as np
 import itertools
@@ -29,7 +30,7 @@ class TestExactMatchAtomicCluster(unittest.TestCase):
         
     
     def rperm(self, x):
-        perm = range(self.natoms)
+        perm = list(range(self.natoms))
         np.random.shuffle(perm)
         self.match.transform.permute(x, perm)
         

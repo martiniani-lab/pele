@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import object
+from past.utils import old_div
 import numpy as np
 from pele.mindist.periodic_exact_match import TransformPeriodic
 from inspect import stack
@@ -31,11 +35,11 @@ class MinDistBulk(object):
         """
 
         if self.verbose:
-            print "Transform:"
-            print self.transform
-            print "Measure.topology:"
-            print self.measure.topology
-            print "Called by", stack()
+            print("Transform:")
+            print(self.transform)
+            print("Measure.topology:")
+            print(self.measure.topology)
+            print("Called by", stack())
         
         # we don't want to change the given coordinates
         x1 = np.copy(x1).reshape(-1, self.boxvec.size)
@@ -43,7 +47,7 @@ class MinDistBulk(object):
 
         dist, dx = self.measure.get_dist(x2, x1, with_vector=True)
         dx = dx.reshape(-1, self.boxvec.size)
-        ave2 = dx.sum(0) / (dx.shape[0])
+        ave2 = old_div(dx.sum(0), (dx.shape[0]))
         self.transform.translate(x2, ave2)
 
         dist, x2 = self.finalize_best_match(x1, x2)    

@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 import unittest
 import numpy as np
 
 from playground.native_code import _lj
 from pele.systems import LJClusterFrozen
 from pele.optimize import mylbfgs
-import _test_lj_cpp
+from . import _test_lj_cpp
 
 class TestFrozenAtoms(_test_lj_cpp.TestLJ_CPP):
     def setUp(self):

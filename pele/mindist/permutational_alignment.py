@@ -1,3 +1,8 @@
+from __future__ import division
+from __future__ import absolute_import
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import numpy as np
 import itertools
 
@@ -10,7 +15,7 @@ have_hungarian = False
 have_munkres = False
 
 try:
-    import minperm
+    from . import minperm
     have_minperm = True    
 except ImportError:
     pass
@@ -46,7 +51,7 @@ def permuteArray(Xold, perm):
     # don't modify Xold
     Xnew = np.copy(Xold)
     permsorted = sorted(perm)
-    for (iold, inew) in itertools.izip(permsorted, perm):
+    for (iold, inew) in zip(permsorted, perm):
         Xnew[inew*3:inew*3+3] = Xold[iold*3:iold*3+3]
 
     return Xnew
@@ -98,7 +103,7 @@ def find_permutations_munkres( X1, X2, make_cost_matrix=_make_cost_matrix ):
     # apply the permutation
     #########################################
     costnew = 0.
-    new_indices = range(len(X1))
+    new_indices = list(range(len(X1)))
     for (iold, inew) in newind:
         costnew += cost[iold, inew]
         new_indices[inew] = iold
@@ -244,9 +249,9 @@ def find_best_permutation(X1, X2, permlist=None, user_algorithm=None,
         X2 = X2.reshape([-1,3])
     
     if permlist is None:
-        permlist = [range(len(X1))]
+        permlist = [list(range(len(X1)))]
     
-    newperm = range(len(X1))
+    newperm = list(range(len(X1)))
     disttot = 0.
     
     for atomlist in permlist:
@@ -260,7 +265,7 @@ def find_best_permutation(X1, X2, permlist=None, user_algorithm=None,
             dist, perm = _find_permutations(X1[atomlist], X2[atomlist], **kwargs)
         
         disttot += dist**2
-        for atom, i in zip(atomlist,xrange(len(atomlist))):
+        for atom, i in zip(atomlist,range(len(atomlist))):
             newperm[atom] = atomlist[perm[i]]
     dist = np.sqrt(disttot)
     return dist, newperm
@@ -269,7 +274,7 @@ def _cartesian_distance_periodic(x1, x2, box_lengths):
     dim = len(box_lengths)
     dx = x2 - x1
     dx = dx.reshape([-1,dim])
-    dx -= box_lengths * np.round(dx / box_lengths[np.newaxis, :])
+    dx -= box_lengths * np.round(old_div(dx, box_lengths[np.newaxis, :]))
     dx = dx.ravel()
     dist = np.linalg.norm(dx)
     return dist

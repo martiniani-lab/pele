@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 import unittest
 import numpy as np
 import networkx as nx
@@ -18,7 +20,7 @@ def make_rates_complete(nnodes=10):
 
 class _MakeRandomGraph(object):
     def __init__(self, nnodes=10, nedges=20, node_set=None):
-        self.nodes = np.array(range(nnodes))
+        self.nodes = np.array(list(range(nnodes)))
         self.nedges = nedges
         self.node_set = set(node_set)
         self.rates = dict()
@@ -26,7 +28,7 @@ class _MakeRandomGraph(object):
         self.graph.add_nodes_from(self.nodes)
     
     def node_set_connected(self):
-        u = iter(self.node_set).next()
+        u = next(iter(self.node_set))
         cc = nx.node_connected_component(self.graph, u)
         cc = set(cc)
         return len(cc.intersection(self.node_set)) == len(self.node_set)

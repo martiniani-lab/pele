@@ -1,4 +1,6 @@
-from aamindist import MeasureAngleAxisCluster
+from __future__ import absolute_import
+from builtins import object
+from .aamindist import MeasureAngleAxisCluster
 from pele.mindist.periodic_exact_match import TransformPeriodic
 from pele.utils.rbtools import CoordsAdapter    
     

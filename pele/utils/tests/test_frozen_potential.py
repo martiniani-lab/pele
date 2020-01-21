@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import unittest
 import numpy as np
 
@@ -57,10 +60,10 @@ class TestBLJNeighborListFreeze(_base_test._TestConfiguration):
     def setUp(self):
         self.x0 = _x0
         self.e0 = -87.46393381926839
-        natoms = self.x0.size / 3
+        natoms = old_div(self.x0.size, 3)
         ntypeA = int(natoms*0.8)
         ntypeB = natoms - ntypeA
-        freezelist = range(ntypeA/2) + range(ntypeA,ntypeA+ntypeB/2)
+        freezelist = list(range(old_div(ntypeA,2))) + list(range(ntypeA,ntypeA+old_div(ntypeB,2)))
         self.freezelist = freezelist
         rcut=2.5
         boxl=5.5

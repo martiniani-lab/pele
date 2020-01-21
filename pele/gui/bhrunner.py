@@ -1,3 +1,6 @@
+from __future__ import print_function
+from builtins import range
+from builtins import object
 import time
 import multiprocessing as mp
 
@@ -21,7 +24,7 @@ class _BHProcess(mp.Process):
     def run(self):
         seed = int(time.time() * 100.) % 4294967295
         np.random.seed(seed)
-        print np.random.random(2)
+        print(np.random.random(2))
         db = self.system.create_database()
         db.on_minimum_added.connect(self.insert)
         opt = self.system.get_basinhopping(database=db, outstream=None)
@@ -31,7 +34,7 @@ class _BHProcess(mp.Process):
             except AttributeError or KeyError:
                 self.nsteps = 100
         
-        for i in xrange(self.nsteps):
+        for i in range(self.nsteps):
             opt.run(1)
             if self._should_die():
                 return
@@ -43,7 +46,7 @@ class _BHProcess(mp.Process):
             if message == "kill":
                 return True
             else:
-                print "don't understand message", message, "ignoring"
+                print("don't understand message", message, "ignoring")
         return False
        
     def insert(self, m):
@@ -161,7 +164,7 @@ class BHManager(object):
         return len(self.workers)
         
 def found(m):
-    print("New Minimum",m[0])
+    print(("New Minimum",m[0]))
     
 if __name__ == '__main__': 
     runner = BHRunner(onMinimumAdded=found)

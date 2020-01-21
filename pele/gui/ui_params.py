@@ -7,6 +7,9 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 from PyQt4 import QtCore, QtGui
 
 class Ui_Dialog(object):

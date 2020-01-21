@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 from copy import copy
 
 import networkx as nx
@@ -11,7 +15,7 @@ from pele.potentials.heisenberg_spin import make3dVector, make2dVector, coords2T
 
 def getm(coords2):
     coords3 = coords2ToCoords3(coords2)
-    m = np.linalg.norm(coords3.sum(0)) / nspins
+    m = old_div(np.linalg.norm(coords3.sum(0)), nspins)
     return m
 
 
@@ -37,21 +41,21 @@ for i in range(nspins):
 coords = np.reshape(coords, [nspins * 2])
 coordsinit = np.copy(coords)
 
-print coords
+print(coords)
 
 e = pot.getEnergy(coords)
-print "energy ", e
+print("energy ", e)
 
-print "try a quench"
+print("try a quench")
 from pele.optimize import mylbfgs
 
 ret = mylbfgs(coords, pot)
 
-print "quenched e = ", ret.energy, "funcalls", ret.nfev
-print ret.coords
+print("quenched e = ", ret.energy, "funcalls", ret.nfev)
+print(ret.coords)
 
 m = getm(ret[0])
-print "magnetization after quench", m
+print("magnetization after quench", m)
 
 
 # do basin hopping
@@ -60,18 +64,18 @@ from pele.takestep.displace import RandomDisplacement
 from pele.takestep.adaptive import AdaptiveStepsize
 from pele.storage import savenlowest
 
-takestep = RandomDisplacement(stepsize=np.pi / 4)
+takestep = RandomDisplacement(stepsize=old_div(np.pi, 4))
 takestepa = AdaptiveStepsize(takestep, frequency=10)
 storage = savenlowest.SaveN(20)
 
 bh = BasinHopping(coords, pot, takestepa, temperature=1.01, storage=storage)
 bh.run(200)
 
-print "lowest structures fount:"
+print("lowest structures fount:")
 with open("out.spins", "w") as fout:
     for min in storage.data:
         m = getm(min.coords)
-        print "energy", min.energy, "magnetization", m
+        print("energy", min.energy, "magnetization", m)
         fout.write("energy %g magnetization %g\n" % (min.energy, m))
         printspins(fout, pot, min.coords)
         fout.write("\n\n")

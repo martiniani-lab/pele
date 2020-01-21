@@ -1,6 +1,7 @@
 '''
     example MolecularCluster subclass
 '''
+from __future__ import print_function
 
 from molecular_cluster import MolecularCluster, Molecule
 
@@ -15,8 +16,8 @@ class WaterCluster(MolecularCluster):
 def main():
     nmol=3
     system=WaterCluster(nmol)
-    print system.get_masses()
-    print system.get_permlist()
+    print(system.get_masses())
+    print(system.get_permlist())
 
 if __name__=="__main__":
     main()
