@@ -136,7 +136,7 @@ class Fire(object):
             vf = np.vdot(f, self.v)
             if vf > 0.0:
                 self.v = (1.0 - self.a) * self.v + old_div(self.a * f, np.sqrt(
-                    np.vdot(f, f)) * np.sqrt(np.vdot(self.v, self.v)))
+                    np.vdot(f, f))) * np.sqrt(np.vdot(self.v, self.v))
                 if self.Nsteps > self.Nmin:
                     self.dt = min(self.dt * self.finc, self.dtmax)
                     self.a *= self.fa

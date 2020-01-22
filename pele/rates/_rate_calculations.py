@@ -129,7 +129,7 @@ class GraphReduction(object):
     
     def _get_final_rate(self, group):
         # should maybe be careful when Pxx is very close to 1.
-        rate = sum(( old_div((1.-self._final_Pxx[x]), self._final_tau[x] * self.weights[x])
+        rate = sum(( old_div((1.-self._final_Pxx[x]), self._final_tau[x]) * self.weights[x]
                      for x in group))
         norm = sum((self.weights[x] for x in group))
         return old_div(rate, norm)

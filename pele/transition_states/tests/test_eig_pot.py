@@ -40,7 +40,7 @@ class TestEigPot(unittest.TestCase):
         
         self.assertLess(old_div(np.max(np.abs(g-gnum)), np.max(np.abs(g))), 1e-2)
         self.assertAlmostEqual(e, e1, delta=e * 1e-4)
-        self.assertAlmostEqual(1., old_div(np.dot(g, gnum), np.linalg.norm(g) / np.linalg.norm(gnum)), 3)
+        self.assertAlmostEqual(1., np.dot(g, gnum) / np.linalg.norm(g) / np.linalg.norm(gnum), 3)
         
     def test_ts(self):
         from pele.utils.xyz import read_xyz
@@ -61,7 +61,7 @@ class TestEigPot(unittest.TestCase):
         
         self.assertLess(old_div(np.max(np.abs(g-gnum)), np.max(np.abs(g))), 1e-3)
         self.assertAlmostEqual(e, e1, delta=e * 1e-4)
-        self.assertAlmostEqual(1., old_div(np.dot(g, gnum), np.linalg.norm(g) / np.linalg.norm(gnum)), 3)
+        self.assertAlmostEqual(1., np.dot(g, gnum) / np.linalg.norm(g) / np.linalg.norm(gnum), 3)
 
 class TestEigPotFirstOrder(TestEigPot):
     def setUp(self):

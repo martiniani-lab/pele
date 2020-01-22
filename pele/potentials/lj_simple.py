@@ -18,10 +18,11 @@ class LJ(BasePotential):
         self.eps = eps
 
     def vij(self, r):
-        return 4. * self.eps * ( (old_div(self.sig, r)) ** 12 - (old_div(self.sig, r)) ** 6 )
+        return 4. * self.eps * ( (self.sig / r) ** 12 - (self.sig / r) ** 6 )
 
     def dvij(self, r):
-        return 4. * self.eps * ( old_div(-12., self.sig * (old_div(self.sig, r)) ** 13) + 6. / self.sig * (old_div(self.sig, r)) ** 7 )
+        return 4. * self.eps * ( -12. / self.sig * (self.sig / r) ** 13 + 6. / self.sig * (self.sig / r) ** 7 )
+
 
     def getEnergy(self, coords):
         natoms = old_div(coords.size, 3)

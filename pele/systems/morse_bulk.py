@@ -14,7 +14,7 @@ def put_in_box(x, boxvec):
     x = x.reshape(-1, boxvec.size)
     x -= boxvec * np.round(old_div(x, boxvec))
 
-
+    
 class MorseBulk(MorseCluster):
     """morse potential with periodic boundary conditions"""
 

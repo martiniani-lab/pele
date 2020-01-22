@@ -133,6 +133,7 @@ class KineticMonteCarlo(object):
             return np.mean(1./mfpt)
         else:
             weights = np.array([weights[a] for a in A])
+            print(weights, 'weihts arrayed')
             return old_div(np.sum(old_div(weights, mfpt)), weights.sum())
 
     def committor(self, x, A, B, maxiter=100000):

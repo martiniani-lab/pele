@@ -410,9 +410,9 @@ class AATopology(object):
                 if np.linalg.norm(p2) < 1e-6:
                     if np.linalg.norm(p1) < 1e-6:
                         continue
-                    n2 = old_div(p1, np.linalg.norm(p1) * 2. * pi)
+                    n2 = old_div(p1, np.linalg.norm(p1)) * 2. * pi
                 else:
-                    n2 = old_div(p2, np.linalg.norm(p2) * 2. * pi)
+                    n2 = old_div(p2, np.linalg.norm(p2)) * 2. * pi
 
                 while True:
                     p2n = p2 + n2

@@ -13,7 +13,7 @@ from pele.angleaxis import RBTopology, RBSystem, RigidFragment, RBPotentialWrapp
 def make_otp():
     """this constructs a single OTP molecule"""
     otp = RigidFragment()
-    otp.add_atom("O", np.array([0.0, old_div(-2.,3 * np.sin( 7.*pi/24.)), 0.0]), 1.)
+    otp.add_atom("O", np.array([0.0, old_div(-2.,3 )* np.sin( 7.*pi/24.), 0.0]), 1.)
     otp.add_atom("O", np.array([cos( 7.*pi/24.),  1./3. * sin( 7.* pi/24.), 0.0]), 1.)
     otp.add_atom("O", np.array([-cos( 7.* pi/24.),  1./3. * sin( 7.*pi/24), 0.0]), 1.)
     otp.finalize_setup()

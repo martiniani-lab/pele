@@ -131,6 +131,7 @@ class TestLBFGS_discontinous(unittest.TestCase):
         pot = DiscontinuousHarmonic()
         x0 = np.array([-10, 1])
         opt = LBFGS(x0, pot, debug=True)
+        print('this runnnns')
         res = opt.run()
         self.assertFalse(res.success)
 

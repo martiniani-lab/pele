@@ -95,6 +95,7 @@ class TestKMC_GraphReduction(unittest.TestCase):
         weights = dict()
         for x in A+B:
             weights[x] = np.random.uniform(0,1)
+        print(weights)
         self.compare(A, B, weights=weights, x=4)
 
 

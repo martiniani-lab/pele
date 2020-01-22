@@ -70,7 +70,7 @@ def q2aa(qin):
     if s < rot_epsilon:
         p = 2. * q[1:4]
     else:
-        p = old_div(q[1:4], s ) * theta
+        p = old_div(q[1:4], s) * theta
     return p
 
 

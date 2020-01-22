@@ -333,6 +333,7 @@ class LBFGS(object):
         X0 = X.copy()
         G0 = G.copy()
         E0 = E
+        print('started')
         if np.dot(G, stp) > 0:
             if self.debug:
                 overlap = np.dot(G, stp) / np.linalg.norm(G) / np.linalg.norm(stp)
@@ -342,7 +343,7 @@ class LBFGS(object):
         stepsize = np.linalg.norm(stp)
 
         if f * stepsize > self.maxstep:
-            f = self.maxstep/stepsize
+            f = old_div(self.maxstep, stepsize)
 
         nincrease = 0
         while True:

@@ -199,6 +199,7 @@ class TestRBTopologyOTP(unittest.TestCase):
         p = np.array(list(range(1,4)), dtype=float)
         p /= np.linalg.norm(p)
         self.transform.rotate(x, rotations.aa2mx(p))
+        
         xnewtrue = np.array([ 0.48757698,  0.61588594,  2.09355038,  2.02484605,  4.76822812,
                             4.81289924,  3.56211511,  8.92057031,  7.53224809,  0.71469473,
                             1.23875927,  1.36136748,  0.72426504,  1.24674367,  1.34426835,
