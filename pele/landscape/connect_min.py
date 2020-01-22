@@ -3,6 +3,7 @@ from builtins import str
 from builtins import range
 from builtins import object
 import logging
+import operator
 
 import numpy as np
 import networkx as nx
@@ -447,10 +448,10 @@ class DoubleEndedConnect(object):
 
         # select which minima pair to return
         if self.longest_first:
-            weightlist.sort()
+            weightlist.sort(key=operator.itemgetter(0))
             w, min1, min2 = weightlist[-1]
         else:
-            weightlist.sort()
+            weightlist.sort(key=operator.itemgetter(0))
             for w, min1, min2 in weightlist:
                 if w > 1e-6:
                     break

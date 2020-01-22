@@ -143,12 +143,15 @@ class TestRotations(unittest.TestCase):
     def test_q2aa(self):
         print("\ntest_q2aa")
         v = np.array(list(range(1,4)), dtype=float)
+        print(v)
         v /= np.linalg.norm(v)
+        print(v)
         q = np.zeros(4)
         q[1:4] = v
         q[0] = 4
         print(q)
         aa = rotations.q2aa(q)
+        print(aa, 'aa')
         print(repr(aa))
         aatrue = np.array([ 0.1309466 ,  0.26189321,  0.39283981])
         for v1, v2 in zip(aa, aatrue):
