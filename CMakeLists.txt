@@ -1,9 +1,9 @@
 # this file is meant to be parsed by python before being a proper CMakeLists.txt file
 # in particular, the following strings will be set to their proper values by python when
 # making CMakeLists.txt
-set(numpy_include /home/praharsh/anaconda3/envs/changebranch2/lib/python2.7/site-packages/numpy/core/include)
-set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/envs/changebranch2/include/python2.7 /home/praharsh/anaconda3/envs/changebranch2/include/python2.7)
-set(PYTHON_LDFLAGS "-lpthread -ldl -lutil -lm -lpython2.7 -Xlinker -export-dynamic")
+set(numpy_include /home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include)
+set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/envs/changebranch3/include/python3.8 /home/praharsh/anaconda3/envs/changebranch3/include/python3.8)
+set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/config-3.8-x86_64-linux-gnu -lpthread -ldl -lutil -lrt -lm -lpython3.8 -Xlinker -export-dynamic")
 
 #find_package(PythonLibs)
 #message("PYTHON_LIBRARIES ${PYTHON_LIBRARIES}")

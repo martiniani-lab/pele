@@ -4,6 +4,7 @@ from builtins import range
 from past.utils import old_div
 from builtins import object
 import copy
+import operator
 
 from collections import deque
 
@@ -770,7 +771,7 @@ class DisconnectivityGraph(object):
             a list of trees ordered with the lowest in the center
             and the others placed successively on the left and right
         """
-        mylist = sorted(tree_value_list)
+        mylist = sorted(tree_value_list, key=operator.itemgetter(0))
         neworder = deque()
         for i in range(len(mylist)):
             if i % 2 == 0:

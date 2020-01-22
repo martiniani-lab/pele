@@ -20,7 +20,7 @@ from numpy.distutils.command.build_ext import build_ext as old_build_ext
 numpy_lib = os.path.split(np.__file__)[0]
 numpy_include = os.path.join(numpy_lib, 'core/include')
 
-
+encoding = 'utf-8'
 # extract the -j flag and pass save it for running make on the CMake makefile
 # extract -c flag to set compiler
 parser = argparse.ArgumentParser(add_help=False)
@@ -310,10 +310,11 @@ def set_compiler_env(compiler_id):
     """
     env = os.environ.copy()
     if compiler_id.lower() in ("unix"):
-        env["CC"] = subprocess.check_output(["which", "gcc"]).rstrip('\n')
-        env["CXX"] = subprocess.check_output(["which", "g++"]).rstrip('\n')
-        env["LD"] = subprocess.check_output(["which", "ld"]).rstrip('\n')
-        env["AR"] = subprocess.check_output(["which", "ar"]).rstrip('\n')
+        print(env, 'eeenv')
+        env["CC"] = (subprocess.check_output(["which", "gcc"])).decode(encoding).rstrip('\n')
+        env["CXX"] = (subprocess.check_output(["which", "g++"])).decode(encoding).rstrip('\n')
+        env["LD"] = (subprocess.check_output(["which", "ld"])).decode(encoding).rstrip('\n')
+        env["AR"] = (subprocess.check_output(["which", "ar"])).decode(encoding).rstrip('\n')
     elif compiler_id.lower() in ("intel"):
         env["CC"] = subprocess.check_output(["which", "icc"]).rstrip('\n')
         env["CXX"] = subprocess.check_output(["which", "icpc"]).rstrip('\n')

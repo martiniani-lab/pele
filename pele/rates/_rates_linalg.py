@@ -180,9 +180,9 @@ class CommittorLinalg(object):
             # some versions of scipy can't handle matrices of size 1
             committors = np.array([old_div(self.right_side[0], self.matrix[0,0])])
         else:
-            t0 = time.clock()
+            t0 = time.process_time()
             committors = scipy.sparse.linalg.spsolve(self.matrix, self.right_side)
-            self.time_solve += time.clock() - t0
+            self.time_solve += time.process_time() - t0
         eps = 1e-10
         if np.any(committors < -eps) or np.any(committors > 1+eps):
             qmax = committors.max()
@@ -255,16 +255,16 @@ class MfptLinalgSparse(object):
     def compute_mfpt(self, use_umfpack=True, cg=False, mfpt_estimate=None):
         if not hasattr(self, "matrix"):
             self.make_matrix(self.nodes - self.B)
-        t0 = time.clock()
+        t0 = time.process_time()
         if cg:
             x0 = np.array([mfpt_estimate[u] for u in self.node_list])
             times, info = scipy.sparse.linalg.cgs(self.matrix, -np.ones(self.matrix.shape[0]),
                                                   x0=x0)
-            print("time to solve using conjugate gradient", time.clock() - t0)
+            print("time to solve using conjugate gradient", time.process_time() - t0)
         else:
             times = scipy.sparse.linalg.spsolve(self.matrix, -np.ones(self.matrix.shape[0]),
                                                 use_umfpack=use_umfpack)
-        self.time_solve += time.clock() - t0
+        self.time_solve += time.process_time() - t0
         self.mfpt_dict = dict(((node, time) for node, time in zip(self.node_list, times)))
         if np.any(times < 0):
             raise LinalgError("error the mean first passage times are not all greater than zero")
