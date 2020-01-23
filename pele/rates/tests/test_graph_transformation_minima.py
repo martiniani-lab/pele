@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from builtins import str
 from builtins import range
+import sys
 import unittest
 import os
 import numpy as np
@@ -45,7 +46,7 @@ def create_random_database(system, db, nmin=20, nts=10):
 class TestGraphRatesLJ(unittest.TestCase):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
-        dbfname = os.path.join(current_dir, "lj15.sqlite")
+        dbfname = os.path.join(current_dir, "lj15.{}.sqlite".format(sys.version_info.major))
         print(dbfname)
         self.system = LJCluster(15)
         self.system.params.structural_quench_params.tol = 1e-6

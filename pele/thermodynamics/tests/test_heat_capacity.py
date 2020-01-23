@@ -2,7 +2,7 @@ import unittest
 import os
 
 import numpy as np
-
+import sys
 from pele.thermodynamics._normalmodes import logproduct_freq2, normalmodes
 from pele.thermodynamics import get_thermodynamic_information
 from pele.systems import LJCluster
