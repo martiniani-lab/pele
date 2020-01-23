@@ -72,7 +72,7 @@ class TestPgorderLj13Database(unittest.TestCase):
     """as of Mar 5 2014 this test fails.  It needs to be fixed"""
     def test1(self):
         d = os.path.dirname(__file__)
-        dbfname = os.path.join(d, "lj13_small_pathsample.sqlite")
+        dbfname = os.path.join(d, "lj75_very_small_pathsample.{}.sqlite".format(sys.version_info.major))
 
         from pele.systems import LJCluster
         natoms = 13
