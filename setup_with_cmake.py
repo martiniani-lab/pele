@@ -316,10 +316,10 @@ def set_compiler_env(compiler_id):
         env["LD"] = (subprocess.check_output(["which", "ld"])).decode(encoding).rstrip('\n')
         env["AR"] = (subprocess.check_output(["which", "ar"])).decode(encoding).rstrip('\n')
     elif compiler_id.lower() in ("intel"):
-        env["CC"] = subprocess.check_output(["which", "icc"]).rstrip('\n')
-        env["CXX"] = subprocess.check_output(["which", "icpc"]).rstrip('\n')
-        env["LD"] = subprocess.check_output(["which", "xild"]).rstrip('\n')
-        env["AR"] = subprocess.check_output(["which", "xiar"]).rstrip('\n')
+        env["CC"] = (subprocess.check_output(["which", "icc"])).decode(encoding).rstrip('\n')
+        env["CXX"] = (subprocess.check_output(["which", "icpc"])).decode(encoding).rstrip('\n')
+        env["LD"] = (subprocess.check_output(["which", "xild"])).decode(encoding).rstrip('\n')
+        env["AR"] = (subprocess.check_output(["which", "xiar"])).decode(encoding).rstrip('\n')
     else:
         raise Exception("compiler_id not known")
     #this line only works is the build directory has been deleted
