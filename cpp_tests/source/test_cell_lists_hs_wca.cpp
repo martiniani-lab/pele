@@ -1,6 +1,6 @@
 #include <omp.h>
 #include <gtest/gtest.h>
-
+#include <random>
 #include "pele/array.h"
 #include "pele/cell_lists.h"
 #include "pele/distance.h"
