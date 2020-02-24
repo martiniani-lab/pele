@@ -39,4 +39,4 @@ pele/version.py
 _ngt_cpp.cxx
 .coverage
 htmlcov
-/cpp_tests/source/test_cell_list_minimize.cpp
+
