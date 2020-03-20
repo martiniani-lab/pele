@@ -176,7 +176,7 @@ double LBFGS::backtracking_linesearch(Array<double> step)
         }
         #pragma simd
         for (size_t j2 = 0; j2 < step.size(); ++j2){
-            step[j2] *= -1;
+          step[j2] *= -1;
         }
     }
 
@@ -243,6 +243,5 @@ void LBFGS::reset(pele::Array<double> &x0)
     x_.assign(x0);
     initialize_func_gradient();
 }
-
 
 }

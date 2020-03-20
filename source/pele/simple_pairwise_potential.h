@@ -8,6 +8,8 @@
 #include "array.h"
 #include "vecn.h"
 #include "distance.h"
+#include "ExactSum.h"
+
 
 namespace pele {
 
@@ -124,34 +126,40 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
         throw std::runtime_error("grad must have the same size as x");
     }
 
-    double e = 0.;
+    ExactSum esum;
     double gij;
     double dr[m_ndim];
-
+    std::vector<ExactSum> exact_grad(m_ndim*natoms);
+    
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
-        const size_t i1 = m_ndim * atom_i;
-        for (size_t atom_j=0; atom_j<atom_i; ++atom_j) {
-            const size_t j1 = m_ndim * atom_j;
+      const size_t i1 = m_ndim * atom_i;
+      for (size_t atom_j=0; atom_j<atom_i; ++atom_j) {
+        const size_t j1 = m_ndim * atom_j;
 
-            _dist->get_rij(dr, &x[i1], &x[j1]);
-            double r2 = 0;
-            #pragma unroll
-            for (size_t k=0; k<m_ndim; ++k) {
-                r2 += dr[k]*dr[k];
-            }
-
-            e += _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j));
-            if (gij != 0) {
-                #pragma unroll
-                for (size_t k=0; k<m_ndim; ++k) {
-                    dr[k] *= gij;
-                    grad[i1+k] -= dr[k];
-                    grad[j1+k] += dr[k];
-                }
-            }
+        _dist->get_rij(dr, &x[i1], &x[j1]);
+        double r2 = 0;
+#pragma unroll
+        for (size_t k=0; k<m_ndim; ++k) {
+          r2 += dr[k]*dr[k];
         }
+
+        esum.AddNumber(_interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j)));
+        if (gij != 0) {
+#pragma unroll
+          for (size_t k=0; k<m_ndim; ++k) {
+            dr[k] *= gij;
+            exact_grad[i1+k].AddNumber(-dr[k]);
+            exact_grad[j1+k].AddNumber(dr[k]);              
+            // grad[i1+k] -= dr[k];
+            // grad[j1+k] += dr[k];
+          }
+        }
+      }
     }
-    return e;
+    for (size_t i = 0; i < exact_grad.size(); ++i) {
+      grad[i] += exact_grad[i].GetSum();
+    }
+    return esum.GetSum();
 }
 
 template<typename pairwise_interaction, typename distance_policy>
@@ -220,6 +228,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
                         hess[N*(i1+l)+j1+k] = Hij_off;
                         hess[N*(j1+k)+i1+l] = Hij_off;
                         hess[N*(j1+l)+i1+k] = Hij_off;
+                        
                     }
                 }
             }
