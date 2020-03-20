@@ -33,7 +33,7 @@ class EnergyAccumulator {
 
 public:
     ~EnergyAccumulator()
-    {                           // removing destructor since I'm initializing without a pointer
+    {      
         for(auto & energy : m_energies) {
             delete energy;
         }
@@ -113,7 +113,6 @@ class EnergyGradientAccumulator {
     const pele::Array<double> m_radii;
     std::vector<ExactSum*> m_energies;
 public:
-   // pele::Array<double> * m_gradient;
   std::vector<ExactSum> * m_gradient;
     ~EnergyGradientAccumulator()
     {
@@ -157,7 +156,6 @@ public:
     void insert_atom_pair(const size_t atom_i, const size_t atom_j, const size_t isubdom)
     {
         pele::VecN<m_ndim, double> dr;
-        
         const size_t xi_off = m_ndim * atom_i;
         const size_t xj_off = m_ndim * atom_j;
         m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
@@ -182,9 +180,6 @@ public:
                 (*m_gradient)[xj_off+k].AddNumber(dr[k]);
             }
         }
-
-        
-        
     }
 
     double get_energy() {
