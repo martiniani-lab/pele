@@ -60,6 +60,7 @@ from .potential import *
 from ._frozen_dof import FrozenPotentialWrapper
 #from lj import *
 from ._lj_cpp import LJ, BLJCut
+from ._frenkel import Frenkel
 from ._hs_wca_cpp import *
 from ._inversepower_cpp import InversePower
 from ._inversepower_stillinger_cpp import InversePowerStillinger
