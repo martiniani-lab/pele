@@ -515,13 +515,42 @@ public:
     auto looper = m_cell_lists.get_atom_pair_looper(m_egAcc);
 
     looper.loop_through_atom_pairs();
-    for (size_t i; i < grad.size(); ++i) {
+    for (size_t i=0; i < grad.size(); ++i) {
       grad[i] = exact_grad[i].GetSum();
     }
 
 
     return m_egAcc.get_energy();
   }
+
+  virtual double get_energy_gradient(Array<double> const & coords, std::vector<ExactSum> & grad)
+  {
+    const size_t natoms = coords.size() / m_ndim;
+    if (m_ndim * natoms != coords.size()) {
+      throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
+    }
+    if (coords.size() != grad.size()) {
+      throw std::invalid_argument("the gradient has the wrong size");
+    }
+
+    // if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
+    //   grad.assign(NAN);
+    //   return NAN;
+    // }
+    // Figure out what this needs to be
+
+    update_iterator(coords);
+    m_egAcc.reset_data(&coords, &grad);
+    auto looper = m_cell_lists.get_atom_pair_looper(m_egAcc);
+
+    looper.loop_through_atom_pairs();
+
+
+    return m_egAcc.get_energy();
+  }
+
+
+  
 
   virtual double get_energy_gradient_hessian(Array<double> const & coords,
                                              Array<double> & grad, Array<double> & hess)

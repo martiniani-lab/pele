@@ -6,8 +6,13 @@
 #include <stdexcept>
 #include <iostream>
 #include "array.h"
+#include "ExactSum.h"
+
+
 
 namespace pele {
+
+
 
 /***
  * basic potential interface for native potentials
@@ -34,6 +39,11 @@ public:
         throw std::runtime_error("BasePotential::add_energy_gradient must be overloaded");
     }
 
+    virtual double add_energy_gradient(Array<double> const & x, std::vector<ExactSum> & grad)
+    {
+        throw std::runtime_error("BasePotential::add_energy_gradient must be overloaded");
+    }
+
     /**
      * compute the energy and gradient.
      *
@@ -44,6 +54,11 @@ public:
         double energy = get_energy(x);
         numerical_gradient(x, grad);
         return energy;
+    }
+
+    virtual double get_energy_gradient(Array<double> const & x, std::vector<ExactSum> & grad)
+    { 
+      throw std::runtime_error("BasePotential::get_energy_gradient_exact should be overloaded if used");
     }
 
 
