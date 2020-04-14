@@ -19,7 +19,7 @@ from cpython cimport bool as cbool
 # import the externally defined ljbfgs implementation
 cdef extern from "pele/lbfgs.h" namespace "pele":
     cdef cppclass cppLBFGS "pele::LBFGS":
-        cppLBFGS(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, int, bool) except +
+        cppLBFGS(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, int) except +
 
         void set_H0(double) except +
         void set_tol(double) except +
@@ -43,7 +43,7 @@ cdef class _Cdef_LBFGS_CPP(_pele_opt.GradientOptimizer):
                   double maxErise=1e-4, double H0=0.1, int iprint=-1,
                   energy=None, gradient=None,
                   int nsteps=10000, int verbosity=0, events=None, logger=None,
-                  rel_energy=False, exact=False):
+                  rel_energy=False):
         potential = as_cpp_potential(potential, verbose=verbosity>0)
 
         self.pot = potential
@@ -53,7 +53,7 @@ cdef class _Cdef_LBFGS_CPP(_pele_opt.GradientOptimizer):
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppLBFGS(self.pot.thisptr, 
                              _pele.Array[double](<double*> x0c.data, x0c.size),
-                             tol, M, exact) )
+                             tol, M) )
         cdef cppLBFGS* lbfgs_ptr = <cppLBFGS*> self.thisptr.get()
         lbfgs_ptr.set_H0(H0)
         lbfgs_ptr.set_maxstep(maxstep)

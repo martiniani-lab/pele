@@ -5,8 +5,6 @@
 
 #include "pele/ExactSum.h"
 
-
-
 ExactSum::ExactSum()
 {
 	set_fpu(0x27F);
@@ -44,8 +42,8 @@ int ExactSum::Round3(double s0, double s1, double s2)
 	// the two places where Round3 gets called, \hat s_2 must be zero, which
 	// means s0 is correctly rounded.
 	if (s1 != .0 && ((str_double*)(&s1))->mantissa_high == 0 &&
-      ((str_double*)(&s1))->mantissa_low == 0 &&
-      s1 * s2 > 0)
+		((str_double*)(&s1))->mantissa_low == 0 &&
+		s1 * s2 > 0)
 		return 1;
 	return 0;
 }	
@@ -68,87 +66,87 @@ double ExactSum::iFastSum(double *num_list, int n)
 	((str_double*)(&ev_d))->sign = 0;
 
 	for (i = 1; i <= n; i++)
-    {
-      // AddTwo, inline
-      t = s + num_list[i];
-      num_list[i] =
-        ((str_double*)(&s))->exponent
-        < ((str_double*)(&(num_list[i])))->exponent ?
-        (num_list[i] - t) + s : (s - t) + num_list[i];
-      s = t;
-    }
+	{
+		// AddTwo, inline
+		t = s + num_list[i];
+		num_list[i] =
+		((str_double*)(&s))->exponent
+			< ((str_double*)(&(num_list[i])))->exponent ?
+			(num_list[i] - t) + s : (s - t) + num_list[i];
+		s = t;
+	}
 	
 	while(1)
-    {
-      count = 1;
-      s_t = .0;
-      max = 0;
-      for (i = 1; i <= c_n; i++)
-        {
-          // AddTwo, inline
-          t = s_t + num_list[i];
-          num_list[count] =
-            ((str_double*)(&s_t))->exponent
-            < ((str_double*)(&num_list[i]))->exponent ?
-            (num_list[i] - t) + s_t : (s_t - t) + num_list[i];
-          s_t = t;
+	{
+		count = 1;
+		s_t = .0;
+		max = 0;
+		for (i = 1; i <= c_n; i++)
+		{
+			// AddTwo, inline
+			t = s_t + num_list[i];
+			num_list[count] =
+				((str_double*)(&s_t))->exponent
+				< ((str_double*)(&num_list[i]))->exponent ?
+				(num_list[i] - t) + s_t : (s_t - t) + num_list[i];
+			s_t = t;
 
-          if (num_list[count] != 0)			 
-            {
-              count++;
-              if(max < ((str_double*)&s_t)->exponent)
-                max = ((str_double*)&s_t)->exponent;
-            }
-        }
+			if (num_list[count] != 0)			 
+			{
+				count++;
+				if(max < ((str_double*)&s_t)->exponent)
+					max = ((str_double*)&s_t)->exponent;
+			}
+		}
 		
-      // compute e_m, the estimated global error
-      if (max > 0) // neither minimum exponent nor de-normalized 
-        {
-          ((str_double*)(&ev_d))->exponent = max;
-          ev_d *= EPS;
-          e_m = ev_d * (count-1);
-        }
-      else
-        e_m = .0;
+		// compute e_m, the estimated global error
+		if (max > 0) // neither minimum exponent nor de-normalized 
+		{
+			((str_double*)(&ev_d))->exponent = max;
+			ev_d *= EPS;
+			e_m = ev_d * (count-1);
+		}
+		else
+			e_m = .0;
 
-      AddTwo(s, s_t);
-      num_list[count] = s_t;
-      c_n = count;
+		AddTwo(s, s_t);
+		num_list[count] = s_t;
+		c_n = count;
 
-      // compute HalfUlp(s)
-      if (((str_double*)(&s))->exponent > 0) 
-        {
-          ((str_double*)(&half_ulp))->exponent = ((str_double*)(&s))->exponent;
-          half_ulp *= EPS;
-        }
-      else
-        half_ulp = .0;
+		// compute HalfUlp(s)
+		if (((str_double*)(&s))->exponent > 0) 
+		{
+			((str_double*)(&half_ulp))->exponent = ((str_double*)(&s))->exponent;
+			half_ulp *= EPS;
+		}
+		else
+			half_ulp = .0;
 
-      if (e_m < half_ulp || e_m == .0)
-        {
-          if (r_c > 0) return s;
-          s1 = s2 = s_t;
-          e1 = e_m;
-          e2 = -e_m;
-          AddTwo(s1, e1);
-          AddTwo(s2, e2);
-          if (s + s1 != s || s + s2 != s || 
-              Round3(s, s1, e1) || Round3(s, s2, e2))
-            {
-              r_c = 1;
-              double s1 = iFastSum(num_list, c_n);
-              AddTwo(s, s1);
-              double s2 = iFastSum(num_list, c_n);
-              r_c = 0;
-              if (Round3(s, s1, s2))
-                {
-                  ((str_double*)(&s1))->mantissa_low |= 0x1;   // the Magnify function
-                  s += s1;
-                }
-            }
-          return s;
-        }
-    }
+		if (e_m < half_ulp || e_m == .0)
+		{
+			if (r_c > 0) return s;
+			s1 = s2 = s_t;
+			e1 = e_m;
+			e2 = -e_m;
+			AddTwo(s1, e1);
+			AddTwo(s2, e2);
+			if (s + s1 != s || s + s2 != s || 
+				Round3(s, s1, e1) || Round3(s, s2, e2))
+			{
+				r_c = 1;
+				double s1 = iFastSum(num_list, c_n);
+				AddTwo(s, s1);
+				double s2 = iFastSum(num_list, c_n);
+				r_c = 0;
+				if (Round3(s, s1, s2))
+				{
+					((str_double*)(&s1))->mantissa_low |= 0x1;   // the Magnify function
+					s += s1;
+				}
+			}
+			return s;
+		}
+	}
 }
 
 double ExactSum::OnlineExactSum(double *num_list, int n)
@@ -167,43 +165,43 @@ double ExactSum::OnlineExactSum(double *num_list, int n)
 
 	int num = n > MAX_N ? MAX_N : n;
 	while (1)
-    {
-      for (i = 1; i <= num; i++)
-        {
-          exp = ((str_double*)(&num_list[i]))->exponent;
-          // AddTwo combined with an addition
-          t = temp_ss[exp] + num_list[i];
-          temp_ss[exp + N_EXPONENT] +=
-            ((str_double*)(&temp_ss[exp]))->exponent
-            < exp ? (num_list[i] - t) + temp_ss[exp]
-              : (temp_ss[exp] - t) + num_list[i];
-          temp_ss[exp] = t;
-        }
-      if (num < n)
-        {
-          for (i = 0; i < N2_EXPONENT; i++)
-            temp_ss2[i] = .0;
-          for (i = 0; i < N2_EXPONENT; i++)
-            {
-              exp = ((str_double*)(&temp_ss[i]))->exponent;
-              t = temp_ss2[exp] + temp_ss[i];
-              temp_ss2[exp + N_EXPONENT] +=
-                ((str_double*)(&temp_ss2[exp]))->exponent
-                < exp ? (temp_ss[i] - t) + temp_ss2[exp]
-                  : (temp_ss2[exp] - t) + temp_ss[i];
-              temp_ss2[exp] = t;
-            }
-          num_list += num;
-          n -= num;
-          num = (n > MAX_N_AFTER_SWAP) ?  MAX_N_AFTER_SWAP : n;
-          // Swap the pointers of two accumulators
-          temp_swap = temp_ss;
-          temp_ss = temp_ss2;
-          temp_ss2 = temp_swap;
-        }
-      else
-        break;
-    }
+	{
+		for (i = 1; i <= num; i++)
+		{
+			exp = ((str_double*)(&num_list[i]))->exponent;
+			// AddTwo combined with an addition
+			t = temp_ss[exp] + num_list[i];
+			temp_ss[exp + N_EXPONENT] +=
+					((str_double*)(&temp_ss[exp]))->exponent
+					< exp ? (num_list[i] - t) + temp_ss[exp]
+					: (temp_ss[exp] - t) + num_list[i];
+			temp_ss[exp] = t;
+		}
+		if (num < n)
+		{
+			for (i = 0; i < N2_EXPONENT; i++)
+				temp_ss2[i] = .0;
+			for (i = 0; i < N2_EXPONENT; i++)
+			{
+				exp = ((str_double*)(&temp_ss[i]))->exponent;
+				t = temp_ss2[exp] + temp_ss[i];
+				temp_ss2[exp + N_EXPONENT] +=
+						((str_double*)(&temp_ss2[exp]))->exponent
+						< exp ? (temp_ss[i] - t) + temp_ss2[exp]
+						: (temp_ss2[exp] - t) + temp_ss[i];
+				temp_ss2[exp] = t;
+			}
+			num_list += num;
+			n -= num;
+			num = (n > MAX_N_AFTER_SWAP) ?  MAX_N_AFTER_SWAP : n;
+			// Swap the pointers of two accumulators
+			temp_swap = temp_ss;
+			temp_ss = temp_ss2;
+			temp_ss2 = temp_swap;
+		}
+		else
+			break;
+	}
 	int j = 0;
 	// extract all the non-zero accumulators
 	for (i = 0; i < N2_EXPONENT; i++)
@@ -221,32 +219,32 @@ void ExactSum::AddNumber(double x)
 	double t;
 	unsigned exp;
 	if (c_num >= MAX_N)
-    {
+	{
 			for (i = 0; i < N2_EXPONENT; i++)
 				t_s2[i] = 0;
 			for (i = 0; i < N2_EXPONENT; i++)
-        {
-          exp = ((str_double*)(&t_s[i]))->exponent;
-          // AddTwo, inline
-          t = t_s2[exp] + t_s[i];
-          t_s2[exp + N_EXPONENT] +=
+			{
+				exp = ((str_double*)(&t_s[i]))->exponent;
+				// AddTwo, inline
+				t = t_s2[exp] + t_s[i];
+				t_s2[exp + N_EXPONENT] +=
 						((str_double*)(&t_s2[exp]))->exponent
 						< exp ? (t_s[i] - t) + t_s2[exp]
-              : (t_s2[exp] - t) + t_s[i];
-          t_s2[exp] = t;
-        }
+						: (t_s2[exp] - t) + t_s[i];
+				t_s2[exp] = t;
+			}
 			double *t_swap = t_s;
 			t_s = t_s2;
 			t_s2 = t_swap;
 			c_num = N2_EXPONENT;  // t_s has added N2_EXPONENT numbers
-    }
+	}
 
 	exp = ((str_double*)(&x))->exponent;
 	// AddTwo, inline
 	t = t_s[exp] + x;
 	t_s[exp + N_EXPONENT] +=
-    ((str_double*)(&t_s[exp]))->exponent
-    < exp ? (x - t) + t_s[exp]
+			((str_double*)(&t_s[exp]))->exponent
+			< exp ? (x - t) + t_s[exp]
 			: (t_s[exp] - t) + x;
 	t_s[exp] = t;
 	c_num ++;
@@ -266,44 +264,44 @@ void ExactSum::AddArray(double *num_list, int n)
 	c_num += num;
 
 	while (1)
-    {
-      for (i = 1; i <= num; i++)
-        {
-          exp = ((str_double*)(&num_list[i]))->exponent;
-          // AddTwo combined with an addition
-          t = t_s[exp] + num_list[i];
-          t_s[exp + N_EXPONENT] +=
-            ((str_double*)(&t_s[exp]))->exponent
-            < exp ? (num_list[i] - t) + t_s[exp]
-              : (t_s[exp] - t) + num_list[i];
-          t_s[exp] = t;
-        }
-      if (num < n)
-        {
-          for (i = 0; i < N2_EXPONENT; i++)
-            t_s2[i] = .0;
-          for (i = 0; i < N2_EXPONENT; i++)
-            {
-              exp = ((str_double*)(&t_s[i]))->exponent;
-              t = t_s2[exp] + t_s[i];
-              t_s2[exp + N_EXPONENT] +=
-                ((str_double*)(&t_s2[exp]))->exponent
-                < exp ? (t_s[i] - t) + t_s2[exp]
-                  : (t_s2[exp] - t) + t_s[i];
-              t_s2[exp] = t;
-            }
-          num_list += num;
-          n -= num;
-          num = (n > MAX_N_AFTER_SWAP) ?  MAX_N_AFTER_SWAP : n;
-          // Swap the pointers of two accumulators
-          double *t_swap = t_s;
-          t_s = t_s2;
-          t_s2 = t_swap;
-          c_num = N2_EXPONENT;  // t_s has added N2_EXPONENT numbers
-        }
-      else
-        break;
-    }
+	{
+		for (i = 1; i <= num; i++)
+		{
+			exp = ((str_double*)(&num_list[i]))->exponent;
+			// AddTwo combined with an addition
+			t = t_s[exp] + num_list[i];
+			t_s[exp + N_EXPONENT] +=
+					((str_double*)(&t_s[exp]))->exponent
+					< exp ? (num_list[i] - t) + t_s[exp]
+					: (t_s[exp] - t) + num_list[i];
+			t_s[exp] = t;
+		}
+		if (num < n)
+		{
+			for (i = 0; i < N2_EXPONENT; i++)
+				t_s2[i] = .0;
+			for (i = 0; i < N2_EXPONENT; i++)
+			{
+				exp = ((str_double*)(&t_s[i]))->exponent;
+				t = t_s2[exp] + t_s[i];
+				t_s2[exp + N_EXPONENT] +=
+						((str_double*)(&t_s2[exp]))->exponent
+						< exp ? (t_s[i] - t) + t_s2[exp]
+						: (t_s2[exp] - t) + t_s[i];
+				t_s2[exp] = t;
+			}
+			num_list += num;
+			n -= num;
+			num = (n > MAX_N_AFTER_SWAP) ?  MAX_N_AFTER_SWAP : n;
+			// Swap the pointers of two accumulators
+			double *t_swap = t_s;
+			t_s = t_s2;
+			t_s2 = t_swap;
+			c_num = N2_EXPONENT;  // t_s has added N2_EXPONENT numbers
+		}
+		else
+			break;
+	}
 }
 
 double ExactSum::GetSum()
@@ -323,5 +321,3 @@ void ExactSum::Reset()
 	for (i = 0; i < N2_EXPONENT; i++)
 		t_s[i] = .0;
 }
-
-

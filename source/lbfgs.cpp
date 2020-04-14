@@ -7,7 +7,7 @@
 namespace pele {
 
 LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-              double tol, int M, bool exact)
+        double tol, int M)
     : GradientOptimizer(potential, x0, tol),
       M_(M),
       max_f_rise_(1e-4),
@@ -18,9 +18,7 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       alpha(M_),
       xold(x_.size()),
       gold(x_.size()),
-      step(x_.size()),
-      exact_(exact),
-      gexact(exact ? x_.size() : 0)
+      step(x_.size())
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -197,17 +195,7 @@ double LBFGS::backtracking_linesearch(Array<double> step)
         for (size_t j2 = 0; j2 < x_.size(); ++j2){
             x_[j2] = xold[j2] + factor * step[j2];
         }
-        if (exact_) {
-          compute_func_gradient_exact(x_, fnew, gexact);
-          for (size_t i = 0; i < g_.size(); ++i) {
-            g_[i] = gexact[i].GetSum();
-          }
-
-        }
-        {
-          compute_func_gradient(x_, fnew, g_);
-        }
-
+        compute_func_gradient(x_, fnew, g_);
 
         double df = fnew - f_;
         if (use_relative_f_) {

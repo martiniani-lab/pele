@@ -6,7 +6,7 @@
 #include "base_potential.h"
 #include "array.h"
 #include "optimizer.h"
-#include "ExactSum.h"
+
 namespace pele{
 
 /**
@@ -34,7 +34,6 @@ private:
     Array<double> y_;
     /** rho stores 1/dot(y_, s_) for the previous M steps */
     Array<double> rho_;
-
     /**
      * H0 is the initial estimate for the diagonal component of the inverse Hessian.
      * It is an input parameter, but the estimate is improved during the run.
@@ -45,55 +44,54 @@ private:
 
     Array<double> alpha; //!< Alpha used when looping through LBFGS memory
 
-  
+
     Array<double> xold; //!< Coordinates before taking a step
     Array<double> gold; //!< Gradient before taking a step
-    std::vector<ExactSum> gexact;
-    bool exact_;                 //!< Whether the gradient calculation should be done exactly
     Array<double> step; //!< Step size and direction
     double inv_sqrt_size; //!< The inverse square root the the number of components
 
 public:
-  /**
-   * Constructor
-   */
-  LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-         double tol = 1e-4, int M = 4, bool exact = false);
+    /**
+     * Constructor
+     */
+    LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
+            double tol = 1e-4, int M = 4);
 
-  /**
-   * Destructor
-   */
-  virtual ~LBFGS() {}
+    /**
+     * Destructor
+     */
+    virtual ~LBFGS() {}
 
-  /**
-   * Do one iteration iteration of the optimization algorithm
-   */
-  void one_iteration();
+    /**
+     * Do one iteration iteration of the optimization algorithm
+     */
+    void one_iteration();
 
-  // functions for setting the parameters
-  inline void set_H0(double H0)
-  {
-    if (iter_number_ > 0){
-      std::cout << "warning: setting H0 after the first iteration.\n";
+    // functions for setting the parameters
+    inline void set_H0(double H0)
+    {
+        if (iter_number_ > 0){
+            std::cout << "warning: setting H0 after the first iteration.\n";
+        }
+        H0_ = H0;
     }
-    H0_ = H0;
-  }
-  inline void set_max_f_rise(double max_f_rise) { max_f_rise_ = max_f_rise; }
-  inline void set_use_relative_f(int use_relative_f)
-  {
-    use_relative_f_ = (bool) use_relative_f;
-  }
+    inline void set_max_f_rise(double max_f_rise) { max_f_rise_ = max_f_rise; }
 
-  // functions for accessing the results
-  inline double get_H0() const { return H0_; }
+    inline void set_use_relative_f(int use_relative_f)
+    {
+        use_relative_f_ = (bool) use_relative_f;
+    }
 
-  /**
-   * reset the lbfgs optimizer to start a new minimization from x0
-   *
-   * H0 is not reset because the current value of H0 is probably better than the input value.
-   * You can use set_H0() to change H0.
-   */
-  virtual void reset(pele::Array<double> &x0);
+    // functions for accessing the results
+    inline double get_H0() const { return H0_; }
+
+    /**
+     * reset the lbfgs optimizer to start a new minimization from x0
+     *
+     * H0 is not reset because the current value of H0 is probably better than the input value.
+     * You can use set_H0() to change H0.
+     */
+    virtual void reset(pele::Array<double> &x0);
 
 private:
 
@@ -115,15 +113,6 @@ private:
      * does not rise more than the allowed amount.
      */
     double backtracking_linesearch(Array<double> step);
-
-    void compute_func_gradient_exact(Array<double> x, double & func,
-                                     std::vector<ExactSum> & gradient)
-      {
-          nfev_ += 1;
-  
-          // pass the arrays to the potential
-          func = potential_->get_energy_gradient(x, gradient);
-      };
 
 };
 }
