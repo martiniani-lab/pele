@@ -19,11 +19,11 @@
 
 namespace pele{
 
-/**
- * class which accumulates the energy one pair interaction at a time
- */
-template <typename pairwise_interaction, typename distance_policy>
-class EnergyAccumulator {
+  /**
+   * class which accumulates the energy one pair interaction at a time
+   */
+  template <typename pairwise_interaction, typename distance_policy>
+  class EnergyAccumulator {
     const static size_t m_ndim = distance_policy::_ndim;
     std::shared_ptr<pairwise_interaction> m_interaction;
     std::shared_ptr<distance_policy> m_dist;
@@ -31,79 +31,79 @@ class EnergyAccumulator {
     const pele::Array<double> m_radii;
     std::vector<ExactSum*> m_energies;
 
-public:
+  public:
     ~EnergyAccumulator()
     {      
-        for(auto & energy : m_energies) {
-            delete energy;
-        }
+      for(auto & energy : m_energies) {
+        delete energy;
+      }
     }
 
     EnergyAccumulator(std::shared_ptr<pairwise_interaction> & interaction,
-            std::shared_ptr<distance_policy> & dist,
-            pele::Array<double> const & radii=pele::Array<double>(0))
-        : m_interaction(interaction),
-          m_dist(dist),
-          m_radii(radii)
+                      std::shared_ptr<distance_policy> & dist,
+                      pele::Array<double> const & radii=pele::Array<double>(0))
+      : m_interaction(interaction),
+        m_dist(dist),
+        m_radii(radii)
     {
-        #ifdef _OPENMP
-        m_energies = std::vector<ExactSum*>(omp_get_max_threads());
-        #pragma omp parallel
-        {
-          m_energies[omp_get_thread_num()] = new ExactSum();
-        }
-        #else
-        m_energies = std::vector<ExactSum*>(1);
-        m_energies[0] = new ExactSum();
-        #endif
+#ifdef _OPENMP
+      m_energies = std::vector<ExactSum*>(omp_get_max_threads());
+#pragma omp parallel
+      {
+        m_energies[omp_get_thread_num()] = new ExactSum();
+      }
+#else
+      m_energies = std::vector<ExactSum*>(1);
+      m_energies[0] = new ExactSum();
+#endif
     }
 
     void reset_data(const pele::Array<double> * coords) {
-        m_coords = coords;
-        #ifdef _OPENMP
-        #pragma omp parallel
-        {
-          m_energies[omp_get_thread_num()]->Reset();
-        }
-        #else
-        m_energies[0]->Reset();
-        #endif
+      m_coords = coords;
+#ifdef _OPENMP
+#pragma omp parallel
+      {
+        m_energies[omp_get_thread_num()]->Reset();
+      }
+#else
+      m_energies[0]->Reset();
+#endif
     }
 
     void insert_atom_pair(const size_t atom_i, const size_t atom_j, const size_t isubdom)
     {
-        const size_t xi_off = m_ndim * atom_i;
-        const size_t xj_off = m_ndim * atom_j;
-        pele::VecN<m_ndim, double> dr;
-        m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
-        double r2 = 0;
-        for (size_t k = 0; k < m_ndim; ++k) {
-            r2 += dr[k] * dr[k];
-        }
-        double radius_sum = 0;
-        if(m_radii.size() > 0) {
-            radius_sum = m_radii[atom_i] + m_radii[atom_j];
-        }
-        #ifdef _OPENMP
-        m_energies[isubdom]->AddNumber(m_interaction->energy(r2, radius_sum));
-        #else
-        m_energies[0]->AddNumber(m_interaction->energy(r2, radius_sum));
-        #endif
+      const size_t xi_off = m_ndim * atom_i;
+      const size_t xj_off = m_ndim * atom_j;
+      pele::VecN<m_ndim, double> dr;
+      m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
+      double r2 = 0;
+      for (size_t k = 0; k < m_ndim; ++k) {
+        r2 += dr[k] * dr[k];
+      }
+      double radius_sum = 0;
+      if(m_radii.size() > 0) {
+        radius_sum = m_radii[atom_i] + m_radii[atom_j];
+      }
+#ifdef _OPENMP
+      m_energies[isubdom]->AddNumber(m_interaction->energy(r2, radius_sum));
+#else
+      m_energies[0]->AddNumber(m_interaction->energy(r2, radius_sum));
+#endif
     }
 
     double get_energy() {
       // I didn't accumulate here considering that the number of energies is small
-        double energy = 0;
-        for(size_t i = 0; i < m_energies.size(); ++i) {
-          energy += m_energies[i]->GetSum();
-        }
-        return energy;
+      double energy = 0;
+      for(size_t i = 0; i < m_energies.size(); ++i) {
+        energy += m_energies[i]->GetSum();
+      }
+      return energy;
     }
-};
+  };
 
-/**
- * class which accumulates the energy and gradient one pair interaction at a time
- */
+  /**
+   * class which accumulates the energy and gradient one pair interaction at a time
+   */
 template <typename pairwise_interaction, typename distance_policy>
 class EnergyGradientAccumulator {
     const static size_t m_ndim = distance_policy::_ndim;
@@ -113,88 +113,88 @@ class EnergyGradientAccumulator {
     const pele::Array<double> m_radii;
     std::vector<ExactSum*> m_energies;
 public:
-  std::vector<ExactSum> * m_gradient;
-    ~EnergyGradientAccumulator()
+  std::shared_ptr<std::vector<ExactSum>> m_gradient;
+  ~EnergyGradientAccumulator()
+  {
+    for(auto & energy : m_energies) {
+      delete energy;
+    }
+  }
+
+  EnergyGradientAccumulator(std::shared_ptr<pairwise_interaction> & interaction,
+                            std::shared_ptr<distance_policy> & dist,
+                            pele::Array<double> const & radii=pele::Array<double>(0))
+      : m_interaction(interaction),
+        m_dist(dist),
+        m_radii(radii)
     {
-        for(auto & energy : m_energies) {
-            delete energy;
-        }
+#ifdef _OPENMP
+      m_energies = std::vector<ExactSum*>(omp_get_max_threads());
+#pragma omp parallel
+      {
+        m_energies[omp_get_thread_num()] = new ExactSum();
+      }
+#else
+      m_energies = std::vector<ExactSum*>(1);
+      m_energies[0] = new ExactSum();
+#endif
     }
 
-    EnergyGradientAccumulator(std::shared_ptr<pairwise_interaction> & interaction,
-            std::shared_ptr<distance_policy> & dist,
-            pele::Array<double> const & radii=pele::Array<double>(0))
-        : m_interaction(interaction),
-          m_dist(dist),
-          m_radii(radii)
-    {
-        #ifdef _OPENMP
-        m_energies = std::vector<ExactSum*>(omp_get_max_threads());
-        #pragma omp parallel
-        {
-            m_energies[omp_get_thread_num()] = new ExactSum();
-        }
-        #else
-        m_energies = std::vector<ExactSum*>(1);
-        m_energies[0] = new ExactSum();
-        #endif
-    }
-
-  void reset_data(const pele::Array<double> * coords, std::vector<ExactSum> * gradient) {
-        m_coords = coords;
-        #ifdef _OPENMP
-        #pragma omp parallel
-        {
-          m_energies[omp_get_thread_num()]->Reset();
-        }
-        #else
-        m_energies[0]->Reset();
-        #endif
-        m_gradient = gradient;
+  void reset_data(const pele::Array<double> * coords, std::shared_ptr<std::vector<ExactSum>> & gradient) {
+    m_coords = coords;
+#ifdef _OPENMP
+#pragma omp parallel
+      {
+        m_energies[omp_get_thread_num()]->Reset();
+      }
+#else
+      m_energies[0]->Reset();
+#endif
+      m_gradient = gradient;
     }
 
     void insert_atom_pair(const size_t atom_i, const size_t atom_j, const size_t isubdom)
     {
-        pele::VecN<m_ndim, double> dr;
-        const size_t xi_off = m_ndim * atom_i;
-        const size_t xj_off = m_ndim * atom_j;
-        m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
-        double r2 = 0;
+      pele::VecN<m_ndim, double> dr;
+      const size_t xi_off = m_ndim * atom_i;
+      const size_t xj_off = m_ndim * atom_j;
+      m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
+      double r2 = 0;
+      for (size_t k = 0; k < m_ndim; ++k) {
+        r2 += dr[k] * dr[k];
+      }
+      double gij;
+      double radius_sum = 0;
+      if(m_radii.size() > 0) {
+        radius_sum = m_radii[atom_i] + m_radii[atom_j];
+      }
+#ifdef _OPENMP
+      m_energies[isubdom]->AddNumber(m_interaction->energy_gradient(r2, &gij, radius_sum));
+#else
+      m_energies[0]->AddNumber(m_interaction->energy_gradient(r2, &gij, radius_sum));
+#endif
+      if (gij != 0) {
         for (size_t k = 0; k < m_ndim; ++k) {
-            r2 += dr[k] * dr[k];
+          dr[k] *= gij;
+          (*m_gradient)[xi_off+k].AddNumber(-dr[k]);
+          (*m_gradient)[xj_off+k].AddNumber(dr[k]);
         }
-        double gij;
-        double radius_sum = 0;
-        if(m_radii.size() > 0) {
-            radius_sum = m_radii[atom_i] + m_radii[atom_j];
-        }
-        #ifdef _OPENMP
-        m_energies[isubdom]->AddNumber(m_interaction->energy_gradient(r2, &gij, radius_sum));
-        #else
-        m_energies[0]->AddNumber(m_interaction->energy_gradient(r2, &gij, radius_sum));
-        #endif
-        if (gij != 0) {
-            for (size_t k = 0; k < m_ndim; ++k) {
-                dr[k] *= gij;
-                (*m_gradient)[xi_off+k].AddNumber(-dr[k]);
-                (*m_gradient)[xj_off+k].AddNumber(dr[k]);
-            }
-        }
+      }
     }
 
     double get_energy() {
-        double energy = 0;
-        for(size_t i = 0; i < m_energies.size(); ++i) {
-          energy += m_energies[i]->GetSum();
-        }
-        return energy;
+      double energy = 0;
+      for(size_t i = 0; i < m_energies.size(); ++i) {
+        energy += m_energies[i]->GetSum();
+      }
+      return energy;
     }
-};
+  };
 
-/**
- * class which accumulates the energy, gradient, and Hessian one pair interaction at a time
- */
-template <typename pairwise_interaction, typename distance_policy>
+  /**
+   * class which accumulates the energy, gradient, and Hessian one pair interaction at a time
+   */
+  template <typename pairwise_interaction, typename distance_policy>
 class EnergyGradientHessianAccumulator {
     const static size_t m_ndim = distance_policy::_ndim;
     std::shared_ptr<pairwise_interaction> m_interaction;
@@ -383,6 +383,7 @@ class OverlapAccumulator {
     const pele::Array<double> m_coords;
     const pele::Array<double> m_radii;
 
+
 public:
     std::vector<size_t> m_overlap_inds;
 
@@ -432,6 +433,9 @@ protected:
     std::shared_ptr<pairwise_interaction> m_interaction;
     std::shared_ptr<distance_policy> m_dist;
     const double m_radii_sca;
+    std::shared_ptr<std::vector<ExactSum>> exact_gradient;
+    bool exact_gradient_initialized;
+    
 
     EnergyAccumulator<pairwise_interaction, distance_policy> m_eAcc;
     EnergyGradientAccumulator<pairwise_interaction, distance_policy> m_egAcc;
@@ -453,7 +457,8 @@ public:
           m_radii_sca(radii_sca),
           m_eAcc(interaction, dist, m_radii),
           m_egAcc(interaction, dist, m_radii),
-          m_eghAcc(interaction, dist, m_radii)
+          m_eghAcc(interaction, dist, m_radii),
+          exact_gradient_initialized(false)
     {}
 
     CellListPotential(
@@ -468,7 +473,8 @@ public:
           m_radii_sca(0.0),
           m_eAcc(interaction, dist),
           m_egAcc(interaction, dist),
-          m_eghAcc(interaction, dist)
+          m_eghAcc(interaction, dist),
+          exact_gradient_initialized(false)
   {}
 
   virtual size_t get_ndim(){return m_ndim;}
@@ -483,7 +489,6 @@ public:
     if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
       return NAN;
     }
-
     update_iterator(coords);
     m_eAcc.reset_data(&coords);
     auto looper = m_cell_lists.get_atom_pair_looper(m_eAcc);
@@ -510,15 +515,29 @@ public:
 
     update_iterator(coords);
     grad.assign(0.);
-    std::vector<ExactSum> exact_grad(grad.size());
-    m_egAcc.reset_data(&coords, &exact_grad);
+    if (!exact_gradient_initialized) {
+      exact_gradient = std::make_shared<std::vector<ExactSum>>(grad.size());
+        exact_gradient_initialized=true;
+    }
+    else {
+      for (size_t i=0; i < grad.size(); ++i) {
+        (*exact_gradient)[i].Reset();
+      } }
+    // std::vector<ExactSum>exact_grad(grad.size());
+    m_egAcc.reset_data(&coords, exact_gradient);
     auto looper = m_cell_lists.get_atom_pair_looper(m_egAcc);
 
     looper.loop_through_atom_pairs();
-    for (size_t i; i < grad.size(); ++i) {
-      grad[i] = exact_grad[i].GetSum();
+#ifdef _OPENMP
+#pragma omp parallel for
+    for (size_t i=0; i < grad.size(); ++i) {
+      grad[i] = (*exact_gradient)[i].GetSum();
     }
-
+#else
+    for (size_t i=0; i < grad.size(); ++i) {
+      grad[i] = (*exact_gradient)[i].GetSum();
+    }
+#endif
 
     return m_egAcc.get_energy();
   }
@@ -684,4 +703,4 @@ protected:
 };
 //namespace pele
 
-#endif //#ifndef _PELE_CELL_LIST_POTENTIAL_H
+#endif

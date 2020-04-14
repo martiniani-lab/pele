@@ -9,6 +9,7 @@
 #include "vecn.h"
 #include "distance.h"
 #include "ExactSum.h"
+#include <omp.h>
 
 
 namespace pele {
@@ -31,6 +32,11 @@ protected:
     std::shared_ptr<pairwise_interaction> _interaction;
     std::shared_ptr<distance_policy> _dist;
     const double m_radii_sca;
+    std::shared_ptr<std::vector<ExactSum>> exact_gradient;
+    bool exact_gradient_initialized;
+
+
+
 
     SimplePairwisePotential( std::shared_ptr<pairwise_interaction> interaction,
             const Array<double> radii,
@@ -39,16 +45,18 @@ protected:
         : PairwisePotentialInterface(radii),
           _interaction(interaction),
           _dist(dist),
-          m_radii_sca(radii_sca)
+          m_radii_sca(radii_sca),
+          exact_gradient_initialized(false)
     {
-        if(_dist == NULL) _dist = std::make_shared<distance_policy>();
+         if(_dist == NULL) _dist = std::make_shared<distance_policy>();
     }
 
     SimplePairwisePotential( std::shared_ptr<pairwise_interaction> interaction,
-            std::shared_ptr<distance_policy> dist=NULL)
+                             std::shared_ptr<distance_policy> dist=NULL)
         : _interaction(interaction),
           _dist(dist),
-          m_radii_sca(0.0)
+          m_radii_sca(0.0),
+          exact_gradient_initialized(false)
     {
         if(_dist == NULL) _dist = std::make_shared<distance_policy>();
     }
@@ -129,8 +137,15 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
     ExactSum esum;
     double gij;
     double dr[m_ndim];
-    std::vector<ExactSum> exact_grad(m_ndim*natoms);
-    
+    // std::vector<ExactSum> exact_grad(m_ndim*natoms);
+    if (!exact_gradient_initialized) {
+        exact_gradient = std::make_shared<std::vector<ExactSum>>(grad.size());
+        exact_gradient_initialized=true;
+        }
+    else {
+    for (size_t i=0; i < grad.size(); ++i) {
+        (*exact_gradient)[i].Reset();
+    } }
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
       const size_t i1 = m_ndim * atom_i;
       for (size_t atom_j=0; atom_j<atom_i; ++atom_j) {
@@ -148,17 +163,24 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
 #pragma unroll
           for (size_t k=0; k<m_ndim; ++k) {
             dr[k] *= gij;
-            exact_grad[i1+k].AddNumber(-dr[k]);
-            exact_grad[j1+k].AddNumber(dr[k]);              
+            (*exact_gradient)[i1+k].AddNumber(-dr[k]);
+            (*exact_gradient)[j1+k].AddNumber(dr[k]);              
             // grad[i1+k] -= dr[k];
             // grad[j1+k] += dr[k];
           }
         }
       }
     }
-    for (size_t i = 0; i < exact_grad.size(); ++i) {
-      grad[i] += exact_grad[i].GetSum();
+#ifdef _OPENMP
+#pragma omp parallel for
+    for (size_t i=0; i < grad.size(); ++i) {
+      grad[i] = (*exact_gradient)[i].GetSum();
     }
+#else
+    for (size_t i=0; i < grad.size(); ++i) {
+      grad[i] = (*exact_gradient)[i].GetSum();
+    }
+#endif
     return esum.GetSum();
 }
 
