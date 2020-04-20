@@ -15,7 +15,12 @@
 #include "distance.h"
 #include "cell_lists.h"
 #include "vecn.h"
-#include "ExactSum.h"
+
+extern "C" {
+#include "xsum.h"
+}
+
+
 
 namespace pele{
 
@@ -29,14 +34,14 @@ namespace pele{
     std::shared_ptr<distance_policy> m_dist;
     const pele::Array<double> * m_coords;
     const pele::Array<double> m_radii;
-    std::vector<ExactSum*> m_energies;
+    std::vector<xsum_large_accumulator> m_energies;
 
   public:
     ~EnergyAccumulator()
     {      
-      for(auto & energy : m_energies) {
-        delete energy;
-      }
+      // for(auto & energy : m_energies) {
+      //   delete energy;
+      // }
     }
 
     EnergyAccumulator(std::shared_ptr<pairwise_interaction> & interaction,
@@ -47,14 +52,14 @@ namespace pele{
         m_radii(radii)
     {
 #ifdef _OPENMP
-      m_energies = std::vector<ExactSum*>(omp_get_max_threads());
+      m_energies = std::vector<xsum_large_accumulator>(omp_get_max_threads());
 #pragma omp parallel
       {
-        m_energies[omp_get_thread_num()] = new ExactSum();
+          xsum_large_init(&(m_energies[omp_get_thread_num()]));
       }
 #else
-      m_energies = std::vector<ExactSum*>(1);
-      m_energies[0] = new ExactSum();
+      m_energies = std::vector<xsum_large_accumulator>(1);
+      xsum_large_init(&(m_energies[0]));
 #endif
     }
 
@@ -63,10 +68,10 @@ namespace pele{
 #ifdef _OPENMP
 #pragma omp parallel
       {
-        m_energies[omp_get_thread_num()]->Reset();
+          xsum_large_init(&(m_energies[omp_get_thread_num()]));
       }
 #else
-      m_energies[0]->Reset();
+      xsum_large_init(&(m_energies[0]));
 #endif
     }
 
@@ -85,9 +90,9 @@ namespace pele{
         radius_sum = m_radii[atom_i] + m_radii[atom_j];
       }
 #ifdef _OPENMP
-      m_energies[isubdom]->AddNumber(m_interaction->energy(r2, radius_sum));
+      xsum_large_add1(&(m_energies[isubdom]), m_interaction->energy(r2, radius_sum));
 #else
-      m_energies[0]->AddNumber(m_interaction->energy(r2, radius_sum));
+      xsum_large_add1(&(m_energies[0]), m_interaction->energy(r2, radius_sum));
 #endif
     }
 
@@ -95,7 +100,7 @@ namespace pele{
       // I didn't accumulate here considering that the number of energies is small
       double energy = 0;
       for(size_t i = 0; i < m_energies.size(); ++i) {
-        energy += m_energies[i]->GetSum();
+          energy += xsum_large_round(&(m_energies[i]));
       }
       return energy;
     }
@@ -111,14 +116,14 @@ class EnergyGradientAccumulator {
     std::shared_ptr<distance_policy> m_dist;
     const pele::Array<double> * m_coords;
     const pele::Array<double> m_radii;
-    std::vector<ExactSum*> m_energies;
+    std::vector<xsum_large_accumulator> m_energies;
 public:
-  std::shared_ptr<std::vector<ExactSum>> m_gradient;
+  std::shared_ptr<std::vector<xsum_large_accumulator>> m_gradient;
   ~EnergyGradientAccumulator()
   {
-    for(auto & energy : m_energies) {
-      delete energy;
-    }
+    // for(auto & energy : m_energies) {
+    //   delete energy;
+    // }
   }
 
   EnergyGradientAccumulator(std::shared_ptr<pairwise_interaction> & interaction,
@@ -129,26 +134,26 @@ public:
         m_radii(radii)
     {
 #ifdef _OPENMP
-      m_energies = std::vector<ExactSum*>(omp_get_max_threads());
+      m_energies = std::vector<xsum_large_accumulator>(omp_get_max_threads());
 #pragma omp parallel
       {
-        m_energies[omp_get_thread_num()] = new ExactSum();
+          xsum_large_init(&(m_energies[omp_get_thread_num()]));
       }
 #else
-      m_energies = std::vector<ExactSum*>(1);
-      m_energies[0] = new ExactSum();
+      m_energies = std::vector<xsum_large_accumulator>(1);
+      xsum_large_init(&(m_energies[0]))
 #endif
     }
 
-  void reset_data(const pele::Array<double> * coords, std::shared_ptr<std::vector<ExactSum>> & gradient) {
+  void reset_data(const pele::Array<double> * coords, std::shared_ptr<std::vector<xsum_large_accumulator>> & gradient) {
     m_coords = coords;
 #ifdef _OPENMP
 #pragma omp parallel
       {
-        m_energies[omp_get_thread_num()]->Reset();
+          xsum_large_init(&(m_energies[omp_get_thread_num()]));
       }
 #else
-      m_energies[0]->Reset();
+      xsum_large_init(&(m_energies[0]));
 #endif
       m_gradient = gradient;
     }
@@ -169,15 +174,17 @@ public:
         radius_sum = m_radii[atom_i] + m_radii[atom_j];
       }
 #ifdef _OPENMP
-      m_energies[isubdom]->AddNumber(m_interaction->energy_gradient(r2, &gij, radius_sum));
+      xsum_large_add1(&(m_energies[isubdom]), m_interaction->energy(r2, radius_sum));
 #else
-      m_energies[0]->AddNumber(m_interaction->energy_gradient(r2, &gij, radius_sum));
+      xsum_large_add1(&(m_energies[0]), m_interaction->energy(r2, radius_sum));
 #endif
       if (gij != 0) {
         for (size_t k = 0; k < m_ndim; ++k) {
           dr[k] *= gij;
-          (*m_gradient)[xi_off+k].AddNumber(-dr[k]);
-          (*m_gradient)[xj_off+k].AddNumber(dr[k]);
+          // (*m_gradient)[xi_off+k].AddNumber(-dr[k]);
+          // (*m_gradient)[xj_off+k].AddNumber(dr[k]);
+          xsum_large_add1(&((*m_gradient)[xi_off+k]), -dr[k]);
+          xsum_large_add1(&((*m_gradient)[xj_off+k]), dr[k]);
         }
       }
     }
@@ -185,7 +192,7 @@ public:
     double get_energy() {
       double energy = 0;
       for(size_t i = 0; i < m_energies.size(); ++i) {
-        energy += m_energies[i]->GetSum();
+          energy += xsum_large_round(&(m_energies[i]));
       }
       return energy;
     }
@@ -433,7 +440,7 @@ protected:
     std::shared_ptr<pairwise_interaction> m_interaction;
     std::shared_ptr<distance_policy> m_dist;
     const double m_radii_sca;
-    std::shared_ptr<std::vector<ExactSum>> exact_gradient;
+    std::shared_ptr<std::vector<xsum_large_accumulator>> exact_gradient;
     bool exact_gradient_initialized;
     
 
@@ -516,26 +523,26 @@ public:
     update_iterator(coords);
     grad.assign(0.);
     if (!exact_gradient_initialized) {
-      exact_gradient = std::make_shared<std::vector<ExactSum>>(grad.size());
+        exact_gradient = std::make_shared<std::vector<xsum_large_accumulator>>(grad.size());
         exact_gradient_initialized=true;
     }
     else {
       for (size_t i=0; i < grad.size(); ++i) {
-        (*exact_gradient)[i].Reset();
+        xsum_large_init(&((*exact_gradient)[i]));
       } }
-    // std::vector<ExactSum>exact_grad(grad.size());
+
     m_egAcc.reset_data(&coords, exact_gradient);
     auto looper = m_cell_lists.get_atom_pair_looper(m_egAcc);
 
     looper.loop_through_atom_pairs();
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (size_t i=0; i < grad.size(); ++i) {
-      grad[i] = (*exact_gradient)[i].GetSum();
+        xsum_large_round(&((*exact_gradient)[i]));
     }
 #else
     for (size_t i=0; i < grad.size(); ++i) {
-      grad[i] = (*exact_gradient)[i].GetSum();
+        xsum_large_round(&((*exact_gradient)[i]));
     }
 #endif
 

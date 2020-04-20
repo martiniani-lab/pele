@@ -53,98 +53,98 @@ inline double round_fast(double r)
 
 namespace pele {
 
-/**
-* compute the cartesian distance
-*/
-template<size_t IDX>
-struct meta_dist {
-    static void f(double * const r_ij, double const * const r1,
-                  double const * const r2)
-    {
-        const static size_t k = IDX - 1;
-        r_ij[k] = r1[k] - r2[k];
-        meta_dist<k>::f(r_ij, r1, r2);
-    }
-};
+    /**
+     * compute the cartesian distance
+     */
+    template<size_t IDX>
+    struct meta_dist {
+        static void f(double * const r_ij, double const * const r1,
+                      double const * const r2)
+        {
+            const static size_t k = IDX - 1;
+            r_ij[k] = r1[k] - r2[k];
+            meta_dist<k>::f(r_ij, r1, r2);
+        }
+    };
 
-template<>
-struct meta_dist<1> {
-    static void f(double * const r_ij, double const * const r1,
-                  double const * const r2)
-    {
-        r_ij[0] = r1[0] - r2[0];
-    }
-};
+    template<>
+    struct meta_dist<1> {
+        static void f(double * const r_ij, double const * const r1,
+                      double const * const r2)
+        {
+            r_ij[0] = r1[0] - r2[0];
+        }
+    };
 
-template<size_t ndim>
-struct cartesian_distance {
-    static const size_t _ndim = ndim;
-    inline void get_rij(double * const r_ij, double const * const r1,
-                        double const * const r2) const
-    {
-        static_assert(ndim > 0, "illegal box dimension");
-        meta_dist<ndim>::f(r_ij, r1, r2);
-    }
+    template<size_t ndim>
+    struct cartesian_distance {
+        static const size_t _ndim = ndim;
+        inline void get_rij(double * const r_ij, double const * const r1,
+                            double const * const r2) const
+        {
+            static_assert(ndim > 0, "illegal box dimension");
+            meta_dist<ndim>::f(r_ij, r1, r2);
+        }
+
+        /**
+         * This should not be called. It's only here for running CellList tests.
+         * The particles can't be outside the box when
+         * using cartesian distance with cell lists.
+         */
+        inline void put_atom_in_box(double * const xnew, const double* x) const
+        {
+            // throw std::runtime_error("Cartesian distance, CellLists: coords are outside of boxvector");
+        }
+        inline void put_atom_in_box(double * const x) const
+        {
+            // throw std::runtime_error("Cartesian distance, CellLists: coords are outside of boxvector");
+        }
+    };
 
     /**
-    * This should not be called. It's only here for running CellList tests.
-    * The particles can't be outside the box when
-    * using cartesian distance with cell lists.
-    */
-    inline void put_atom_in_box(double * const xnew, const double* x) const
-    {
-        // throw std::runtime_error("Cartesian distance, CellLists: coords are outside of boxvector");
-    }
-    inline void put_atom_in_box(double * const x) const
-    {
-        // throw std::runtime_error("Cartesian distance, CellLists: coords are outside of boxvector");
-    }
-};
+     * periodic boundary conditions in rectangular box
+     */
 
-/**
-* periodic boundary conditions in rectangular box
-*/
+    template<size_t IDX>
+    struct  meta_periodic_distance {
+        static void f(double * const r_ij, double const * const r1,
+                      double const * const r2, const double* box, const double* ibox)
+        {
+            const static size_t k = IDX - 1;
+            r_ij[k] = r1[k] - r2[k];
+            r_ij[k] -= round_fast(r_ij[k] * ibox[k]) * box[k];
+            meta_periodic_distance<k>::f(r_ij, r1, r2, box, ibox);
+        }
+    };
 
-template<size_t IDX>
-struct  meta_periodic_distance {
-    static void f(double * const r_ij, double const * const r1,
-                  double const * const r2, const double* box, const double* ibox)
-    {
-        const static size_t k = IDX - 1;
-        r_ij[k] = r1[k] - r2[k];
-        r_ij[k] -= round_fast(r_ij[k] * ibox[k]) * box[k];
-        meta_periodic_distance<k>::f(r_ij, r1, r2, box, ibox);
-    }
-};
+    template<>
+    struct meta_periodic_distance<1> {
+        static void f(double * const r_ij, double const * const r1,
+                      double const * const r2, const double* box, const double* ibox)
+        {
+            r_ij[0] = r1[0] - r2[0];
+            r_ij[0] -= round_fast(r_ij[0] * ibox[0]) * box[0];
+        }
+    };
 
-template<>
-struct meta_periodic_distance<1> {
-    static void f(double * const r_ij, double const * const r1,
-                  double const * const r2, const double* box, const double* ibox)
-    {
-        r_ij[0] = r1[0] - r2[0];
-        r_ij[0] -= round_fast(r_ij[0] * ibox[0]) * box[0];
-    }
-};
-
-/**
- * meta_image applies the nearest periodic image convention to the
- * coordinates of one particle.
- * In particular, meta_image is called by put_in_box once for each
- * particle.
- * x points to the first coodinate of the particle that should be put in
- * the box.
- * The template meta program expands to apply the nearest image
- * convention to all ndim coordinates in the range [x, x + ndim).
- * The function f of meta_image translates x[k] such that its new value
- * is in the range [-box[k]/2, box[k]/2].
- * To see this, consider the behavior of std::round.
- * E.g. if the input is x[k] == -0.7 box[k], then
- * round_fast(x[k] * ibox[k]) == -1 and finally
- * (x[k] -= -1 * box[k]) == 0.3 * box[k]
- */
-template<size_t IDX>
-struct meta_image {
+    /**
+     * meta_image applies the nearest periodic image convention to the
+     * coordinates of one particle.
+     * In particular, meta_image is called by put_in_box once for each
+     * particle.
+     * x points to the first coodinate of the particle that should be put in
+     * the box.
+     * The template meta program expands to apply the nearest image
+     * convention to all ndim coordinates in the range [x, x + ndim).
+     * The function f of meta_image translates x[k] such that its new value
+     * is in the range [-box[k]/2, box[k]/2].
+     * To see this, consider the behavior of std::round.
+     * E.g. if the input is x[k] == -0.7 box[k], then
+     * round_fast(x[k] * ibox[k]) == -1 and finally
+     * (x[k] -= -1 * box[k]) == 0.3 * box[k]
+     */
+    template<size_t IDX>
+    struct meta_image {
         static void f(double *const xnew, const double* x, const double* ibox,
                       const double* box)
         {
@@ -162,20 +162,20 @@ struct meta_image {
         static void f(double *const x, const double* ibox,
                       const double* box)
         {
-        const static size_t k = IDX - 1;
-        x[k] -= round_fast(x[k] * ibox[k]) * box[k];
+            const static size_t k = IDX - 1;
+            x[k] -= round_fast(x[k] * ibox[k]) * box[k];
 
-        // Correction for values close to the box boundary
-        double half_box = 0.5 * box[k];
-        int outside = (x[k] < -half_box) - (x[k] > half_box);
-        x[k] += box[k] * outside;
+            // Correction for values close to the box boundary
+            double half_box = 0.5 * box[k];
+            int outside = (x[k] < -half_box) - (x[k] > half_box);
+            x[k] += box[k] * outside;
 
-        meta_image<k>::f(x, ibox, box);
-    }
-};
+            meta_image<k>::f(x, ibox, box);
+        }
+    };
 
-template<>
-struct meta_image<1> {
+    template<>
+    struct meta_image<1> {
         static void f(double *const xnew, const double* x, const double* ibox,
                       const double* box)
         {
@@ -190,28 +190,28 @@ struct meta_image<1> {
         static void f(double *const x, const double* ibox,
                       const double* box)
         {
-        x[0] -= round_fast(x[0] * ibox[0]) * box[0];
+            x[0] -= round_fast(x[0] * ibox[0]) * box[0];
 
-        // Correction for values close to the box boundary
-        double half_box = 0.5 * box[0];
-        int outside = (x[0] < -half_box) - (x[0] > half_box);
-        x[0] += box[0] * outside;
-    }
-};
-
-template<size_t ndim>
-class periodic_distance {
-public:
-    static const size_t _ndim = ndim;
-    double m_box[ndim];
-    double m_ibox[ndim];
-
-    periodic_distance(Array<double> const box)
-    {
-        static_assert(ndim > 0, "illegal box dimension");
-        if (box.size() != ndim) {
-            throw std::invalid_argument("box.size() must be equal to ndim");
+            // Correction for values close to the box boundary
+            double half_box = 0.5 * box[0];
+            int outside = (x[0] < -half_box) - (x[0] > half_box);
+            x[0] += box[0] * outside;
         }
+    };
+
+    template<size_t ndim>
+    class periodic_distance {
+    public:
+        static const size_t _ndim = ndim;
+        double m_box[ndim];
+        double m_ibox[ndim];
+
+        periodic_distance(Array<double> const box)
+        {
+            static_assert(ndim > 0, "illegal box dimension");
+            if (box.size() != ndim) {
+                throw std::invalid_argument("box.size() must be equal to ndim");
+            }
         for (size_t i = 0; i < ndim; ++i) {
             m_box[i] = box[i];
             m_ibox[i] = 1 / box[i];

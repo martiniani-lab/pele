@@ -4,7 +4,7 @@
 set(numpy_include __NUMPY_INCLUDE__)
 set(PYTHON_INCLUDE_DIRS __PYTHON_INCLUDE__)
 set(PYTHON_LDFLAGS "__PYTHON_LDFLAGS__")
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #find_package(PythonLibs)
 #message("PYTHON_LIBRARIES ${PYTHON_LIBRARIES}")
 #message("PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS}")
@@ -38,8 +38,10 @@ set(pele_include ${CMAKE_CURRENT_SOURCE_DIR}/source)
 message("pele include directory: ${pele_include}")
 
 # build the pele library
+# NOTE: GLOBBING MIGHT BE A BAD IDEA WHEN ADDING FILES https://stackoverflow.com/questions/1027247/is-it-better-to-specify-source-files-with-glob-or-each-file-individually-in-cmake
+# This is a likely source of undefined symbol errors
 include_directories(${pele_include})
-FILE(GLOB pele_sources ${pele_include}/*.cpp)
+FILE(GLOB pele_sources ${pele_include}/*.c*)
 add_library(pele_lib SHARED ${pele_sources})
 
 function(make_cython_lib cython_cxx_source)

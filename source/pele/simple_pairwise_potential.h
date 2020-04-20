@@ -8,8 +8,14 @@
 #include "array.h"
 #include "vecn.h"
 #include "distance.h"
-#include "ExactSum.h"
 #include <omp.h>
+
+
+
+extern "C" {
+#include "xsum.h"
+}
+
 
 
 namespace pele {
@@ -32,7 +38,7 @@ protected:
     std::shared_ptr<pairwise_interaction> _interaction;
     std::shared_ptr<distance_policy> _dist;
     const double m_radii_sca;
-    std::shared_ptr<std::vector<ExactSum>> exact_gradient;
+    std::shared_ptr<std::vector<xsum_large_accumulator>> exact_gradient;    
     bool exact_gradient_initialized;
 
 
@@ -134,18 +140,22 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
         throw std::runtime_error("grad must have the same size as x");
     }
 
-    ExactSum esum;
+    xsum_large_accumulator esum;
+    xsum_large_init(&esum);
+    
     double gij;
     double dr[m_ndim];
-    // std::vector<ExactSum> exact_grad(m_ndim*natoms);
+    
+
     if (!exact_gradient_initialized) {
-        exact_gradient = std::make_shared<std::vector<ExactSum>>(grad.size());
+        exact_gradient = std::make_shared<std::vector<xsum_large_accumulator>>(grad.size());
         exact_gradient_initialized=true;
-        }
-    else {
+    }
+
     for (size_t i=0; i < grad.size(); ++i) {
-        (*exact_gradient)[i].Reset();
-    } }
+        xsum_large_init(&((*exact_gradient)[i]));
+    }
+    
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
       const size_t i1 = m_ndim * atom_i;
       for (size_t atom_j=0; atom_j<atom_i; ++atom_j) {
@@ -157,31 +167,32 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
         for (size_t k=0; k<m_ndim; ++k) {
           r2 += dr[k]*dr[k];
         }
-
-        esum.AddNumber(_interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j)));
+        xsum_large_add1(&esum, _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j)));
         if (gij != 0) {
 #pragma unroll
-          for (size_t k=0; k<m_ndim; ++k) {
-            dr[k] *= gij;
-            (*exact_gradient)[i1+k].AddNumber(-dr[k]);
-            (*exact_gradient)[j1+k].AddNumber(dr[k]);              
-            // grad[i1+k] -= dr[k];
-            // grad[j1+k] += dr[k];
-          }
+            for (size_t k=0; k<m_ndim; ++k) {
+                dr[k] *= gij;
+                xsum_large_add1(&((*exact_gradient)[i1+k]), -dr[k]);
+                xsum_large_add1(&((*exact_gradient)[j1+k]), dr[k]);
+                // (*exact_gradient)[i1+k].AddNumber(-dr[k]);
+                // (*exact_gradient)[j1+k].AddNumber(dr[k]);          
+                // grad[i1+k] -= dr[k];
+                // grad[j1+k] += dr[k];
+            }
         }
       }
     }
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (size_t i=0; i < grad.size(); ++i) {
-      grad[i] = (*exact_gradient)[i].GetSum();
+        xsum_large_round(&((*exact_gradient)[i]));
     }
 #else
     for (size_t i=0; i < grad.size(); ++i) {
-      grad[i] = (*exact_gradient)[i].GetSum();
+        xsum_large_round(&((*exact_gradient)[i]));
     }
 #endif
-    return esum.GetSum();
+    return xsum_large_round(&esum);
 }
 
 template<typename pairwise_interaction, typename distance_policy>
