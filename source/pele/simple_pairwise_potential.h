@@ -38,7 +38,7 @@ protected:
     std::shared_ptr<pairwise_interaction> _interaction;
     std::shared_ptr<distance_policy> _dist;
     const double m_radii_sca;
-    std::shared_ptr<std::vector<xsum_large_accumulator>> exact_gradient;    
+    std::shared_ptr<std::vector<xsum_small_accumulator>> exact_gradient;    
     bool exact_gradient_initialized;
 
 
@@ -148,12 +148,12 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
     
 
     if (!exact_gradient_initialized) {
-        exact_gradient = std::make_shared<std::vector<xsum_large_accumulator>>(grad.size());
+        exact_gradient = std::make_shared<std::vector<xsum_small_accumulator>>(grad.size());
         exact_gradient_initialized=true;
     }
 
     for (size_t i=0; i < grad.size(); ++i) {
-        xsum_large_init(&((*exact_gradient)[i]));
+        xsum_small_init(&((*exact_gradient)[i]));
     }
     
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
@@ -172,8 +172,8 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
 #pragma unroll
             for (size_t k=0; k<m_ndim; ++k) {
                 dr[k] *= gij;
-                xsum_large_add1(&((*exact_gradient)[i1+k]), -dr[k]);
-                xsum_large_add1(&((*exact_gradient)[j1+k]), dr[k]);
+                xsum_small_add1(&((*exact_gradient)[i1+k]), -dr[k]);
+                xsum_small_add1(&((*exact_gradient)[j1+k]), dr[k]);
                 // (*exact_gradient)[i1+k].AddNumber(-dr[k]);
                 // (*exact_gradient)[j1+k].AddNumber(dr[k]);          
                 // grad[i1+k] -= dr[k];
@@ -185,11 +185,11 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)
     for (size_t i=0; i < grad.size(); ++i) {
-        xsum_large_round(&((*exact_gradient)[i]));
+        xsum_small_round(&((*exact_gradient)[i]));
     }
 #else
     for (size_t i=0; i < grad.size(); ++i) {
-        xsum_large_round(&((*exact_gradient)[i]));
+        xsum_small_round(&((*exact_gradient)[i]));
     }
 #endif
     return xsum_large_round(&esum);
