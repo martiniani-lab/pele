@@ -118,7 +118,7 @@ class EnergyGradientAccumulator {
     const pele::Array<double> m_radii;
     std::vector<xsum_large_accumulator> m_energies;
 public:
-  std::shared_ptr<std::vector<xsum_large_accumulator>> m_gradient;
+  std::shared_ptr<std::vector<xsum_small_accumulator>> m_gradient;
   ~EnergyGradientAccumulator()
   {
     // for(auto & energy : m_energies) {
@@ -145,7 +145,7 @@ public:
 #endif
     }
 
-  void reset_data(const pele::Array<double> * coords, std::shared_ptr<std::vector<xsum_large_accumulator>> & gradient) {
+  void reset_data(const pele::Array<double> * coords, std::shared_ptr<std::vector<xsum_small_accumulator>> & gradient) {
     m_coords = coords;
 #ifdef _OPENMP
 #pragma omp parallel
@@ -183,8 +183,8 @@ public:
           dr[k] *= gij;
           // (*m_gradient)[xi_off+k].AddNumber(-dr[k]);
           // (*m_gradient)[xj_off+k].AddNumber(dr[k]);
-          xsum_large_add1(&((*m_gradient)[xi_off+k]), -dr[k]);
-          xsum_large_add1(&((*m_gradient)[xj_off+k]), dr[k]);
+          xsum_small_add1(&((*m_gradient)[xi_off+k]), -dr[k]);
+          xsum_small_add1(&((*m_gradient)[xj_off+k]), dr[k]);
         }
       }
     }
@@ -440,7 +440,7 @@ protected:
     std::shared_ptr<pairwise_interaction> m_interaction;
     std::shared_ptr<distance_policy> m_dist;
     const double m_radii_sca;
-    std::shared_ptr<std::vector<xsum_large_accumulator>> exact_gradient;
+    std::shared_ptr<std::vector<xsum_small_accumulator>> exact_gradient;
     bool exact_gradient_initialized;
     
 
@@ -523,12 +523,12 @@ public:
     update_iterator(coords);
     grad.assign(0.);
     if (!exact_gradient_initialized) {
-        exact_gradient = std::make_shared<std::vector<xsum_large_accumulator>>(grad.size());
+        exact_gradient = std::make_shared<std::vector<xsum_small_accumulator>>(grad.size());
         exact_gradient_initialized=true;
     }
     else {
       for (size_t i=0; i < grad.size(); ++i) {
-        xsum_large_init(&((*exact_gradient)[i]));
+        xsum_small_init(&((*exact_gradient)[i]));
       } }
 
     m_egAcc.reset_data(&coords, exact_gradient);
@@ -538,11 +538,11 @@ public:
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)
     for (size_t i=0; i < grad.size(); ++i) {
-        xsum_large_round(&((*exact_gradient)[i]));
+        xsum_small_round(&((*exact_gradient)[i]));
     }
 #else
     for (size_t i=0; i < grad.size(); ++i) {
-        xsum_large_round(&((*exact_gradient)[i]));
+        xsum_small_round(&((*exact_gradient)[i]));
     }
 #endif
 
