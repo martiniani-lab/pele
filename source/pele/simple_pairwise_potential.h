@@ -145,8 +145,9 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
     
     double gij;
     double dr[m_ndim];
-    
+    // std::vector<double> grad_test (grad.size(), 0);
 
+    
     if (!exact_gradient_initialized) {
         exact_gradient = std::make_shared<std::vector<xsum_small_accumulator>>(grad.size());
         exact_gradient_initialized=true;
@@ -157,39 +158,36 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
     }
     
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
-      const size_t i1 = m_ndim * atom_i;
-      for (size_t atom_j=0; atom_j<atom_i; ++atom_j) {
-        const size_t j1 = m_ndim * atom_j;
+        const size_t i1 = m_ndim * atom_i;
+        for (size_t atom_j=0; atom_j<atom_i; ++atom_j) {
+            const size_t j1 = m_ndim * atom_j;
 
-        _dist->get_rij(dr, &x[i1], &x[j1]);
-        double r2 = 0;
-#pragma unroll
-        for (size_t k=0; k<m_ndim; ++k) {
-          r2 += dr[k]*dr[k];
-        }
-        xsum_large_add1(&esum, _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j)));
-        if (gij != 0) {
+            _dist->get_rij(dr, &x[i1], &x[j1]);
+            double r2 = 0;
 #pragma unroll
             for (size_t k=0; k<m_ndim; ++k) {
-                dr[k] *= gij;
-                xsum_small_add1(&((*exact_gradient)[i1+k]), -dr[k]);
-                xsum_small_add1(&((*exact_gradient)[j1+k]), dr[k]);
-                // (*exact_gradient)[i1+k].AddNumber(-dr[k]);
-                // (*exact_gradient)[j1+k].AddNumber(dr[k]);          
-                // grad[i1+k] -= dr[k];
-                // grad[j1+k] += dr[k];
+                r2 += dr[k]*dr[k];
+            }
+            xsum_large_add1(&esum, _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j)));
+            if (gij != 0) {
+#pragma unroll
+                for (size_t k=0; k<m_ndim; ++k) {
+                    dr[k] *= gij;
+                    xsum_small_add1(&((*exact_gradient)[i1+k]), -dr[k]);
+                    xsum_small_add1(&((*exact_gradient)[j1+k]), dr[k]);
+                }
             }
         }
-      }
     }
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)
     for (size_t i=0; i < grad.size(); ++i) {
-        xsum_small_round(&((*exact_gradient)[i]));
+        grad[i] += xsum_small_round(&((*exact_gradient)[i]));
     }
 #else
     for (size_t i=0; i < grad.size(); ++i) {
-        xsum_small_round(&((*exact_gradient)[i]));
+        grad[i] += xsum_small_round(&((*exact_gradient)[i]));
     }
 #endif
     return xsum_large_round(&esum);

@@ -174,18 +174,18 @@ public:
         radius_sum = m_radii[atom_i] + m_radii[atom_j];
       }
 #ifdef _OPENMP
-      xsum_large_add1(&(m_energies[isubdom]), m_interaction->energy(r2, radius_sum));
+      xsum_large_add1(&(m_energies[isubdom]), m_interaction->energy_gradient(r2, &gij, radius_sum));
 #else
-      xsum_large_add1(&(m_energies[0]), m_interaction->energy(r2, radius_sum));
+      xsum_large_add1(&(m_energies[0]), m_interaction->energy_gradient(r2, &gij, radius_sum));
 #endif
       if (gij != 0) {
-        for (size_t k = 0; k < m_ndim; ++k) {
-          dr[k] *= gij;
-          // (*m_gradient)[xi_off+k].AddNumber(-dr[k]);
-          // (*m_gradient)[xj_off+k].AddNumber(dr[k]);
-          xsum_small_add1(&((*m_gradient)[xi_off+k]), -dr[k]);
-          xsum_small_add1(&((*m_gradient)[xj_off+k]), dr[k]);
-        }
+          for (size_t k = 0; k < m_ndim; ++k) {
+              dr[k] *= gij;
+              // (*m_gradient)[xi_off+k].AddNumber(-dr[k]);
+              // (*m_gradient)[xj_off+k].AddNumber(dr[k]);
+              xsum_small_add1(&((*m_gradient)[xi_off+k]), -dr[k]);
+              xsum_small_add1(&((*m_gradient)[xj_off+k]), dr[k]);
+          }
       }
     }
 
@@ -533,18 +533,19 @@ public:
 
     m_egAcc.reset_data(&coords, exact_gradient);
     auto looper = m_cell_lists.get_atom_pair_looper(m_egAcc);
-
+    
     looper.loop_through_atom_pairs();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)
     for (size_t i=0; i < grad.size(); ++i) {
-        xsum_small_round(&((*exact_gradient)[i]));
+        grad[i] = xsum_small_round(&((*exact_gradient)[i]));
     }
 #else
     for (size_t i=0; i < grad.size(); ++i) {
-        xsum_small_round(&((*exact_gradient)[i]));
+        grad[i] = xsum_small_round(&((*exact_gradient)[i]));
     }
 #endif
+
 
     return m_egAcc.get_energy();
   }

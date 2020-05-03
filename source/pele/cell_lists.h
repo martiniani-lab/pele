@@ -655,7 +655,7 @@ public:
     {
         #ifdef _OPENMP
         #pragma omp parallel
-        {
+        { 
             size_t isubdom = omp_get_thread_num();
             loop_cell_pairs(m_container.m_cell_neighbor_pairs_inner[isubdom], isubdom);
             #pragma omp barrier
