@@ -82,4 +82,5 @@ from .ljcut import *
 from .xyspin import *
 from .morse import Morse
 from .ml import MLCost
+from ._HPModel import HP
 
