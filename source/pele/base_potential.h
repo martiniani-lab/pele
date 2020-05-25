@@ -7,6 +7,11 @@
 #include <iostream>
 #include "array.h"
 
+
+extern "C" {
+#include "xsum.h"
+}
+
 namespace pele {
 
 /***
@@ -44,6 +49,12 @@ public:
         double energy = get_energy(x);
         numerical_gradient(x, grad);
         return energy;
+    }
+
+
+    virtual double get_energy_gradient(Array<double> const & x, std::vector<xsum_small_accumulator> & exact_grad)
+    {
+        throw std::runtime_error("A numerical version for the exact gradient has not been written");
     }
 
 

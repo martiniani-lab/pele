@@ -52,8 +52,8 @@ private:
 
     Array<double> xold; //!< Coordinates before taking a step
     Array<double> gold; //!< Gradient before taking a step
-    std::shared_ptr<std::vector<xsum_small_accumulator>> exact_gold;
-    std::shared_ptr<std::vector<xsum_small_accumulator>> exact_g;
+    std::vector<xsum_small_accumulator> exact_gold;
+    std::vector<xsum_small_accumulator> exact_g_;
     Array<double> step; //!< Step size and direction
     double inv_sqrt_size; //!< The inverse square root the the number of components
 
@@ -106,8 +106,11 @@ private:
      * Add a step to the LBFGS Memory
      * This updates s_, y_, rho_, H0_, and k_
      */
-    void update_memory( Array<double> xold, Array<double> gold,
-            Array<double> xnew, Array<double> gnew);
+    void update_memory(
+                       Array<double> x_old,
+                       std::vector<xsum_small_accumulator> & exact_gold,
+                       Array<double> x_new,
+                       std::vector<xsum_small_accumulator> & exact_gnew);
 
     /**
      * Compute the LBFGS step from the memory

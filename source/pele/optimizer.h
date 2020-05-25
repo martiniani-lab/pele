@@ -3,6 +3,7 @@
 
 #include "base_potential.h"
 #include "array.h"
+#include "xsum.h"
 #include <vector>
 #include <math.h>
 #include <algorithm>
@@ -211,6 +212,14 @@ protected :
         func = potential_->get_energy_gradient(x, gradient);
     }
 
+    void compute_func_gradient(Array<double> x, double & func,
+                               std::vector<xsum_small_accumulator> & gradient)
+    {
+        nfev_ += 1;
+
+        // pass the arrays to the potential
+        func = potential_->get_energy_gradient(x, gradient);
+    }
     /**
      * compute the initial func and gradient
      */

@@ -78,6 +78,14 @@ public:
         grad.assign(0);
         return add_energy_gradient(x, grad);
     }
+
+    virtual double get_energy_gradient(Array<double> const & x, std::vector<xsum_small_accumulator> & exact_grad)
+    {
+        for (size_t i=0; i < exact_grad.size(); ++i) {
+            xsum_small_init(&(exact_grad[i]));
+        };
+        return add_energy_gradient(x, exact_grad);
+    }
     virtual double get_energy_gradient_hessian(Array<double> const & x, Array<double> & grad, Array<double> & hess)
     {
         grad.assign(0);
@@ -85,6 +93,7 @@ public:
         return add_energy_gradient_hessian(x, grad, hess);
     }
     virtual double add_energy_gradient(Array<double> const & x, Array<double> & grad);
+    virtual double add_energy_gradient(Array<double> const & x, std::vector<xsum_small_accumulator> & exact_grad);
     virtual double add_energy_gradient_hessian(Array<double> const & x, Array<double> & grad, Array<double> & hess);
     virtual void get_neighbors(pele::Array<double> const & coords,
                                 pele::Array<std::vector<size_t>> & neighbor_indss,
@@ -192,6 +201,74 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradi
 #endif
     return xsum_large_round(&esum);
 }
+
+
+template<typename pairwise_interaction, typename distance_policy>
+    inline double
+    SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradient(
+                                                                                        Array<double> const & x, std::vector<xsum_small_accumulator> & exact_grad)
+    {
+        const size_t natoms = x.size() / m_ndim;
+        if (m_ndim * natoms != x.size()) {
+            throw std::runtime_error("x.size() is not divisible by the number of dimensions");
+        }
+        if (exact_grad.size() != x.size()) {
+            throw std::runtime_error("grad must have the same size as x");
+        }
+
+        xsum_large_accumulator esum;
+        xsum_large_init(&esum);
+    
+        double gij;
+        double dr[m_ndim];
+        // std::vector<double> grad_test (grad.size(), 0);
+
+    
+        if (!exact_gradient_initialized) {
+            exact_gradient = std::make_shared<std::vector<xsum_small_accumulator>>(exact_grad.size());
+            exact_gradient_initialized=true;
+        }
+
+        for (size_t i=0; i < exact_grad.size(); ++i) {
+            xsum_small_init(&((*exact_gradient)[i]));
+        }
+    
+        for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
+            const size_t i1 = m_ndim * atom_i;
+            for (size_t atom_j=0; atom_j<atom_i; ++atom_j) {
+                const size_t j1 = m_ndim * atom_j;
+
+                _dist->get_rij(dr, &x[i1], &x[j1]);
+                double r2 = 0;
+#pragma unroll
+                for (size_t k=0; k<m_ndim; ++k) {
+                    r2 += dr[k]*dr[k];
+                }
+                xsum_large_add1(&esum, _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j)));
+                if (gij != 0) {
+#pragma unroll
+                    for (size_t k=0; k<m_ndim; ++k) {
+                        dr[k] *= gij;
+                        xsum_small_add1(&((*exact_gradient)[i1+k]), -dr[k]);
+                        xsum_small_add1(&((*exact_gradient)[j1+k]), dr[k]);
+                    }
+                }
+            }
+        }
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+        for (size_t i=0; i < exact_grad.size(); ++i) {
+            // grad[i] += xsum_small_round(&((*exact_gradient)[i]));
+            xsum_small_equal(&(exact_grad[i]), &((*exact_gradient)[i]));
+        }
+#else
+        for (size_t i=0; i < exact_grad.size(); ++i) {
+            xsum_small_equal(&(exact_grad[i]), &((*exact_gradient)[i]));
+        }
+#endif
+        return xsum_large_round(&esum);
+    }
 
 template<typename pairwise_interaction, typename distance_policy>
 inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradient_hessian(

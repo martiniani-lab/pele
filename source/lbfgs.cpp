@@ -1,4 +1,3 @@
-
 #include "pele/lbfgs.h"
 #include <memory>
 #include <iostream>
@@ -18,7 +17,9 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       alpha(M_),
       xold(x_.size()),
       gold(x_.size()),
-      step(x_.size())
+      step(x_.size()),
+      exact_g_(x_.size()),
+      exact_gold(x_.size())
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -28,8 +29,6 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
     // allocate space for s_ and y_
     s_ = Array<double>(x_.size() * M_);
     y_ = Array<double>(x_.size() * M_);
-    exact_g = std::make_shared<std::vector<xsum_small_accumulator>>(x_.size());
-    exact_gold = std::make_shared<std::vector<xsum_small_accumulator>>(x_.size());
 }
 
     /**
@@ -46,19 +45,19 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
         gold.assign(g_);
 
         for (int i = 0; i < xold.size(); ++i) {
-            xsum_small_equal(&((*exact_gold)[i]), &((*exact_g)[i]));
+            xsum_small_equal(&(exact_gold[i]), &(exact_g_[i]));
         }
 
         
-    
-            // get the stepsize and direction from the LBFGS algorithm
-            compute_lbfgs_step(step);
+        
+        // get the stepsize and direction from the LBFGS algorithm
+        compute_lbfgs_step(step);
         // std::cout << iter_number_ << "\n";
         // reduce the stepsize if necessary
         double stepnorm = backtracking_linesearch(step);
 
         // update the LBFGS memeory
-        update_memory(xold, gold, x_, g_);
+        update_memory(xold, exact_gold, x_, exact_g_);
 
         // print some status information
         if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)){
@@ -73,26 +72,33 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
 
     void LBFGS::update_memory(
                               Array<double> x_old,
-                              Array<double> g_old,
+                              std::vector<xsum_small_accumulator> & exact_gold,
                               Array<double> x_new,
-                              Array<double> g_new)
+                              std::vector<xsum_small_accumulator> & exact_gnew)
     {
         // update the lbfgs memory
         // This updates s_, y_, rho_, and H0_, and k_
         int klocal = k_ % M_;
         double ys = 0;
         double yy = 0;
+        
+        // define a dummy accumulator to help with exactly
+        // calculating y
+        xsum_small_accumulator sacc_dummy;
+        
         // std::cout << "gradient difference" << "\n";
 #pragma simd reduction( + : ys, yy)
-        for (size_t j2 = 0; j2 < x_.size(); ++j2){
-            size_t ind_j2 = klocal * x_.size() + j2;
-            y_[ind_j2] = g_new[j2] - g_old[j2];
-            // std::cout << y_[ind_j2]<< ", ";
-            s_[ind_j2] = x_new[j2] - x_old[j2];
-            ys += y_[ind_j2] * s_[ind_j2];
-            yy += y_[ind_j2] * y_[ind_j2];
-        }
-    // std::cout << "end gradient difference" << "\n";
+            for (size_t j2 = 0; j2 < x_.size(); ++j2){
+                size_t ind_j2 = klocal * x_.size() + j2;
+                xsum_small_subtract_acc_and_set(&(exact_gnew[j2]),
+                                                &(exact_gold[j2]),
+                                                &sacc_dummy);
+                y_[ind_j2] = xsum_small_round(&sacc_dummy);
+                s_[ind_j2] = x_new[j2] - x_old[j2];
+                ys += y_[ind_j2] * s_[ind_j2];
+                yy += y_[ind_j2] * y_[ind_j2];
+            }
+        // std::cout << "end gradient difference" << "\n";
     if (ys == 0.) {
         if (verbosity_ > 0) {
             std::cout << "warning: resetting YS to 1." << std::endl;
@@ -207,8 +213,13 @@ double LBFGS::backtracking_linesearch(Array<double> step)
         for (size_t j2 = 0; j2 < x_.size(); ++j2){
             x_[j2] = xold[j2] + factor * step[j2];
         }
-        compute_func_gradient(x_, fnew, g_);
+        compute_func_gradient(x_, fnew, exact_g_);
 
+        for (int i = 0; i < exact_g_.size(); ++i) {
+            g_[i] = xsum_small_round(&(exact_g_[i]));
+        }
+
+        
         double df = fnew - f_;
         if (use_relative_f_) {
             double absf = 1e-100;

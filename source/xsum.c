@@ -2041,11 +2041,29 @@ void xsum_small_add_acc(xsum_small_accumulator *restrict sacc,
                         xsum_small_accumulator *restrict sacc_to_add) 
 { 
     if (sacc->adds_until_propagate == 0) 
-        (void) xsum_carry_propagate(sacc); 
+        (void) xsum_carry_propagate(sacc);
+#pragma simd
     for (int i = 0; i < XSUM_SCHUNKS; i++) 
         sacc->chunk[i] += sacc_to_add->chunk[i]; 
     sacc->adds_until_propagate; 
 }
+
+
+/*  ASSIGNS THE ACCUMULATOR DIFFERENCE TO A THIRD ACCUMULATOR SET TO ZERO */
+
+
+void xsum_small_subtract_acc_and_set(xsum_small_accumulator *restrict sacc, 
+                                     xsum_small_accumulator *restrict sacc_to_subtract,
+                                     xsum_small_accumulator *restrict sacc_to_assign) 
+{   xsum_small_init(sacc_to_assign);
+    if (sacc->adds_until_propagate == 0) 
+        (void) xsum_carry_propagate(sacc);
+#pragma simd
+    for (int i = 0; i < XSUM_SCHUNKS; i++) 
+        sacc_to_assign->chunk[i] = sacc->chunk[i] - sacc_to_subtract->chunk[i]; 
+    sacc->adds_until_propagate; 
+}
+
 
 
 /* ASSIGN A SMALL ACCUMULATOR TO ANOTHER SMALL ACCUMULATOR */
@@ -2055,9 +2073,12 @@ void xsum_small_equal(xsum_small_accumulator *restrict sacc,
                       xsum_small_accumulator *restrict sacc_to_assign) 
 { 
     if (sacc->adds_until_propagate == 0) 
-        (void) xsum_carry_propagate(sacc); 
-    for (int i = 0; i < XSUM_SCHUNKS; i++) 
+        (void) xsum_carry_propagate(sacc);
+#pragma simd
+    for (int i = 0; i < XSUM_SCHUNKS; i++)
         sacc->chunk[i] = sacc_to_assign->chunk[i]; 
     sacc->adds_until_propagate; 
 }
+
+
 
