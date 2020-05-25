@@ -7,9 +7,14 @@
 #include "array.h"
 #include "optimizer.h"
 
+
+extern "C" {
+#include "xsum.h"
+}
+
 namespace pele{
 
-/**
+    /**
  * An implementation of the LBFGS optimization algorithm in c++.  This
  * Implementation uses a backtracking linesearch.
  */
@@ -47,6 +52,8 @@ private:
 
     Array<double> xold; //!< Coordinates before taking a step
     Array<double> gold; //!< Gradient before taking a step
+    std::shared_ptr<std::vector<xsum_small_accumulator>> exact_gold;
+    std::shared_ptr<std::vector<xsum_small_accumulator>> exact_g;
     Array<double> step; //!< Step size and direction
     double inv_sqrt_size; //!< The inverse square root the the number of components
 
@@ -55,7 +62,7 @@ public:
      * Constructor
      */
     LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-            double tol = 1e-4, int M = 4);
+           double tol = 1e-4, int M = 4);
 
     /**
      * Destructor

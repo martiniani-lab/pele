@@ -168,4 +168,18 @@ extern int xsum_debug;
 
 void xsum_large_add1 (xsum_large_accumulator *restrict, xsum_flt);
 
+
+
+
+/* ADD A SMALL ACCUMULATOR TO ANOTHER SMALL ACCUMULATOR.  */ 
+void xsum_small_add_acc(xsum_small_accumulator *restrict sacc, 
+                        xsum_small_accumulator *restrict sacc_to_add) ;
+
+
+/* ASSIGN A SMALL ACCUMULATOR TO ANOTHER SMALL ACCUMULATOR */
+
+
+void xsum_small_equal(xsum_small_accumulator *restrict sacc, 
+                      xsum_small_accumulator *restrict sacc_to_assign);
+
 #endif

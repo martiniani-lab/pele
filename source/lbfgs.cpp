@@ -28,68 +28,78 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
     // allocate space for s_ and y_
     s_ = Array<double>(x_.size() * M_);
     y_ = Array<double>(x_.size() * M_);
+    exact_g = std::make_shared<std::vector<xsum_small_accumulator>>(x_.size());
+    exact_gold = std::make_shared<std::vector<xsum_small_accumulator>>(x_.size());
 }
 
-/**
-* Do one iteration iteration of the optimization algorithm
-*/
-void LBFGS::one_iteration()
-{
-    if (!func_initialized_) {
-        initialize_func_gradient();
+    /**
+     * Do one iteration iteration of the optimization algorithm
+     */
+    void LBFGS::one_iteration()
+    {
+        if (!func_initialized_) {
+            initialize_func_gradient();
+        }
+
+        // make a copy of the position and gradient
+        xold.assign(x_);
+        gold.assign(g_);
+
+        for (int i = 0; i < xold.size(); ++i) {
+            xsum_small_equal(&((*exact_gold)[i]), &((*exact_g)[i]));
+        }
+
+        
+    
+            // get the stepsize and direction from the LBFGS algorithm
+            compute_lbfgs_step(step);
+        // std::cout << iter_number_ << "\n";
+        // reduce the stepsize if necessary
+        double stepnorm = backtracking_linesearch(step);
+
+        // update the LBFGS memeory
+        update_memory(xold, gold, x_, g_);
+
+        // print some status information
+        if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)){
+            std::cout << "lbfgs: " << iter_number_
+                      << " E " << f_
+                      << " rms " << rms_
+                      << " nfev " << nfev_
+                      << " step norm " << stepnorm << std::endl;
+        }
+        iter_number_ += 1;
     }
 
-    // make a copy of the position and gradient
-    xold.assign(x_);
-    gold.assign(g_);
-
-    // get the stepsize and direction from the LBFGS algorithm
-    compute_lbfgs_step(step);
-
-    // reduce the stepsize if necessary
-    double stepnorm = backtracking_linesearch(step);
-
-    // update the LBFGS memeory
-    update_memory(xold, gold, x_, g_);
-
-    // print some status information
-    if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)){
-        std::cout << "lbgs: " << iter_number_
-            << " E " << f_
-            << " rms " << rms_
-            << " nfev " << nfev_
-            << " step norm " << stepnorm << std::endl;
-    }
-    iter_number_ += 1;
-}
-
-void LBFGS::update_memory(
-        Array<double> x_old,
-        Array<double> g_old,
-        Array<double> x_new,
-        Array<double> g_new)
-{
-    // update the lbfgs memory
-    // This updates s_, y_, rho_, and H0_, and k_
-    int klocal = k_ % M_;
-    double ys = 0;
-    double yy = 0;
-    #pragma simd reduction( + : ys, yy)
-    for (size_t j2 = 0; j2 < x_.size(); ++j2){
-        size_t ind_j2 = klocal * x_.size() + j2;
-        y_[ind_j2] = g_new[j2] - g_old[j2];
-        s_[ind_j2] = x_new[j2] - x_old[j2];
-        ys += y_[ind_j2] * s_[ind_j2];
-        yy += y_[ind_j2] * y_[ind_j2];
-    }
-
+    void LBFGS::update_memory(
+                              Array<double> x_old,
+                              Array<double> g_old,
+                              Array<double> x_new,
+                              Array<double> g_new)
+    {
+        // update the lbfgs memory
+        // This updates s_, y_, rho_, and H0_, and k_
+        int klocal = k_ % M_;
+        double ys = 0;
+        double yy = 0;
+        // std::cout << "gradient difference" << "\n";
+#pragma simd reduction( + : ys, yy)
+        for (size_t j2 = 0; j2 < x_.size(); ++j2){
+            size_t ind_j2 = klocal * x_.size() + j2;
+            y_[ind_j2] = g_new[j2] - g_old[j2];
+            // std::cout << y_[ind_j2]<< ", ";
+            s_[ind_j2] = x_new[j2] - x_old[j2];
+            ys += y_[ind_j2] * s_[ind_j2];
+            yy += y_[ind_j2] * y_[ind_j2];
+        }
+    // std::cout << "end gradient difference" << "\n";
     if (ys == 0.) {
         if (verbosity_ > 0) {
             std::cout << "warning: resetting YS to 1." << std::endl;
         }
         ys = 1.;
     }
-
+    
     rho_[klocal] = 1. / ys;
 
     if (yy == 0.) {
@@ -142,7 +152,7 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
         }
         alpha[i] = alpha_tmp;
     }
-
+    // Assumption of the choice here makes a difference
     // scale the step size by H0, invert the step to point downhill
     #pragma simd
     for (size_t j2 = 0; j2 < step.size(); ++j2){
@@ -163,6 +173,8 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
             step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
         }
     }
+
+    
 }
 
 double LBFGS::backtracking_linesearch(Array<double> step)

@@ -2031,3 +2031,33 @@ void xsum_large_add1 (xsum_large_accumulator *restrict lacc,
             lacc->chunk[ix] += u.uintv;
         }
 }
+
+
+
+
+/* ADD A SMALL ACCUMULATOR TO ANOTHER SMALL ACCUMULATOR. 
+   sacc <-- sacc + sacc_to_add */ 
+void xsum_small_add_acc(xsum_small_accumulator *restrict sacc, 
+                        xsum_small_accumulator *restrict sacc_to_add) 
+{ 
+    if (sacc->adds_until_propagate == 0) 
+        (void) xsum_carry_propagate(sacc); 
+    for (int i = 0; i < XSUM_SCHUNKS; i++) 
+        sacc->chunk[i] += sacc_to_add->chunk[i]; 
+    sacc->adds_until_propagate; 
+}
+
+
+/* ASSIGN A SMALL ACCUMULATOR TO ANOTHER SMALL ACCUMULATOR */
+
+
+void xsum_small_equal(xsum_small_accumulator *restrict sacc, 
+                      xsum_small_accumulator *restrict sacc_to_assign) 
+{ 
+    if (sacc->adds_until_propagate == 0) 
+        (void) xsum_carry_propagate(sacc); 
+    for (int i = 0; i < XSUM_SCHUNKS; i++) 
+        sacc->chunk[i] = sacc_to_assign->chunk[i]; 
+    sacc->adds_until_propagate; 
+}
+
