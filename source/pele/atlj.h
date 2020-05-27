@@ -35,19 +35,23 @@ private:
     double get_AT_energy(Array<double> const &x);
     double get_AT_energy_gradient(Array<double> const &x, std::vector<xsum_small_accumulator> & exact_grad);
     // partial derivative vector of r12**n*r23**n*r31**n useful for calculating gradient
-    inline Array<double> prod_derivative(double rij,
-                                         double rjk,
+    void prod_derivative(double rij,
+                         double rjk,
                                          double rki,
                                          Array<double> drij,
                                          Array<double> drjk,
-                                         Array<double> drki, double n);
+                                         Array<double> drki,
+                                         double n, double prefactor,
+                                         std::vector<xsum_small_accumulator> & exact_grad);
     // partial derivative of product of piecewise dot products: useful for calculating gradient
-    Array<double> piecewise_derivative(double rij,
-                                       double rjk,
-                                              double rki,
-                                              Array<double> drij,
-                                              Array<double> drjk,
-                                              Array<double> drki);
+    void piecewise_derivative(double rij,
+                              double rjk,
+                                       double rki,
+                                       Array<double> drij,
+                                       Array<double> drjk,
+                                       Array<double> drki,
+                                       double prefactor,
+                                       std::vector<xsum_small_accumulator> & exact_grad);
 
 public:
     ATLJ(double sig, double eps, double Z);
