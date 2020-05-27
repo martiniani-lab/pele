@@ -60,7 +60,7 @@ from .potential import *
 from ._frozen_dof import FrozenPotentialWrapper
 #from lj import *
 from ._lj_cpp import LJ, BLJCut
-# from ._frenkel import Frenkel
+from ._frenkel import Frenkel
 from ._hs_wca_cpp import *
 from ._inversepower_cpp import InversePower
 from ._inversepower_stillinger_cpp import InversePowerStillinger
@@ -70,6 +70,7 @@ from ._harmonic_cpp import Harmonic
 from ._sumgaussianpot_cpp import SumGaussianPot
 from ._pspin_spherical_cpp import MeanFieldPSpinSpherical
 from .ATLJ import *
+from .atlj import ATLJ as ATLJCPP
 from .gminpotential import *
 from .heisenberg_spin import *
 from .heisenberg_spin_RA import *
