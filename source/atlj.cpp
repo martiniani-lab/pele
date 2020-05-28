@@ -42,6 +42,19 @@ namespace pele {
         return lj_energy+at_energy;
     }
 
+    double ATLJ::get_energy_gradient(const Array<double> &x,
+                                     Array<double> &grad) {
+        std::vector<xsum_small_accumulator> exact_grad(grad.size());
+
+        double energy = get_energy_gradient(x, exact_grad);
+
+        for (size_t i =0; i < grad.size(); ++i) {
+            grad[i] = xsum_small_round(&(exact_grad[i]));
+        }
+
+        return energy;
+    }
+
     double ATLJ::get_AT_energy(const Array<double> &x) {
         double energy = 0;
         Array<double> drij(m_natoms);
@@ -51,14 +64,15 @@ namespace pele {
         // Rewrite into a three pairwise loop for more atoms
         for (size_t i = 0; i < m_natoms; ++i) {
             drij[i] = x[i] - x[i + m_natoms];
-            drjk[i] = x[i+m_natoms] - x[i+2*m_natoms]; 
+            drjk[i] = x[i+m_natoms] - x[i+2*m_natoms];
             drki[i] = x[i+2*m_natoms] - x[i];
         }
-        double rij = norm(rij);
-        double rjk = norm(rjk);
-        double rki = norm(rki);
-        double costhetaprod = (3*dot(drij, drjk)*dot(drjk, drki)*dot(drki, drij))/pow((rij*rjk*rki), 2);
-        energy += (1 + costhetaprod)/(pow((rij*rjk*rki),3));
+        double rij = norm(drij);
+        double rjk = norm(drjk);
+        double rki = norm(drki);
+        // note that this is slightly differently written, the - sign is taken outside
+        double costhetaprod = -(3*dot(drij, drjk)*dot(drjk, drki)*dot(drki, drij))/pow((rij*rjk*rki), 2);
+        energy += m_Z*(1 + costhetaprod)/(pow((rij*rjk*rki),3));
         return energy;
     }
 
@@ -76,30 +90,29 @@ namespace pele {
             drjk[i] = x[i+m_ndim] - x[i+2*m_ndim]; 
             drki[i] = x[i+2*m_ndim] - x[i];
         }
-        double rij = norm(rij);
-        double rjk = norm(rjk);
-        double rki = norm(rki);
+        double rij = norm(drij);
+        double rjk = norm(drjk);
+        double rki = norm(drki);
         // Energy calculation
         double d = pow((rij*rjk*rki),2);
         double c= (dot(drij, drjk)*dot(drjk, drki)*dot(drki, drij));
         double b = pow((rij*rjk*rki),3);
-        double a = 1 + 3*c/d;
-        energy += (a)/b;
+        double a = 1 - 3*c/d;
+        energy += m_Z*(a)/b;
         
         // gradient done with chain rule and terms directly accumulated with prefactors
-        // into the exact gradient grad = d(c)/bd -(c/bd^2)* d(d) - (a/b^2)* d(b)
+        // into the exact gradient grad = -d(c)/bd +(c/bd^2)* d(d) - (a/b^2)* d(b)
         
 #pragma simd
         for (size_t i = 0; i < m_natoms*m_ndim; ++i) {
             xsum_small_init(&(exact_grad[i]));
         }
-
         
 
         // calculation of d and b using prod derivative
-        piecewise_derivative(rij, rjk, rki, drij, drjk, drki, 3/(b*d), exact_grad);
-        prod_derivative(rij, rjk, rki, drij, drjk, drki, 2, -3*c/(b*d*d), exact_grad);
-        prod_derivative(rij, rjk, rki, drij, drjk, drki, 3, -a/(b*b), exact_grad);
+        piecewise_derivative(rij, rjk, rki, drij, drjk, drki, -3*m_Z/(b*d), exact_grad);
+        prod_derivative(rij, rjk, rki, drij, drjk, drki, 2, 3*c*m_Z/(b*d*d), exact_grad);
+        prod_derivative(rij, rjk, rki, drij, drjk, drki, 3, -a*m_Z/(b*b), exact_grad);
         return energy;
     }
 
@@ -113,23 +126,23 @@ namespace pele {
         double drjk_dot_drki = dot(drjk, drki);
         double drki_dot_drij = dot(drki, drij);
         // Array<double> pd(m_natoms*m_ndim, 0);
-        // :( 
-        for (size_t j;j < m_ndim; ++j) {
+        // :(
+        for (size_t j=0;j < m_ndim; ++j) {
             // atom i
-            xsum_small_add1(&exact_grad[j], prefactor*drjk[j]*drjk_dot_drki*drki_dot_drij);
-            xsum_small_add1(&exact_grad[j], -prefactor*drij_dot_drjk*drjk[j]*drki_dot_drij);
-            xsum_small_add1(&exact_grad[j], prefactor*drij_dot_drjk*drjk_dot_drki*(drki[j]));
-            xsum_small_add1(&exact_grad[j], prefactor*drij_dot_drjk*drjk_dot_drki*(- drij[j]));
+            xsum_small_add1(&(exact_grad[j]), prefactor*drjk[j]*drjk_dot_drki*drki_dot_drij);
+            xsum_small_add1(&(exact_grad[j]), -prefactor*drij_dot_drjk*drjk[j]*drki_dot_drij);
+            xsum_small_add1(&(exact_grad[j]), prefactor*drij_dot_drjk*drjk_dot_drki*(drki[j]));
+            xsum_small_add1(&(exact_grad[j]), prefactor*drij_dot_drjk*drjk_dot_drki*(- drij[j]));
             // atom j
-            xsum_small_add1(&exact_grad[j+m_ndim], prefactor*(drij[j])*drjk_dot_drki*drki_dot_drij);
-            xsum_small_add1(&exact_grad[j+m_ndim], prefactor*(- drjk[j])*drjk_dot_drki*drki_dot_drij);
-            xsum_small_add1(&exact_grad[j+m_ndim], prefactor*drij_dot_drjk*drki[j]*drki_dot_drij);
-            xsum_small_add1(&exact_grad[j+m_ndim], -prefactor*drij_dot_drjk*drjk_dot_drki*(drki[j]));
+            xsum_small_add1(&(exact_grad[j+m_ndim]), prefactor*(drij[j])*drjk_dot_drki*drki_dot_drij);
+            xsum_small_add1(&(exact_grad[j+m_ndim]), prefactor*(- drjk[j])*drjk_dot_drki*drki_dot_drij);
+            xsum_small_add1(&(exact_grad[j+m_ndim]), prefactor*drij_dot_drjk*drki[j]*drki_dot_drij);
+            xsum_small_add1(&(exact_grad[j+m_ndim]), -prefactor*drij_dot_drjk*drjk_dot_drki*(drki[j]));
             // atom k
-            xsum_small_add1(&exact_grad[j+2*m_ndim], -prefactor*drij[j]*drjk_dot_drki*drki_dot_drij);
-            xsum_small_add1(&exact_grad[j+2*m_ndim], prefactor*drij_dot_drjk*(drjk[j] )*drki_dot_drij);
-            xsum_small_add1(&exact_grad[j+2*m_ndim], prefactor*drij_dot_drjk*(-drki[j])*drki_dot_drij);
-            xsum_small_add1(&exact_grad[j+2*m_ndim], prefactor*drij_dot_drjk*drjk_dot_drki*(drij[j]));
+            xsum_small_add1(&(exact_grad[j+2*m_ndim]), -prefactor*drij[j]*drjk_dot_drki*drki_dot_drij);
+            xsum_small_add1(&(exact_grad[j+2*m_ndim]), prefactor*drij_dot_drjk*(drjk[j] )*drki_dot_drij);
+            xsum_small_add1(&(exact_grad[j+2*m_ndim]), prefactor*drij_dot_drjk*(-drki[j])*drki_dot_drij);
+            xsum_small_add1(&(exact_grad[j+2*m_ndim]), prefactor*drij_dot_drjk*drjk_dot_drki*(drij[j]));
         }
     }
     void ATLJ::prod_derivative(double rij,
@@ -138,8 +151,7 @@ namespace pele {
                                Array<double> drij,
                                Array<double> drjk,
                                Array<double> drki, double n, double prefactor, std::vector<xsum_small_accumulator> & exact_grad) {
-        Array<double> pd(m_natoms*m_ndim, 0);
-        for (size_t j;j < m_ndim; ++j) {
+        for (size_t j=0;j < m_ndim; ++j) {
             // atom i
             xsum_small_add1(&exact_grad[j],  n*prefactor*pow(rij*rjk*rki, n)*(drij[j]/(rij*rij)));
             xsum_small_add1(&exact_grad[j],  n*prefactor*pow(rij*rjk*rki, n)*(-drki[j]/(rki*rki)));

@@ -37,27 +37,28 @@ private:
     // partial derivative vector of r12**n*r23**n*r31**n useful for calculating gradient
     void prod_derivative(double rij,
                          double rjk,
-                                         double rki,
-                                         Array<double> drij,
-                                         Array<double> drjk,
-                                         Array<double> drki,
-                                         double n, double prefactor,
-                                         std::vector<xsum_small_accumulator> & exact_grad);
+                         double rki,
+                         Array<double> drij,
+                         Array<double> drjk,
+                         Array<double> drki,
+                         double n, double prefactor,
+                         std::vector<xsum_small_accumulator> & exact_grad);
     // partial derivative of product of piecewise dot products: useful for calculating gradient
     void piecewise_derivative(double rij,
                               double rjk,
-                                       double rki,
-                                       Array<double> drij,
-                                       Array<double> drjk,
-                                       Array<double> drki,
-                                       double prefactor,
-                                       std::vector<xsum_small_accumulator> & exact_grad);
+                              double rki,
+                              Array<double> drij,
+                              Array<double> drjk,
+                              Array<double> drki,
+                              double prefactor,
+                              std::vector<xsum_small_accumulator> & exact_grad);
 
 public:
     ATLJ(double sig, double eps, double Z);
     virtual ~ATLJ() {}
     double get_energy(Array<double> const & x);
     double get_energy_gradient(Array<double> const & x, std::vector<xsum_small_accumulator> & exact_grad);
+    double get_energy_gradient(Array<double> const &x, Array<double> & grad);
 };
     
 } // End pele
