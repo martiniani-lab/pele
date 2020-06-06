@@ -31,7 +31,6 @@ class _EG(object):
 class _Raise(BasePotential):
     def getEnergy(self, x):
         raise NotImplementedError
-
     def getEnergyGradient(self, x):
         raise NotImplementedError
 
@@ -176,6 +175,8 @@ class TestLBFGS_CPP_LJ(unittest.TestCase):
         self.assertEqual(res1.H0, res2.H0)
         self.assertEqual(res1.nfev, res2.nfev)
         self.assertEqual(res1.nsteps, res2.nsteps)
+        print(res1.coords)
+        print(res2.coords)
         self.assertTrue(np.all(res1.coords == res2.coords))
 
 

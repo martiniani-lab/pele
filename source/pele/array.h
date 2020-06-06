@@ -10,7 +10,9 @@
 #include <numeric>
 #include <stdexcept>
 #include <vector>
+#include "/usr/include/mpreal.h"
 
+using mpfr::mpreal;
 namespace pele {
 
 /**
@@ -467,13 +469,24 @@ inline std::ostream &operator<<(std::ostream &out, const Array<dtype> &a)
    return std::inner_product(v1.begin(), v1.end(), v2.begin(), double(0));
  }
 
- /**
-  * compute the L2 norm of an Array
-  */
- inline double norm(Array<double> const &v)
- {
-   return sqrt(dot(v, v));
- }
+inline mpreal dot(Array<mpreal> const &v1, Array<mpreal> const &v2)
+{
+    assert(v1.size() == v2.size());
+    return std::inner_product(v1.begin(), v1.end(), v2.begin(), mpreal(0));
+}
+
+/**
+ * compute the L2 norm of an Array
+ */
+inline double norm(Array<double> const &v)
+{
+    return sqrt(dot(v, v));
+}
+
+inline mpreal norm(Array<mpreal> const &v)
+{
+    return sqrt(dot(v, v));
+}
 
 template<class T, class U>
 Array<T> operator*(const U rhs, const Array<T>& lhs)

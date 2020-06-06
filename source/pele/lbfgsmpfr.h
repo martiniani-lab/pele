@@ -1,74 +1,75 @@
-#ifndef _PELE_LBFGS_H__
-#define _PELE_LBFGS_H__
+#ifndef _PELE_LBFGSMPFR_H__
+#define _PELE_LBFGSMPFR_H__
 
 #include <vector>
 #include <memory>
 #include "base_potential.h"
 #include "array.h"
-#include "optimizer.h"
+#include "optimizermpfr.h"
+#include "/usr/include/mpreal.h"
 
 
 extern "C" {
 #include "xsum.h"
 }
 
-
+using mpfr::mpreal;
 namespace pele{
 
     /**
  * An implementation of the LBFGS optimization algorithm in c++.  This
  * Implementation uses a backtracking linesearch.
  */
-class LBFGS : public GradientOptimizer{
+class LBFGSMPFR : public GradientOptimizerMPFR{
 private:
 
     int M_; /**< The length of the LBFGS memory */
-    double max_f_rise_; /**< The maximum the function is allowed to rise in a
+    mpreal max_f_rise_; /**< The maximum the function is allowed to rise in a
                          * given step.  This is the criterion for the
                          * backtracking line search.
                          */
     bool use_relative_f_; /**< If True, then max_f_rise is the relative
-                          * maximum the function is allowed to rise during
-                          * a step.
-                          * (f_new - f_old) / abs(f_old) < max_f_rise
-                          */
+                           * maximum the function is allowed to rise during
+                           * a step.
+                           * (f_new - f_old) / abs(f_old) < max_f_rise
+                           */
 
     // places to store the lbfgs memory
     /** s_ stores the changes in position for the previous M steps */
-    Array<double> s_;
+    Array<mpreal> s_;
     /** y_ stores the changes in gradient for the previous M steps */
-    Array<double> y_;
+    Array<mpreal> y_;
     /** rho stores 1/dot(y_, s_) for the previous M steps */
-    Array<double> rho_;
+    Array<mpreal> rho_;
     /**
      * H0 is the initial estimate for the diagonal component of the inverse Hessian.
      * It is an input parameter, but the estimate is improved during the run.
      * H0 is a scalar, which means that we use the same value for all degrees of freedom.
      */
-    double H0_;
+    mpreal H0_;
     int k_; /**< Counter for how many times the memory has been updated */
 
-    Array<double> alpha; //!< Alpha used when looping through LBFGS memory
+    Array<mpreal> alpha; //!< Alpha used when looping through LBFGS memory
 
 
-    Array<double> xold; //!< Coordinates before taking a step
-    Array<double> gold; //!< Gradient before taking a step
+    Array<mpreal> xold; //!< Coordinates before taking a step
+    Array<mpreal> gold; //!< Gradient before taking a step
     std::vector<xsum_small_accumulator> exact_gold;
     std::vector<xsum_small_accumulator> exact_g_;
-    Array<double> step; //!< Step size and direction
-    double inv_sqrt_size; //!< The inverse square root the the number of components
+    Array<mpreal> step; //!< Step size and direction
+    mpreal inv_sqrt_size; //!< The inverse square root the the number of components
 
 public:
     /**
      * Constructor
      */
-    LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-           double tol = 1e-4, int M = 4);
+    LBFGSMPFR( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
+               double tol = 1e-4, int M = 4, int precison=53);
 
     /**
      * Destructor
      */
-    virtual ~LBFGS() {}
+    virtual ~LBFGSMPFR() {}
 
     /**
      * Do one iteration iteration of the optimization algorithm
@@ -91,7 +92,7 @@ public:
     }
 
     // functions for accessing the results
-    inline double get_H0() const { return H0_; }
+    inline double get_H0() const { return H0_.toDouble(); }
 
     /**
      * reset the lbfgs optimizer to start a new minimization from x0
@@ -99,7 +100,7 @@ public:
      * H0 is not reset because the current value of H0 is probably better than the input value.
      * You can use set_H0() to change H0.
      */
-    virtual void reset(pele::Array<double> &x0);
+    void reset(pele::Array<double> &x0);
 
 private:
 
@@ -108,22 +109,22 @@ private:
      * This updates s_, y_, rho_, H0_, and k_
      */
     void update_memory(
-                       Array<double> x_old,
+                       Array<mpreal> x_old,
                        std::vector<xsum_small_accumulator> & exact_gold,
-                       Array<double> x_new,
+                       Array<mpreal> x_new,
                        std::vector<xsum_small_accumulator> & exact_gnew);
 
     /**
      * Compute the LBFGS step from the memory
      */
-    void compute_lbfgs_step(Array<double> step);
+    void compute_lbfgs_step(Array<mpreal> step);
 
     /**
      * Take the step and do a backtracking linesearch if necessary.
      * Apply the maximum step size constraint and ensure that the function
      * does not rise more than the allowed amount.
      */
-    double backtracking_linesearch(Array<double> step);
+    mpreal backtracking_linesearch(Array<mpreal> step);
 
 };
 }

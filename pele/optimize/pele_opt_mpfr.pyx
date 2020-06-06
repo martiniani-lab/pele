@@ -6,10 +6,11 @@ import numpy as np
 from pele.potentials import _pele
 from pele.optimize import Result
 
+cimport numpy as np
 from libcpp cimport bool as cbool
 cimport cython
 import copy
-cimport numpy as np
+
 from pele.potentials cimport _pele
 
 @cython.boundscheck(False)
@@ -20,11 +21,10 @@ cdef pele_array_to_np_array(_pele.Array[double] v):
     cdef int N = vnew.size
     for i in xrange(N):
         vnew[i] = v[i]
-    
     return vnew
 
 
-cdef class GradientOptimizer(object):
+cdef class GradientOptimizerMPFR(object):
     """this class defines the python interface for c++ gradient optimizers 
     
     Notes
