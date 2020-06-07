@@ -117,7 +117,7 @@
             VEC(3,J2,J1)=X(3*(J2-1)+3)-X(3*(J1-1)+3)
             R2(J1,J2)=R2(J2,J1) 
             RR2(J1,J2)=RR2(J2,J1) 
-            RR5(J1,J2)=RR5(J2,J1) 
+            RR5(J1,J2)=RR5(J2,J1)
             VEC(1,J1,J2)=-VEC(1,J2,J1)
             VEC(2,J1,J2)=-VEC(2,J2,J1)
             VEC(3,J1,J2)=-VEC(3,J2,J1)

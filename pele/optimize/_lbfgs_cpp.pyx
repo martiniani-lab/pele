@@ -29,7 +29,6 @@ cdef extern from "pele/lbfgs.h" namespace "pele":
         void set_max_iter(int) except +
         void set_iprint(int) except +
         void set_verbosity(int) except +
-
         double get_H0() except +
 
 
@@ -45,7 +44,6 @@ cdef class _Cdef_LBFGS_CPP(_pele_opt.GradientOptimizer):
                   int nsteps=10000, int verbosity=0, events=None, logger=None,
                   rel_energy=False):
         potential = as_cpp_potential(potential, verbose=verbosity>0)
-
         self.pot = potential
         if logger is not None:
             print "warning c++ LBFGS is ignoring logger"

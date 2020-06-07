@@ -110,7 +110,9 @@ public :
           rms_(1e10),
           func_initialized_(false)
           
-    {                           // set x_
+    {    
+        x_ = Array<mpreal>(x0.size());
+                                      
         for (int i =0; i < x0.size(); ++i) {
             x_[i] = x0[i];
         }
@@ -133,7 +135,6 @@ public :
             // note: this needs to be both here and in one_iteration
             initialize_func_gradient();
         }
-
         // iterate until the stop criterion is satisfied or maximum number of
         // iterations is reached
         for (int i = 0; i < niter; ++i) {

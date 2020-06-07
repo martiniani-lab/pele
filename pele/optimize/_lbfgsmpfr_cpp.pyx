@@ -46,12 +46,14 @@ cdef class _Cdef_LBFGS_MPFR_CPP(_pele_opt_mpfr.GradientOptimizerMPFR):
 
         self.pot = potential
         if logger is not None:
-            print "warning c++ LBFGS is ignoring logger"
+            print ("warning c++ LBFGS is ignoring logger")
         cdef np.ndarray[double, ndim=1] x0c = np.array(x0, dtype=float)
+        print("this is where we are")
         self.thisptr = shared_ptr[_pele_opt_mpfr.cGradientOptimizerMPFR]( <_pele_opt_mpfr.cGradientOptimizerMPFR*>
                 new cppLBFGSMPFR(self.pot.thisptr, 
                              _pele.Array[double](<double*> x0c.data, x0c.size),
                              tol, M, prec) )
+        print("this is the construction")
         cdef cppLBFGSMPFR* lbfgs_ptr = <cppLBFGSMPFR*> self.thisptr.get()
         lbfgs_ptr.set_H0(H0)
         lbfgs_ptr.set_maxstep(maxstep)

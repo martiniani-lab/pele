@@ -23,9 +23,10 @@ LBFGSMPFR::LBFGSMPFR( std::shared_ptr<pele::BasePotential> potential, const pele
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
-
     inv_sqrt_size = 1 / sqrt(x_.size());
-
+    mpreal one = 1.11122312314143;
+    mpreal two = 1.124312341234423;
+    std::cout << one + two << " this works?\n";
     // allocate space for s_ and y_
     s_ = Array<mpreal>(x_.size() * M_);
     y_ = Array<mpreal>(x_.size() * M_);
@@ -35,30 +36,26 @@ LBFGSMPFR::LBFGSMPFR( std::shared_ptr<pele::BasePotential> potential, const pele
      * Do one iteration iteration of the optimization algorithm
      */
     void LBFGSMPFR::one_iteration()
-    {
+    {    
         if (!func_initialized_) {
             initialize_func_gradient();
         }
-
         // make a copy of the position and gradient
         for (int i =0; i < x_.size(); ++i) {
             xold[i] = x_[i];
         }
-
         gold.assign(g_);
-
+        
         for (int i = 0; i < xold.size(); ++i) {
             xsum_small_equal(&(exact_gold[i]), &(exact_g_[i]));
         }
 
-        
         
         // get the stepsize and direction from the LBFGS algorithm
         compute_lbfgs_step(step);
         // std::cout << iter_number_ << "\n";
         // reduce the stepsize if necessary
         mpreal stepnorm = backtracking_linesearch(step);
-
         // update the LBFGS memeory
         update_memory(xold, exact_gold, x_, exact_g_);
 
@@ -88,7 +85,7 @@ void LBFGSMPFR::update_memory(Array<mpreal> x_old,
     // calculating y
     xsum_small_accumulator sacc_dummy;
         
-    // std::cout << "gradient difference" << "\n";
+
 #pragma simd reduction( + : ys, yy)
     for (size_t j2 = 0; j2 < x_.size(); ++j2){
         size_t ind_j2 = klocal * x_.size() + j2;
@@ -100,7 +97,6 @@ void LBFGSMPFR::update_memory(Array<mpreal> x_old,
         ys += y_[ind_j2] * s_[ind_j2];
         yy += y_[ind_j2] * y_[ind_j2];
     }
-    // std::cout << "end gradient difference" << "\n";
     if (ys == 0.) {
         if (verbosity_ > 0) {
             std::cout << "warning: resetting YS to 1." << std::endl;
@@ -216,11 +212,9 @@ mpreal LBFGSMPFR::backtracking_linesearch(Array<mpreal> step)
             x_[j2] = xold[j2] + factor * step[j2];
         }
         compute_func_gradient(x_, fnew, exact_g_);
-
         for (int i = 0; i < exact_g_.size(); ++i) {
             g_[i] = xsum_small_round(&(exact_g_[i]));
         }
-
         
         mpreal df = fnew - f_;
         if (use_relative_f_) {
@@ -269,5 +263,4 @@ void LBFGSMPFR::reset(pele::Array<double> &x0)
     }
     initialize_func_gradient();
 }
-
 }
