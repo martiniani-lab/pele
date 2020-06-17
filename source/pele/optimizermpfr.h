@@ -96,7 +96,7 @@ protected :
 public :
     GradientOptimizerMPFR(std::shared_ptr<pele::BasePotential> potential,
                           const pele::Array<double> x0, double tol=1e-4, int precision = 53) 
-        : potential_((mpreal::set_default_prec(mpfr::digits2bits(precision)), potential)),
+        : potential_((mpreal::set_default_prec(precision), potential)),
           digits(precision),
           tol_(tol),
           maxstep_(0.1),
@@ -130,7 +130,7 @@ public :
      * until the maximum number of iterations is reached
      */
     void run(int const niter)
-    {
+    {   std::cout << niter << "\n";
         if (! func_initialized_){
             // note: this needs to be both here and in one_iteration
             initialize_func_gradient();
