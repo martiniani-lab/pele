@@ -64,6 +64,5 @@ public:
                 std::make_shared<morse_interaction>(rho, r0, A) )
     {}
 };
-
 }
 #endif

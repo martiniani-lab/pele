@@ -142,7 +142,6 @@ public :
     {
         run(maxiter_ - iter_number_);
     }
-
     /**
      * Set the initial func and gradient.  This can be used
      * to avoid one potential call

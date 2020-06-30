@@ -310,6 +310,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
                     grad[j1+k] += gij * dr[k];
                 }
             }
+            
 
             if (hij != 0) {
                 #pragma unroll

@@ -8,6 +8,14 @@
 #include "optimizer.h"
 
 
+// Eigen linear algebra library
+#include <Eigen/Dense>
+#include <Eigen/SparseCore>
+#include <Eigen/SparseCholesky>
+
+
+
+
 extern "C" {
 #include "xsum.h"
 }
@@ -39,16 +47,17 @@ private:
     Array<double> y_;
     /** rho stores 1/dot(y_, s_) for the previous M steps */
     Array<double> rho_;
+    
     /**
      * H0 is the initial estimate for the diagonal component of the inverse Hessian.
      * It is an input parameter, but the estimate is improved during the run.
      * H0 is a scalar, which means that we use the same value for all degrees of freedom.
      */
     double H0_;
+    int t_;
     int k_; /**< Counter for how many times the memory has been updated */
 
     Array<double> alpha; //!< Alpha used when looping through LBFGS memory
-
 
     Array<double> xold; //!< Coordinates before taking a step
     Array<double> gold; //!< Gradient before taking a step
@@ -56,13 +65,18 @@ private:
     std::vector<xsum_small_accumulator> exact_g_;
     Array<double> step; //!< Step size and direction
     double inv_sqrt_size; //!< The inverse square root the the number of components
+    // Preconditioning
+    int T_;      // number of steps after which the hessian is updated
+    std::shared_ptr<Eigen::ColPivHouseholderQR<Eigen::MatrixXd>> solver; // solver for H x = b
+    Eigen::VectorXd update_solver(Eigen::VectorXd r);                                     // updates the solver with the new hessian
+    Eigen::MatrixXd get_hessian_sparse();
 
 public:
     /**
      * Constructor
      */
     LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-           double tol = 1e-4, int M = 4);
+           double tol = 1e-4, int M = 4, int T=10);
 
     /**
      * Destructor
@@ -122,9 +136,17 @@ private:
      * Apply the maximum step size constraint and ensure that the function
      * does not rise more than the allowed amount.
      */
-    double backtracking_linesearch(Array<double> step);
+    double backtracking_linesearch(Array<double>);
 
+    /** Take the step and do a backtracking linesearch if necessary.Take the step and do a backtracking linesearch if necessary.
+     * Preconditions the array according to a double thing
+     * Apply the maximum step size constraint and ensure that the function
+     * does not rise more than the allowed amount.
+     */
+    void precondition(Array<double> step);
+    // Does normal LBFGS without preconditioning
+    void no_precondition(Array<double>step);
 };
-}
+} // end namespace
 
 #endif
