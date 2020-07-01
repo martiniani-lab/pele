@@ -75,9 +75,12 @@ double ATLJ::get_energy_gradient(const Array<double> &x,
 
 
 double ATLJ::get_energy_gradient_hessian(const Array<double> &x, Array<double> &grad, Array<double> &hess) {
-    double lj_energy = ljpot.get_energy_gradient_hessian(x, grad, hess);
-    // AT_Energy_gradient_hessian accumulates without resetting the gradient and hessian
-    double at_energy = get_AT_energy_gradient_hessian(x, grad, hess);
+    // double lj_energy = ljpot.get_energy_gradient_hessian(x, grad, hess);
+    // // AT_Energy_gradient_hessian accumulates without resetting the gradient and hessian
+    // double at_energy = get_AT_energy_gradient_hessian(x, grad, hess);
+    numerical_hessian(x, hess , 1e-8);
+    double lj_energy = ljpot.get_energy(x);
+    double at_energy = get_AT_energy(x);
     return lj_energy + at_energy;
 }
 

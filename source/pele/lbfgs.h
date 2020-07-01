@@ -70,6 +70,9 @@ private:
     std::shared_ptr<Eigen::ColPivHouseholderQR<Eigen::MatrixXd>> solver; // solver for H x = b
     Eigen::VectorXd update_solver(Eigen::VectorXd r);                                     // updates the solver with the new hessian
     Eigen::MatrixXd get_hessian_sparse();
+    // Calculates hess + delta I where delta makes the new eigenvalue positive
+    Eigen::MatrixXd get_hessian_sparse_pos();
+    Eigen::MatrixXd saved_hessian;
 
 public:
     /**

@@ -131,12 +131,11 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
             gnorm = 1. / gnorm;
         }
         // 0.05 is a conservative factor that does not mess up anything
-        double prefactor =  -gnorm * (0.03);
+        double prefactor =  -gnorm * (maxstep_);
 #pragma simd
         for (size_t j2 = 0; j2 < x_.size(); ++j2){
             step[j2] = prefactor * g_[j2];
         }
-
         return;
     }
 
@@ -148,64 +147,39 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
     int i;
 
     alpha.assign(0.0);
-//     // loop backwards through the memory
-//     for (int j = jmax - 1; j >= jmin; --j) {
-//         i = j % M_;
-//         double alpha_tmp = 0;
-// #pragma simd reduction(+ : alpha_tmp)
-//         for (size_t j2 = 0; j2 < step.size(); ++j2){
-//             alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
-//         }
-// #pragma simd
-//         for (size_t j2 = 0; j2 < step.size(); ++j2){
-//             step[j2] -= alpha_tmp * y_[i * step.size() + j2];
-//         }
-//         alpha[i] = alpha_tmp;
-//     }
-
-    // Preconditioning step
-    // we're using iter_number -1 to get a better initialization
-
-
-    // Eigen::VectorXd r(step.size());
-
-    // for (int i =0; i < step.size(); ++i) {
-    //     r[i] = step[i];
-    // }
-
-    // Eigen::VectorXd q;
-
-    // q = solver->solve(r);
-    // // negative sign for descent direction
-    // for (int i =0; i < step.size(); ++i) {
-    //     step[i] = -q[i];
-    // }
+    // loop backwards through the memory
+    for (int j = jmax - 1; j >= jmin; --j) {
+        i = j % M_;
+        double alpha_tmp = 0;
+#pragma simd reduction(+ : alpha_tmp)
+        for (size_t j2 = 0; j2 < step.size(); ++j2){
+            alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
+        }
+#pragma simd
+        for (size_t j2 = 0; j2 < step.size(); ++j2){
+            step[j2] -= alpha_tmp * y_[i * step.size() + j2];
+        }
+        alpha[i] = alpha_tmp;
+    }
+    
     precondition(step);
-    
-    
-    // #pragma simd
-    //     for (size_t j2 = 0; j2 < step.size(); ++j2){
-    //         step[j2] *= -H0_;
-    //     }
 
-    
-    
     // loop forwards through the memory
-//     for (int j = jmin; j < jmax; ++j) {
-//         i = j % M_;
-//         double beta = 0;
-// #pragma simd reduction(+ : beta)
-//         for (size_t j2 = 0; j2 < step.size(); ++j2) {
-//             beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
-//         }
-//         double alpha_beta = alpha[i] - beta;
-// #pragma simd
-//         for (size_t j2 = 0; j2 < step.size(); ++j2) {
-//             step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
-//         }
-//     }
+    for (int j = jmin; j < jmax; ++j) {
+        i = j % M_;
+        double beta = 0;
+#pragma simd reduction(+ : beta)
+        for (size_t j2 = 0; j2 < step.size(); ++j2) {
+            beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
+        }
+        double alpha_beta = alpha[i] - beta;
+#pragma simd
+        for (size_t j2 = 0; j2 < step.size(); ++j2) {
+            step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
+        }
+    }
 }
-
+    
 
 
 
@@ -222,18 +196,20 @@ void LBFGS::precondition(Array<double> step) {
     if ((iter_number_-1)%T_ ==0) {
         q = update_solver(r);
     }
+    else{
+        q = saved_hessian.colPivHouseholderQr().solve(r);
+    }
     // q = solver->solve(r);
     for (int i =0; i < step.size(); ++i) {
-        step[i] = q[i];
+        step[i] = -q[i];
     }
 }
 
+
 Eigen::VectorXd LBFGS::update_solver(Eigen::VectorXd r) {
     // Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solve;
-    Eigen::MatrixXd hess_sparse;
-    hess_sparse.setZero();
-    hess_sparse = get_hessian_sparse();
-    return hess_sparse.colPivHouseholderQr().solve(r);
+    saved_hessian = get_hessian_sparse_pos();
+    return saved_hessian.colPivHouseholderQr().solve(r);
     // std::cout << hess_sparse << "\n";
 }
 
@@ -242,7 +218,7 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse() {
     Array<double> grad(xold.size());
     double e = potential_->get_energy_gradient_hessian(x_, grad, hess);
     Eigen::MatrixXd hess_dense(xold.size(), xold.size());
-    // Note to future: Eigen can be annoying with memory leaks
+    // Note to future: Autodiff can be annoying with memory leaks
     hess_dense.setZero();
     for (int i = 0; i < xold.size(); ++i) {
         for (int j=0; j < xold.size(); ++j) {
@@ -252,6 +228,23 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse() {
     // std::cout << hess_dense << "\n dense hessian \n";
     return hess_dense;
 }
+
+
+Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
+    Eigen::MatrixXd hess = get_hessian_sparse();
+    Eigen::VectorXd eigvals = hess.eigenvalues().real();
+    double minimum = eigvals.minCoeff();
+    if (minimum<0) {
+        // hardcoded but can set globally if necessary
+        // controls fraction of the PSD factor added to hessian
+        double pf = 3;
+        return hess - pf*minimum*Eigen::MatrixXd::Identity(x_.size(), x_.size());
+    }
+    else {
+        return hess;
+    }
+}
+
 
 
 void LBFGS::no_precondition(Array<double> step) {
@@ -273,10 +266,10 @@ double LBFGS::backtracking_linesearch(Array<double> step)
     double fnew;
 
     // if the step is pointing uphill, invert it
-        if (dot(step, g_) > 0.){
-            if (verbosity_ > 1) {
-                std::cout << "warning: step direction was uphill.  inverting" << std::endl;
-            }
+    if (dot(step, g_) > 0.){
+        if (verbosity_>1) {
+            std::cout << "warning: step direction was uphill.  inverting" << std::endl;
+        }
 #pragma simd
         for (size_t j2 = 0; j2 < step.size(); ++j2){
             step[j2] *= -1;
@@ -290,25 +283,25 @@ double LBFGS::backtracking_linesearch(Array<double> step)
         factor = maxstep_ / stepnorm;
     }
     int nred;
-    int nred_max = 10;
-    for (nred = 0; nred < nred_max; ++nred){
+        int nred_max = 10;
+        for (nred = 0; nred < nred_max; ++nred){
 #pragma simd
-        for (size_t j2 = 0; j2 < x_.size(); ++j2){
-            x_[j2] = xold[j2] + factor * step[j2];
-        }
-        compute_func_gradient(x_, fnew, exact_g_);
-
-        for (int i = 0; i < exact_g_.size(); ++i) {
-            g_[i] = xsum_small_round(&(exact_g_[i]));
-        }
-        
-        double df = fnew - f_;
-        if (use_relative_f_) {
-            double absf = 1e-100;
-            if (f_ != 0) {
-                absf = std::abs(f_);
+            for (size_t j2 = 0; j2 < x_.size(); ++j2){
+                x_[j2] = xold[j2] + factor * step[j2];
             }
-            df /= absf;
+            compute_func_gradient(x_, fnew, exact_g_);
+
+            for (int i = 0; i < exact_g_.size(); ++i) {
+                g_[i] = xsum_small_round(&(exact_g_[i]));
+            }
+        
+            double df = fnew - f_;
+            if (use_relative_f_) {
+                double absf = 1e-100;
+                if (f_ != 0) {
+                    absf = std::abs(f_);
+                }
+df /= absf;
         }
         if (df < max_f_rise_){
             break;
