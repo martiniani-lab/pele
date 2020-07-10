@@ -13,6 +13,53 @@
 
 namespace pele{
 
+
+
+
+
+// /**
+//  * Abstract base class for Line Search Methods in optimizers. All Line search methods
+//  * should ideally derive from this class
+//  */
+// class thingie
+// {
+
+// protected:
+//     // stored energy and gradient at the computed stepsize
+//     Array<double> end_gradient;
+//     std::shared_ptr<double> end_energy;
+//     double stepnorm;
+//     // Base potential pointer
+//     std::shared_ptr<BasePotential> pot_;
+//     double max_stepnorm_;
+
+// public:
+//     thingie(std::shared_ptr<BasePotential> pot, double maxstepnorm):
+//         pot_(pot),
+//         max_stepnorm_(maxstepnorm)
+//     {};
+//     virtual ~thingie ();
+//     /**
+//      * Computes the step size given a step and a position
+//      * 
+//      */
+//     virtual double line_search(Array<double> & x, Array<double> step){
+//         throw std::runtime_error("Line search without gradient Method must be overloaded");
+//     }
+
+//     // variable settings
+//     inline void set_max_stepnorm_(double max_stepnorm_in) { max_stepnorm_ = max_stepnorm_in; }
+//     double get_max_stepnorm() {return max_stepnorm_;}
+// };
+
+class blah
+{
+public:
+    blah();
+    virtual ~blah();
+};
+
+
 /**
  * this defines the basic interface for optimizers.  All pele optimizers
  * should derive from this class.
@@ -61,10 +108,9 @@ protected :
      * A pointer to the object that computes the function and gradient
      */
     std::shared_ptr<pele::BasePotential> potential_;
-
+    // friend class LineSearch;  // LineSearch can access internals
     double tol_; /**< The tolerance for the rms gradient */
     double maxstep_; /**< The maximum step size */
-
     int maxiter_; /**< The maximum number of iterations */
     int iprint_; /**< how often to print status information */
     int verbosity_; /**< How much information to print */
@@ -88,9 +134,17 @@ protected :
      */
     bool func_initialized_;
 
+
+    /**
+     * Declares LineSearch to be a friend of this class since it requires access to the potential
+     * and gradient
+     */
+
+    
+
 public :
     GradientOptimizer(std::shared_ptr<pele::BasePotential> potential,
-          const pele::Array<double> x0, double tol=1e-4)
+                      const pele::Array<double> x0, double tol=1e-4)
         : potential_(potential),
           tol_(tol),
           maxstep_(0.1),
@@ -185,31 +239,47 @@ public :
     inline double get_maxstep() { return maxstep_; }
     inline double get_tol() const {return tol_;}
     inline bool success() { return stop_criterion_satisfied(); }
+    inline int get_verbosity_() {return verbosity_;}
 
     /**
      * Return true if the termination condition is satisfied, false otherwise
-     */
-    virtual bool stop_criterion_satisfied()
-    {
-        if (! func_initialized_) {
-            initialize_func_gradient();
+         */
+        virtual bool stop_criterion_satisfied()
+        {
+            if (! func_initialized_) {
+                initialize_func_gradient();
+            }
+            return rms_ <= tol_;
         }
-        return rms_ <= tol_;
-    }
 
-protected :
 
     /**
      * Compute the func and gradient of the objective function
+     // this is public but the idea being that this should basically be used
+     // by linesearch
      */
     void compute_func_gradient(Array<double> x, double & func,
-            Array<double> gradient)
+                               Array<double> gradient)
     {
         nfev_ += 1;
 
         // pass the arrays to the potential
         func = potential_->get_energy_gradient(x, gradient);
     }
+
+protected :
+
+    // /**
+    //  * Compute the func and gradient of the objective function
+    //  */
+    // void compute_func_gradient(Array<double> x, double & func,
+    //         Array<double> gradient)
+    // {
+    //     nfev_ += 1;
+
+    //     // pass the arrays to the potential
+    //     func = potential_->get_energy_gradient(x, gradient);
+    // }
 
     void compute_func_gradient(Array<double> x, double & func,
                                std::vector<xsum_small_accumulator> & gradient)

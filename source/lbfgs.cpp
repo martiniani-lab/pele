@@ -46,17 +46,19 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
         xold.assign(x_);
         gold.assign(g_);
 
-        for (int i = 0; i < xold.size(); ++i) {
-            xsum_small_equal(&(exact_gold[i]), &(exact_g_[i]));
-        }
+        // for (int i = 0; i < xold.size(); ++i) {
+        //     xsum_small_equal(&(exact_gold[i]), &(exact_g_[i]));
+        // }
         // get the stepsize and direction from the LBFGS algorithm
         compute_lbfgs_step(step);
-        // std::cout << iter_number_ << "\n";
+
+
+        
         // reduce the stepsize if necessary
         double stepnorm = backtracking_linesearch(step);
 
-        // update the LBFGS memeory
-        update_memory(xold, exact_gold, x_, exact_g_);
+        // update the LBFGS memory
+        update_memory(xold, gold, x_, g_);
 
         // print some status information
         if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)){
@@ -71,28 +73,23 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
 
 void LBFGS::update_memory(
                           Array<double> x_old,
-                              std::vector<xsum_small_accumulator> & exact_gold,
-                              Array<double> x_new,
-                          std::vector<xsum_small_accumulator> & exact_gnew)
+                          Array<double> & g_old,
+                          Array<double> x_new,
+                          Array<double> & g_new)
 {
     // update the lbfgs memory
     // This updates s_, y_, rho_, and H0_, and k_
     int klocal = k_ % M_;
     double ys = 0;
     double yy = 0;
-        
     // define a dummy accumulator to help with exactly
     // calculating y
-    xsum_small_accumulator sacc_dummy;
-        
+    // xsum_small_accumulator sacc_dummy;
     // std::cout << "gradient difference" << "\n";
 #pragma simd reduction( + : ys, yy)
     for (size_t j2 = 0; j2 < x_.size(); ++j2){
         size_t ind_j2 = klocal * x_.size() + j2;
-        xsum_small_subtract_acc_and_set(&(exact_gnew[j2]),
-                                        &(exact_gold[j2]),
-                                        &sacc_dummy);
-        y_[ind_j2] = xsum_small_round(&sacc_dummy);
+        y_[ind_j2] = g_new[j2] - g_old[j2];
         s_[ind_j2] = x_new[j2] - x_old[j2];
         ys += y_[ind_j2] * s_[ind_j2];
         yy += y_[ind_j2] * y_[ind_j2];
@@ -117,6 +114,8 @@ void LBFGS::update_memory(
     // increment k
     k_ += 1;
 }
+
+
 
 
 
@@ -162,7 +161,7 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
         alpha[i] = alpha_tmp;
     }
     
-    precondition(step);
+    no_precondition(step);
 
     // loop forwards through the memory
     for (int j = jmin; j < jmax; ++j) {
@@ -264,8 +263,8 @@ void LBFGS::no_precondition(Array<double> step) {
 double LBFGS::backtracking_linesearch(Array<double> step)
 {
     double fnew;
-
-    // if the step is pointing uphill, invert it
+    // Always point the step in the direction of the gradient:
+    // May fail if the convergence is quadratic
     if (dot(step, g_) > 0.){
         if (verbosity_>1) {
             std::cout << "warning: step direction was uphill.  inverting" << std::endl;
@@ -283,25 +282,25 @@ double LBFGS::backtracking_linesearch(Array<double> step)
         factor = maxstep_ / stepnorm;
     }
     int nred;
-        int nred_max = 10;
-        for (nred = 0; nred < nred_max; ++nred){
+    int nred_max = 10;
+    for (nred = 0; nred < nred_max; ++nred){
 #pragma simd
-            for (size_t j2 = 0; j2 < x_.size(); ++j2){
-                x_[j2] = xold[j2] + factor * step[j2];
-            }
-            compute_func_gradient(x_, fnew, exact_g_);
+        for (size_t j2 = 0; j2 < x_.size(); ++j2){
+            x_[j2] = xold[j2] + factor * step[j2];
+        }
+        compute_func_gradient(x_, fnew, exact_g_);
 
-            for (int i = 0; i < exact_g_.size(); ++i) {
-                g_[i] = xsum_small_round(&(exact_g_[i]));
-            }
+        for (int i = 0; i < exact_g_.size(); ++i) {
+            g_[i] = xsum_small_round(&(exact_g_[i]));
+        }
         
-            double df = fnew - f_;
-            if (use_relative_f_) {
-                double absf = 1e-100;
-                if (f_ != 0) {
-                    absf = std::abs(f_);
-                }
-df /= absf;
+        double df = fnew - f_;
+        if (use_relative_f_) {
+            double absf = 1e-100;
+            if (f_ != 0) {
+                absf = std::abs(f_);
+            }
+            df /= absf;
         }
         if (df < max_f_rise_){
             break;
@@ -317,7 +316,7 @@ df /= absf;
             }
         }
     }
-    
+        
 
     if (nred >= nred_max){
         // possibly raise an error here
@@ -331,15 +330,74 @@ df /= absf;
     return stepnorm * factor;
 }
 
+
+// double LBFGS::zoom(double size1, size2, Array<double> step, double phialphaj,
+//                    double phialpha0, double gradphialpha0) {
+//     for (int nred; i < nred_max; ++i) {
+//         // bisecting search can be replaced with 
+//         // better interpolation if necessary
+//         // interpolation begin
+//         double sizej = (size1 + size2)/2;
+//         // TODO: set an interpolation safeguard;
+//         double phialphaj = potential_->get_energy(xold + sizej*step);
+//         if (phialphaj > phialpha0 + c1*phialpha0) {
+            
+//         }
+//     }
+// }
+
+// double LBFGS::wolfe_linesearch(Array<double> step) {
+//     Array<double> gradphialphi;      // 
+//     Array<double> gradphialpha0;   // bounded step
+//     double phialpha0;
+//     double phialphai;
+//     double nredmax = 10;
+//     //  compute the gradient at the original point
+//     compute_func_gradient(xold,
+//                           phialpha0,
+//                           gradphialpha0);
+//     double alphai = maxstep_;
+//     double phialphaold = phialpha0;
+//     Array<double> gradphialphaold = gradphialpha0;
+//     double phipalpha0 = dot(step, gradphialpha0);
+//     // the result we want
+//     double alphastar;
+//     for (int nred=1; i < nred_max; ++i) {
+//         compute_func_gradient(xold + alphai*step, phialphai, gradphialphi);
+        
+//         if ((phialphai>phialpha0 + c1*alphai*phipalpha0) or
+//             ((phialphai >= 0 ) and i > 1)) {
+//             alphastar = zoom(alphaold, alphai, step, phialpha0, phipalpha0);
+//             break;
+//         }
+
+//         if(norm(gradphialphi) <= c2*norm(phialpha0)) {
+//             alphastar = alphai;
+//         }
+
+//         if (dot(gradphialphi, step)>=0) {
+//             alphastar = zoom(alphai, maxstep_, step, phialpha0, phipalpha0);
+//         }
+//     }
+// }
+
+
+
+
+
+
+
+
+
 void LBFGS::reset(pele::Array<double> &x0)
 {
     if (x0.size() != x_.size()){
         throw std::invalid_argument("The number of degrees of freedom (x0.size()) cannot change when calling reset()");
-    }
-    k_ = 0;
-    iter_number_ = 0;
-    nfev_ = 0;
-    x_.assign(x0);
+        }
+        k_ = 0;
+        iter_number_ = 0;
+        nfev_ = 0;
+        x_.assign(x0);
     initialize_func_gradient();
 }
 }

@@ -16,7 +16,7 @@ namespace pele{
 class GradientDescent : public GradientOptimizer{
 private:
     double max_f_rise_; /**< The maximum the function is allowed to rise in a
-                         * given step.  This is the criterion for the
+                         * given stbisecting does a better jobep.  This is the criterion for the
                          * backtracking line search.
                          */
     bool use_relative_f_; /**< If True, then max_f_rise is the relative

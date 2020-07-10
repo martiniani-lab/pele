@@ -125,9 +125,9 @@ private:
      */
     void update_memory(
                        Array<double> x_old,
-                       std::vector<xsum_small_accumulator> & exact_gold,
+                       Array<double> & gold,
                        Array<double> x_new,
-                       std::vector<xsum_small_accumulator> & exact_gnew);
+                       Array<double> & gnew);
 
     /**
      * Compute the LBFGS step from the memory
@@ -149,6 +149,14 @@ private:
     void precondition(Array<double> step);
     // Does normal LBFGS without preconditioning
     void no_precondition(Array<double>step);
+    // // line search implementing strong Wolfe conditioins.
+    // // As implemented in Nocedal and Wright Chapter 3
+    // // This helps us deal with step length issues
+    // //returns linestep
+    // double wolfe_linesearch(Array<double> step);
+    // Interpolate 
+    // void zoom(double &a1, double &a2);
+    
 };
 } // end namespace
 

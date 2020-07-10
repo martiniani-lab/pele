@@ -14,7 +14,6 @@
 #include <memory>
 #include "base_potential.h"
 #include "array.h"
-#include "optimizer.h"
 #include "lj.h"
 extern "C" {
 #include "xsum.h"
