@@ -13,6 +13,8 @@
 
 namespace pele {
 
+
+
 /**
  * This manages the data of the Array class.  This can act as a simple wrapper for a
  * vector, or wrap an externally allocated block of memory.
@@ -21,8 +23,8 @@ template<typename dtype>
 class _ArrayMemory {
     std::vector<dtype> _vector;
     dtype *_data; /** _data will either point to the beginning of _vector, or to the beginning of the
-                       block of externally allocated memory.  _data is a simple pointer and will not
-                       represent allocated memory. */
+                      block of externally allocated memory.  _data is a simple pointer and will not
+                      represent allocated memory. */
     size_t _size;  /** the size of the block of memory, whether in vector or external. */
 
 public:
@@ -67,36 +69,36 @@ public:
 
 
 
-/** An Array class which acts in many ways like a numpy array
- *
- * This copy constructor and assignment operator act to wrap existing
- * memory rather than copy the memory.
- */
-template<typename dtype>
-class Array
-{
-protected:
-    std::shared_ptr<_ArrayMemory<dtype> > _memory;
-    dtype * _data; /**< _data will usually be a copy of memory->data().  If this
-                        is a view of another array then _data will be
-                        _memory->data() + ibegin */
-    size_t _size;   /**< The size of the array. */
-public:
-
-    /** create an array of size 0
+    /** An Array class which acts in many ways like a numpy array
+     *
+     * This copy constructor and assignment operator act to wrap existing
+     * memory rather than copy the memory.
      */
-    Array()
-        : _memory(new _ArrayMemory<dtype>()),
-          _data(_memory->data()),
-          _size(_memory->size())
-    {}
+    template<typename dtype>
+    class Array
+    {
+    protected:
+        std::shared_ptr<_ArrayMemory<dtype> > _memory;
+        dtype * _data; /**< _data will usually be a copy of memory->data().  If this
+                          is a view of another array then _data will be
+                          _memory->data() + ibegin */
+        size_t _size;   /**< The size of the array. */
+    public:
 
-    /**
-     * construct an array with a given size
-     */
-    Array(size_t size)
-        : _memory(new _ArrayMemory<dtype>(size)),
-          _data(_memory->data()),
+        /** create an array of size 0
+         */
+        Array()
+            : _memory(new _ArrayMemory<dtype>()),
+              _data(_memory->data()),
+              _size(_memory->size())
+        {}
+
+        /**
+         * construct an array with a given size
+         */
+        Array(size_t size)
+            : _memory(new _ArrayMemory<dtype>(size)),
+              _data(_memory->data()),
           _size(_memory->size())
     {}
 

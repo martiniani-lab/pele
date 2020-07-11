@@ -13,51 +13,15 @@
 
 namespace pele{
 
-
-
-
-
-// /**
-//  * Abstract base class for Line Search Methods in optimizers. All Line search methods
-//  * should ideally derive from this class
-//  */
-// class thingie
+// class blah
 // {
-
-// protected:
-//     // stored energy and gradient at the computed stepsize
-//     Array<double> end_gradient;
-//     std::shared_ptr<double> end_energy;
-//     double stepnorm;
-//     // Base potential pointer
-//     std::shared_ptr<BasePotential> pot_;
-//     double max_stepnorm_;
-
 // public:
-//     thingie(std::shared_ptr<BasePotential> pot, double maxstepnorm):
-//         pot_(pot),
-//         max_stepnorm_(maxstepnorm)
-//     {};
-//     virtual ~thingie ();
-//     /**
-//      * Computes the step size given a step and a position
-//      * 
-//      */
-//     virtual double line_search(Array<double> & x, Array<double> step){
-//         throw std::runtime_error("Line search without gradient Method must be overloaded");
-//     }
-
-//     // variable settings
-//     inline void set_max_stepnorm_(double max_stepnorm_in) { max_stepnorm_ = max_stepnorm_in; }
-//     double get_max_stepnorm() {return max_stepnorm_;}
+//     blah(double a) {std::cout << "this works" << "\n";};
+//     virtual ~blah() {};
 // };
 
-class blah
-{
-public:
-    blah();
-    virtual ~blah();
-};
+
+
 
 
 /**
@@ -160,7 +124,7 @@ public :
           func_initialized_(false)
     {}
 
-    virtual ~GradientOptimizer() {}
+          virtual ~GradientOptimizer() {}
 
     /**
      * Do one iteration iteration of the optimization algorithm
@@ -226,8 +190,11 @@ public :
     inline void set_max_iter(int max_iter) { maxiter_ = max_iter; }
     inline void set_iprint(int iprint) { iprint_ = iprint; }
     inline void set_verbosity(int verbosity) { verbosity_ = verbosity; }
+    // functions for accessing the internals for linesearches
+    inline void set_f(double f_in) { f_ = f_in; }
+    inline void set_rms(double rms_in) { rms_ = rms_in; }
 
-
+    
     // functions for accessing the status of the optimizer
     inline Array<double> get_x() const { return x_; }
     inline Array<double> get_g() const { return g_; }
@@ -241,6 +208,8 @@ public :
     inline bool success() { return stop_criterion_satisfied(); }
     inline int get_verbosity_() {return verbosity_;}
 
+    
+
     /**
      * Return true if the termination condition is satisfied, false otherwise
          */
@@ -251,21 +220,6 @@ public :
             }
             return rms_ <= tol_;
         }
-
-
-    /**
-     * Compute the func and gradient of the objective function
-     // this is public but the idea being that this should basically be used
-     // by linesearch
-     */
-    void compute_func_gradient(Array<double> x, double & func,
-                               Array<double> gradient)
-    {
-        nfev_ += 1;
-
-        // pass the arrays to the potential
-        func = potential_->get_energy_gradient(x, gradient);
-    }
 
 protected :
 
@@ -301,6 +255,21 @@ protected :
         func_initialized_ = true;
     }
 
+
+public:
+    /**
+     * functions for LineSearch
+     */
+    void compute_func_gradient(Array<double> x, double & func,
+                               Array<double> gradient)
+    {
+        nfev_ += 1;
+
+        // pass the arrays to the potential
+        func = potential_->get_energy_gradient(x, gradient);
+    }
+
+
     /**
      * Compute the norm defined by the potential
      */
@@ -308,6 +277,8 @@ protected :
     {
         return potential_->compute_norm(x);
     }
+
+
 
 };
 }

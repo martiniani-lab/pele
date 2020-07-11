@@ -6,6 +6,7 @@
 #include "base_potential.h"
 #include "array.h"
 #include "optimizer.h"
+#include "linesearch.h"
 
 
 // Eigen linear algebra library
@@ -22,7 +23,9 @@ extern "C" {
 
 namespace pele{
 
-    /**
+
+
+/**
  * An implementation of the LBFGS optimization algorithm in c++.  This
  * Implementation uses a backtracking linesearch.
  */
@@ -73,6 +76,7 @@ private:
     // Calculates hess + delta I where delta makes the new eigenvalue positive
     Eigen::MatrixXd get_hessian_sparse_pos();
     Eigen::MatrixXd saved_hessian;
+    OldLineSearch line_search_method;
 
 public:
     /**
@@ -149,6 +153,8 @@ private:
     void precondition(Array<double> step);
     // Does normal LBFGS without preconditioning
     void no_precondition(Array<double>step);
+
+    
     // // line search implementing strong Wolfe conditioins.
     // // As implemented in Nocedal and Wright Chapter 3
     // // This helps us deal with step length issues

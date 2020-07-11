@@ -20,7 +20,8 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       step(x_.size()),
       exact_g_(x_.size()),
       exact_gold(x_.size()),
-      T_(T)
+      T_(T),
+      line_search_method(this, 0.1)
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -36,43 +37,42 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
 /**
  * Do one iteration iteration of the optimization algorithm
  */
-    void LBFGS::one_iteration()
-    {   
-        if (!func_initialized_) {
-            initialize_func_gradient();
-        }
-
-        // make a copy of the position and gradient
-        xold.assign(x_);
-        gold.assign(g_);
-
-        // for (int i = 0; i < xold.size(); ++i) {
-        //     xsum_small_equal(&(exact_gold[i]), &(exact_g_[i]));
-        // }
-        // get the stepsize and direction from the LBFGS algorithm
-        compute_lbfgs_step(step);
-
-
-        
-        // reduce the stepsize if necessary
-        double stepnorm = backtracking_linesearch(step);
-
-        // update the LBFGS memory
-        update_memory(xold, gold, x_, g_);
-
-        // print some status information
-        if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)){
-            std::cout << "lbfgs: " << iter_number_
-                      << " E " << f_
-                      << " rms " << rms_
-                      << " nfev " << nfev_
-                      << " step norm " << stepnorm << std::endl;
-        }
-        iter_number_ += 1;
+void LBFGS::one_iteration() {
+    if (!func_initialized_) {
+        initialize_func_gradient();
     }
+    // make a copy of the position and gradient
+    xold.assign(x_);
+    gold.assign(g_);
+    compute_lbfgs_step(step);
 
-void LBFGS::update_memory(
-                          Array<double> x_old,
+    // Line search method
+    line_search_method.set_xold_gold_(xold, gold);
+    line_search_method.set_g_f_ptr(g_);
+    double stepnorm = line_search_method.line_search(x_, step);
+    
+
+    // Line search method 2
+
+    // double stepnorm = backtracking_linesearch(step);
+
+    // step taken 
+
+    
+    update_memory(xold, gold, x_, g_);
+
+    
+    if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)){
+        std::cout << "lbfgs: " << iter_number_
+                  << " E " << f_
+                  << " rms " << rms_
+                  << " nfev " << nfev_
+                  << " step norm " << stepnorm << std::endl;
+    }
+    iter_number_ += 1;
+}
+
+void LBFGS::update_memory(Array<double> x_old,
                           Array<double> & g_old,
                           Array<double> x_new,
                           Array<double> & g_new)
@@ -102,7 +102,6 @@ void LBFGS::update_memory(
         ys = 1.;
     }
     rho_[klocal] = 1. / ys;
-
     if (yy == 0.) {
         if (verbosity_ > 0) {
             std::cout << "warning: resetting YY to 1." << std::endl;
@@ -110,10 +109,12 @@ void LBFGS::update_memory(
         yy = 1.;
     }
     H0_ = ys / yy;
-
     // increment k
     k_ += 1;
 }
+
+
+
 
 
 
@@ -274,7 +275,7 @@ double LBFGS::backtracking_linesearch(Array<double> step)
             step[j2] *= -1;
         }
     }
-
+    
     double factor = 1.;
     double stepnorm = compute_pot_norm(step);
     // make sure the step is no larger than maxstep_
@@ -315,9 +316,7 @@ double LBFGS::backtracking_linesearch(Array<double> step)
                     << " H0 " << H0_ << std::endl;
             }
         }
-    }
-        
-
+    }        
     if (nred >= nred_max){
         // possibly raise an error here
         if (verbosity_ > 0) {
@@ -345,7 +344,6 @@ double LBFGS::backtracking_linesearch(Array<double> step)
 //         }
 //     }
 // }
-
 // double LBFGS::wolfe_linesearch(Array<double> step) {
 //     Array<double> gradphialphi;      // 
 //     Array<double> gradphialpha0;   // bounded step
@@ -364,7 +362,6 @@ double LBFGS::backtracking_linesearch(Array<double> step)
 //     double alphastar;
 //     for (int nred=1; i < nred_max; ++i) {
 //         compute_func_gradient(xold + alphai*step, phialphai, gradphialphi);
-        
 //         if ((phialphai>phialpha0 + c1*alphai*phipalpha0) or
 //             ((phialphai >= 0 ) and i > 1)) {
 //             alphastar = zoom(alphaold, alphai, step, phialpha0, phipalpha0);
@@ -389,8 +386,7 @@ double LBFGS::backtracking_linesearch(Array<double> step)
 
 
 
-void LBFGS::reset(pele::Array<double> &x0)
-{
+void LBFGS::reset(pele::Array<double> &x0) {
     if (x0.size() != x_.size()){
         throw std::invalid_argument("The number of degrees of freedom (x0.size()) cannot change when calling reset()");
         }
@@ -398,6 +394,8 @@ void LBFGS::reset(pele::Array<double> &x0)
         iter_number_ = 0;
         nfev_ = 0;
         x_.assign(x0);
-    initialize_func_gradient();
+        initialize_func_gradient(); }
+
 }
-}
+
+
