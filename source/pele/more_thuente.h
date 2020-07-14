@@ -46,8 +46,8 @@ using vector_t = Array<double>;
 
 class MoreThuente : public LineSearch {
 public:
-    MoreThuente(GradientOptimizer * opt, double alpha_max = 0.1, double alpha_min=1e-15,
-                double x_tol = 1e-15, double f_tol=1e-10, double g_tol=1e-10, double x_trapf = 4, double max_fev = 20,double alphainit = 1.0) :
+    MoreThuente(GradientOptimizer * opt, double alpha_max = 1e15, double alpha_min=1e-15,
+                double x_tol = 1e-15, double f_tol=1e-10, double g_tol=1e-4, double x_trapf = 4, double max_fev = 40,double alphainit = 1.0) :
         LineSearch(opt, alpha_max),
         xtol(x_tol),
         ftol(f_tol),
@@ -97,7 +97,7 @@ private:
     // figure this out
     scalar_t xtrapf;
     int maxfev;
-
+    bool desdir;
 
     // methods 
 public:
@@ -128,14 +128,21 @@ int cvsrch(vector_t &x, scalar_t f,
     // internal values
     int info = 0;
     int infoc = 1;
-    scalar_t stpmax = alphamax*norm(stp);
-    scalar_t stpmin = alphamin*norm(stp);
+    scalar_t stpmax = 1.0;
+    scalar_t stpmin = 0.01;
+    desdir = false;
+    // std::cout << dot(g, s) << " dot(g, s) \n";
+    if (dot(g, s) >= 0) {
+        // we''re here?
+        for (int i = 0; i<s.size(); i++) {
+            s[i] = -s[i];
+        }
+        desdir = true;
+    }
+    // std::cout << dot(g, s) << " dot(g, s) \n";
     scalar_t dginit = dot(g, s);
     if (dginit >= 0.0) {
-        // if descent direction is positive swap directions
-        for (auto elem : s) {
-            elem = -elem;
-        }
+        std::cout << "warning descent direction negative: error in algorithm" << "\n";
     }
 
     bool brackt = false;
@@ -143,114 +150,114 @@ int cvsrch(vector_t &x, scalar_t f,
 
     scalar_t finit = f;
     scalar_t dgtest = ftol * dginit;
-        scalar_t width = stpmax - stpmin;
-        scalar_t width1 = 2 * width;
-        vector_t wa = x;
+    scalar_t width = stpmax - stpmin;
+    scalar_t width1 = 2 * width;
+    vector_t wa = x;
 
-        scalar_t stx = 0.0;
-        scalar_t fx = finit;
-        scalar_t dgx = dginit;
-        scalar_t sty = 0.0;
-        scalar_t fy = finit;
-        scalar_t dgy = dginit;
+    scalar_t stx = 0.0;
+    scalar_t fx = finit;
+    scalar_t dgx = dginit;
+    scalar_t sty = 0.0;
+    scalar_t fy = finit;
+    scalar_t dgy = dginit;
 
-        scalar_t stmin;
-        scalar_t stmax;
+    scalar_t stmin;
+    scalar_t stmax;
 
-        while (true) {
-            // make sure we stay in the interval when setting min/max-step-width
-            if (brackt) {
-                stmin = std::min<scalar_t>(stx, sty);
-                stmax = std::max<scalar_t>(stx, sty);
-            } else {
-                stmin = stx;
-                stmax = stp + xtrapf * (stp - stx);
-            }
-
-            // Force the step to be within the bounds stpmax and stpmin.
-            stp = std::max<scalar_t>(stp, stpmin);
-            stp = std::min<scalar_t>(stp, stpmax);
-            // Oops, let us return the last reliable values
-            // DEBUG
-            // std::cout << (brackt && ((stp <= stmin) || (stp >= stmax))) << " case 1 \n";
-            // std::cout << (nfev >= maxfev-1) << " case 2\n";
-            // std::cout << nfev << "---- nfeev inside\n";
-            // std::cout << maxfev-1 << " --- maxfeev inside\n";
-            // std::cout << infoc << " infoc value \n";
-            // std::cout << (brackt && ((stmax - stmin) <= (xtol * stmax))) << " case 3 \n";
-            
-            if ((brackt && ((stp <= stmin) || (stp >= stmax))) ||
-                (nfev >= maxfev - 1) || (infoc == 0) ||
-                (brackt && ((stmax - stmin) <= (xtol * stmax)))) {
-                stp = stx;
-            }
-
-            // test new point
-
-            for (int i=0; i < x.size(); ++i) {
-                x[i] = wa[i] + stp * s[i];
-            }
-
-
-            // f = function(x);
-            // function.Gradient(x, &g);
-            opt_->compute_func_gradient(x, f, g);
-            nfev++;
-            scalar_t dg = dot(g, s);
-            scalar_t ftest1 = finit + stp * dgtest;
-            // all possible convergence tests
-            if ((brackt & ((stp <= stmin) | (stp >= stmax))) | (infoc == 0)) info = 6;
-
-            if ((stp == stpmax) & (f <= ftest1) & (dg <= dgtest)) info = 5;
-
-            if ((stp == stpmin) & ((f > ftest1) | (dg >= dgtest))) info = 4;
-
-            if (nfev >= maxfev) info = 3;
-
-            if (brackt & (stmax - stmin <= xtol * stmax)) info = 2;
-
-            if ((f <= ftest1) & (fabs(dg) <= gtol * (-dginit))) info = 1;
-
-            // terminate when convergence reached
-            if (info != 0) return -1;
-
-            if (stage1 & (f <= ftest1) &
-                (dg >= std::min<scalar_t>(ftol, gtol) * dginit))
-                stage1 = false;
-
-            if (stage1 & (f <= fx) & (f > ftest1)) {
-                scalar_t fm = f - stp * dgtest;
-                scalar_t fxm = fx - stx * dgtest;
-                scalar_t fym = fy - sty * dgtest;
-                scalar_t dgm = dg - dgtest;
-                scalar_t dgxm = dgx - dgtest;
-                scalar_t dgym = dgy - dgtest;
-
-                cstep(stx, fxm, dgxm, sty, fym, dgym, stp, fm, dgm, brackt, stmin,
-                      stmax, infoc);
-
-                fx = fxm + stx * dgtest;
-                fy = fym + sty * dgtest;
-                dgx = dgxm + dgtest;
-                dgy = dgym + dgtest;
-            } else {
-                // this is ugly and some variables should be moved to the class scope
-                cstep(stx, fx, dgx, sty, fy, dgy, stp, f, dg, brackt, stmin, stmax,
-                      infoc);
-            }
-
-            if (brackt) {
-                if (fabs(sty - stx) >= 0.66 * width1) stp = stx + 0.5 * (sty - stx);
-                width1 = width;
-                width = fabs(sty - stx);
-            }
+    while (true) {
+        // make sure we stay in the interval when setting min/max-step-width
+        if (brackt) {
+            stmin = std::min<scalar_t>(stx, sty);
+            stmax = std::max<scalar_t>(stx, sty);
+        } else {
+            stmin = stx;
+            stmax = stp + xtrapf * (stp - stx);
         }
+
+        // Force the step to be within the bounds stpmax and stpmin.
+        stp = std::max<scalar_t>(stp, stpmin);
+        stp = std::min<scalar_t>(stp, stpmax);
+        // Oops, let us return the last reliable values
+        // DEBUG
+        // std::cout << (brackt && ((stp <= stmin) || (stp >= stmax))) << " case 1 \n";
+        // std::cout << (nfev >= maxfev-1) << " case 2\n";
+        // std::cout << nfev << "---- nfeev inside\n";
+        // std::cout << maxfev-1 << " --- maxfeev inside\n";
+        // std::cout << infoc << " infoc value \n";
+        // std::cout << (brackt && ((stmax - stmin) <= (xtol * stmax))) << " case 3 \n";
+            
+        if ((brackt && ((stp <= stmin) || (stp >= stmax))) ||
+            (nfev >= maxfev - 1) || (infoc == 0) ||
+            (brackt && ((stmax - stmin) <= (xtol * stmax)))) {
+            stp = stx;
+        }
+
+        // test new point
+
+        for (int i=0; i < x.size(); ++i) {
+            x[i] = wa[i] + stp * s[i];
+        }
+
+
+        // f = function(x);
+        // function.Gradient(x, &g);
+        opt_->compute_func_gradient(x, f, g);
+        nfev++;
+        scalar_t dg = dot(g, s);
+        scalar_t ftest1 = finit + stp * dgtest;
+        // all possible convergence tests
+        if ((brackt & ((stp <= stmin) | (stp >= stmax))) | (infoc == 0)) info = 6;
+
+        if ((stp == stpmax) & (f <= ftest1) & (dg <= dgtest)) info = 5;
+
+        if ((stp == stpmin) & ((f > ftest1) | (dg >= dgtest))) info = 4;
+
+        if (nfev >= maxfev) info = 3;
+
+        if (brackt & (stmax - stmin <= xtol * stmax)) info = 2;
+
+        if ((f <= ftest1) & (fabs(dg) <= gtol * (-dginit))) info = 1;
+
+        // terminate when convergence reached
+        if (info != 0) return -1;
+
+        if (stage1 & (f <= ftest1) &
+            (dg >= std::min<scalar_t>(ftol, gtol) * dginit))
+            stage1 = false;
+
+        if (stage1 & (f <= fx) & (f > ftest1)) {
+            scalar_t fm = f - stp * dgtest;
+            scalar_t fxm = fx - stx * dgtest;
+            scalar_t fym = fy - sty * dgtest;
+            scalar_t dgm = dg - dgtest;
+            scalar_t dgxm = dgx - dgtest;
+            scalar_t dgym = dgy - dgtest;
+
+            cstep(stx, fxm, dgxm, sty, fym, dgym, stp, fm, dgm, brackt, stmin,
+                  stmax, infoc);
+
+            fx = fxm + stx * dgtest;
+            fy = fym + sty * dgtest;
+            dgx = dgxm + dgtest;
+            dgy = dgym + dgtest;
+        } else {
+            // this is ugly and some variables should be moved to the class scope
+            cstep(stx, fx, dgx, sty, fy, dgy, stp, f, dg, brackt, stmin, stmax,
+                  infoc);
+        }
+
+        if (brackt) {
+            if (fabs(sty - stx) >= 0.66 * width1) stp = stx + 0.5 * (sty - stx);
+            width1 = width;
+            width = fabs(sty - stx);
+        }
+    }
         
         return 0.;
 }
-
-  int cstep(scalar_t &stx, scalar_t &fx, scalar_t &dx, scalar_t &sty,
-            scalar_t &fy, scalar_t &dy, scalar_t &stp, scalar_t &fp,
+    
+    int cstep(scalar_t &stx, scalar_t &fx, scalar_t &dx, scalar_t &sty,
+              scalar_t &fy, scalar_t &dy, scalar_t &stp, scalar_t &fp,
                    scalar_t &dp, bool &brackt, scalar_t &stpmin,
                    scalar_t &stpmax, int &info) {
     info = 0;
@@ -398,7 +405,10 @@ int cvsrch(vector_t &x, scalar_t f,
  * Interfacing function for general line search methods in pele
  */
 double MoreThuente::line_search(Array<double> &x, Array<double> step)  {
-    
+    for (int i = 0; i < step.size(); ++i) {
+        step[i] = - step[i];
+    }
+
     // assumes xold is set TODO : rewrite interface
     double alpha = MoreThuente::search(xold_, step);
     x_= x;
@@ -409,6 +419,7 @@ double MoreThuente::line_search(Array<double> &x, Array<double> step)  {
     opt_->compute_func_gradient(x_, fend, g_);
     opt_->set_f(fend);
     opt_->set_rms(norm(g_)/sqrt(g_.size()));
+    return alpha*opt_->compute_pot_norm(step);
 }
 };  // namespace pele
 

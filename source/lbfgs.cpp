@@ -45,12 +45,10 @@ void LBFGS::one_iteration() {
     xold.assign(x_);
     gold.assign(g_);
     compute_lbfgs_step(step);
-
     // Line search method
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
     double stepnorm = line_search_method.line_search(x_, step);
-    
 
     // Line search method 2
 
@@ -60,9 +58,8 @@ void LBFGS::one_iteration() {
 
     
     update_memory(xold, gold, x_, g_);
-
     
-    if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)){
+    if (false){
         std::cout << "lbfgs: " << iter_number_
                   << " E " << f_
                   << " rms " << rms_
@@ -155,7 +152,7 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
         alpha[i] = alpha_tmp;
     }
     
-    no_precondition(step);
+    precondition(step);
 
     // loop forwards through the memory
     for (int j = jmin; j < jmax; ++j) {
@@ -267,6 +264,7 @@ double LBFGS::backtracking_linesearch(Array<double> step)
         for (size_t j2 = 0; j2 < step.size(); ++j2){
             step[j2] *= -1;
         }
+        std::cout << "warning: step direction is wrong" << "\n";
     }
     
     double factor = 1.;

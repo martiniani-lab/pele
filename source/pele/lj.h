@@ -72,6 +72,8 @@ public:
 };
 
 
+
+
 //
 // combine the components (interaction, looping method, distance function) into
 // defined classes
