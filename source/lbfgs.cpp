@@ -115,13 +115,6 @@ void LBFGS::update_memory(Array<double> x_old,
 
 
 
-
-
-
-
-
-
-
 void LBFGS::compute_lbfgs_step(Array<double> step)
 {
     if (k_ == 0){

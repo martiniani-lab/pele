@@ -50,14 +50,14 @@ protected:
     double max_stepnorm_;
     // Optimizer class
     GradientOptimizer * opt_;
-
 public:
     LineSearch(GradientOptimizer * opt, double max_stepnorm):
         opt_(opt),
         max_stepnorm_(max_stepnorm)
     {std::cout << "class constructed " << "\n";};
     virtual ~LineSearch () {std::cout << "destructor called" << "\n";};
-    
+
+
     // * Computes the step size given a step and a position
     // * 
     virtual double line_search(Array<double> & x, Array<double> step){
@@ -74,7 +74,7 @@ public:
  * prevents the energy from rising above a certain value as compared to the usual backtracking linesearch method
  * which implements sufficient decrease condition
  * May also fail if the convergence is quadratic
- * 
+ *
  * ALso it is assumed that any potential methods used by this would be defined from an interface to the optimizer
  * so that the evaluations can be tracked
  */
@@ -130,9 +130,6 @@ public:
     // helper function to assign g_ and f
     void set_g_f_ptr(Array<double> &g) {g_ = g;};
 };
-
-
-
 
 
 double OldLineSearch::line_search(Array<double> &x, Array<double> step) {
@@ -197,10 +194,9 @@ double OldLineSearch::line_search(Array<double> &x, Array<double> step) {
 
     opt_->set_f(fnew);
     // rms_ = norm(g_) * inv_sqrt_size;
-    opt_->set_rms(norm(g_)/1/sqrt(x_.size()));
+    opt_->set_rms(norm(g_)/sqrt(x_.size()));
     return stepnorm * factor;
 };
-
 
 }
 

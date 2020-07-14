@@ -13,6 +13,8 @@
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
+#include "eigen_interface.h"
+#include "more_thuente.h"
 
 
 
@@ -76,7 +78,7 @@ private:
     // Calculates hess + delta I where delta makes the new eigenvalue positive
     Eigen::MatrixXd get_hessian_sparse_pos();
     Eigen::MatrixXd saved_hessian;
-    OldLineSearch line_search_method;
+    MoreThuente line_search_method;
 
 public:
     /**
@@ -127,8 +129,7 @@ private:
      * Add a step to the LBFGS Memory
      * This updates s_, y_, rho_, H0_, and k_
      */
-    void update_memory(
-                       Array<double> x_old,
+    void update_memory(Array<double> x_old,
                        Array<double> & gold,
                        Array<double> x_new,
                        Array<double> & gnew);
@@ -137,6 +138,8 @@ private:
      * Compute the LBFGS step from the memory
      */
     void compute_lbfgs_step(Array<double> step);
+
+    
 
     /**
      * Take the step and do a backtracking linesearch if necessary.
