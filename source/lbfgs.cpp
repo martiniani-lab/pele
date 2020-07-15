@@ -152,7 +152,7 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
         alpha[i] = alpha_tmp;
     }
     
-    precondition(step);
+    no_precondition(step);
 
     // loop forwards through the memory
     for (int j = jmin; j < jmax; ++j) {
