@@ -13,13 +13,13 @@
 
 namespace pele {
 // implicitly assumes that the arrays of same size
-inline void eig_eq_pele(Array<double> &x, Eigen::VectorXd &mat) {
+inline void eig_eq_pele(Eigen::VectorXd &mat, Array<double> &x) {
     for (size_t i = 0; i < x.size(); ++i) {
         mat[i] = x[i];
     }
 }
 
-inline void pele_eq_eig(Eigen::VectorXd &mat, Array<double> x) {
+inline void pele_eq_eig(Array<double> x, Eigen::VectorXd &mat) {
     for (size_t i = 0; i < x.size(); ++i) {
         x[i] = mat[i];
     }
