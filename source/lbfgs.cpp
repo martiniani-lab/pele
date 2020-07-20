@@ -138,36 +138,36 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
 
     alpha.assign(0.0);
     // loop backwards through the memory
-    for (int j = jmax - 1; j >= jmin; --j) {
-        i = j % M_;
-        double alpha_tmp = 0;
-#pragma simd reduction(+ : alpha_tmp)
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
-        }
-#pragma simd
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            step[j2] -= alpha_tmp * y_[i * step.size() + j2];
-        }
-        alpha[i] = alpha_tmp;
-    }
+//     for (int j = jmax - 1; j >= jmin; --j) {
+//         i = j % M_;
+//         double alpha_tmp = 0;
+// #pragma simd reduction(+ : alpha_tmp)
+//         for (size_t j2 = 0; j2 < step.size(); ++j2){
+//             alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
+//         }
+// #pragma simd
+//         for (size_t j2 = 0; j2 < step.size(); ++j2){
+//             step[j2] -= alpha_tmp * y_[i * step.size() + j2];
+//         }
+//         alpha[i] = alpha_tmp;
+//     }
     
-    no_precondition(step);
+    precondition(step);
 
     // loop forwards through the memory
-    for (int j = jmin; j < jmax; ++j) {
-        i = j % M_;
-        double beta = 0;
-#pragma simd reduction(+ : beta)
-        for (size_t j2 = 0; j2 < step.size(); ++j2) {
-            beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
-        }
-        double alpha_beta = alpha[i] - beta;
-#pragma simd
-        for (size_t j2 = 0; j2 < step.size(); ++j2) {
-            step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
-        }
-    }
+    // for (int j = jmin; j < jmax; ++j) {
+    //         i = j % M_;
+//         double beta = 0;
+// #pragma simd reduction(+ : beta)
+//         for (size_t j2 = 0; j2 < step.size(); ++j2) {
+//             beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
+//         }
+//         double alpha_beta = alpha[i] - beta;
+// #pragma simd
+//         for (size_t j2 = 0; j2 < step.size(); ++j2) {
+//             step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
+//         }
+//     }
 }
     
 
@@ -199,7 +199,8 @@ void LBFGS::precondition(Array<double> step) {
 Eigen::VectorXd LBFGS::update_solver(Eigen::VectorXd r) {
     // Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solve;
     saved_hessian = get_hessian_sparse_pos();
-    return saved_hessian.colPivHouseholderQr().solve(r);
+    return saved_hessian.
+        colPivHouseholderQr().solve(r);
     // std::cout << hess_sparse << "\n";
 }
 
@@ -234,6 +235,8 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
         return hess;
     }
 }
+
+
 
 
 
@@ -319,6 +322,9 @@ double LBFGS::backtracking_linesearch(Array<double> step)
     rms_ = norm(g_) * inv_sqrt_size;
     return stepnorm * factor;
 }
+
+
+
 
 
 // double LBFGS::zoom(double size1, size2, Array<double> step, double phialphaj,

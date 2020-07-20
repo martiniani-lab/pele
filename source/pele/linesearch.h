@@ -20,7 +20,6 @@
 
 
 
-
 // Eigen Linear Algebra library
 
 // #include <Eigen/Dense>
@@ -54,15 +53,13 @@ public:
     LineSearch(GradientOptimizer * opt, double max_stepnorm):
         opt_(opt),
         max_stepnorm_(max_stepnorm)
-    {std::cout << "class constructed " << "\n";};
-    virtual ~LineSearch () {std::cout << "destructor called" << "\n";};
+    {};
+    virtual ~LineSearch () {};
 
 
     // * Computes the step size given a step and a position
     // * 
-    virtual double line_search(Array<double> & x, Array<double> step){
-        throw std::runtime_error("line_search must be overloaded in the LineSearch class");
-    }
+    virtual double line_search(Array<double> & x, Array<double> step)=0;
 
     // // variable settings
     inline void set_max_stepnorm_(double max_stepnorm_in) { max_stepnorm_ = max_stepnorm_in; }
@@ -130,6 +127,7 @@ public:
     // helper function to assign g_ and f
     inline void set_g_f_ptr(Array<double> &g) {g_ = g;};
 };
+
 }
 
 

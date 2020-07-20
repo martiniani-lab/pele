@@ -1,6 +1,7 @@
 #include "pele/array.h"
 #include "pele/lj.h"
 #include "pele/lbfgs.h"
+#include "pele/rosenbrock.h"
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -14,6 +15,7 @@ using std::cout;
 TEST(LbfgsLJ, TwoAtom_Works){
     auto lj = std::make_shared<pele::LJ> (1., 1.);
     Array<double> x0(6, 0);
+    std::cout << x0 << "\n";
     x0[0] = 2.;
     pele::LBFGS lbfgs(lj, x0);
     lbfgs.run();
@@ -96,5 +98,26 @@ TEST(LbfgsLJ, SetFuncGradientWorks){
     ASSERT_EQ(lbfgs1.get_niter(), lbfgs2.get_niter());
     ASSERT_DOUBLE_EQ(lbfgs1.get_f(), lbfgs2.get_f());
 }
+
+
+TEST(LbfgsRosenbrock, Rosebrock_works){
+    auto lj = std::make_shared<pele::RosenBrock> ();
+    Array<double> x0(2, 0);
+    pele::LBFGS lbfgs(lj, x0);
+    lbfgs.run();
+    Array<double> x = lbfgs.get_x();
+    std::cout << x << "\n";
+    cout << lbfgs.get_nfev() << " get_nfev() \n";
+    cout << lbfgs.get_niter() << " get_niter() \n";
+    cout << lbfgs.get_rms() << " get_rms() \n";
+    cout << lbfgs.get_rms() << " get_rms() \n";
+    std::cout << x0 << "\n" << " \n";
+    std::cout << "this is okay" << "\n";
+}
+
+
+
+
+
 
 

@@ -35,17 +35,15 @@ int MoreThuente::cvsrch(vector_t &x, scalar_t f,
     scalar_t width = stpmax - stpmin;
     scalar_t width1 = 2 * width;
     vector_t wa = x;
-
     scalar_t stx = 0.0;
     scalar_t fx = finit;
     scalar_t dgx = dginit;
     scalar_t sty = 0.0;
     scalar_t fy = finit;
     scalar_t dgy = dginit;
-
     scalar_t stmin;
     scalar_t stmax;
-
+    
     while (true) {
         // make sure we stay in the interval when setting min/max-step-width
         if (brackt) {

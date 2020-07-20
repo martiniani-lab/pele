@@ -106,6 +106,7 @@ TEST_F(LowestEigPotentialTest, lowesteigtest_works2){
     ASSERT_NEAR(lowesteigenvalue, 0, 1e-5);
 }
 
+
 TEST_F(LowestEigPotentialTest, LowestEig_ranvecorth){
     _lbfgs->run(100);
     bool success = _lbfgs->success();

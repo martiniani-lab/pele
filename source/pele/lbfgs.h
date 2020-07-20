@@ -5,8 +5,8 @@
 #include <memory>
 #include "base_potential.h"
 #include "array.h"
-#include "optimizer.h"
-#include "linesearch.h"
+
+
 
 
 // Eigen linear algebra library
@@ -14,9 +14,12 @@
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
 #include "eigen_interface.h"
+
+// line search methods 
 #include "more_thuente.h"
-
-
+#include "linesearch.h"
+#include "optimizer.h"
+#include "nwpele.h"
 
 
 extern "C" {
@@ -45,6 +48,7 @@ private:
                           * (f_new - f_old) / abs(f_old) < max_f_rise
                           */
 
+
     // places to store the lbfgs memory
     /** s_ stores the changes in position for the previous M steps */
     Array<double> s_;
@@ -52,6 +56,7 @@ private:
     Array<double> y_;
     /** rho stores 1/dot(y_, s_) for the previous M steps */
     Array<double> rho_;
+    
     
     /**
      * H0 is the initial estimate for the diagonal component of the inverse Hessian.
@@ -72,13 +77,14 @@ private:
     double inv_sqrt_size; //!< The inverse square root the the number of components
     // Preconditioning
     int T_;      // number of steps after which the hessian is updated
-    std::shared_ptr<Eigen::ColPivHouseholderQR<Eigen::MatrixXd>> solver; // solver for H x = b
+    std::shared_ptr<Eigen::ColPivHouseholderQR<Eigen::MatrixXd>> solver;                  // solver for H x = b
     Eigen::VectorXd update_solver(Eigen::VectorXd r);                                     // updates the solver with the new hessian
-    Eigen::MatrixXd get_hessian_sparse();
+    Eigen::MatrixXd get_hessian_sparse();                                                 
     // Calculates hess + delta I where delta makes the new eigenvalue positive
     Eigen::MatrixXd get_hessian_sparse_pos();
     Eigen::MatrixXd saved_hessian;
-    MoreThuente line_search_method;
+    NocedalWrightLineSearch line_search_method;
+    
 
 public:
     /**
@@ -167,6 +173,12 @@ private:
     // void zoom(double &a1, double &a2);
     
 };
+
+
+
+
+
+
 } // end namespace
 
 #endif
