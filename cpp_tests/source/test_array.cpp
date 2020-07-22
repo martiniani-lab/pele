@@ -362,6 +362,37 @@ TEST(ArrayTest, ProdOperator_Const){
 
 ///////////
 
+TEST(ArrayTest, AddOperator){
+
+    pele::Array<double> v(6, 2);
+    pele::Array<double> vr(6, 10);
+    pele::Array<double> vl;
+    vl = v + vr;
+    for (int i = 0; i < 6; ++i){
+        EXPECT_EQ(vl[i], 12);
+        EXPECT_EQ(v[i], 2);
+        EXPECT_EQ(vr[i], 10);        
+    }
+}
+
+TEST(ArrayTest, SubtractOperator){
+
+    pele::Array<double> vr(6, 2);
+    pele::Array<double> v(6, 10);
+    pele::Array<double> vl;
+    vl =  v - vr;
+    for (int i = 0; i < 6; ++i){
+        EXPECT_EQ(vl[i], 8);
+        EXPECT_EQ(vr[i], 2);
+        EXPECT_EQ(v[i], 10);        
+    }
+}
+
+
+
+
+///////////
+
 TEST(ArrayTest, DivOperator_Array){
     pele::Array<double> v(6,2);
     pele::Array<double> v2(6,2);

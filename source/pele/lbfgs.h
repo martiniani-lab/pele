@@ -84,14 +84,13 @@ private:
     Eigen::MatrixXd get_hessian_sparse_pos();
     Eigen::MatrixXd saved_hessian;
     NocedalWrightLineSearch line_search_method;
-    
 
 public:
     /**
      * Constructor
      */
     LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-           double tol = 1e-4, int M = 4, int T=10);
+           double tol = 1e-4, int M = 4, int T=1);
 
     /**
      * Destructor
@@ -144,8 +143,6 @@ private:
      * Compute the LBFGS step from the memory
      */
     void compute_lbfgs_step(Array<double> step);
-
-    
 
     /**
      * Take the step and do a backtracking linesearch if necessary.

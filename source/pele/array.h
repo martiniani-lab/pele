@@ -74,31 +74,31 @@ public:
      * This copy constructor and assignment operator act to wrap existing
      * memory rather than copy the memory.
      */
-    template<typename dtype>
-    class Array
-    {
-    protected:
-        std::shared_ptr<_ArrayMemory<dtype> > _memory;
-        dtype * _data; /**< _data will usually be a copy of memory->data().  If this
-                          is a view of another array then _data will be
-                          _memory->data() + ibegin */
-        size_t _size;   /**< The size of the array. */
-    public:
+template<typename dtype>
+class Array
+{
+protected:
+    std::shared_ptr<_ArrayMemory<dtype> > _memory;
+    dtype * _data; /**< _data will usually be a copy of memory->data().  If this
+                      is a view of another array then _data will be
+                      _memory->data() + ibegin */
+    size_t _size;   /**< The size of the array. */
+public:
 
-        /** create an array of size 0
-         */
-        Array()
-            : _memory(new _ArrayMemory<dtype>()),
-              _data(_memory->data()),
-              _size(_memory->size())
-        {}
+    /** create an array of size 0
+     */
+    Array()
+        : _memory(new _ArrayMemory<dtype>()),
+          _data(_memory->data()),
+          _size(_memory->size())
+    {}
 
-        /**
-         * construct an array with a given size
-         */
-        Array(size_t size)
-            : _memory(new _ArrayMemory<dtype>(size)),
-              _data(_memory->data()),
+    /**
+     * construct an array with a given size
+     */
+    Array(size_t size)
+        : _memory(new _ArrayMemory<dtype>(size)),
+          _data(_memory->data()),
           _size(_memory->size())
     {}
 
@@ -160,11 +160,11 @@ public:
      * This is commented because it just duplicates the default copy constructor
      *
      Array(Array<dtype> const & x)
-         : _memory(x._memory)
-           _data(x._data),
-           _size(x._size)
+     : _memory(x._memory)
+     _data(x._data),
+     _size(x._size)
      {}
-     */
+    */
 
     /**
      * wrap another array
@@ -208,11 +208,11 @@ public:
      *
      * This is commented because it just duplicates the default assignment operator
      *
-    Array<dtype> &operator=(const Array<dtype> & rhs){
-        _memory = rhs._memory;
-        _data = rhs._data;
-        _size = rhs._size;
-    }
+     Array<dtype> &operator=(const Array<dtype> & rhs){
+     _memory = rhs._memory;
+     _data = rhs._data;
+     _size = rhs._size;
+     }
     */
 
 
@@ -255,16 +255,16 @@ public:
         return *this;
     }
 
-//    /**
-//     * assign each element of the array to be
-//     */
-//    Array<dtype> &assign(dtype const * const d) {
-//        std::copy(rhs.begin(), rhs.end(), begin());
-//        for (size_t i = 0; i < size(); ++i) {
-//
-//        }
-//        return *this;
-//    }
+    //    /**
+    //     * assign each element of the array to be
+    //     */
+    //    Array<dtype> &assign(dtype const * const d) {
+    //        std::copy(rhs.begin(), rhs.end(), begin());
+    //        for (size_t i = 0; i < size(); ++i) {
+    //
+    //        }
+    //        return *this;
+    //    }
 
     /**
      * return a copy of the array.
@@ -300,6 +300,41 @@ public:
     }
 
     /**
+     *  Array addition(+) , subtraction (-)
+     */
+
+
+    Array<dtype> operator+(const Array<dtype> & rhs)
+    {   if (size() != rhs.size()) {
+            throw std::runtime_error("operator+: arrays must have the same size");
+        }
+        Array<dtype> newarray(size());
+        const_iterator iter = rhs.begin();
+        const_iterator iternew = (*this).begin();
+        for (dtype &val : newarray) {
+            val = *iternew + *iter;
+            ++iter;
+            ++iternew;
+        }
+        return newarray;
+    }
+
+    Array<dtype> operator-(const Array<dtype> & rhs)
+    {   if (size() != rhs.size()) {
+            throw std::runtime_error("operator+: arrays must have the same size");
+        }
+        Array<dtype> newarray(size());
+        const_iterator iter = rhs.begin();
+        const_iterator iternew = (*this).begin();
+        for (dtype &val : newarray) {
+            val = *iternew - *iter;
+            ++iter;
+            ++iternew;
+        }
+        return newarray;
+    }
+
+    /**
      * Compound Assignment Operators += -= *=
      */
     Array<dtype> &operator+=(const Array<dtype> & rhs)
@@ -308,10 +343,10 @@ public:
             throw std::runtime_error("operator+=: arrays must have the same size");
         }
         const_iterator iter = rhs.begin();
-        for (dtype & val : *this) {
-            val += *iter;
-            ++iter;
-        }
+            for (dtype & val : *this) {
+                val += *iter;
+                ++iter;
+}
         return *this;
     }
 
@@ -322,6 +357,9 @@ public:
         }
         return *this;
     }
+
+
+        
 
     Array<dtype> &operator-=(const Array<dtype> & rhs)
     {
@@ -366,10 +404,10 @@ public:
     }
 
     Array<dtype> operator*(const dtype rhs)
-    {
-        Array<dtype> result = this->copy();
-        return (result *= rhs).copy();
-    }
+{
+            Array<dtype> result = this->copy();
+            return (result *= rhs).copy();
+        }
 
     Array<dtype> &operator/=(const Array<dtype> & rhs)
     {
@@ -384,6 +422,8 @@ public:
         return *this;
     }
 
+    
+
     Array<dtype> &operator/=(const  dtype &rhs)
     {
         for (dtype & val : (*this)) {
@@ -392,7 +432,7 @@ public:
         return *this;
     }
 
-/*SOME OTHER ARITHMETIC UTILITIES*/
+    /*SOME OTHER ARITHMETIC UTILITIES*/
 
     /**
      * returns the sum of all elements (reduces the array)
@@ -406,43 +446,43 @@ public:
     }
 
     /**
-     * returns the product of all elements (reduces the array)
-     *
-     * References:
-     * http://www.cplusplus.com/reference/functional/multiplies/
-     * http://en.cppreference.com/w/cpp/algorithm/accumulate
-     * http://rosettacode.org/wiki/Sum_and_product_of_an_array
-     */
-    dtype prod() const
-    {
-        if (empty()) {
-            throw std::runtime_error("array::prod(): array is empty, can't take product of array elements");
+* returns the product of all elements (reduces the array)
+         *
+         * References:
+         * http://www.cplusplus.com/reference/functional/multiplies/
+         * http://en.cppreference.com/w/cpp/algorithm/accumulate
+         * http://rosettacode.org/wiki/Sum_and_product_of_an_array
+         */
+        dtype prod() const
+        {
+            if (empty()) {
+                throw std::runtime_error("array::prod(): array is empty, can't take product of array elements");
+            }
+            return std::accumulate(begin(), end(), dtype(1), std::multiplies<dtype>());
         }
-        return std::accumulate(begin(), end(), dtype(1), std::multiplies<dtype>());
-    }
 
-    /**
-     * return an array that wraps the data from index ibegin to index iend-1.
-     */
-    Array<dtype> view(size_t ibegin, size_t iend) const
-    {
-        if (iend <= ibegin) {
-            throw std::invalid_argument("iend must larger than ibegin");
+        /**
+         * return an array that wraps the data from index ibegin to index iend-1.
+         */
+        Array<dtype> view(size_t ibegin, size_t iend) const
+        {
+            if (iend <= ibegin) {
+                throw std::invalid_argument("iend must larger than ibegin");
+            }
+            if (iend > size()) {
+                throw std::invalid_argument("iend cannot be larger than array size");
+            }
+            Array<dtype> newarray(*this);
+            newarray._data += ibegin;
+            newarray._size = iend - ibegin;
+            return newarray;
         }
-        if (iend > size()) {
-            throw std::invalid_argument("iend cannot be larger than array size");
-        }
-        Array<dtype> newarray(*this);
-        newarray._data += ibegin;
-        newarray._size = iend - ibegin;
-        return newarray;
-    }
 
-    /**
-     * Get maximum and minimum elements of array.
-     */
-    dtype get_max() const { return *std::max_element(begin(), end()); }
-    dtype get_min() const { return *std::min_element(begin(), end()); }
+        /**
+         * Get maximum and minimum elements of array.
+         */
+        dtype get_max() const { return *std::max_element(begin(), end()); }
+        dtype get_min() const { return *std::min_element(begin(), end()); }
 };
 
 
@@ -483,6 +523,11 @@ Array<T> operator*(const U rhs, const Array<T>& lhs)
     Array<T> result = lhs.copy();
     return (result *= rhs).copy();
 }
+
+
+
+
+
 
 } // namespace pele
 

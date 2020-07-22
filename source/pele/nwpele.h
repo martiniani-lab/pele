@@ -24,15 +24,15 @@ namespace pele {
 class NocedalWrightLineSearch : LineSearch {
 public:
     NocedalWrightLineSearch(GradientOptimizer *opt,
-                            Scalar max_step_       = Scalar(1e+20),
-                                   int    m_              = 6,
+                            Scalar max_step_       = Scalar(1e20),
+                            int    m_              = 6,
                                    Scalar epsilon_        = Scalar(1e-5),
                                    Scalar epsilon_rel_    = Scalar(1e-5),
                                    int    past_           = 0,
                                    Scalar delta_          = Scalar(0),
                                    int    max_linesearch_ = 20,
-                                   Scalar min_step_       = Scalar(1e-20),
-                                   Scalar ftol_           = Scalar(1e-4),
+                            Scalar min_step_       = Scalar(0.05),
+                            Scalar ftol_           = Scalar(1e-4),
                                    Scalar wolfe_          = Scalar(0.9)) :
         params(m_,
                epsilon_,
@@ -62,6 +62,7 @@ public:
     // helper function to assign g_ and f
     inline void set_g_f_ptr(Array<double> &g) {g_ = g;};
     double line_search(Array<double> & x, Array<double> step);
+
 private:
     LBFGSParam params;
     int xsize;

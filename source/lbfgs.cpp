@@ -32,6 +32,7 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
     s_ = Array<double>(x_.size() * M_);
     y_ = Array<double>(x_.size() * M_);
     std::cout << T << " set T \n";
+    std::cout << x0 << "-------- x0" << "\n";
 }
 
 /**
@@ -49,7 +50,7 @@ void LBFGS::one_iteration() {
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
     double stepnorm = line_search_method.line_search(x_, step);
-
+    // double stepnorm = 1;
     // Line search method 2
 
     // double stepnorm = backtracking_linesearch(step);
@@ -79,6 +80,7 @@ void LBFGS::update_memory(Array<double> x_old,
     int klocal = k_ % M_;
     double ys = 0;
     double yy = 0;
+    
     // define a dummy accumulator to help with exactly
     // calculating y
     // xsum_small_accumulator sacc_dummy;
@@ -91,6 +93,7 @@ void LBFGS::update_memory(Array<double> x_old,
         ys += y_[ind_j2] * s_[ind_j2];
         yy += y_[ind_j2] * y_[ind_j2];
     }
+    
     // std::cout << "end gradient difference" << "\n";
     if (ys == 0.) {
         if (verbosity_ > 0) {
@@ -105,6 +108,10 @@ void LBFGS::update_memory(Array<double> x_old,
         }
         yy = 1.;
     }
+    std::cout << ys << "ys  \n";
+    std::cout << yy << "yy  \n";
+    // std::cout << dot(g_new-g_old, x_new-x_old) << "\n";
+
     H0_ = ys / yy;
     // increment k
     k_ += 1;
@@ -114,20 +121,20 @@ void LBFGS::update_memory(Array<double> x_old,
 
 void LBFGS::compute_lbfgs_step(Array<double> step)
 {
-    if (k_ == 0){
-        // take a conservative first step
-        double gnorm = norm(g_);
-        if (gnorm > 1.) {
-            gnorm = 1. / gnorm;
-        }
-        // 0.05 is a conservative factor that does not mess up anything
-        double prefactor =  -gnorm * (maxstep_);
-#pragma simd
-        for (size_t j2 = 0; j2 < x_.size(); ++j2){
-            step[j2] = prefactor * g_[j2];
-        }
-        return;
-    }
+//     if (k_ == 0){
+//         // take a conservative first step
+//         double gnorm = norm(g_);
+//         if (gnorm > 1.) {
+//             gnorm = 1. / gnorm;
+//         }
+//         // 0.05 is a conservative factor that does not mess up anything
+//         double prefactor =  -gnorm * (maxstep_);
+// #pragma simd
+//         for (size_t j2 = 0; j2 < x_.size(); ++j2){
+//             step[j2] = prefactor * g_[j2];
+//         }
+//         return;
+//     }
 
     // copy the gradient into step
     step.assign(g_);
@@ -138,36 +145,40 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
 
     alpha.assign(0.0);
     // loop backwards through the memory
-//     for (int j = jmax - 1; j >= jmin; --j) {
-//         i = j % M_;
-//         double alpha_tmp = 0;
-// #pragma simd reduction(+ : alpha_tmp)
-//         for (size_t j2 = 0; j2 < step.size(); ++j2){
-//             alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
-//         }
-// #pragma simd
-//         for (size_t j2 = 0; j2 < step.size(); ++j2){
-//             step[j2] -= alpha_tmp * y_[i * step.size() + j2];
-//         }
-//         alpha[i] = alpha_tmp;
-//     }
+    for (int j = jmax - 1; j >= jmin; --j) {
+        i = j % M_;
+        double alpha_tmp = 0;
+#pragma simd reduction(+ : alpha_tmp)
+        for (size_t j2 = 0; j2 < step.size(); ++j2){
+            alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
+        }
+#pragma simd
+        for (size_t j2 = 0; j2 < step.size(); ++j2){
+            step[j2] -= alpha_tmp * y_[i * step.size() + j2];
+        }
+        alpha[i] = alpha_tmp;
+    }
     
-    precondition(step);
-
+    no_precondition(step);
+    std::cout << dot(step, g_) << " step val before the iterations \n";
     // loop forwards through the memory
-    // for (int j = jmin; j < jmax; ++j) {
-    //         i = j % M_;
-//         double beta = 0;
-// #pragma simd reduction(+ : beta)
-//         for (size_t j2 = 0; j2 < step.size(); ++j2) {
-//             beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
-//         }
-//         double alpha_beta = alpha[i] - beta;
-// #pragma simd
-//         for (size_t j2 = 0; j2 < step.size(); ++j2) {
-//             step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
-//         }
-//     }
+    for (int j = jmin; j < jmax; ++j) {
+            i = j % M_;
+        double beta = 0;
+#pragma simd reduction(+ : beta)
+        for (size_t j2 = 0; j2 < step.size(); ++j2) {
+            beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
+        }
+        double alpha_beta = alpha[i] - beta;
+#pragma simd
+        for (size_t j2 = 0; j2 < step.size(); ++j2) {
+            step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
+        }
+    }
+    std::cout << dot(step, gold) << " step val after the iterations \n";
+    
+
+
 }
     
 
@@ -183,24 +194,31 @@ void LBFGS::precondition(Array<double> step) {
     }
     Eigen::VectorXd q(step.size());
     q.setZero();
-    if ((iter_number_-1)%T_ ==0) {
+    Eigen::VectorXd gg(step.size());
+    eig_eq_pele(gg, g_);
+    if ((iter_number_)%T_ ==0) {
+        std::cout << (r.dot(gg)) << "r dot grad val \n";
         q = update_solver(r);
+        std::cout << "this is inside" << "\n";
+        std::cout << (q.dot(gg)) << "q dot grad val \n";
     }
-    else{
+    else {
         q = saved_hessian.colPivHouseholderQr().solve(r);
     }
     // q = solver->solve(r);
     for (int i =0; i < step.size(); ++i) {
         step[i] = -q[i];
     }
+
 }
 
 
 Eigen::VectorXd LBFGS::update_solver(Eigen::VectorXd r) {
     // Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solve;
     saved_hessian = get_hessian_sparse_pos();
-    return saved_hessian.
-        colPivHouseholderQr().solve(r);
+    std::cout << saved_hessian.eigenvalues() << " eigenvalues \n";
+    std::cout << saved_hessian.inverse().eigenvalues() << "\n";
+    return saved_hessian.fullPivHouseholderQr().solve(r);
     // std::cout << hess_sparse << "\n";
 }
 
@@ -225,15 +243,30 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
     Eigen::MatrixXd hess = get_hessian_sparse();
     Eigen::VectorXd eigvals = hess.eigenvalues().real();
     double minimum = eigvals.minCoeff();
-    if (minimum<0) {
+    double maximum = eigvals.maxCoeff();
+    std::cout << minimum << " minimum \n";
+    std::cout << maximum << " maximum \n";
+    std::cout << minimum/maximum << " minimum/maximum\n";
+
+
+
+
+    if (minimum<0 and minimum/maximum<-1e-2) {
         // hardcoded but can set globally if necessary
         // controls fraction of the PSD factor added to hessian
         double pf = 3;
+        // note minimum is negative
         return hess - pf*minimum*Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
-    else {
-        return hess;
+    else if (minimum/maximum < 1e-2) {
+        double extra = eigvals.mean();
+        double pf = 3;
+        std::cout << "we are here" << "\n";
+        return hess + pf*extra*Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
+    else {return hess;}
+
+    
 }
 
 
@@ -245,8 +278,10 @@ void LBFGS::no_precondition(Array<double> step) {
 #pragma simd
     for (size_t j2 = 0; j2 < step.size(); ++j2){
         // std::cout << step[j2] * -H0_ << "\n";
-        step[j2] *= -H0_;
+        step[j2] *= - H0_;
     }
+    std::cout << H0_ << "H0_ H0 \n";
+
 }
 
 
