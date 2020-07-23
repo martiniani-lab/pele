@@ -12,20 +12,22 @@ int MoreThuente::cvsrch(vector_t &x, scalar_t f,
     int info = 0;
     int infoc = 1;
     scalar_t stpmax = 1e15;
-    scalar_t stpmin = 0.01;
+    scalar_t stpmin = 0.0;
     desdir = false;
     // std::cout << dot(g, s) << " dot(g, s) \n";
-    if (dot(g, s) >= 0) {
-        // we''re here?
-        for (int i = 0; i<s.size(); i++) {
-            s[i] = -s[i];
-        }
-        desdir = true;
-    }
+    // if (dot(g, s) >= 0) {
+    //     // we''re here?
+    //     for (int i = 0; i<s.size(); i++) {
+    //         s[i] = -s[i];
+    //     }
+    //     desdir = true;
+    // }
     // std::cout << dot(g, s) << " dot(g, s) \n";
     scalar_t dginit = dot(g, s);
+    std::cout << dginit << "\n";
+
     if (dginit >= 0.0) {
-        std::cout << "warning descent direction negative: error in algorithm" << "\n";
+        throw std::logic_error("the moving direction increases the objective function value");
     }
 
     bool brackt = false;
@@ -284,9 +286,6 @@ int MoreThuente::cstep(scalar_t &stx, scalar_t &fx, scalar_t &dx, scalar_t &sty,
  * Interfacing function for general line search methods in pele
  */
 double MoreThuente::line_search(Array<double> &x, Array<double> step)  {
-    for (int i = 0; i < step.size(); ++i) {
-        step[i] = - step[i];
-    }
 
     // assumes xold is set TODO : rewrite interface
     double alpha = MoreThuente::search(xold_, step);

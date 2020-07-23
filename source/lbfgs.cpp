@@ -21,18 +21,14 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       exact_g_(x_.size()),
       exact_gold(x_.size()),
       T_(T),
-      line_search_method(this, 0.1)
+      line_search_method(this, 1e15)
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
-
     inv_sqrt_size = 1 / sqrt(x_.size());
-
     // allocate space for s_ and y_
     s_ = Array<double>(x_.size() * M_);
     y_ = Array<double>(x_.size() * M_);
-    std::cout << T << " set T \n";
-    std::cout << x0 << "-------- x0" << "\n";
 }
 
 /**
@@ -52,9 +48,7 @@ void LBFGS::one_iteration() {
     double stepnorm = line_search_method.line_search(x_, step);
     // double stepnorm = 1;
     // Line search method 2
-
     // double stepnorm = backtracking_linesearch(step);
-
     // step taken 
 
     
@@ -108,10 +102,6 @@ void LBFGS::update_memory(Array<double> x_old,
         }
         yy = 1.;
     }
-    std::cout << ys << "ys  \n";
-    std::cout << yy << "yy  \n";
-    // std::cout << dot(g_new-g_old, x_new-x_old) << "\n";
-
     H0_ = ys / yy;
     // increment k
     k_ += 1;
@@ -159,8 +149,7 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
         alpha[i] = alpha_tmp;
     }
     
-    no_precondition(step);
-    std::cout << dot(step, g_) << " step val before the iterations \n";
+    precondition(step);
     // loop forwards through the memory
     for (int j = jmin; j < jmax; ++j) {
             i = j % M_;
@@ -175,7 +164,6 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
             step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
         }
     }
-    std::cout << dot(step, gold) << " step val after the iterations \n";
     
 
 
@@ -197,10 +185,7 @@ void LBFGS::precondition(Array<double> step) {
     Eigen::VectorXd gg(step.size());
     eig_eq_pele(gg, g_);
     if ((iter_number_)%T_ ==0) {
-        std::cout << (r.dot(gg)) << "r dot grad val \n";
         q = update_solver(r);
-        std::cout << "this is inside" << "\n";
-        std::cout << (q.dot(gg)) << "q dot grad val \n";
     }
     else {
         q = saved_hessian.colPivHouseholderQr().solve(r);
@@ -216,8 +201,6 @@ void LBFGS::precondition(Array<double> step) {
 Eigen::VectorXd LBFGS::update_solver(Eigen::VectorXd r) {
     // Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solve;
     saved_hessian = get_hessian_sparse_pos();
-    std::cout << saved_hessian.eigenvalues() << " eigenvalues \n";
-    std::cout << saved_hessian.inverse().eigenvalues() << "\n";
     return saved_hessian.fullPivHouseholderQr().solve(r);
     // std::cout << hess_sparse << "\n";
 }
@@ -244,9 +227,6 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
     Eigen::VectorXd eigvals = hess.eigenvalues().real();
     double minimum = eigvals.minCoeff();
     double maximum = eigvals.maxCoeff();
-    std::cout << minimum << " minimum \n";
-    std::cout << maximum << " maximum \n";
-    std::cout << minimum/maximum << " minimum/maximum\n";
 
 
 
@@ -261,7 +241,6 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
     else if (minimum/maximum < 1e-2) {
         double extra = eigvals.mean();
         double pf = 3;
-        std::cout << "we are here" << "\n";
         return hess + pf*extra*Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
     else {return hess;}
@@ -280,10 +259,7 @@ void LBFGS::no_precondition(Array<double> step) {
         // std::cout << step[j2] * -H0_ << "\n";
         step[j2] *= - H0_;
     }
-    std::cout << H0_ << "H0_ H0 \n";
-
 }
-
 
 
 

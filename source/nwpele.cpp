@@ -11,21 +11,25 @@ double NocedalWrightLineSearch::line_search(Array<double> &x, Array<double> step
 
     eig_eq_pele(xoldvec, xold_);
     eig_eq_pele(gradvec, gold_);
+    
     eig_eq_pele(step_direction, step);
-
+    
     Scalar f = opt_->get_f();
     stpsize = 1;
+    // force a unit step direction
 
     LSFunc(f, xvec, gradvec, stpsize, step_direction, xoldvec, params);
+    
     pele_eq_eig(x, xvec);
-
     pele_eq_eig(g_, gradvec);
     pele_eq_eig(step, step_direction);
     opt_->set_f(f);
     opt_->set_rms(norm(g_)/sqrt(x.size()));
-
     return stpsize*opt_->compute_pot_norm(step);
 };
+
+
+
 
 double NocedalWrightLineSearch::func_grad_wrapper(Vector &x, Vector &grad) {
     pele_eq_eig(xdum, x);
@@ -47,16 +51,15 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
     // change 
     // To make this implementation more similar to the other line search
     // methods in LBFGSpp, the symbol names from the literature
-    // ("Numerical Optimizations") have been changed.
-    //
-    // Literature | LBFGSpp
-    // -----------|--------
-    // alpha      | step
-    // phi        | fx
-    // phi'       | dg
-
-    // the rate, by which the 
-    const Scalar expansion = Scalar(2);      
+        // ("Numerical Optimizations") have been changed.
+        //
+        // Literature | LBFGSpp
+        // -----------|--------
+        // alpha      | step
+        // phi        | fx
+        // phi'       | dg
+        // the rate, by which the 
+    const Scalar expansion = Scalar(2);
     // Save the function value at the current x
     const Scalar fx_init = fx;
     // Projection of gradient on the search direction
@@ -73,7 +76,12 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
     Scalar step_hi, step_lo = 0,
         fx_hi,   fx_lo = fx_init,
         dg_hi,   dg_lo = dg_init;
+    // internal steps generating 
+    Scalar minstepval, maxstepval;
+    Scalar stpdiff;
+    
 
+    
     // STEP 1: Bracketing Phase
     //   Find a range guaranteed to contain a step satisfying strong Wolfe.
     //
@@ -81,7 +89,8 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
     //     "Numerical Optimization", "Algorithm 3.5 (Line Search Algorithm)".
     int iter = 0;
     for(;;)
-        {
+        {   
+
             x.noalias() = xp + step * drt;
             fx = func_grad_wrapper(x, grad);
             if(iter++ >= param.max_linesearch)
@@ -94,10 +103,8 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
                     dg_hi = dg;
                     break;
                 }
-
             if( std::abs(dg) <= test_curv )
-                return;
-
+                {   return;}
             step_hi = step_lo;
             fx_hi =   fx_lo;   
             dg_hi =   dg_lo;
@@ -111,6 +118,8 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
             step *= expansion;
         }
 
+
+
     // STEP 2: Zoom Phase
     //   Given a range (step_lo,step_hi) that is guaranteed to
     //   contain a valid strong Wolfe step value, this method
@@ -119,26 +128,45 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
     //   See also:
     //     "Numerical Optimization", "Algorithm 3.6 (Zoom)".
     for(;;)
-        {
-            // use {fx_lo, fx_hi, dg_lo} to make a quadric interpolation of
-            // the function said interpolation is used to estimate the minimum
-            //
-            // polynomial: p (x) = c0*(x - step)² + c1
-            // conditions: p (step_hi) = fx_hi
-            //             p (step_lo) = fx_lo
-            //             p'(step_lo) = dg_lo
-            step  = (fx_hi-fx_lo)*step_lo - (step_hi*step_hi - step_lo*step_lo)*dg_lo/2;
-            step /= (fx_hi-fx_lo)         - (step_hi         - step_lo        )*dg_lo;
-
-            // if interpolation fails, bisection is used
-            if( step <= std::min(step_lo,step_hi) ||
-                step >= std::max(step_lo,step_hi) )
-                step  = step_lo/2 + step_hi/2;
+        {    
+            // // use {fx_lo, fx_hi, dg_lo} to make a quadric interpolation of
+            // // the function said interpolation is used to estimate the minimum
+            // //
+            // // polynomial: p (x) = c0*(x - step)² + c1
+            // // conditions: p (step_hi) = fx_hi
+            // //             p (step_lo) = fx_lo
+            // //             p'(step_lo) = dg_lo
+            // step  = (fx_hi-fx_lo)*step_lo - (step_hi*step_hi - step_lo*step_lo)*dg_lo/2;
+            // step /= (fx_hi-fx_lo)         - (step_hi         - step_lo        )*dg_lo;
+            // // if interpolation fails, bisection is used
+            // minstepval = std::min(step_lo,step_hi);
+            // maxstepval = std::max(step_lo,step_hi);
+            // stpdiff = maxstepval-minstepval;
             
+            // if( step <= std::min(step_lo,step_hi) ||
+                
+            //     step >= std::max(step_lo,step_hi) // ||
+                
+            //     // step-minstepval < 1e-3*stpdiff    ||
+                
+            //     // maxstepval -step <1e-3*stpdiff 
+            //     )
+                
+            //     {std::cout << "bisection used" << "\n";
+            //         step  = step_lo/2 + step_hi/2;}
+
+            step = (step_hi+ step_lo)/2;
             x.noalias() = xp + step * drt;
             fx = func_grad_wrapper(x, grad);
             if(iter++ >= param.max_linesearch)
-                return;
+                {   Scalar ival;
+                    for (int blah; blah < 1000; ++blah) {
+                        ival = blah*0.1;
+                        x.noalias() = xp + ival*drt;
+                        fx = func_grad_wrapper(x, grad);
+                    }
+                    throw std::logic_error("the moving direction increases the objective function value");
+                    return;}
 
             const Scalar dg = grad.dot(drt);
 
@@ -154,23 +182,24 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
             else
                 {
                     if( std::abs(dg) <= test_curv )
-                        return;
+                        {    
+                            return;}
 
                     if( dg * (step_hi - step_lo) >= 0 )
-                            {
-                                step_hi = step_lo;
-                                fx_hi =   fx_lo;
-                                dg_hi =   dg_lo;
-                            }
+                        {
+                            step_hi = step_lo;
+                            fx_hi =   fx_lo;
+                            dg_hi =   dg_lo;
+                        }
 
-                        if( step == step_lo )
-                            throw std::runtime_error("the line search routine failed, possibly due to insufficient numeric precision");
+                    if( step == step_lo )
+                        throw std::runtime_error("the line search routine failed, possibly due to insufficient numeric precision");
 
-                        step_lo = step;
-                        fx_lo =   fx;
-                        dg_lo =   dg;
-                    }
-            }
+                    step_lo = step;
+                    fx_lo =   fx;
+                    dg_lo =   dg;
+                }
+        }
 }
 
 

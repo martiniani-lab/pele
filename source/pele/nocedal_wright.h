@@ -123,7 +123,7 @@ public:
                Scalar epsilon_rel_    = Scalar(1e-5),
                int    past_           = 0,
                Scalar delta_          = Scalar(0),
-               int    max_linesearch_ = 20,
+               int    max_linesearch_ = 200,
                Scalar min_step_       = Scalar(1e-20),
                Scalar max_step_       = Scalar(1e+20),
                Scalar ftol_           = Scalar(1e-4),
