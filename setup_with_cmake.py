@@ -167,7 +167,7 @@ fmodules.add_module("pele/accept_tests/_spherical_container.f90")
 #
 # compile the pure cython modules
 #
-extra_compile_args=['-Wall', '-Wextra','-pedantic','-funroll-loops','-O2',]
+extra_compile_args=['-Wextra','-pedantic','-funroll-loops','-O2',]
 
 cxx_modules = [
             Extension("pele.optimize._cython_lbfgs", ["pele/optimize/_cython_lbfgs.c"],

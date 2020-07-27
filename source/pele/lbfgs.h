@@ -20,6 +20,8 @@
 #include "linesearch.h"
 #include "optimizer.h"
 #include "nwpele.h"
+#include "backtracking.h"
+#include "bracketing.h"
 
 
 extern "C" {
@@ -83,7 +85,7 @@ private:
     // Calculates hess + delta I where delta makes the new eigenvalue positive
     Eigen::MatrixXd get_hessian_sparse_pos();
     Eigen::MatrixXd saved_hessian;
-    NocedalWrightLineSearch line_search_method;
+    BracketingLineSearch line_search_method;
 
 public:
     /**

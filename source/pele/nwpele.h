@@ -9,8 +9,9 @@
 #define PELE_LINE_SEARCH_NOCEDAL_WRIGHT_H
 #include "optimizer.h"
 #include "linesearch.h"
-#include "nocedal_wright.h"
+#include "lsparameters.h"
 #include "eigen_interface.h"
+#include <Eigen/Core>
 
 using Scalar=double;
 typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;

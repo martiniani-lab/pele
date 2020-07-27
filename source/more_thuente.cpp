@@ -76,7 +76,7 @@ int MoreThuente::cvsrch(vector_t &x, scalar_t f,
 
         // test new point
 
-        for (int i=0; i < x.size(); ++i) {
+        for (size_t i=0; i < x.size(); ++i) {
             x[i] = wa[i] + stp * s[i];
         }
 
@@ -285,12 +285,11 @@ int MoreThuente::cstep(scalar_t &stx, scalar_t &fx, scalar_t &dx, scalar_t &sty,
 /**
  * Interfacing function for general line search methods in pele
  */
-double MoreThuente::line_search(Array<double> &x, Array<double> step)  {
-
+    double MoreThuente::line_search(Array<double> &x, Array<double> step)  {
     // assumes xold is set TODO : rewrite interface
     double alpha = MoreThuente::search(xold_, step);
     x_= x;
-    for (int i = 0; i < xold_.size(); ++i) {
+    for (size_t i = 0; i < xold_.size(); ++i) {
         x_[i] = xold_[i] + alpha*step[i];
     }
     double fend;

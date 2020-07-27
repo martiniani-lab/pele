@@ -17,9 +17,9 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       alpha(M_),
       xold(x_.size()),
       gold(x_.size()),
-      step(x_.size()),
-      exact_g_(x_.size()),
       exact_gold(x_.size()),
+      exact_g_(x_.size()),
+      step(x_.size()),
       T_(T),
       line_search_method(this, 1e15)
 {
@@ -50,8 +50,12 @@ void LBFGS::one_iteration() {
     // Line search method 2
     // double stepnorm = backtracking_linesearch(step);
     // step taken 
-
     
+    if (verbosity_>1) {
+        std::cout << g_ << " gradient new \n";
+        std::cout << gold << " gradient old \n";
+    }
+
     update_memory(xold, gold, x_, g_);
     
     if (false){
@@ -74,7 +78,7 @@ void LBFGS::update_memory(Array<double> x_old,
     int klocal = k_ % M_;
     double ys = 0;
     double yy = 0;
-    
+
     // define a dummy accumulator to help with exactly
     // calculating y
     // xsum_small_accumulator sacc_dummy;
@@ -123,8 +127,10 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
 //         for (size_t j2 = 0; j2 < x_.size(); ++j2){
 //             step[j2] = prefactor * g_[j2];
 //         }
-//         return;
-//     }
+//         return;     }
+
+
+
 
     // copy the gradient into step
     step.assign(g_);
@@ -141,31 +147,57 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
 #pragma simd reduction(+ : alpha_tmp)
         for (size_t j2 = 0; j2 < step.size(); ++j2){
             alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
+            if (verbosity_>1) {
+                std::cout << rho_[i] << "rho_i"<< "rho value \n";
+                std::cout << s_[i * step.size() + j2] << " step value \n";
+                std::cout << step[j2] << "step[j2]\n ";
+            }
         }
+
+
+        
 #pragma simd
         for (size_t j2 = 0; j2 < step.size(); ++j2){
             step[j2] -= alpha_tmp * y_[i * step.size() + j2];
         }
+        
         alpha[i] = alpha_tmp;
+        if (verbosity_>1) {
+            std::cout << alpha_tmp << "alpha value\n";
+        }
+    }
+
+
+    if (verbosity_>1) {
+        std::cout << step << " step before preconditioning \n";
+    }
+
+    precondition(step);
+    if (verbosity_> 1) {
+        std::cout << step << " step after preconditioning \n";
     }
     
-    precondition(step);
     // loop forwards through the memory
     for (int j = jmin; j < jmax; ++j) {
-            i = j % M_;
+        i = j % M_;
         double beta = 0;
 #pragma simd reduction(+ : beta)
         for (size_t j2 = 0; j2 < step.size(); ++j2) {
             beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
         }
         double alpha_beta = alpha[i] - beta;
+        if (verbosity_>1) {        std::cout << alpha[i] << "alph i";
+            std::cout << beta << "beta \n";
+            std::cout << alpha_beta <<  " alpha beta \n";}
+
 #pragma simd
         for (size_t j2 = 0; j2 < step.size(); ++j2) {
             step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
         }
     }
-    
-
+    if (verbosity_>1) {
+        std::cout << step << "step after everything \n";
+    }
 
 }
     
@@ -177,7 +209,7 @@ void LBFGS::precondition(Array<double> step) {
     // Preconditioning steps
     Eigen::VectorXd r(step.size());
     r.setZero();
-    for (int i =0; i < step.size(); ++i) {
+    for (size_t i =0; i < step.size(); ++i) {
         r[i] = step[i];
     }
     Eigen::VectorXd q(step.size());
@@ -191,7 +223,7 @@ void LBFGS::precondition(Array<double> step) {
         q = saved_hessian.colPivHouseholderQr().solve(r);
     }
     // q = solver->solve(r);
-    for (int i =0; i < step.size(); ++i) {
+    for (size_t i =0; i < step.size(); ++i) {
         step[i] = -q[i];
     }
 
@@ -212,8 +244,8 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse() {
     Eigen::MatrixXd hess_dense(xold.size(), xold.size());
     // Note to future: Autodiff can be annoying with memory leaks
     hess_dense.setZero();
-    for (int i = 0; i < xold.size(); ++i) {
-        for (int j=0; j < xold.size(); ++j) {
+    for (size_t i = 0; i < xold.size(); ++i) {
+        for (size_t j=0; j < xold.size(); ++j) {
             hess_dense(i, j) = hess[i + grad.size()*j];
         }
     }
@@ -296,7 +328,7 @@ double LBFGS::backtracking_linesearch(Array<double> step)
         }
         compute_func_gradient(x_, fnew, exact_g_);
 
-        for (int i = 0; i < exact_g_.size(); ++i) {
+        for (size_t i = 0; i < exact_g_.size(); ++i) {
             g_[i] = xsum_small_round(&(exact_g_[i]));
         }
         

@@ -13,7 +13,7 @@ double NocedalWrightLineSearch::line_search(Array<double> &x, Array<double> step
     eig_eq_pele(gradvec, gold_);
     
     eig_eq_pele(step_direction, step);
-    
+    std::cout << step << "\n";
     Scalar f = opt_->get_f();
     stpsize = 1;
     // force a unit step direction
@@ -25,10 +25,10 @@ double NocedalWrightLineSearch::line_search(Array<double> &x, Array<double> step
     pele_eq_eig(step, step_direction);
     opt_->set_f(f);
     opt_->set_rms(norm(g_)/sqrt(x.size()));
+    std::cout << stpsize << " ----------------------------------------- final step size \n";
+    std::cout << stpsize*opt_->compute_pot_norm(step) << "\n";
     return stpsize*opt_->compute_pot_norm(step);
 };
-
-
 
 
 double NocedalWrightLineSearch::func_grad_wrapper(Vector &x, Vector &grad) {
@@ -39,6 +39,8 @@ double NocedalWrightLineSearch::func_grad_wrapper(Vector &x, Vector &grad) {
     eig_eq_pele(grad, gdum);
     return f;
 }
+
+
 
 void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
                                      Scalar& step,
@@ -77,10 +79,7 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
         fx_hi,   fx_lo = fx_init,
         dg_hi,   dg_lo = dg_init;
     // internal steps generating 
-    Scalar minstepval, maxstepval;
-    Scalar stpdiff;
     
-
     
     // STEP 1: Bracketing Phase
     //   Find a range guaranteed to contain a step satisfying strong Wolfe.
@@ -92,7 +91,8 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
         {   
 
             x.noalias() = xp + step * drt;
-            fx = func_grad_wrapper(x, grad);
+            fx =
+                func_grad_wrapper(x, grad);
             if(iter++ >= param.max_linesearch)
                 return;
             const Scalar dg = grad.dot(drt);
@@ -111,15 +111,36 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
             step_lo = step;
             fx_lo =   fx;
             dg_lo =   dg;
-
+            
             if( dg >= 0 )
                 break;
 
             step *= expansion;
+            
         }
 
 
-
+    bool debug=true;
+    if (debug==true) {
+        // writes line search data to files by iteration number
+        Scalar ival;
+        Scalar fdebug;
+        Vector xdebug(x.size());
+        Vector graddebug(x.size());
+        std::cout << "line search function is searching along  " << "\n";
+        
+        std::cout << "linesearch function" << " ------- \n";
+        for (int blah=0; blah < 1000; ++blah) {
+            ival = blah*0.1;
+            xdebug.noalias() = xp + ival*drt;
+            fdebug = func_grad_wrapper(xdebug, graddebug);
+            std::cout << fdebug << ", ";
+        }
+        std::cout << "\n---------" << "\n";
+        std::cout << "norm of the internal step is " << drt.norm() << "\n";
+                
+    }
+    
     // STEP 2: Zoom Phase
     //   Given a range (step_lo,step_hi) that is guaranteed to
     //   contain a valid strong Wolfe step value, this method
@@ -159,13 +180,23 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
             x.noalias() = xp + step * drt;
             fx = func_grad_wrapper(x, grad);
             if(iter++ >= param.max_linesearch)
-                {   Scalar ival;
-                    for (int blah; blah < 1000; ++blah) {
-                        ival = blah*0.1;
-                        x.noalias() = xp + ival*drt;
-                        fx = func_grad_wrapper(x, grad);
-                    }
-                    throw std::logic_error("the moving direction increases the objective function value");
+                {   // Scalar ival;
+                    std::cout << grad << "drt \n";
+                    std::cout << drt.norm() << "norm \n";
+                    std::cout << xp << " starting configuration for error \n";
+                    std::cout << drt << "drt \n";
+                    // std::cout << "linesearch function" << " ------- \n";
+                    // for (int blah; blah < 1000; ++blah) {
+                    //     ival = blah*0.1;
+                    //     x.noalias() = xp + ival*drt;
+                    //     fx = func_grad_wrapper(x, grad);
+                    //     std::cout << fx << ", ";
+                    // }
+
+                    // std::cout << "------ ---" << "\n";
+
+                    std::cout << opt_->get_tol() << "\n";
+                    throw std::logic_error("line search number exceeded ");
                     return;}
 
             const Scalar dg = grad.dot(drt);
