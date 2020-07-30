@@ -1,3 +1,4 @@
+
 #include "pele/lbfgs.h"
 #include <memory>
 #include <iostream>
@@ -21,11 +22,13 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       exact_g_(x_.size()),
       step(x_.size()),
       T_(T),
-      line_search_method(this, 1e15)
+      line_search_method(this, 1)
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
     inv_sqrt_size = 1 / sqrt(x_.size());
+    std::cout << "lbfgs constructed" << "M=" << M_ <<" T=" <<T_ << "\n";
+
     // allocate space for s_ and y_
     s_ = Array<double>(x_.size() * M_);
     y_ = Array<double>(x_.size() * M_);
@@ -140,32 +143,30 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
     int i;
 
     alpha.assign(0.0);
-    // loop backwards through the memory
-    for (int j = jmax - 1; j >= jmin; --j) {
-        i = j % M_;
-        double alpha_tmp = 0;
-#pragma simd reduction(+ : alpha_tmp)
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
-            if (verbosity_>1) {
-                std::cout << rho_[i] << "rho_i"<< "rho value \n";
-                std::cout << s_[i * step.size() + j2] << " step value \n";
-                std::cout << step[j2] << "step[j2]\n ";
-            }
-        }
+//     // loop backwards through the memory
+//     for (int j = jmax - 1; j >= jmin; --j) {
+//         i = j % M_;
+//         double alpha_tmp = 0;
+// #pragma simd reduction(+ : alpha_tmp)
+//         for (size_t j2 = 0; j2 < step.size(); ++j2){
+//             alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
+//             if (verbosity_>1) {
+//                 std::cout << rho_[i] << "rho_i"<< "rho value \n";
+//                 std::cout << s_[i * step.size() + j2] << " step value \n";
+//                 std::cout << step[j2] << "step[j2]\n ";
+//             }
+//         }
 
-
+// #pragma simd
+//         for (size_t j2 = 0; j2 < step.size(); ++j2){
+//             step[j2] -= alpha_tmp * y_[i * step.size() + j2];
+//         }
         
-#pragma simd
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            step[j2] -= alpha_tmp * y_[i * step.size() + j2];
-        }
-        
-        alpha[i] = alpha_tmp;
-        if (verbosity_>1) {
-            std::cout << alpha_tmp << "alpha value\n";
-        }
-    }
+//         alpha[i] = alpha_tmp;
+//         if (verbosity_>1) {
+//             std::cout << alpha_tmp << "alpha value\n";
+//         }
+//     }
 
 
     if (verbosity_>1) {
@@ -177,27 +178,27 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
         std::cout << step << " step after preconditioning \n";
     }
     
-    // loop forwards through the memory
-    for (int j = jmin; j < jmax; ++j) {
-        i = j % M_;
-        double beta = 0;
-#pragma simd reduction(+ : beta)
-        for (size_t j2 = 0; j2 < step.size(); ++j2) {
-            beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
-        }
-        double alpha_beta = alpha[i] - beta;
-        if (verbosity_>1) {        std::cout << alpha[i] << "alph i";
-            std::cout << beta << "beta \n";
-            std::cout << alpha_beta <<  " alpha beta \n";}
+//     // loop forwards through the memory
+//     for (int j = jmin; j < jmax; ++j) {
+//         i = j % M_;
+//         double beta = 0;
+// #pragma simd reduction(+ : beta)
+//         for (size_t j2 = 0; j2 < step.size(); ++j2) {
+//             beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
+//         }
+//         double alpha_beta = alpha[i] - beta;
+//         if (verbosity_>1) {        std::cout << alpha[i] << "alph i";
+//             std::cout << beta << "beta \n";
+//             std::cout << alpha_beta <<  " alpha beta \n";}
 
-#pragma simd
-        for (size_t j2 = 0; j2 < step.size(); ++j2) {
-            step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
-        }
-    }
-    if (verbosity_>1) {
-        std::cout << step << "step after everything \n";
-    }
+// #pragma simd
+//         for (size_t j2 = 0; j2 < step.size(); ++j2) {
+//             step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
+//         }
+//     }
+//     if (verbosity_>1) {
+//         std::cout << step << "step after everything \n";
+//     }
 
 }
     
@@ -220,7 +221,7 @@ void LBFGS::precondition(Array<double> step) {
         q = update_solver(r);
     }
     else {
-        q = saved_hessian.colPivHouseholderQr().solve(r);
+        q = scale*saved_hessian.ldlt().solve(r);
     }
     // q = solver->solve(r);
     for (size_t i =0; i < step.size(); ++i) {
@@ -233,7 +234,10 @@ void LBFGS::precondition(Array<double> step) {
 Eigen::VectorXd LBFGS::update_solver(Eigen::VectorXd r) {
     // Eigen::ColPivHouseholderQR<Eigen::MatrixXd> solve;
     saved_hessian = get_hessian_sparse_pos();
-    return saved_hessian.fullPivHouseholderQr().solve(r);
+    Eigen::VectorXd q(step.size());
+    q = saved_hessian.ldlt().solve(r);
+
+    return q*scale;
     // std::cout << hess_sparse << "\n";
 }
 
@@ -257,27 +261,25 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse() {
 Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
     Eigen::MatrixXd hess = get_hessian_sparse();
     Eigen::VectorXd eigvals = hess.eigenvalues().real();
-    double minimum = eigvals.minCoeff();
+    minimum = eigvals.minCoeff();
     double maximum = eigvals.maxCoeff();
 
-
-
-
-    if (minimum<0 and minimum/maximum<-1e-2) {
-        // hardcoded but can set globally if necessary
-        // controls fraction of the PSD factor added to hessian
-        double pf = 3;
+    double steeptol = 1e0;
+    // controls fraction of the PSD factor added to hessian
+    pf = 1000;
+    double pf2 = 4;
+    hessnorm = hess.norm()/eigvals.size();
+    if (minimum<0 and minimum/maximum<-steeptol) {
         // note minimum is negative
+        scale = 2*pf*hessnorm/(-minimum);
         return hess - pf*minimum*Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
-    else if (minimum/maximum < 1e-2) {
-        double extra = eigvals.mean();
-        double pf = 3;
-        return hess + pf*extra*Eigen::MatrixXd::Identity(x_.size(), x_.size());
+    else if (minimum/maximum < 0) {
+        scale = 1.;
+        return hess + pf2*0.05*hessnorm*Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
-    else {return hess;}
-
-    
+    else {scale = 1;
+        return hess;}
 }
 
 

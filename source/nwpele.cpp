@@ -13,7 +13,7 @@ double NocedalWrightLineSearch::line_search(Array<double> &x, Array<double> step
     eig_eq_pele(gradvec, gold_);
     
     eig_eq_pele(step_direction, step);
-    std::cout << step << "\n";
+    // std::cout << step << "\n";
     Scalar f = opt_->get_f();
     stpsize = 1;
     // force a unit step direction
@@ -25,8 +25,8 @@ double NocedalWrightLineSearch::line_search(Array<double> &x, Array<double> step
     pele_eq_eig(step, step_direction);
     opt_->set_f(f);
     opt_->set_rms(norm(g_)/sqrt(x.size()));
-    std::cout << stpsize << " ----------------------------------------- final step size \n";
-    std::cout << stpsize*opt_->compute_pot_norm(step) << "\n";
+    // std::cout << stpsize << " ----------------------------------------- final step size \n";
+    // std::cout << stpsize*opt_->compute_pot_norm(step) << "\n";
     return stpsize*opt_->compute_pot_norm(step);
 };
 
@@ -91,8 +91,7 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
         {   
 
             x.noalias() = xp + step * drt;
-            fx =
-                func_grad_wrapper(x, grad);
+            fx = func_grad_wrapper(x, grad);
             if(iter++ >= param.max_linesearch)
                 return;
             const Scalar dg = grad.dot(drt);
@@ -120,7 +119,7 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
         }
 
 
-    bool debug=true;
+    bool debug=false;
     if (debug==true) {
         // writes line search data to files by iteration number
         Scalar ival;
@@ -198,7 +197,6 @@ void NocedalWrightLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
                     std::cout << opt_->get_tol() << "\n";
                     throw std::logic_error("line search number exceeded ");
                     return;}
-
             const Scalar dg = grad.dot(drt);
 
             if( fx - fx_init > step * test_decr || fx >= fx_lo )

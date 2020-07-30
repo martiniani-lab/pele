@@ -69,8 +69,8 @@ enum LINE_SEARCH_TERMINATION_CONDITION
         /// where \f$\beta\f$ is the value specified by \ref LBFGSParam::wolfe.
         ///
         LINESEARCH_BACKTRACKING_STRONG_WOLFE = 3
+        
     };
-
 
 
 ///

@@ -62,7 +62,7 @@ void BracketingLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
 
     // Upper and lower end of the current line search range
     Scalar step_lo = 0,
-        step_hi = std::numeric_limits<Scalar>::infinity();
+        step_hi = 1/(opt_->get_tol());
 
     for( int iter = 0; iter < param.max_linesearch; iter++ )
         {
@@ -113,8 +113,6 @@ void BracketingLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
             step = std::isinf(step_hi) ? 2*step : step_lo/2 + step_hi/2;
         }
 }
-
-
 
 
 

@@ -81,11 +81,11 @@ private:
     int T_;      // number of steps after which the hessian is updated
     std::shared_ptr<Eigen::ColPivHouseholderQR<Eigen::MatrixXd>> solver;                  // solver for H x = b
     Eigen::VectorXd update_solver(Eigen::VectorXd r);                                     // updates the solver with the new hessian
-    Eigen::MatrixXd get_hessian_sparse();                                                 
+    Eigen::MatrixXd get_hessian_sparse();
     // Calculates hess + delta I where delta makes the new eigenvalue positive
     Eigen::MatrixXd get_hessian_sparse_pos();
     Eigen::MatrixXd saved_hessian;
-    BracketingLineSearch line_search_method;
+    OldLineSearch line_search_method;
 
 public:
     /**
@@ -161,7 +161,11 @@ private:
     void precondition(Array<double> step);
     // Does normal LBFGS without preconditioning
     void no_precondition(Array<double>step);
-
+    double hessnorm;
+    double minimum;
+    double pf;
+    // scale of the final vector
+    double scale;
     
     // // line search implementing strong Wolfe conditioins.
     // // As implemented in Nocedal and Wright Chapter 3
