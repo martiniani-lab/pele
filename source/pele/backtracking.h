@@ -32,7 +32,8 @@ namespace pele {
                                int    max_linesearch_ = 40,
                                Scalar min_step_       = Scalar(1e-15),
                                Scalar ftol_           = Scalar(1e-4),
-                               Scalar wolfe_          = Scalar(0.9)) :
+                               Scalar wolfe_          = Scalar(0.9),
+                               Scalar lstype_         = LINESEARCH_BACKTRACKING_ARMIJO) :
             LineSearch(opt, max_step_),
             params(m_,
                    epsilon_,
@@ -43,7 +44,8 @@ namespace pele {
                    min_step_,
                    max_step_,
                    ftol_,
-                   wolfe_),
+                   wolfe_,
+                   lstype_),
             xsize(opt->get_x().size()),
             xdum(opt->get_x().copy()),
             gdum(xsize),

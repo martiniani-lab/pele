@@ -81,138 +81,139 @@ public :
 
   };
 
-  inline void MODIFIED_FIRE::reset(Array<double> &x0)
-  {
-        //arrays are already wrapped by the integrator, must not wrap them again, just update their values, dont's use array.copy()
-        // or will wrap a copy to the array
-      if (!func_initialized_) {
-          initialize_func_gradient();
-      }
-      iter_number_ = 0;
-      x_.assign(x0);
-      f_ = potential_->get_energy_gradient(x_, g_);
-      nfev_ = 1;
-      //fire specific
-      _fire_iter_number = 0;
-      _dt = _dtstart;
-      _a = _astart;
-      _fold = f_;
-      _xold.assign(x_);
-      _gold.assign(g_);
-      for(size_t k=0; k<x_.size();++k){
-          _v[k] = -g_[k]*_dt;
-      }
-      _ifnorm = 1./norm(g_);
-      _vnorm = norm(_v);
-      rms_ = 1. / (_ifnorm*sqrt(_N));
-  }
+inline void MODIFIED_FIRE::reset(Array<double> &x0)
+{
+    //arrays are already wrapped by the integrator, must not wrap them again, just update their values, dont's use array.copy()
+    // or will wrap a copy to the array
+    if (!func_initialized_) {
+        initialize_func_gradient();
+    }
+    iter_number_ = 0;
+    x_.assign(x0);
+    f_ = potential_->get_energy_gradient(x_, g_);
+    nfev_ = 1;
+    //fire specific
+    _fire_iter_number = 0;
+    _dt = _dtstart;
+    _a = _astart;
+    _fold = f_;
+    _xold.assign(x_);
+    _gold.assign(g_);
+    for(size_t k=0; k<x_.size();++k){
+        _v[k] = -g_[k]*_dt;
+    }
+    _ifnorm = 1./norm(g_);
+    _vnorm = norm(_v);
+    rms_ = 1. / (_ifnorm*sqrt(_N));
+}
 
-  inline void MODIFIED_FIRE::_VelocityVerlet_integration()
-  {
-      /* the minuses in the following expressions are due to the fact that
-       * the gradients rather than the forces appear in the expression
-       */
-      for (size_t i = 0; i < _N; ++i) {
-          _v[i] -= 0.5 * _dt * (_gold[i] + g_[i]);         //update velocity assumes all masses 1
-          _dx[i] = _dt * (_v[i] - 0.5 * _dt * g_[i]);      //build displacement vector, assumes all masses 1
-      }
-      _gold.assign(g_);             //save gradient as old g
-      double normdx = compute_pot_norm(_dx);
+inline void MODIFIED_FIRE::_VelocityVerlet_integration()
+{
+    /* the minuses in the following expressions are due to the fact that
+     * the gradients rather than the forces appear in the expression
+     */
+    for (size_t i = 0; i < _N; ++i) {
+        _v[i] -= 0.5 * _dt * (_gold[i] + g_[i]);         //update velocity assumes all masses 1
+        _dx[i] = _dt * (_v[i] - 0.5 * _dt * g_[i]);      //build displacement vector, assumes all masses 1
+    }
+    _gold.assign(g_);             //save gradient as old g
+    double normdx = compute_pot_norm(_dx);
 
-      if (normdx > _maxstep) {
-          _dx *= (_maxstep / normdx); //resize displacement vector is greater than _maxstep
-      }
+    if (normdx > _maxstep) {
+        _dx *= (_maxstep / normdx); //resize displacement vector is greater than _maxstep
+    }
 
-      x_ += _dx;
+    x_ += _dx;
 
-      f_ = potential_->get_energy_gradient(x_, g_);    //update gradient
-  }
+    f_ = potential_->get_energy_gradient(x_, g_);    //update gradient
+}
 
-  inline void MODIFIED_FIRE::_ForwardEuler_integration()
-  {
-      /* the minuses in the following expressions are due to the fact that
-       * the gradients rather than the forces appear in the expression
-       */
-      for (size_t i = 0; i < _N; ++i) { //this was after get_energy_gradient, moved for testing
-          _v[i] -= _dt * g_[i];     //update velocity, assumes all masses are 1
-          _dx[i] = _dt * _v[i];     //build displacement vector
-      }
+inline void MODIFIED_FIRE::_ForwardEuler_integration()
+{
+    /* the minuses in the following expressions are due to the fact that
+     * the gradients rather than the forces appear in the expression
+     */
+    for (size_t i = 0; i < _N; ++i) { //this was after get_energy_gradient, moved for testing
+        _v[i] -= _dt * g_[i];     //update velocity, assumes all masses are 1
+        _dx[i] = _dt * _v[i];     //build displacement vector
+    }
 
-      _gold.assign(g_);             //save gradient as old g
-      double normdx = compute_pot_norm(_dx);
+    _gold.assign(g_);             //save gradient as old g
+    double normdx = compute_pot_norm(_dx);
 
-      if (normdx > _maxstep) {
-          _dx *= (_maxstep / normdx); //resize displacement vector is greater than _maxstep
-      }
+    if (normdx > _maxstep) {
+        _dx *= (_maxstep / normdx); //resize displacement vector is greater than _maxstep
+    }
 
-      x_ += _dx;
+    x_ += _dx;
 
-      f_ = potential_->get_energy_gradient(x_, g_);    //update gradient
-  }
+    f_ = potential_->get_energy_gradient(x_, g_);    //update gradient
+}
 
-  inline void MODIFIED_FIRE::one_iteration()
-  {
-      nfev_ += 1;
-      iter_number_ += 1;
-      _fire_iter_number += 1; //this is different from iter_number_ which does not get reset
 
-      //save old configuration in case next step has P < 0
-      _fold = f_; //set f_ old before integration step
-      _xold.assign(x_); //save x as xold, gold saved in integrator (because velocity verlet needs it, if vv is used)
+inline void MODIFIED_FIRE::one_iteration()
+{
+    nfev_ += 1;
+    iter_number_ += 1;
+    _fire_iter_number += 1; //this is different from iter_number_ which does not get reset
 
-      /*equation written in this conditional statement _v = (1- _a)*_v + _a * funit * vnorm*/
+    //save old configuration in case next step has P < 0
+    _fold = f_; //set f_ old before integration step
+    _xold.assign(x_); //save x as xold, gold saved in integrator (because velocity verlet needs it, if vv is used)
 
-      for (size_t i = 0; i < _N; ++i) {
-          _v[i] = (1. - _a) * _v[i] - _a * g_[i] * _ifnorm * _vnorm;
-      }
+    /*equation written in this conditional statement _v = (1- _a)*_v + _a * funit * vnorm*/
 
-      /*run MD*/
-      this->_ForwardEuler_integration();
-      //this->_VelocityVerlet_integration();
+    for (size_t i = 0; i < _N; ++i) {
+        _v[i] = (1. - _a) * _v[i] - _a * g_[i] * _ifnorm * _vnorm;
+    }
 
-      double P = -1 * dot(_v, g_);
+    /*run MD*/
+    this->_ForwardEuler_integration();
+    //this->_VelocityVerlet_integration();
 
-      if (P > 0) {
-          if (_fire_iter_number > _Nmin) {
-              _dt = std::min(_dt * _finc, _dtmax);
-              _a *= _fa;
-          }
+    double P = -1 * dot(_v, g_);
 
-          _ifnorm = 1. / norm(g_);
-          _vnorm = norm(_v);
-          rms_ = 1. / (_ifnorm * sqrt(_N)); //update rms
-      }
-      else {
-          _dt *= _fdec;
-          _a = _astart;
-          _fire_iter_number = 0;
-          _v.assign(0);
+    if (P > 0) {
+        if (_fire_iter_number > _Nmin) {
+            _dt = std::min(_dt * _finc, _dtmax);
+            _a *= _fa;
+        }
 
-          //reset position and gradient to the one before the step (core of modified fire) reset velocity to initial (0)
-          if (_stepback == true) {
-              f_ = _fold;
-              //reset position and gradient to the one before the step (core of modified fire) reset velocity to initial (0)
-              x_.assign(_xold);
-              g_.assign(_gold);
-          }
-          if (verbosity_ > 1) {
-              std::cout << "warning: step direction was uphill.  inverting\n";
-          }
-      }
+        _ifnorm = 1. / norm(g_);
+        _vnorm = norm(_v);
+        rms_ = 1. / (_ifnorm * sqrt(_N)); //update rms
+    }
+    else {
+        _dt *= _fdec;
+        _a = _astart;
+        _fire_iter_number = 0;
+        _v.assign(0);
 
-      // print some status information
-      if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {
-          std::cout << "fire: " << iter_number_
-              << " fire_iter_number " << _fire_iter_number
-              << " dt " << _dt
-              << " a " << _a
-              << " P " << P
-              << " vnorm " << _vnorm
-              << " E " << f_
-              << " rms " << rms_
-              << " nfev " << nfev_ << "\n";
-      }
-  }
+        //reset position and gradient to the one before the step (core of modified fire) reset velocity to initial (0)
+        if (_stepback == true) {
+            f_ = _fold;
+            //reset position and gradient to the one before the step (core of modified fire) reset velocity to initial (0)
+            x_.assign(_xold);
+            g_.assign(_gold);
+        }
+        if (verbosity_ > 1) {
+            std::cout << "warning: step direction was uphill.  inverting\n";
+        }
+    }
+
+    // print some status information
+    if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {
+        std::cout << "fire: " << iter_number_
+                  << " fire_iter_number " << _fire_iter_number
+                  << " dt " << _dt
+                  << " a " << _a
+                  << " P " << P
+                  << " vnorm " << _vnorm
+                  << " E " << f_
+                  << " rms " << rms_
+                  << " nfev " << nfev_ << "\n";
+    }
+}
 
 } // namespace pele
 

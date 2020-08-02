@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 enable_language(CXX)
-ADD_DEFINITIONS(-std=c++0x -g)
+ADD_DEFINITIONS(-std=c++1z -g)
 ADD_DEFINITIONS(-Wall)
 
 #set OpenMP
@@ -37,11 +37,11 @@ include_directories(${pele_include})
 message("pele include directory ${pele_include}")
 
 # build the pele library
-FILE(GLOB pele_sources ${pele_include}/*.cpp)
+FILE(GLOB pele_sources ${pele_include}/*.c*)
 add_library(pele_lib ${pele_sources})
 
 # get all the source files
-FILE(GLOB sources *.cpp)
+FILE(GLOB sources *.c*)
 
 add_executable(test_main ${sources})
 target_link_libraries(test_main pele_lib gtest gtest_main pthread)

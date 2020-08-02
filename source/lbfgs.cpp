@@ -36,6 +36,7 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
 
 /**
  * Do one iteration iteration of the optimization algorithm
+ 
  */
 void LBFGS::one_iteration() {
     if (!func_initialized_) {
@@ -45,15 +46,19 @@ void LBFGS::one_iteration() {
     xold.assign(x_);
     gold.assign(g_);
     compute_lbfgs_step(step);
-    // Line search method
+    // // Line search method
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
     double stepnorm = line_search_method.line_search(x_, step);
     // double stepnorm = 1;
     // Line search method 2
     // double stepnorm = backtracking_linesearch(step);
-    // step taken 
+    // step taken
+    // std::cout << norm(step)  << "for iteration " << iter_number_ <<"\n";
+    // std::cout << norm(g_) << " norm g \n";
+
     
+    // double stepnorm  = 1; 
     if (verbosity_>1) {
         std::cout << g_ << " gradient new \n";
         std::cout << gold << " gradient old \n";
@@ -81,7 +86,7 @@ void LBFGS::update_memory(Array<double> x_old,
     int klocal = k_ % M_;
     double ys = 0;
     double yy = 0;
-
+    
     // define a dummy accumulator to help with exactly
     // calculating y
     // xsum_small_accumulator sacc_dummy;
@@ -143,30 +148,30 @@ void LBFGS::compute_lbfgs_step(Array<double> step)
     int i;
 
     alpha.assign(0.0);
-//     // loop backwards through the memory
-//     for (int j = jmax - 1; j >= jmin; --j) {
-//         i = j % M_;
-//         double alpha_tmp = 0;
-// #pragma simd reduction(+ : alpha_tmp)
-//         for (size_t j2 = 0; j2 < step.size(); ++j2){
-//             alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
-//             if (verbosity_>1) {
-//                 std::cout << rho_[i] << "rho_i"<< "rho value \n";
-//                 std::cout << s_[i * step.size() + j2] << " step value \n";
-//                 std::cout << step[j2] << "step[j2]\n ";
-//             }
-//         }
+    //     // loop backwards through the memory
+    //     for (int j = jmax - 1; j >= jmin; --j) {
+    //         i = j % M_;
+    //         double alpha_tmp = 0;
+    // #pragma simd reduction(+ : alpha_tmp)
+    //         for (size_t j2 = 0; j2 < step.size(); ++j2){
+    //             alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
+    //             if (verbosity_>1) {
+    //                 std::cout << rho_[i] << "rho_i"<< "rho value \n";
+    //                 std::cout << s_[i * step.size() + j2] << " step value \n";
+    //                 std::cout << step[j2] << "step[j2]\n ";
+    //             }
+    //         }
 
-// #pragma simd
-//         for (size_t j2 = 0; j2 < step.size(); ++j2){
-//             step[j2] -= alpha_tmp * y_[i * step.size() + j2];
-//         }
+    // #pragma simd
+    //         for (size_t j2 = 0; j2 < step.size(); ++j2){
+    //             step[j2] -= alpha_tmp * y_[i * step.size() + j2];
+    //         }
         
-//         alpha[i] = alpha_tmp;
-//         if (verbosity_>1) {
-//             std::cout << alpha_tmp << "alpha value\n";
-//         }
-//     }
+    //         alpha[i] = alpha_tmp;
+    //         if (verbosity_>1) {
+    //             std::cout << alpha_tmp << "alpha value\n";
+    //         }
+    //     }
 
 
     if (verbosity_>1) {
@@ -263,22 +268,22 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
     Eigen::VectorXd eigvals = hess.eigenvalues().real();
     minimum = eigvals.minCoeff();
     double maximum = eigvals.maxCoeff();
-
-    double steeptol = 1e0;
+    double steeptol = 1e-2;
     // controls fraction of the PSD factor added to hessian
     pf = 1000;
     double pf2 = 4;
     hessnorm = hess.norm()/eigvals.size();
-    if (minimum<0 and minimum/maximum<-steeptol) {
+
+    if (minimum<0) {
         // note minimum is negative
-        scale = 2*pf*hessnorm/(-minimum);
-        return hess - pf*minimum*Eigen::MatrixXd::Identity(x_.size(), x_.size());
+        scale = 0.5;
+        return Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
-    else if (minimum/maximum < 0) {
-        scale = 1.;
-        return hess + pf2*0.05*hessnorm*Eigen::MatrixXd::Identity(x_.size(), x_.size());
-    }
-    else {scale = 1;
+    // else if (minimum/maximum < 0) {
+    //     scale = 1.;
+    //     return hess + pf2*0.05*hessnorm*Eigen::MatrixXd::Identity(x_.size(), x_.size());
+    // }
+    else {scale = 100;
         return hess;}
 }
 

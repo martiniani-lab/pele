@@ -311,6 +311,7 @@ def set_compiler_env(compiler_id):
     does not alway choose the right compiler
     """
     env = os.environ.copy()
+    
     if compiler_id.lower() in ("unix"):
         print(env, 'eeenv')
         env["CC"] = (subprocess.check_output(["which", "gcc"])).decode(encoding).rstrip('\n')
@@ -325,7 +326,7 @@ def set_compiler_env(compiler_id):
     else:
         raise Exception("compiler_id not known")
     #this line only works is the build directory has been deleted
-    cmake_compiler_args = shlex.split("-D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
+    cmake_compiler_args = shlex.split("-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
                                       "-D CMAKE_LINKER={} -D CMAKE_AR={}"
                                       .format(env["CC"], env["CXX"], env["LD"], env["AR"]))
     return env, cmake_compiler_args

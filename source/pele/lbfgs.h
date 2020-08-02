@@ -85,7 +85,7 @@ private:
     // Calculates hess + delta I where delta makes the new eigenvalue positive
     Eigen::MatrixXd get_hessian_sparse_pos();
     Eigen::MatrixXd saved_hessian;
-    OldLineSearch line_search_method;
+    BacktrackingLineSearch line_search_method;
 
 public:
     /**

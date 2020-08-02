@@ -43,7 +43,7 @@ class CoordsAdaptor {
     size_t _natoms;  /** the number of non-rigid point particles */
     pele::Array<double> _coords;
     static const size_t _ndim = 3;
-
+    
 public:
     CoordsAdaptor(size_t nrigid, size_t natoms, pele::Array<double> coords)
         : _nrigid(nrigid),
@@ -117,7 +117,6 @@ public:
         size_t const istart = 3*_nrigid + 3*isite;
         return _coords.view(istart, istart+3);
     }
-
     pele::Array<double> get_atom_positions()
     {
         if (_natoms == 0) {
@@ -127,7 +126,6 @@ public:
 
         return _coords.view(6*_nrigid, 6*_nrigid + 3*_natoms);
     }
-
 };
 
 // forward definition of RBTopology needed for TrasnformAACluster
