@@ -7,39 +7,37 @@
 #include "array.h"
 #include "optimizer.h"
 
+
+// line search methods 
+#include "more_thuente.h"
+#include "linesearch.h"
+#include "optimizer.h"
+#include "nwpele.h"
+#include "backtracking.h"
+#include "bracketing.h"
+
 namespace pele{
 
 /**
  * An implementation of the standard gradient descent optimization algorithm in c++.
- * The learning rate (step size) is set via maxstep. Additionally, we use a backtracking linesearch.
+ * The learning rate (step size) is set via initial_step. defaults to backtracking line search 
  */
 class GradientDescent : public GradientOptimizer{
 private:
-    double max_f_rise_; /**< The maximum the function is allowed to rise in a
-                         * given stbisecting does a better jobep.  This is the criterion for the
-                         * backtracking line search.
-                         */
-    bool use_relative_f_; /**< If True, then max_f_rise is the relative
-                          * maximum the function is allowed to rise during
-                          * a step.
-                          * (f_new - f_old) / abs(f_old) < max_f_rise
-                          */
-
     Array<double> xold; //!< Coordinates before taking a step
-    Array<double> step; //!< Step size and direction
+    Array<double> step; //!< Step direction
     double inv_sqrt_size; //!< The inverse square root the the number of components
-
+    BacktrackingLineSearch line_search_method; // Line search method
 public:
     /**
      * Constructor
      */
     GradientDescent( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-            double tol = 1e-4)
+                     double tol = 1e-4, double stepsize = 0.05)
         : GradientOptimizer(potential, x0, tol),
-        max_f_rise_(1e-4),
-        use_relative_f_(false),
-        xold(x_.size()),
-        step(x_.size())
+          xold(x_.size()),
+          step(x_.size()),
+          line_search_method(this, stepsize)
     {
         // set precision of printing
         std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -63,32 +61,26 @@ public:
 
         // make a copy of the position and gradient
         xold.assign(x_);
-
+        //  really need to refactor and clean this up
+        Array<double> gold = g_.copy();
         // Gradient defines step direction
         step = g_.copy();
-
+        
         // reduce the stepsize if necessary
-        double stepnorm = backtracking_linesearch(step);
+        line_search_method.set_xold_gold_(xold, gold);
+        line_search_method.set_g_f_ptr(g_);
+        double stepnorm = line_search_method.line_search(x_, step);
 
         // print some status information
         if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)){
-            std::cout << "lbgs: " << iter_number_
-                << " E " << f_
-                << " rms " << rms_
-                << " nfev " << nfev_
-                << " step norm " << stepnorm << std::endl;
+            std::cout << "steepest descent: " << iter_number_
+                      << " E " << f_
+                      << " rms " << rms_
+                      << " nfev " << nfev_
+                      << " step norm " << stepnorm << std::endl;
         }
         iter_number_ += 1;
     }
-
-    // functions for setting the parameters
-    inline void set_max_f_rise(double max_f_rise) { max_f_rise_ = max_f_rise; }
-
-    inline void set_use_relative_f(int use_relative_f)
-    {
-        use_relative_f_ = (bool) use_relative_f;
-    }
-
     /**
      * reset the optimizer to start a new minimization from x0
      *
@@ -103,71 +95,6 @@ public:
         x_.assign(x0);
         initialize_func_gradient();
     }
-
-private:
-
-    /**
-     * Take the step and do a backtracking linesearch if necessary.
-     * Apply the maximum step size constraint and ensure that the function
-     * does not rise more than the allowed amount.
-     *
-     * Same as LBFGS.
-     */
-    double backtracking_linesearch(Array<double> step)
-    {
-        double fnew;
-        double factor = 1.;
-        double stepnorm = compute_pot_norm(step);
-
-        // make sure the step is no larger than maxstep_
-        if (factor * stepnorm > maxstep_) {
-            factor = maxstep_ / stepnorm;
-        }
-
-        int nred;
-        int nred_max = 10;
-        for (nred = 0; nred < nred_max; ++nred){
-            #pragma simd
-            for (size_t j2 = 0; j2 < x_.size(); ++j2){
-                x_[j2] = xold[j2] + factor * step[j2];
-            }
-            compute_func_gradient(x_, fnew, g_);
-
-            double df = fnew - f_;
-            if (use_relative_f_) {
-                double absf = 1e-100;
-                if (f_ != 0) {
-                    absf = std::abs(f_);
-                }
-                df /= absf;
-            }
-            if (df < max_f_rise_){
-                break;
-            } else {
-                factor *= 0.5;
-                if (verbosity_ > 2) {
-                    std::cout
-                        << "energy increased by " << df
-                        << " to " << fnew
-                        << " from " << f_
-                        << " reducing step norm to " << factor * stepnorm
-                        << std::endl;
-                }
-            }
-        }
-
-        if (nred >= nred_max){
-            // possibly raise an error here
-            if (verbosity_ > 0) {
-                std::cout << "warning: the line search backtracked too many times" << std::endl;
-            }
-        }
-
-        f_ = fnew;
-        rms_ = norm(g_) * inv_sqrt_size;
-        return stepnorm * factor;
-    }
-
 };
 }
 

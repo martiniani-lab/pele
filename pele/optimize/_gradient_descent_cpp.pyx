@@ -24,8 +24,6 @@ cdef extern from "pele/gradient_descent.h" namespace "pele":
 
         void set_tol(double) except +
         void set_maxstep(double) except +
-        void set_max_f_rise(double) except +
-        void set_use_relative_f(int) except +
         void set_max_iter(int) except +
         void set_iprint(int) except +
         void set_verbosity(int) except +
@@ -36,13 +34,10 @@ cdef class _Cdef_GradientDescent_CPP(_pele_opt.GradientOptimizer):
     """
     cdef _pele.BasePotential pot
 
-    def __cinit__(self, x0, potential, double tol=1e-5, double maxstep=0.1,
-                  double maxErise=1e-4, int iprint=-1,
+    def __cinit__(self, x0, potential, double tol=1e-5, int iprint=-1,
                   energy=None, gradient=None,
-                  int nsteps=10000, int verbosity=0, events=None, logger=None,
-                  rel_energy=False):
+                  int nsteps=10000, int verbosity=0, events=None, logger=None):
         potential = as_cpp_potential(potential, verbose=verbosity>0)
-
         self.pot = potential
         if logger is not None:
             print "warning c++ gradient descent is ignoring logger"
@@ -52,13 +47,9 @@ cdef class _Cdef_GradientDescent_CPP(_pele_opt.GradientOptimizer):
                              _pele.Array[double](<double*> x0c.data, x0c.size),
                              tol) )
         cdef cppGradientDescent* gd_ptr = <cppGradientDescent*> self.thisptr.get()
-        gd_ptr.set_maxstep(maxstep)
-        gd_ptr.set_max_f_rise(maxErise)
         gd_ptr.set_max_iter(nsteps)
         gd_ptr.set_verbosity(verbosity)
         gd_ptr.set_iprint(iprint)
-        if rel_energy:
-            gd_ptr.set_use_relative_f(1)
 
         cdef np.ndarray[double, ndim=1] g_
         if energy is not None and gradient is not None:
