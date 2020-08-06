@@ -13,7 +13,7 @@ double BacktrackingLineSearch::line_search(Array<double> &x, Array<double> step)
     eig_eq_pele(step_direction, step);
     // std::cout << step << "\n";
     Scalar f = opt_->get_f();
-    stpsize = 0.01;
+    stpsize = 1.0;
     // force a unit step direction
 
     LSFunc(f, xvec, gradvec, stpsize, step_direction, xoldvec, params);

@@ -104,7 +104,7 @@ TEST(LbfgsLJ, SetFuncGradientWorks){
 TEST(LbfgsRosenbrock, Rosebrock_works){
     auto rosenbrock = std::make_shared<pele::RosenBrock> ();
     Array<double> x0(2, 0);
-    pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 10, 8);
+    pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 1, 1);
     lbfgs.run(20);
     Array<double> x = lbfgs.get_x();
     std::cout << x << "\n";

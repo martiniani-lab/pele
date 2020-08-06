@@ -13,7 +13,7 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       max_f_rise_(1e-4),
       use_relative_f_(false),
       rho_(M_),
-      H0_(0.1),
+      H0_(0.0001),
       k_(0),
       alpha(M_),
       xold(x_.size()),
@@ -22,7 +22,7 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       exact_g_(x_.size()),
       step(x_.size()),
       T_(T),
-      line_search_method(this, 1)
+      line_search_method(this, 3)
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -274,16 +274,16 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
     double pf2 = 4;
     hessnorm = hess.norm()/eigvals.size();
 
-    if (minimum<0) {
+    if (minimum<0 and std::abs(minimum/maximum) >= steeptol) {
         // note minimum is negative
-        scale = 0.5;
+        scale = std::abs(H0_);
         return Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
-    // else if (minimum/maximum < 0) {
-    //     scale = 1.;
-    //     return hess + pf2*0.05*hessnorm*Eigen::MatrixXd::Identity(x_.size(), x_.size());
-    // }
-    else {scale = 100;
+    else if (std::abs(minimum/maximum) < steeptol and minimum < 0) {
+        scale = 1.;
+        return hess - 2*minimum*Eigen::MatrixXd::Identity(x_.size(), x_.size());
+    }
+    else {scale =1;
         return hess;}
 }
 
