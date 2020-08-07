@@ -11,20 +11,14 @@ double BacktrackingLineSearch::line_search(Array<double> &x, Array<double> step)
     eig_eq_pele(gradvec, gold_);
     
     eig_eq_pele(step_direction, step);
-    // std::cout << step << "\n";
     Scalar f = opt_->get_f();
-    stpsize = 1.0;
     // force a unit step direction
-
     LSFunc(f, xvec, gradvec, stpsize, step_direction, xoldvec, params);
-    
     pele_eq_eig(x, xvec);
     pele_eq_eig(g_, gradvec);
     pele_eq_eig(step, step_direction);
     opt_->set_f(f);
     opt_->set_rms(norm(g_)/sqrt(x.size()));
-    // std::cout << stpsize << " ----------------------------------------- final step size \n";
-    // std::cout << stpsize*opt_->compute_pot_norm(step) << "\n";
     return stpsize*opt_->compute_pot_norm(step);
 };
 
@@ -62,6 +56,7 @@ if(step <= Scalar(0))
         const Scalar fx_init = fx;
         // Projection of gradient on the search direction
         const Scalar dg_init = grad.dot(drt);
+
         // Make sure d points to a descent direction
         if(dg_init > 0)
             std::logic_error("the moving direction increases the objective function value");
@@ -75,7 +70,6 @@ if(step <= Scalar(0))
                 x.noalias() = xp + step * drt;
                 // Evaluate this candidate
                 fx = func_grad_wrapper(x, grad);
-
                 if(fx > fx_init + step * test_decr)
                     {
                         width = dec;

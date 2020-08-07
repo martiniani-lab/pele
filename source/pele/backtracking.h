@@ -5,7 +5,6 @@
 // Copyright (C) 2016-2020 Yixuan Qiu <yixuan.qiu@cos.name>
 // Under MIT license
 
-#include "lsparameters.h"
 #ifndef PELE_LINE_SEARCH_BACKTRACKING_H
 #define PELE_LINE_SEARCH_BACKTRACKING_H
 #include "optimizer.h"
@@ -23,7 +22,8 @@ namespace pele {
     class BacktrackingLineSearch : LineSearch {
     public:
         BacktrackingLineSearch(GradientOptimizer *opt,
-                               Scalar max_step_       = Scalar(1.0),
+                               Scalar stpsize_        = Scalar(1.0),
+                               Scalar max_step_       = Scalar(10.0),
                                int    m_              = 6,
                                Scalar epsilon_        = Scalar(1e-5),
                                Scalar epsilon_rel_    = Scalar(1e-5),
@@ -51,10 +51,12 @@ namespace pele {
             gdum(xsize),
             xvec(xsize),
             gradvec(xsize),
-            stpsize(Scalar(1.0)),
+            stpsize(stpsize_),
             step_direction(xsize),
             xoldvec(xsize)
         {
+            std::cout << stpsize << "stpsize \n";
+            std::cout << max_step_ << "max step \n";
         };
         virtual ~BacktrackingLineSearch() {};
         inline void set_xold_gold_(Array<double> &xold, Array<double>  &gold) {
@@ -84,12 +86,9 @@ namespace pele {
         Vector xvec;
         Vector gradvec;
         Scalar stpsize;
-    Vector step_direction;
-    Vector xoldvec;
+        Vector step_direction;
+        Vector xoldvec;
     };
-
-
-
 }  // pele
 
 #endif  // end #ifndef PELE_LINE_SEARCH_BACKTRACKING_H

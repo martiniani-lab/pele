@@ -334,6 +334,16 @@ public:
         return newarray;
     }
 
+    Array<dtype> operator-(){
+        Array<dtype> newarray(size());
+        const_iterator iter = (*this).begin();
+        for (dtype &val : newarray) {
+            val = -*iter;
+            ++iter;
+        }
+        return newarray;
+    }
+
     /**
      * Compound Assignment Operators += -= *=
      */

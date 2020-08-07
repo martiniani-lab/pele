@@ -33,8 +33,7 @@ namespace pele{
 
 
 /**
- * An implementation of the LBFGS optimization algorithm in c++.  This
- * Implementation uses a backtracking linesearch.
+ * An implementation of the LBFGS optimization algorithm in c++.
  */
 class LBFGS : public GradientOptimizer{
 private:

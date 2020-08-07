@@ -33,7 +33,7 @@ public:
      * Constructor
      */
     GradientDescent( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-                     double tol = 1e-4, double stepsize = 0.05)
+                     double tol = 1e-4, double stepsize = 0.005)
         : GradientOptimizer(potential, x0, tol),
           xold(x_.size()),
           step(x_.size()),
@@ -64,7 +64,7 @@ public:
         //  really need to refactor and clean this up
         Array<double> gold = g_.copy();
         // Gradient defines step direction
-        step = g_.copy();
+        step = -g_.copy();
         
         // reduce the stepsize if necessary
         line_search_method.set_xold_gold_(xold, gold);

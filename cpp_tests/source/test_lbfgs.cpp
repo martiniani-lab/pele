@@ -1,4 +1,3 @@
-#include "pele/array.h"
 #include "pele/lj.h"
 #include "pele/atlj.h"
 #include "pele/lbfgs.h"
@@ -6,6 +5,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include "pele/gradient_descent.h"
 #include <gtest/gtest.h>
 #include <cmath>
 #include <memory>
@@ -104,8 +104,9 @@ TEST(LbfgsLJ, SetFuncGradientWorks){
 TEST(LbfgsRosenbrock, Rosebrock_works){
     auto rosenbrock = std::make_shared<pele::RosenBrock> ();
     Array<double> x0(2, 0);
-    pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 1, 1);
-    lbfgs.run(20);
+    // pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 1, 1);
+    pele ::GradientDescent lbfgs(rosenbrock, x0);
+    lbfgs.run(100000);
     Array<double> x = lbfgs.get_x();
     std::cout << x << "\n";
     cout << lbfgs.get_nfev() << " get_nfev() \n";
@@ -115,6 +116,7 @@ TEST(LbfgsRosenbrock, Rosebrock_works){
     std::cout << x0 << "\n" << " \n";
     std::cout << "this is okay" << "\n";
 }
+
 
 
 TEST(LbfgsSaddle, Saddle_works){

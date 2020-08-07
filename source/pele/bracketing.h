@@ -5,7 +5,6 @@
 // Copyright (C) 2016-2020 Yixuan Qiu <yixuan.qiu@cos.name>
 // Under MIT license
 
-#include "lsparameters.h"
 #ifndef PELE_LINE_SEARCH_BRACKETING_H
 #define PELE_LINE_SEARCH_BRACKETING_H
 #include "optimizer.h"

@@ -389,6 +389,18 @@ TEST(ArrayTest, SubtractOperator){
 }
 
 
+TEST(ArrayTest, NegationOperator){
+    pele::Array<double> v {1, 2, 3};
+    pele::Array<double> vl;
+    vl = -v;
+    EXPECT_EQ(vl[0], -1);
+    EXPECT_EQ(vl[1], -2);
+    EXPECT_EQ(vl[2], -3);
+    EXPECT_EQ(v[0], 1);
+    EXPECT_EQ(v[1], 2);
+    EXPECT_EQ(v[2], 3); 
+}
+
 
 
 ///////////

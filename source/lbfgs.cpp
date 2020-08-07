@@ -1,4 +1,3 @@
-
 #include "pele/lbfgs.h"
 #include <memory>
 #include <iostream>
