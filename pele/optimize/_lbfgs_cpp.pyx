@@ -16,7 +16,7 @@ from pele.optimize._pele_opt cimport shared_ptr
 cimport cython
 from cpython cimport bool as cbool
 
-# import the externally defined ljbfgs implementation
+# import the externally defined lbfgs implementation
 cdef extern from "pele/lbfgs.h" namespace "pele":
     cdef cppclass cppLBFGS "pele::LBFGS":
         cppLBFGS(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, int, int) except +

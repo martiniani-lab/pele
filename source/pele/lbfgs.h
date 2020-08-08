@@ -16,6 +16,7 @@
 #include "eigen_interface.h"
 
 // line search methods 
+#include "lsparameters.h"
 #include "more_thuente.h"
 #include "linesearch.h"
 #include "optimizer.h"

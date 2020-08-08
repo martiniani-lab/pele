@@ -56,6 +56,7 @@ to a constraint on the energy change.  If the energy rises more than a given amo
 step size is reduce until the condition is satisfied.  Note: this is what makes
 lbfgs potentially fail with non-Hamiltonian systems.
 
+
 .. autosummary::
    :toctree: generated/
 
@@ -97,4 +98,5 @@ from ._fire import *
 from ._gradient_descent_cpp import GradientDescent_CPP
 from ._modified_fire_cpp import ModifiedFireCPP
 from ._lbfgs_cpp import LBFGS_CPP
+from ._mxopt import MixedOptimizer_CPP as MixedOptimizer
 from ._quench import *

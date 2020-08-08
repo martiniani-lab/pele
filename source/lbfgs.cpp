@@ -27,7 +27,6 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
     inv_sqrt_size = 1 / sqrt(x_.size());
     std::cout << "lbfgs constructed" << "M=" << M_ <<" T=" <<T_ << "\n";
-
     // allocate space for s_ and y_
     s_ = Array<double>(x_.size() * M_);
     y_ = Array<double>(x_.size() * M_);
@@ -219,8 +218,6 @@ void LBFGS::precondition(Array<double> step) {
     }
     Eigen::VectorXd q(step.size());
     q.setZero();
-    Eigen::VectorXd gg(step.size());
-    eig_eq_pele(gg, g_);
     if ((iter_number_)%T_ ==0) {
         q = update_solver(r);
     }
@@ -274,15 +271,25 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
     hessnorm = hess.norm()/eigvals.size();
 
     if (minimum<0 and std::abs(minimum/maximum) >= steeptol) {
+#if OPTIMIZER_DEBUG_LEVEL >= 1
+        std::cout << "minimum less than 0" << " convexity tolerance condition not satisfied \n";
+#endif  
         // note minimum is negative
         scale = std::abs(H0_);
         return Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
     else if (std::abs(minimum/maximum) < steeptol and minimum < 0) {
+#if OPTIMIZER_DEBUG_LEVEL >= 1
+        std::cout << "minimum less than 0" << " convexity tolerance condition satisfied \n";
+#endif                
         scale = 1.;
         return hess - 2*minimum*Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
-    else {scale =1;
+    else {
+#if OPTIMIZER_DEBUG_LEVEL >= 1
+        std::cout << "minimum greater than 0" << " convexity tolerance condition satisfied \n";
+#endif 
+        scale =1;
         return hess;}
 }
 
