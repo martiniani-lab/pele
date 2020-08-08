@@ -12,7 +12,7 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       max_f_rise_(1e-4),
       use_relative_f_(false),
       rho_(M_),
-      H0_(0.0001),
+      H0_(0.000001),
       k_(0),
       alpha(M_),
       xold(x_.size()),
@@ -21,7 +21,7 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
       exact_g_(x_.size()),
       step(x_.size()),
       T_(T),
-      line_search_method(this, 3)
+      line_search_method(this, 1)
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -271,24 +271,25 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
     hessnorm = hess.norm()/eigvals.size();
 
     if (minimum<0 and std::abs(minimum/maximum) >= steeptol) {
+        
 #if OPTIMIZER_DEBUG_LEVEL >= 1
         std::cout << "minimum less than 0" << " convexity tolerance condition not satisfied \n";
-#endif  
+#endif
+        
         // note minimum is negative
         scale = std::abs(H0_);
         return Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
     else if (std::abs(minimum/maximum) < steeptol and minimum < 0) {
-#if OPTIMIZER_DEBUG_LEVEL >= 1
-        std::cout << "minimum less than 0" << " convexity tolerance condition satisfied \n";
-#endif                
         scale = 1.;
         return hess - 2*minimum*Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
     else {
+        
 #if OPTIMIZER_DEBUG_LEVEL >= 1
         std::cout << "minimum greater than 0" << " convexity tolerance condition satisfied \n";
-#endif 
+#endif                                          \
+    
         scale =1;
         return hess;}
 }

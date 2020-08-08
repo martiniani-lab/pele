@@ -1,4 +1,5 @@
 #include "pele/backtracking.h"
+#include "pele/lsparameters.h"
 
 
 
@@ -9,16 +10,20 @@ double BacktrackingLineSearch::line_search(Array<double> &x, Array<double> step)
 
     eig_eq_pele(xoldvec, xold_);
     eig_eq_pele(gradvec, gold_);
-    
     eig_eq_pele(step_direction, step);
     Scalar f = opt_->get_f();
     // force a unit step direction
+    Scalar stpsize = initial_stpsize;
     LSFunc(f, xvec, gradvec, stpsize, step_direction, xoldvec, params);
     pele_eq_eig(x, xvec);
     pele_eq_eig(g_, gradvec);
     pele_eq_eig(step, step_direction);
     opt_->set_f(f);
     opt_->set_rms(norm(g_)/sqrt(x.size()));
+#if OPTIMIZER_DEBUG_LEVEL >= 1
+    std::cout << stpsize << " stepsize final \n";
+    std::cout << opt_->compute_pot_norm(step) << "\n";
+#endif
     return stpsize*opt_->compute_pot_norm(step);
 };
 

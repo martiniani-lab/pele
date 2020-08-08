@@ -5,6 +5,7 @@
 #include <memory>
 #include "base_potential.h"
 #include "array.h"
+#include "debug.h"
 
 
 

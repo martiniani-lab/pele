@@ -11,6 +11,9 @@
 #include "linesearch.h"
 #include "lsparameters.h"
 #include "eigen_interface.h"
+#include "debug.h"
+
+
 
 
 
@@ -22,7 +25,7 @@ namespace pele {
     class BacktrackingLineSearch : LineSearch {
     public:
         BacktrackingLineSearch(GradientOptimizer *opt,
-                               Scalar stpsize_        = Scalar(1.0),
+                               Scalar inital_stpsize_        = Scalar(1.0),
                                Scalar max_step_       = Scalar(10.0),
                                int    m_              = 6,
                                Scalar epsilon_        = Scalar(1e-5),
@@ -51,11 +54,11 @@ namespace pele {
             gdum(xsize),
             xvec(xsize),
             gradvec(xsize),
-            stpsize(stpsize_),
+            initial_stpsize(inital_stpsize_),
             step_direction(xsize),
             xoldvec(xsize)
         {
-            std::cout << stpsize << "stpsize \n";
+            std::cout << inital_stpsize_ << "stpsize \n";
             std::cout << max_step_ << "max step \n";
         };
         virtual ~BacktrackingLineSearch() {};
@@ -85,7 +88,7 @@ namespace pele {
         Array<double> gdum;
         Vector xvec;
         Vector gradvec;
-        Scalar stpsize;
+        Scalar initial_stpsize;
         Vector step_direction;
         Vector xoldvec;
     };
