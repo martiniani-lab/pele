@@ -12,7 +12,7 @@
  *
  * Rule of thumb: add an extra level for printing 1 dimensional vectors and 2 levels for printing 2 dimensional vectors       
  */
-#define OPTIMIZER_DEBUG_LEVEL 1
+#define OPTIMIZER_DEBUG_LEVEL 0
 
 
 #endif PELE_FLAGS /* end debug flags */

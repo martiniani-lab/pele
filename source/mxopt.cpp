@@ -2,6 +2,8 @@
 #include "Eigen/src/Core/Matrix.h"
 #include "pele/debug.h"
 #include "pele/eigen_interface.h"
+#include "pele/lsparameters.h"
+#include "pele/optimizer.h"
 #include <algorithm>
 #include <complex>
 #include <memory>
@@ -174,40 +176,39 @@ bool MixedOptimizer::convexity_check() {
     Eigen::VectorXd eigvals = hessian.eigenvalues().real();
     minimum = eigvals.minCoeff();
     double maximum = eigvals.maxCoeff();
+    double convexity_estimate = std::abs(minimum/maximum);
     
-    if (minimum<0 and std::abs(minimum/maximum) >= conv_tol_) {
-        // note minimum is negative
+    if (minimum<0 and convexity_estimate >= conv_tol_) {
+            // note minimum is negative
 #if OPTIMIZER_DEBUG_LEVEL >= 1
-        std::cout << "minimum less than 0" << " convexity tolerance condition not satisfied \n";
+            std::cout << "minimum less than 0" << " convexity tolerance condition not satisfied \n";
 #endif        
-        minimum_less_than_zero =true; 
+            minimum_less_than_zero =true; 
         return true;
-
     }
-    
-    else if (std::abs(minimum/maximum) < conv_tol_ and minimum < 0) {
+    else if (convexity_estimate < conv_tol_ and minimum < 0) {
 
 #if OPTIMIZER_DEBUG_LEVEL >= 1
         std::cout << "minimum less than 0" << " convexity tolerance condition satisfied \n";
 #endif                
         scale = 1.;
-        minimum_less_than_zero = true;
-        return false;
-    }
-    
-    else {scale =1;
+minimum_less_than_zero = true;
+            return false;
+        }
+        
+        else {scale =1;
 #if OPTIMIZER_DEBUG_LEVEL >= 1
-        std::cout << "minimum greater than 0" << " convexity tolerance condition satisfied \n";
+            std::cout << "minimum greater than 0" << " convexity tolerance condition satisfied \n";
 #endif                        
-        minimum_less_than_zero = false;
-        return false;}
+            minimum_less_than_zero = false;
+            return false;}
 
-}
+        }
 
 
-/**
- * Gets the hessian. involves a dense hessian for now. #TODO replace with a sparse hessian
- */
+    /**
+     * Gets the hessian. involves a dense hessian for now. #TODO replace with a sparse hessian
+     */
 Eigen::MatrixXd MixedOptimizer::get_hessian() {
     Array<double> hess(xold.size()*xold.size());
     Array<double> grad(xold.size());
@@ -248,16 +249,18 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
     }
     // this can mess up accuracy if we aren't close to a minimum preferably switch
     // sparse
+    
     if (minimum_less_than_zero) {
         hessian -= conv_factor_*minimum*Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
+
     Eigen::VectorXd r(step.size());
     Eigen::VectorXd q(step.size());
     q.setZero();
     eig_eq_pele(r, step);
     // negative sign to switch direction
     q = -scale*hessian.ldlt().solve(r);
-    pele_eq_eig(step, r);
+    pele_eq_eig(step, q);
 }
 
 

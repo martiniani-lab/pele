@@ -22,7 +22,7 @@ double BacktrackingLineSearch::line_search(Array<double> &x, Array<double> step)
     opt_->set_rms(norm(g_)/sqrt(x.size()));
 #if OPTIMIZER_DEBUG_LEVEL >= 1
     std::cout << stpsize << " stepsize final \n";
-    std::cout << opt_->compute_pot_norm(step) << "\n";
+    std::cout << opt_->compute_pot_norm(step) << " step norm \n";
 #endif
     return stpsize*opt_->compute_pot_norm(step);
 };
@@ -58,58 +58,61 @@ if(step <= Scalar(0))
             std::invalid_argument("'step' must be positive");
 
         // Save the function value at the current x
-        const Scalar fx_init = fx;
+        const Scalar fx_init = fx;        
         // Projection of gradient on the search direction
         const Scalar dg_init = grad.dot(drt);
-
+#if OPTIMIZER_DEBUG_LEVEL >= 3
+        std::cout << dg_init << " dginit must be less than 0 \n";
+#endif
         // Make sure d points to a descent direction
         if(dg_init > 0)
-            std::logic_error("the moving direction increases the objective function value");
+            { 
+                throw std::logic_error("the moving direction increases the objective function value");}
         const Scalar test_decr = param.ftol * dg_init;
         Scalar width;
 
         int iter;
         for(iter = 0; iter < param.max_linesearch; iter++)
-            {
-                // x_{k+1} = x_k + step * d_k
-                x.noalias() = xp + step * drt;
-                // Evaluate this candidate
-                fx = func_grad_wrapper(x, grad);
-                if(fx > fx_init + step * test_decr)
                     {
-                        width = dec;
-                    } else {
-                    // Armijo condition is met
-                    if(param.linesearch == LINESEARCH_BACKTRACKING_ARMIJO)
-                        break;
-                    const Scalar dg = grad.dot(drt);
-                    if(dg < param.wolfe * dg_init)
-                        {
-                            width = inc;
-                        } else {
-                        // Regular Wolfe condition is met
-                        if(param.linesearch == LINESEARCH_BACKTRACKING_WOLFE)
-                            break;
-                        if(dg > -param.wolfe * dg_init)
+                        // x_{k+1} = x_k + step * d_k
+                        x.noalias() = xp + step * drt;
+                        // Evaluate this candidate
+                        fx = func_grad_wrapper(x, grad);
+                        if(fx > fx_init + step * test_decr)
                             {
                                 width = dec;
                             } else {
-                            // Strong Wolfe condition is met
-                            break;
+                            // Armijo condition is met
+                            if(param.linesearch == LINESEARCH_BACKTRACKING_ARMIJO)
+                                break;
+                            const Scalar dg = grad.dot(drt);
+                            if(dg < param.wolfe * dg_init)
+                                {
+                                    width = inc;
+                                } else {
+                                // Regular Wolfe condition is met
+                                if(param.linesearch == LINESEARCH_BACKTRACKING_WOLFE)
+                                    break;
+                                if(dg > -param.wolfe * dg_init)
+                                    {
+                                        width = dec;
+                                    } else {
+                                    // Strong Wolfe condition is met
+                                    break;
+                                }
+                            }
                         }
-                    }
-                }
 
-                if(iter >= param.max_linesearch)
-                    throw std::runtime_error("the line search routine reached the maximum number of iterations");
+                        if(iter >= param.max_linesearch)
+                            throw std::runtime_error("the line search routine reached the maximum number of iterations");
 
-                if(step < param.min_step)
-                    throw std::runtime_error("the line search step became smaller than the minimum value allowed");
+                        if(step < param.min_step)
+                            throw std::runtime_error("the line search step became smaller than the minimum value allowed");
 
-                if(step > param.max_step)
-                    throw std::runtime_error("the line search step became larger than the maximum value allowed");
+                        if(step > param.max_step)
+                            throw std::runtime_error("the line search step became larger than the maximum value allowed");
 
-                step *= width;
+                        step *= width;
             }
 
 }

@@ -281,6 +281,9 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
         return Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
     else if (std::abs(minimum/maximum) < steeptol and minimum < 0) {
+#if OPTIMIZER_DEBUG_LEVEL >= 1
+        std::cout << "minimum less than 0" << " convexity tolerance condition satisfied \n";
+#endif
         scale = 1.;
         return hess - 2*minimum*Eigen::MatrixXd::Identity(x_.size(), x_.size());
     }
@@ -288,8 +291,7 @@ Eigen::MatrixXd LBFGS::get_hessian_sparse_pos() {
         
 #if OPTIMIZER_DEBUG_LEVEL >= 1
         std::cout << "minimum greater than 0" << " convexity tolerance condition satisfied \n";
-#endif                                          \
-    
+#endif
         scale =1;
         return hess;}
 }
