@@ -106,7 +106,7 @@ TEST(LbfgsRosenbrock, Rosebrock_works){
     Array<double> x0(2, 0);
     // pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 1, 1);
     pele ::GradientDescent lbfgs(rosenbrock, x0);
-    lbfgs.run(100000);
+    lbfgs.run(10);
     Array<double> x = lbfgs.get_x();
     std::cout << x << "\n";
     cout << lbfgs.get_nfev() << " get_nfev() \n";

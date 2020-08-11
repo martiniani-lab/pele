@@ -38,7 +38,7 @@ cdef class _Cdef_LBFGS_CPP(_pele_opt.GradientOptimizer):
     """
     cdef _pele.BasePotential pot
     
-    def __cinit__(self, x0, potential, double tol=1e-5, int M=4, double maxstep=0.1, 
+    def __cinit__(self, potential, x0, double tol=1e-5, int M=4, double maxstep=0.1, 
                   double maxErise=1e-4, double H0=0.1, int iprint=-1,
                   energy=None, gradient=None,
                   int nsteps=10000, int verbosity=0, events=None, logger=None,

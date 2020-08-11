@@ -20,7 +20,7 @@ from cpython cimport bool as cbool
 # import the externally defined gradient descent implementation
 cdef extern from "pele/gradient_descent.h" namespace "pele":
     cdef cppclass cppGradientDescent "pele::GradientDescent":
-        cppGradientDescent(shared_ptr[_pele.cBasePotential], _pele.Array[double], double) except +
+        cppGradientDescent(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, double) except +
 
         void set_tol(double) except +
         void set_maxstep(double) except +
@@ -34,9 +34,9 @@ cdef class _Cdef_GradientDescent_CPP(_pele_opt.GradientOptimizer):
     """
     cdef _pele.BasePotential pot
 
-    def __cinit__(self, x0, potential, double tol=1e-5, int iprint=-1,
+    def __cinit__(self, potential, x0, double tol=1e-5, int iprint=-1,
                   energy=None, gradient=None,
-                  int nsteps=10000, int verbosity=0, events=None, logger=None):
+                  int nsteps=10000, int verbosity=0, events=None, logger=None, double stepsize = 0.005):
         potential = as_cpp_potential(potential, verbose=verbosity>0)
         self.pot = potential
         if logger is not None:
@@ -45,7 +45,7 @@ cdef class _Cdef_GradientDescent_CPP(_pele_opt.GradientOptimizer):
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppGradientDescent(self.pot.thisptr,
                              _pele.Array[double](<double*> x0c.data, x0c.size),
-                             tol) )
+                             tol, stepsize))
         cdef cppGradientDescent* gd_ptr = <cppGradientDescent*> self.thisptr.get()
         gd_ptr.set_max_iter(nsteps)
         gd_ptr.set_verbosity(verbosity)

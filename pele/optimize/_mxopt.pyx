@@ -28,7 +28,7 @@ cdef class _Cdef_MixedOptimizer_CPP(_pele_opt.GradientOptimizer):
     """This class is the python interface for the c++ MixedOptimizer implementation
     """
     cdef _pele.BasePotential pot
-    def __cinit__(self, x0, potential, double tol=1e-5, int T=1, double step=1, double conv_tol = 1e-2,
+    def __cinit__(self, potential, x0,  double tol=1e-5, int T=1, double step=1, double conv_tol = 1e-2,
                   double conv_factor=2, int nsteps=10000):
         potential = as_cpp_potential(potential, verbose=True)
 

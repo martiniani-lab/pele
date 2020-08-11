@@ -34,7 +34,6 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
 
 /**
  * Do one iteration iteration of the optimization algorithm
- 
  */
 void LBFGS::one_iteration() {
     if (!func_initialized_) {

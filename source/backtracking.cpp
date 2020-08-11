@@ -1,5 +1,9 @@
 #include "pele/backtracking.h"
+#include "pele/array.h"
+#include "pele/base_potential.h"
 #include "pele/lsparameters.h"
+#include <cmath>
+#include <complex>
 
 
 
@@ -10,10 +14,17 @@ double BacktrackingLineSearch::line_search(Array<double> &x, Array<double> step)
 
     eig_eq_pele(xoldvec, xold_);
     eig_eq_pele(gradvec, gold_);
+    // if the step is too large (greater than 1/20 the box size, force scale it down)
+    Scalar stpsize = initial_stpsize;
+    // absolute original stepnorm
+    double absolute_step_norm = norm(step);
+    if (absolute_step_norm*initial_stpsize>0.6) {
+        stpsize *= 0.6/absolute_step_norm;
+    }
     eig_eq_pele(step_direction, step);
     Scalar f = opt_->get_f();
-    // force a unit step direction
-    Scalar stpsize = initial_stpsize;
+    // start with the initial stepsize
+    
     LSFunc(f, xvec, gradvec, stpsize, step_direction, xoldvec, params);
     pele_eq_eig(x, xvec);
     pele_eq_eig(g_, gradvec);
@@ -23,8 +34,9 @@ double BacktrackingLineSearch::line_search(Array<double> &x, Array<double> step)
 #if OPTIMIZER_DEBUG_LEVEL >= 1
     std::cout << stpsize << " stepsize final \n";
     std::cout << opt_->compute_pot_norm(step) << " step norm \n";
+    std::cout << stpsize*opt_->compute_pot_norm(step) << "absolute step size \n";
 #endif
-    return stpsize*opt_->compute_pot_norm(step);
+    return stpsize*norm(step);
 };
 
 /**
@@ -60,6 +72,9 @@ if(step <= Scalar(0))
         // Save the function value at the current x
         const Scalar fx_init = fx;        
         // Projection of gradient on the search direction
+        std::cout << grad << "graaaad \n";
+        Vector gradinit = grad;
+        Vector y_vec;
         const Scalar dg_init = grad.dot(drt);
 #if OPTIMIZER_DEBUG_LEVEL >= 3
         std::cout << dg_init << " dginit must be less than 0 \n";
@@ -76,31 +91,25 @@ if(step <= Scalar(0))
                     {
                         // x_{k+1} = x_k + step * d_k
                         x.noalias() = xp + step * drt;
+                        
                         // Evaluate this candidate
                         fx = func_grad_wrapper(x, grad);
+                        y_vec = grad-gradinit;
+                        // Scalar H0 = std::abs(step*drt.dot(y_vec)/y_vec.dot(y_vec));
+                        // if (step*drt.norm() > 0.1*(H0)*grad.norm()) {
+                        //     std::cout << step*drt.norm() << "step norm\n";
+                        //     std::cout << 0.1*H0*grad.norm() << "curvature estimate \n";
+                        //     step = 0.1*H0*grad.norm()/drt.norm();
+                        //     x.noalias() = xp + step*drt;
+                        //     fx = func_grad_wrapper(x, grad);
+                        // } 
                         if(fx > fx_init + step * test_decr)
                             {
                                 width = dec;
                             } else {
                             // Armijo condition is met
-                            if(param.linesearch == LINESEARCH_BACKTRACKING_ARMIJO)
-                                break;
-                            const Scalar dg = grad.dot(drt);
-                            if(dg < param.wolfe * dg_init)
-                                {
-                                    width = inc;
-                                } else {
-                                // Regular Wolfe condition is met
-                                if(param.linesearch == LINESEARCH_BACKTRACKING_WOLFE)
-                                    break;
-                                if(dg > -param.wolfe * dg_init)
-                                    {
-                                        width = dec;
-                                    } else {
-                                    // Strong Wolfe condition is met
-                                    break;
-                                }
-                            }
+
+                            break;
                         }
 
                         if(iter >= param.max_linesearch)
@@ -113,12 +122,8 @@ if(step <= Scalar(0))
                             throw std::runtime_error("the line search step became larger than the maximum value allowed");
 
                         step *= width;
-            }
-
+        }
 }
-
-
-
 
 
 }  // pele

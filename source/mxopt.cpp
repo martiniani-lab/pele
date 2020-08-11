@@ -29,9 +29,11 @@ MixedOptimizer::MixedOptimizer( std::shared_ptr<pele::BasePotential> potential,
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
     inv_sqrt_size = 1 / sqrt(x_.size());
     std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
+    
 #if OPTIMIZER_DEBUG_LEVEL >= 1
-    std::cout << "Mixed optimizer constructed" << "M=" <<" T=" <<T_ << "\n";
+    std::cout << "Mixed optimizer constructed" << "T=" <<T_ << "\n";
 #endif
+    std::cout << H0_ << "\n";
 }
 /**
  * Does one iteration of the optimization algorithm
@@ -94,8 +96,6 @@ void MixedOptimizer::one_iteration() {
     iter_number_ += 1;
 
 }
-
-
 
 
 void MixedOptimizer::update_H0_(Array<double> x_old,
