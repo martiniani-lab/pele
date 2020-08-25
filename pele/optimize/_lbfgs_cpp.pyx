@@ -1,248 +1,88 @@
+"""
+# distutils: language = C++
+"""
+import sys
 
-#include "pele/lbfgs.h"
-#include <memory>
-#include <iostream>
-#include <limits>
+import numpy as np
 
-namespace pele {
+from pele.potentials import _pele
+from pele.potentials cimport _pele
+from pele.optimize import Result
+from pele.potentials._pythonpotential import as_cpp_potential
 
-LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-        double tol, int M)
-    : GradientOptimizer(potential, x0, tol),
-      M_(M),
-      max_f_rise_(1e-4),
-      use_relative_f_(false),
-      rho_(M_),
-      H0_(0.1),
-      k_(0),
-      alpha(M_),
-      xold(x_.size()),
-      gold(x_.size()),
-      step(x_.size())
-{
-    // set precision of printing
-    std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
+cimport numpy as np
+cimport pele.optimize._pele_opt as _pele_opt
+from pele.optimize._pele_opt cimport shared_ptr
+cimport cython
+from cpython cimport bool as cbool
 
-    inv_sqrt_size = 1 / sqrt(x_.size());
+# import the externally defined ljbfgs implementation
+cdef extern from "pele/lbfgs.h" namespace "pele":
+    cdef cppclass cppLBFGS "pele::LBFGS":
+        cppLBFGS(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, int) except +
 
-    // allocate space for s_ and y_
-    s_ = Array<double>(x_.size() * M_);
-    y_ = Array<double>(x_.size() * M_);
-}
+        void set_H0(double) except +
+        void set_tol(double) except +
+        void set_maxstep(double) except +
+        void set_max_f_rise(double) except +
+        void set_use_relative_f(int) except +
+        void set_max_iter(int) except +
+        void set_iprint(int) except +
+        void set_verbosity(int) except +
 
-/**
-* Do one iteration iteration of the optimization algorithm
-*/
-void LBFGS::one_iteration()
-{
-    if (!func_initialized_) {
-        initialize_func_gradient();
-    }
-
-    // make a copy of the position and gradient
-    xold.assign(x_);
-    gold.assign(g_);
-
-    // get the stepsize and direction from the LBFGS algorithm
-    compute_lbfgs_step(step);
-
-    // reduce the stepsize if necessary
-    double stepnorm = backtracking_linesearch(step);
-
-    // update the LBFGS memeory
-    update_memory(xold, gold, x_, g_);
-
-    // print some status information
-    if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)){
-        std::cout << "lbgs: " << iter_number_
-            << " E " << f_
-            << " rms " << rms_
-            << " nfev " << nfev_
-            << " step norm " << stepnorm << std::endl;
-    }
-    iter_number_ += 1;
-}
-
-void LBFGS::update_memory(
-        Array<double> x_old,
-        Array<double> g_old,
-        Array<double> x_new,
-        Array<double> g_new)
-{
-    // update the lbfgs memory
-    // This updates s_, y_, rho_, and H0_, and k_
-    int klocal = k_ % M_;
-    double ys = 0;
-    double yy = 0;
-    #pragma simd reduction( + : ys, yy)
-    for (size_t j2 = 0; j2 < x_.size(); ++j2){
-        size_t ind_j2 = klocal * x_.size() + j2;
-        y_[ind_j2] = g_new[j2] - g_old[j2];
-        s_[ind_j2] = x_new[j2] - x_old[j2];
-        ys += y_[ind_j2] * s_[ind_j2];
-        yy += y_[ind_j2] * y_[ind_j2];
-    }
-
-    if (ys == 0.) {
-        if (verbosity_ > 0) {
-            std::cout << "warning: resetting YS to 1." << std::endl;
-        }
-        ys = 1.;
-    }
-
-    rho_[klocal] = 1. / ys;
-
-    if (yy == 0.) {
-        if (verbosity_ > 0) {
-            std::cout << "warning: resetting YY to 1." << std::endl;
-        }
-        yy = 1.;
-    }
-    H0_ = ys / yy;
-
-    // increment k
-    k_ += 1;
-}
-
-void LBFGS::compute_lbfgs_step(Array<double> step)
-{
-    if (k_ == 0){
-        // take a conservative first step
-        double gnorm = norm(g_);
-        if (gnorm > 1.) {
-            gnorm = 1. / gnorm;
-        }
-        double prefactor =  -gnorm * H0_;
-        #pragma simd
-        for (size_t j2 = 0; j2 < x_.size(); ++j2){
-            step[j2] = prefactor * g_[j2];
-        }
-        return;
-    }
-
-    // copy the gradient into step
-    step.assign(g_);
-
-    int jmin = std::max(0, k_ - M_);
-    int jmax = k_;
-    int i;
-
-    alpha.assign(0.0);
-    // loop backwards through the memory
-    for (int j = jmax - 1; j >= jmin; --j) {
-        i = j % M_;
-        double alpha_tmp = 0;
-        #pragma simd reduction(+ : alpha_tmp)
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
-        }
-        #pragma simd
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            step[j2] -= alpha_tmp * y_[i * step.size() + j2];
-        }
-        alpha[i] = alpha_tmp;
-    }
-
-    // scale the step size by H0, invert the step to point downhill
-    #pragma simd
-    for (size_t j2 = 0; j2 < step.size(); ++j2){
-        step[j2] *= -H0_;
-    }
-
-    // loop forwards through the memory
-    for (int j = jmin; j < jmax; ++j) {
-        i = j % M_;
-        double beta = 0;
-        #pragma simd reduction(+ : beta)
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
-        }
-        double alpha_beta = alpha[i] - beta;
-        #pragma simd
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
-        }
-    }
-}
-
-double LBFGS::backtracking_linesearch(Array<double> step)
-{
-    double fnew;
-
-    // if the step is pointing uphill, invert it
-    if (dot(step, g_) > 0.){
-        if (verbosity_ > 1) {
-            std::cout << "warning: step direction was uphill.  inverting" << std::endl;
-        }
-        #pragma simd
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            step[j2] *= -1;
-        }
-    }
-
-    double factor = 1.;
-    double stepnorm = compute_pot_norm(step);
-
-    // make sure the step is no larger than maxstep_
-    if (factor * stepnorm > maxstep_) {
-        factor = maxstep_ / stepnorm;
-    }
-
-    int nred;
-    int nred_max = 10;
-    for (nred = 0; nred < nred_max; ++nred){
-        #pragma simd
-        for (size_t j2 = 0; j2 < x_.size(); ++j2){
-            x_[j2] = xold[j2] + factor * step[j2];
-        }
-        compute_func_gradient(x_, fnew, g_);
-
-        double df = fnew - f_;
-        if (use_relative_f_) {
-            double absf = 1e-100;
-            if (f_ != 0) {
-                absf = std::abs(f_);
-            }
-            df /= absf;
-        }
-        if (df < max_f_rise_){
-            break;
-        } else {
-            factor *= 0.5;
-            if (verbosity_ > 2) {
-                std::cout
-                    << "energy increased by " << df
-                    << " to " << fnew
-                    << " from " << f_
-                    << " reducing step norm to " << factor * stepnorm
-                    << " H0 " << H0_ << std::endl;
-            }
-        }
-    }
-
-    if (nred >= nred_max){
-        // possibly raise an error here
-        if (verbosity_ > 0) {
-            std::cout << "warning: the line search backtracked too many times" << std::endl;
-        }
-    }
-
-    f_ = fnew;
-    rms_ = norm(g_) * inv_sqrt_size;
-    return stepnorm * factor;
-}
-
-void LBFGS::reset(pele::Array<double> &x0)
-{
-    if (x0.size() != x_.size()){
-        throw std::invalid_argument("The number of degrees of freedom (x0.size()) cannot change when calling reset()");
-    }
-    k_ = 0;
-    iter_number_ = 0;
-    nfev_ = 0;
-    x_.assign(x0);
-    initialize_func_gradient();
-}
+        double get_H0() except +
 
 
-}
+
+cdef class _Cdef_LBFGS_CPP(_pele_opt.GradientOptimizer):
+    """This class is the python interface for the c++ LBFGS implementation
+    """
+    cdef _pele.BasePotential pot
+    
+    def __cinit__(self, x0, potential, double tol=1e-5, int M=4, double maxstep=0.1, 
+                  double maxErise=1e-4, double H0=0.1, int iprint=-1,
+                  energy=None, gradient=None,
+                  int nsteps=10000, int verbosity=0, events=None, logger=None,
+                  rel_energy=False):
+        potential = as_cpp_potential(potential, verbose=verbosity>0)
+
+        self.pot = potential
+        if logger is not None:
+            print "warning c++ LBFGS is ignoring logger"
+        cdef np.ndarray[double, ndim=1] x0c = np.array(x0, dtype=float)
+        self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
+                new cppLBFGS(self.pot.thisptr, 
+                             _pele.Array[double](<double*> x0c.data, x0c.size),
+                             tol, M) )
+        cdef cppLBFGS* lbfgs_ptr = <cppLBFGS*> self.thisptr.get()
+        lbfgs_ptr.set_H0(H0)
+        lbfgs_ptr.set_maxstep(maxstep)
+        lbfgs_ptr.set_max_f_rise(maxErise)
+        lbfgs_ptr.set_max_iter(nsteps)
+        lbfgs_ptr.set_verbosity(verbosity)
+        lbfgs_ptr.set_iprint(iprint)
+        if rel_energy:
+            lbfgs_ptr.set_use_relative_f(1)
+        
+        cdef np.ndarray[double, ndim=1] g_  
+        if energy is not None and gradient is not None:
+            g_ = gradient
+            self.thisptr.get().set_func_gradient(energy, _pele.Array[double](<double*> g_.data, g_.size))
+
+        self.events = events
+        if self.events is None: 
+            self.events = []
+    
+    def set_H0(self, H0):
+        cdef cppLBFGS* lbfgs_ptr = <cppLBFGS*> self.thisptr.get()
+        lbfgs_ptr.set_H0(float(H0))
+    
+    def get_result(self):
+        cdef cppLBFGS* lbfgs_ptr = <cppLBFGS*> self.thisptr.get()
+        res = super(_Cdef_LBFGS_CPP, self).get_result()
+        res["H0"] = float(lbfgs_ptr.get_H0())
+        return res
+
+class LBFGS_CPP(_Cdef_LBFGS_CPP):
+    """This class is the python interface for the c++ LBFGS implementation
+    """
