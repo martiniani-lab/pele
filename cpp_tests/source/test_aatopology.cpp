@@ -7,7 +7,6 @@
 #include "pele/vecn.h"
 #include "pele/matrix.h"
 #include "pele/distance.h"
-
 using pele::Array;
 using pele::VecN;
 using pele::MatrixNM;
