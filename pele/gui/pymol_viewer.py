@@ -19,10 +19,8 @@ class PymolViewer(object):
         the child end of the commumication pipe
     """
     def __init__(self, load_coords_pymol):
-#        mp.Process.__init__(self)
-#        self.conn = conn
-        
-#        import pymol
+        #        mp.Process.__init__(self)
+        #        import pymol
         print("finishing launching pymol")
         pymol.finish_launching() #  must do this before anything else
         print("done launching pymol")

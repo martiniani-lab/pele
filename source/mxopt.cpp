@@ -1,5 +1,7 @@
 #include "pele/mxopt.h"
 #include "Eigen/src/Core/Matrix.h"
+#include "pele/array.h"
+#include "pele/base_potential.h"
 #include "pele/debug.h"
 #include "pele/eigen_interface.h"
 #include "pele/lsparameters.h"
@@ -23,7 +25,7 @@ MixedOptimizer::MixedOptimizer( std::shared_ptr<pele::BasePotential> potential,
       T_(T),
       conv_tol_(conv_tol),
       conv_factor_(conv_factor),
-      line_search_method(this, 1)
+      line_search_method(this, step)
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -31,7 +33,7 @@ MixedOptimizer::MixedOptimizer( std::shared_ptr<pele::BasePotential> potential,
     std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
     
 #if OPTIMIZER_DEBUG_LEVEL >= 1
-    std::cout << "Mixed optimizer constructed" << "T=" <<T_ << "\n";
+    std::cout << "Mixed optimizer constructed" << "T=" << T_ << "\n";
 #endif
     std::cout << H0_ << "\n";
 }
@@ -179,11 +181,11 @@ bool MixedOptimizer::convexity_check() {
     double convexity_estimate = std::abs(minimum/maximum);
     
     if (minimum<0 and convexity_estimate >= conv_tol_) {
-            // note minimum is negative
+        // note minimum is negative
 #if OPTIMIZER_DEBUG_LEVEL >= 1
-            std::cout << "minimum less than 0" << " convexity tolerance condition not satisfied \n";
+        std::cout << "minimum less than 0" << " convexity tolerance condition not satisfied \n";
 #endif        
-            minimum_less_than_zero =true; 
+        minimum_less_than_zero =true; 
         return true;
     }
     else if (convexity_estimate < conv_tol_ and minimum < 0) {
@@ -192,8 +194,8 @@ bool MixedOptimizer::convexity_check() {
         std::cout << "minimum less than 0" << " convexity tolerance condition satisfied \n";
 #endif                
         scale = 1.;
-minimum_less_than_zero = true;
-            return false;
+        minimum_less_than_zero = true;
+        return false;
         }
         
         else {scale =1;
@@ -203,7 +205,7 @@ minimum_less_than_zero = true;
             minimum_less_than_zero = false;
             return false;}
 
-        }
+}
 
 
     /**
@@ -262,8 +264,6 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
     q = -scale*hessian.ldlt().solve(r);
     pele_eq_eig(step, q);
 }
-
-
 }
 
 

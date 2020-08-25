@@ -61,7 +61,7 @@ from ._frozen_dof import FrozenPotentialWrapper
 # from lj import *
 from ._lj_cpp import LJ, BLJCut
 from ._frenkel import Frenkel
-from ._hs_wca_cpp import *
+from ._hs_wca_cpp import HS_WCA
 from ._inversepower_cpp import InversePower
 from ._inversepower_stillinger_cpp import InversePowerStillinger
 from ._inversepower_stillinger_cut_cpp import InversePowerStillingerCut
@@ -83,4 +83,3 @@ from .ljcut import *
 from .xyspin import *
 from .morse import Morse
 from .ml import MLCost
-

@@ -19,7 +19,7 @@ def _compute_LBFGS_step(
     cdef np.ndarray[double, ndim=1] stp
     cdef np.ndarray[double, ndim=1] a
     cdef np.ndarray[long int, ndim=1] indices
-    
+
     M = s.shape[0]
     N = G.size
     assert s.shape[0] == M

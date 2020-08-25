@@ -18,9 +18,12 @@ double BacktrackingLineSearch::line_search(Array<double> &x, Array<double> step)
     Scalar stpsize = initial_stpsize;
     // absolute original stepnorm
     double absolute_step_norm = norm(step);
-    if (absolute_step_norm*initial_stpsize>0.6) {
-        stpsize *= 0.6/absolute_step_norm;
-    }
+    //     if (absolute_step_norm*initial_stpsize>0.3) {
+    //         stpsize *= 0.3/absolute_step_norm;
+    // #if OPTIMIZER_DEBUG_LEVEL >= 1
+    //         std::cout << stpsize << " step size rescaled \n";
+    // #endif
+    //     }
     eig_eq_pele(step_direction, step);
     Scalar f = opt_->get_f();
     // start with the initial stepsize
@@ -72,7 +75,7 @@ if(step <= Scalar(0))
         // Save the function value at the current x
         const Scalar fx_init = fx;        
         // Projection of gradient on the search direction
-        std::cout << grad << "graaaad \n";
+
         Vector gradinit = grad;
         Vector y_vec;
         const Scalar dg_init = grad.dot(drt);
