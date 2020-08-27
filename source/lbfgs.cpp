@@ -63,6 +63,7 @@ void LBFGS::one_iteration()
     iter_number_ += 1;
 }
 
+
 void LBFGS::update_memory(
                           Array<double> x_old,
                           Array<double> g_old,

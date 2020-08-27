@@ -15,6 +15,9 @@ from past.utils import old_div
 import numpy as np
 
 from pele.optimize import LBFGS, MYLBFGS, Fire, Result, LBFGS_CPP, ModifiedFireCPP
+from scipy.integrate import RK45, RK23
+from scipy.integrate import Radau
+from scipy.integrate import BDF
 
 __all__ = ["lbfgs_scipy", "fire", "lbfgs_py", "mylbfgs", "cg",
            "steepest_descent", "bfgs_scipy", "lbfgs_cpp"]
@@ -190,4 +193,83 @@ def mylbfgs(coords, pot, **kwargs):
 def modifiedfire_cpp(coords, pot, **kwargs):
     modifiedfire = ModifiedFireCPP(coords, pot, **kwargs)
     return modifiedfire.run()
+
+def ode_scipy_naive(coords, pot, t_bound=1000, tol=1e-4, nsteps=20000, convergence_check=None, solver_type='rk45', **kwargs):
+    """ This uses rk45 in a minimizer like approach to find the ode
+        The idea is to solve for the path
+         dx/dt = - \\grad{E}
+    Parameters
+    ----------
+    coords: array
+        coords input for the quench
+    pot: array
+        potential class that has a
+        getenergygradient function that we need for stepping
+    nsteps: int
+        maximum number of steps
+    tol: float
+        gives a tolerance for making sure that we have found the minima
+    kwargs: ...
+        extra arguments for the integrator
+    Return
+    ----------
+    result container with steps and function evaluations
+    """
+
+    class feval_pot:
+        """ wrapper class that calculates function evaluations
+            and makes sure to point the gradient in the right direction
+        """
+        def __init__(self):
+            self.nfev = 0
+        def get_gradient(self, t, x):
+            self.nfev +=1
+            return -pot.getEnergyGradient(x.copy())[1]
+
+    # This code seems to work for these three solvers from scipy
+    if solver_type == 'Radau':
+        solver = Radau
+    elif solver_type == 'RK23':
+        solver = RK23
+    else:
+        solver = RK45
+
+    
+    # def get_gradient(t, x):
+    #     # gets just the gradient from the potential
+    #     return pot.getEnergyGradient(x)[1]
+    function_evaluate_pot = feval_pot()
+    solver = solver(function_evaluate_pot.get_gradient, 
+                    0, coords, t_bound,
+                    rtol=1e-8, atol=1e-8)
+    # min_step = 10 * np.abs(np.nextafter(t, self.direction * np.inf) - t)
+    converged = False
+    n = 0
+    if convergence_check == None:
+        convergence_check = lambda g: np.linalg.norm(g)<tol
+
+    x_ = np.full(len(coords), np.nan)
+    while not converged and n<nsteps:
+        xold = x_
+        # solver.h_abs = 
+        solver.step()
+        x_ = solver.dense_output().y_old        
+        n+=1
+        converged = convergence_check(pot.getEnergyGradient(x_)[1])
+    res = Result()
+    res.coords = x_
+    res.nfev = function_evaluate_pot.nfev
+    print(res.nfev)
+    res.coords = x_
+    res.energy = pot.getEnergy(x_)
+    res.rms = 0
+    res.grad = 0
+    res.nsteps = n
+    res.success = converged
+    return res
+        
+
+    
+
+
 
