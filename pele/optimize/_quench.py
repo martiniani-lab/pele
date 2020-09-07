@@ -13,11 +13,14 @@ from builtins import str
 from builtins import range
 from past.utils import old_div
 import numpy as np
+from scipy.integrate.quadpack import quad_explain
 
 from pele.optimize import LBFGS, MYLBFGS, Fire, Result, LBFGS_CPP, ModifiedFireCPP
 from scipy.integrate import RK45, RK23
 from scipy.integrate import Radau
 from scipy.integrate import BDF
+from .rk import RK45_LS, RK23_LS
+from scipy.integrate import LSODA
 
 __all__ = ["lbfgs_scipy", "fire", "lbfgs_py", "mylbfgs", "cg",
            "steepest_descent", "bfgs_scipy", "lbfgs_cpp"]
@@ -225,23 +228,24 @@ def ode_scipy_naive(coords, pot, t_bound=1000, tol=1e-4, nsteps=20000, convergen
         def get_gradient(self, t, x):
             self.nfev +=1
             return -pot.getEnergyGradient(x.copy())[1]
+        def get_energy_gradient(self, x):
+            self.nfev +=1
+            return pot.getEnergyGradient(x.copy())
 
-    # This code seems to work for these three solvers from scipy
-    if solver_type == 'Radau':
-        solver = Radau
-    elif solver_type == 'RK23':
-        solver = RK23
-    else:
-        solver = RK45
-
-    
+    # This code seems to work for these two solvers
+    # if solver_type == 'RK23':
+    #     solver = RK23_LS
+    # else:
+    #     solver = RK23_LS
+    solver = Radau
     # def get_gradient(t, x):
     #     # gets just the gradient from the potential
     #     return pot.getEnergyGradient(x)[1]
     function_evaluate_pot = feval_pot()
-    solver = solver(function_evaluate_pot.get_gradient, 
+    solver = solver(function_evaluate_pot.get_gradient,
+                    # function_evaluate_pot.get_energy_gradient,
                     0, coords, t_bound,
-                    rtol=1e-8, atol=1e-8)
+                    rtol=1e-3, atol=1e-3)
     # min_step = 10 * np.abs(np.nextafter(t, self.direction * np.inf) - t)
     converged = False
     n = 0
@@ -251,7 +255,6 @@ def ode_scipy_naive(coords, pot, t_bound=1000, tol=1e-4, nsteps=20000, convergen
     x_ = np.full(len(coords), np.nan)
     while not converged and n<nsteps:
         xold = x_
-        # solver.h_abs = 
         solver.step()
         x_ = solver.dense_output().y_old        
         n+=1
