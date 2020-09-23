@@ -197,6 +197,10 @@ def modifiedfire_cpp(coords, pot, **kwargs):
     modifiedfire = ModifiedFireCPP(coords, pot, **kwargs)
     return modifiedfire.run()
 
+
+
+
+
 def ode_scipy_naive(coords, pot, t_bound=1000, tol=1e-4, nsteps=20000, convergence_check=None, solver_type='rk45', **kwargs):
     """ This uses rk45 in a minimizer like approach to find the ode
         The idea is to solve for the path
@@ -270,9 +274,8 @@ def ode_scipy_naive(coords, pot, t_bound=1000, tol=1e-4, nsteps=20000, convergen
     res.nsteps = n
     res.success = converged
     return res
-        
 
-    
+
 
 
 

@@ -7,16 +7,23 @@ from pele.optimize import Result
 import numpy as np
 import julia
 from diffeqpy import de
+
+
+
 j = julia.Julia()
 
 
 # def get_negative_grad(x, p, t):
-#     return - 2*
+#     return - 2*x
+
+solvers = [de.Rosenbrock23(autodiff=False), de.Rosenbrock32(autodiff=False), de.CVODE_BDF()]
+solvers_explicit = [de.CVODE_Adams()]
+solvers_stiffness = [de.AutoTsit5(de.Rosenbrock23(autodiff=False))]
 
 
 
-def ode_julia_naive(coords, pot, tol=1e-4, nsteps=20000,
-                    convergence_check=None, solver_type=de.Tsit5, **kwargs):
+def ode_julia_naive(coords, pot, tol=1e-4, nsteps=2000,
+                    convergence_check=None, solver_type=de.ROCK2(), reltol = 1e-5, abstol=1e-5, **kwargs):
     class feval_pot:
         """ wrapper class that makes sure the function is right
         """
@@ -32,12 +39,14 @@ def ode_julia_naive(coords, pot, tol=1e-4, nsteps=20000,
     converged = False
     n = 0
     if convergence_check == None:
-        convergence_check = lambda g: np.linalg.norm(g)<tol
+        convergence_check = lambda g: np.max(g)<tol
 
     # initialize ode problem
-    tspan = (0, float('inf'))
+    tspan = (0.0, 10.0)
+   # tspan
+    # tspan = (0.0, 10.0) 
     prob = de.ODEProblem(function_evaluate_pot.get_negative_grad, coords, tspan)
-    integrator = de.init(prob, solver_type())
+    integrator = de.init(prob, solver_type, reltol=reltol, abstol=abstol)
     x_ = np.full(len(coords), np.nan)
     while not converged and n<nsteps:
         xold = x_
@@ -45,6 +54,8 @@ def ode_julia_naive(coords, pot, tol=1e-4, nsteps=20000,
         x_ = integrator.u
         n+=1
         converged = convergence_check(de.get_du(integrator))
+        if converged:
+            print(de.get_du(integrator))
     res = Result()
     res.coords = x_
     res.energy = pot.getEnergy(x_)

@@ -1,5 +1,6 @@
-
 #include "pele/lbfgs.h"
+#include "pele/array.h"
+#include "pele/optimizer.h"
 #include <memory>
 #include <iostream>
 #include <limits>
@@ -22,9 +23,7 @@ LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
-
     inv_sqrt_size = 1 / sqrt(x_.size());
-
     // allocate space for s_ and y_
     s_ = Array<double>(x_.size() * M_);
     y_ = Array<double>(x_.size() * M_);

@@ -15,7 +15,10 @@
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
-#include "eigen_interface.h"
+#include "eigen_interface.h"                    \
+                                                \
+                                                \
+
 
 // line search methods 
 #include "more_thuente.h"

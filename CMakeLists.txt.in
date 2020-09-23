@@ -14,6 +14,40 @@ IF(APPLE)
   SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 ENDIF(APPLE)
 
+
+##################################### sundials #######################################
+# TODO: figure out how to remove the extra setup for sundials
+
+set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+set(SUNDIALS_INCLUDE_DIR
+  /home/praharsh/.local/include
+  CACHE PATH "Location of SUNDIALS header files")
+set(SUNDIALS_LIBRARY_DIR
+  /home/praharsh/.local/lib
+  CACHE PATH "Location of SUNDIALS libraries")
+
+
+# Find the SUNDIALS libraries
+find_library(SUNDIALS_SOLVER_LIB
+  sundials_cvode ${SUNDIALS_LIBRARY_DIR}
+  DOC "CVODE library")
+
+find_library(SUNDIALS_NVEC_LIB
+  sundials_nvecserial ${SUNDIALS_LIBRARY_DIR}
+  DOC "NVECTOR_SERIAL library")
+
+find_library(SUNDIALS_MANYVEC_LIB
+  sundials_nvecmanyvector ${SUNDIALS_LIBRARY_DIR}
+  DOC "NVECTOR_MANYVECTOR library")
+
+set(SUNDIALS_LIBRARIES
+  -L${SUNDIALS_LIBRARY_DIR}
+  ${SUNDIALS_SOLVER_LIB}
+  ${SUNDIALS_NVEC_LIB}
+  ${SUNDIALS_MANYVEC_LIB}
+  ${SUNDIALS_EXTRA_LIBS})
+#####################################################################################
+
 message("python include dirs: ${PYTHON_INCLUDE_DIRS}")
 message("python ldflags: ${PYTHON_LDFLAGS}")
 message("numpy include dirs: ${numpy_include}")
@@ -41,6 +75,7 @@ message("pele include directory: ${pele_include}")
 # NOTE: GLOBBING MIGHT BE A BAD IDEA WHEN ADDING FILES https://stackoverflow.com/questions/1027247/is-it-better-to-specify-source-files-with-glob-or-each-file-individually-in-cmake
 # This is a likely source of undefined symbol errors
 include_directories(${pele_include})
+include_directories(${SUNDIALS_INCLUDE_DIR})
 FILE(GLOB pele_sources ${pele_include}/*.c*)
 add_library(pele_lib SHARED ${pele_sources})
 
@@ -49,6 +84,7 @@ function(make_cython_lib cython_cxx_source)
   string(REGEX REPLACE ".cxx$" "" library_name ${library_name})
   add_library(${library_name} SHARED ${cython_cxx_source})
   target_link_libraries(${library_name} pele_lib)
+  target_link_libraries(${library_name} ${SUNDIALS_LIBRARIES})
   set_target_properties(${library_name} PROPERTIES PREFIX "")
   message("making library ${library_name} from source ${cython_cxx_source}")
 endfunction(make_cython_lib)

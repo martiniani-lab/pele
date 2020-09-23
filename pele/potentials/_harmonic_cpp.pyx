@@ -38,7 +38,6 @@ cdef class Harmonic(_pele.BasePotential):
         self.k = k
         self.com = com
         self.bdim = bdim
-        
         if self.com is True:
             self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new cHarmonicCOM(_pele.Array[double](<double*> corigin.data, corigin.size), 
                                                                    self.k, self.bdim) )

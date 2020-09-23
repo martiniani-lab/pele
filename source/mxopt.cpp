@@ -31,6 +31,7 @@ MixedOptimizer::MixedOptimizer( std::shared_ptr<pele::BasePotential> potential,
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
     inv_sqrt_size = 1 / sqrt(x_.size());
     std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
+
     
 #if OPTIMIZER_DEBUG_LEVEL >= 1
     std::cout << "Mixed optimizer constructed" << "T=" << T_ << "\n";
