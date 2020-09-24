@@ -18,7 +18,7 @@ ENDIF(APPLE)
 ##################################### sundials #######################################
 # TODO: figure out how to remove the extra setup for sundials
 
-set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+# set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
 set(SUNDIALS_INCLUDE_DIR
   /home/praharsh/.local/include
   CACHE PATH "Location of SUNDIALS header files")

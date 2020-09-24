@@ -212,14 +212,14 @@ public :
 
     /**
      * Return true if the termination condition is satisfied, false otherwise
-         */
-        virtual bool stop_criterion_satisfied()
-        {
-            if (! func_initialized_) {
-                initialize_func_gradient();
-            }
-            return rms_ <= tol_;
+     */
+    virtual bool stop_criterion_satisfied()
+    {
+        if (! func_initialized_) {
+            initialize_func_gradient();
         }
+        return rms_ <= tol_;
+    }
 
 protected :
 

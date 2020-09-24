@@ -15,10 +15,7 @@
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
-#include "eigen_interface.h"                    \
-                                                \
-                                                \
-
+#include "eigen_interface.h"
 
 // line search methods 
 #include "more_thuente.h"
@@ -27,6 +24,13 @@
 #include "nwpele.h"
 #include "backtracking.h"
 #include "bracketing.h"
+
+#include <cvode/cvode.h>               /* access to CVODE                 */
+#include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
+#include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
+#include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
+
+
 
 extern "C" {
 #include "xsum.h"
@@ -50,7 +54,7 @@ private:
 
 
     Array<double> xold; //!< Coordinates before taking a step
-Array<double> gold; //!< Gradient before taking a step
+    Array<double> gold; //!< Gradient before taking a step
     Array<double> step; //!< Step size and direction
     double inv_sqrt_size; //!< The inverse square root the the number of components
     // Preconditioning
