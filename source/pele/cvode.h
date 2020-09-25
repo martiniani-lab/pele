@@ -57,6 +57,10 @@ typedef struct UserData_
     double atol;
     size_t nfev;                // number of gradient(function) evaluations
     size_t nhev;                // number of hessian (jacobian) evaluations
+    double stored_energy;       // stored energy
+    Array<double>    stored_grad;      // stored gradient. need to pass this on to 
+    std::shared_ptr<pele::BasePotential> pot_;
+
 } * UserData;
 
 /**
@@ -75,18 +79,18 @@ private:
     N_Vector x0_N;
 public:
     void one_iteration();
-    int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-    int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
-            void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-    
-
-protected:
-    double H02;
+    // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+    // static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+    //                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
     CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potential,
                       const pele::Array<double> x0,
                       double tol=1e-5,
                       double rtol=1e-4,
                       double atol=1e-4);
+
+protected:
+    double H02;
+
 };
 
 /**
@@ -107,6 +111,10 @@ inline N_Vector N_Vector_eq_pele(pele::Array<double> x)
 inline pele::Array<double> pele_eq_N_Vector(N_Vector x) {
     return pele::Array<double>(NV_DATA_S(x), N_VGetLength(x));
 }
+
+static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+               void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
 } // namespace pele
 #endif
