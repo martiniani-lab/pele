@@ -20,6 +20,37 @@ endif()
 
 #cmake_policy(SET CMP0015 NEW)
 
+
+# set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+set(SUNDIALS_INCLUDE_DIR
+  /home/praharsh/.local/include
+  CACHE PATH "Location of SUNDIALS header files")
+set(SUNDIALS_LIBRARY_DIR
+  /home/praharsh/.local/lib
+  CACHE PATH "Location of SUNDIALS libraries")
+
+
+# Find the SUNDIALS libraries
+find_library(SUNDIALS_SOLVER_LIB
+  sundials_cvode ${SUNDIALS_LIBRARY_DIR}
+  DOC "CVODE library")
+
+find_library(SUNDIALS_NVEC_LIB
+  sundials_nvecserial ${SUNDIALS_LIBRARY_DIR}
+  DOC "NVECTOR_SERIAL library")
+
+find_library(SUNDIALS_MANYVEC_LIB
+  sundials_nvecmanyvector ${SUNDIALS_LIBRARY_DIR}
+  DOC "NVECTOR_MANYVECTOR library")
+
+set(SUNDIALS_LIBRARIES
+  -L${SUNDIALS_LIBRARY_DIR}
+  ${SUNDIALS_SOLVER_LIB}
+  ${SUNDIALS_NVEC_LIB}
+  ${SUNDIALS_MANYVEC_LIB}
+  ${SUNDIALS_EXTRA_LIBS})
+#####################################################################################
+
 # Add and compile the gtest library
 set(gtest_src ../gtest)
 set(gtest_binary_dir googletest)
@@ -34,6 +65,7 @@ message("gtest_libs ${gtest_libs}")
 # set the pele include directory
 set(pele_include ../../source)
 include_directories(${pele_include})
+include_directories(${SUNDIALS_INCLUDE_DIR})
 message("pele include directory ${pele_include}")
 
 # build the pele library
@@ -45,6 +77,7 @@ FILE(GLOB sources *.c*)
 
 add_executable(test_main ${sources})
 target_link_libraries(test_main pele_lib gtest gtest_main pthread)
+target_link_libraries(test_main ${SUNDIALS_LIBRARIES})
 
 add_subdirectory(benchmarks)
 
@@ -52,6 +85,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     include(CodeCoverage)
     setup_target_for_coverage(${PROJECT_NAME}_coverage test_main coverage)
+
     #target_link_libraries(test_main gcov)
     #target_link_libraries(pele_lib gcov)
 endif()

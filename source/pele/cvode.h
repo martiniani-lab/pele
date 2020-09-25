@@ -57,10 +57,9 @@ typedef struct UserData_
     double atol;
     size_t nfev;                // number of gradient(function) evaluations
     size_t nhev;                // number of hessian (jacobian) evaluations
-    double stored_energy;       // stored energy
-    Array<double>    stored_grad;      // stored gradient. need to pass this on to 
+    double stored_energy = 0;       // stored energy
+    Array<double>    stored_grad;      // stored gradient. need to pass this on to
     std::shared_ptr<pele::BasePotential> pot_;
-
 } * UserData;
 
 /**
@@ -69,14 +68,15 @@ typedef struct UserData_
  */
 class CVODEBDFOptimizer : public GradientOptimizer {
 private:
-    UserData udata;
+    UserData_ udata;
     void *cvode_mem; /* CVODE memory         */
     size_t N_size;
     SUNMatrix A;
     SUNLinearSolver LS;
-    double t;
-    double t1;
+    double t0;
+    double tN;
     N_Vector x0_N;
+    Array<double> xold;
 public:
     void one_iteration();
     // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -100,7 +100,10 @@ inline N_Vector N_Vector_eq_pele(pele::Array<double> x)
 {
     N_Vector y;
     y = N_VNew_Serial(x.size());
-    NV_DATA_S(y) = x.data();
+    for (size_t i = 0; i < x.size(); ++i) {
+        NV_Ith_S(y, i) = x[i];
+    }
+    // NV_DATA_S(y) = x.copy().data();
     return y;
 }
 
@@ -109,12 +112,21 @@ inline N_Vector N_Vector_eq_pele(pele::Array<double> x)
  * wraps the sundials data in a pele array and passes it on
  */
 inline pele::Array<double> pele_eq_N_Vector(N_Vector x) {
-    return pele::Array<double>(NV_DATA_S(x), N_VGetLength(x));
+    Array<double> y = Array<double>(N_VGetLength(x));
+    for (size_t i = 0; i < y.size(); ++i) {
+        y[i] = NV_Ith_S(x, i);
+    }
+    return pele::Array<double>(NV_DATA_S(x), N_VGetLength(x)).copy();
 }
 
-static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
-               void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
+        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+
+static int check_flag(void *flagvalue, const char *funcname, int opt);
 
 } // namespace pele
 #endif
