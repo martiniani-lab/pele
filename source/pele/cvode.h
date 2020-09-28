@@ -87,6 +87,7 @@ public:
                       double tol=1e-5,
                       double rtol=1e-4,
                       double atol=1e-4);
+    inline double get_nhev() const { return udata.nhev;}
 
 protected:
     double H02;
@@ -125,8 +126,6 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
 static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-
-static int check_flag(void *flagvalue, const char *funcname, int opt);
 
 } // namespace pele
 #endif

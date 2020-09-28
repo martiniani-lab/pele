@@ -22,6 +22,7 @@ cdef extern from "pele/cvode.h" namespace "pele":
     cdef cppclass cppCVODEBDFOptimizer "pele::CVODEBDFOptimizer":
         cppCVODEBDFOptimizer(shared_ptr[_pele.cBasePotential], _pele.Array[double],
                              double, double, double) except +
+        double get_nhev() except +
 
 
 cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
@@ -45,6 +46,7 @@ cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
     def get_result(self):
         cdef cppCVODEBDFOptimizer* mxopt_ptr = <cppCVODEBDFOptimizer*> self.thisptr.get()
         res = super(_Cdef_CVODEBDFOptimizer_CPP, self).get_result()
+        res["nhev"] = float(mxopt_ptr.get_nhev())
         return res
 
 class CVODEBDFOptimizer_CPP(_Cdef_CVODEBDFOptimizer_CPP):

@@ -1,5 +1,6 @@
 #include "pele/mxopt.h"
 #include "Eigen/src/Core/Matrix.h"
+#include "cvode/cvode.h"
 #include "pele/array.h"
 #include "pele/base_potential.h"
 #include "pele/debug.h"
@@ -19,6 +20,12 @@ MixedOptimizer::MixedOptimizer( std::shared_ptr<pele::BasePotential> potential,
                                 double tol, int T, double step, double conv_tol, double conv_factor)
     : GradientOptimizer(potential, x0, tol),
       H0_(1e-10),
+      cvode_mem(CVodeCreate(CV_ADAMS)), // create cvode memory
+      N_size(x_.size()),
+      t0(0),
+      tN(100.0),
+      rtol(1e-3),
+      atol(1e-3),
       xold(x_.size()),
       gold(x_.size()),
       step(x_.size()),
@@ -29,6 +36,31 @@ MixedOptimizer::MixedOptimizer( std::shared_ptr<pele::BasePotential> potential,
 {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
+    // dummy t0
+    double t0 = 0;
+    std::cout << x0 << "\n";
+    Array<double> x0copy = x0.copy();
+    x0_N = N_Vector_eq_pele(x0copy);
+    // initialization of everything CVODE needs
+    int ret = CVodeInit(cvode_mem, f, t0, x0_N);
+    // initialize userdata
+    udata.rtol = rtol;
+    udata.atol = atol;
+    udata.nfev = 0;
+    udata.nhev = 0;
+    udata.pot_ = potential_;
+    udata.stored_grad = Array<double>(x0.size(), 0);
+    CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
+    ret = CVodeSetUserData(cvode_mem, &udata);
+    
+    A = SUNDenseMatrix(N_size, N_size);
+    LS = SUNLinSol_Dense(x0_N, A);
+    
+    CVodeSetLinearSolver(cvode_mem, LS, A);
+    CVodeSetJacFn(cvode_mem, Jac);
+    g_ = udata.stored_grad;
+    CVodeSetMaxNumSteps(cvode_mem, 100000);
+    CVodeSetStopTime(cvode_mem, tN);
     inv_sqrt_size = 1 / sqrt(x_.size());
     std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
 
@@ -75,12 +107,13 @@ void MixedOptimizer::one_iteration() {
 #endif        
         
         compute_phase_2_step(step);
+        line_search_method.set_xold_gold_(xold, gold);
+        line_search_method.set_g_f_ptr(g_);
+        double stepnorm = line_search_method.line_search(x_, step);
     }
 
     // should think of using line search method within the phase steps
-    line_search_method.set_xold_gold_(xold, gold);
-    line_search_method.set_g_f_ptr(g_);
-    double stepnorm = line_search_method.line_search(x_, step);
+
     
         
     
@@ -219,7 +252,7 @@ Eigen::MatrixXd MixedOptimizer::get_hessian() {
     double e = potential_->get_energy_gradient_hessian(x_, grad, hess); // preferably switch this to sparse Eigen
     
     Eigen::MatrixXd hess_dense(xold.size(), xold.size());
-
+    udata.nhev +=1;
     hess_dense.setZero();
     for (size_t i = 0; i < xold.size(); ++i) {
         for (size_t j=0; j < xold.size(); ++j) {
@@ -231,13 +264,33 @@ Eigen::MatrixXd MixedOptimizer::get_hessian() {
     
 }
 
+// /**
+//  * Phase 1 The problem does not look convex, Try solving using with an adaptive differential equationish approach
+//  */
+// void MixedOptimizer::compute_phase_1_step(Array<double> step) {
+//     // use a a scaled steepest descent step
+//     step *= -std::abs(H0_);
+// }
+
+
 /**
- * Phase 1 The problem does not look convex, Try solving using with an adaptive differential equationish approach
+ * Phase 1 The problem does not look convex, Try solving using with sundials
  */
 void MixedOptimizer::compute_phase_1_step(Array<double> step) {
     // use a a scaled steepest descent step
-    step *= -std::abs(H0_);
+    /* advance solver just one internal step */
+    Array<double> xold = x_;
+    int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
+    iter_number_ +=1;
+    x_ = pele_eq_N_Vector(x0_N);
+    g_ = udata.stored_grad;
+    rms_ = (norm(g_)/sqrt(x_.size()));
+    f_ = udata.stored_energy;
+    nfev_ = udata.nfev;
+    step = xold-x_;
 }
+
+
 
 
 /**

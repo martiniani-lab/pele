@@ -20,8 +20,6 @@ double BracketingLineSearch::line_search(Array<double> &x, Array<double> step) {
     pele_eq_eig(step, step_direction);
     opt_->set_f(f);
     opt_->set_rms(norm(g_)/sqrt(x.size()));
-    // std::cout << stpsize << " ----------------------------------------- final step size \n";
-    // std::cout << stpsize*opt_->compute_pot_norm(step) << "\n";
     return stpsize*opt_->compute_pot_norm(step);
 };
 

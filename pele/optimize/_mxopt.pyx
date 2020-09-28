@@ -22,6 +22,7 @@ cdef extern from "pele/mxopt.h" namespace "pele":
                  double, double, double) except +
         void set_H0(double) except +
         double get_H0() except +
+        double get_nhev() except +
 
 
 cdef class _Cdef_MixedOptimizer_CPP(_pele_opt.GradientOptimizer):
@@ -48,6 +49,7 @@ cdef class _Cdef_MixedOptimizer_CPP(_pele_opt.GradientOptimizer):
         cdef cppMixedOptimizer* mxopt_ptr = <cppMixedOptimizer*> self.thisptr.get()
         res = super(_Cdef_MixedOptimizer_CPP, self).get_result()
         res["H0"] = float(mxopt_ptr.get_H0())
+        res["nhev"] = float(mxopt_ptr.get_nhev())
         return res
 
 class MixedOptimizer_CPP(_Cdef_MixedOptimizer_CPP):

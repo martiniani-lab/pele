@@ -24,6 +24,7 @@
 #include "nwpele.h"
 #include "backtracking.h"
 #include "bracketing.h"
+#include "cvode.h"
 
 #include <cvode/cvode.h>               /* access to CVODE                 */
 #include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
@@ -40,6 +41,23 @@ namespace pele{
 
 
 
+
+// /**
+//  * user data passed to CVODE
+//  */
+// typedef struct UserData_
+// {
+
+//     double rtol; /* integration tolerances */
+//     double atol;
+//     size_t nfev;                // number of gradient(function) evaluations
+//     size_t nhev;                // number of hessian (jacobian) evaluations
+//     double stored_energy = 0;       // stored energy
+//     Array<double>    stored_grad;      // stored gradient. need to pass this on to
+//     std::shared_ptr<pele::BasePotential> pot_;
+// } * UserData;
+
+
 /**
  * Mixed optimization scheme that uses different methods of solving far and away from the minimum/ somewhat close to the minimum and near the minimum
  */
@@ -51,7 +69,16 @@ private:
      * H0 is the initial estimate for the inverse hessian. This is as small as possible, for making a good inverse hessian estimate next time.
      */
     double H0_;
-
+    UserData_ udata;
+    void *cvode_mem; /* CVODE memory         */
+    size_t N_size;
+    SUNMatrix A;
+    SUNLinearSolver LS;
+    double t0;
+    double tN;
+    N_Vector x0_N;
+    double rtol;
+    double atol;
 
     Array<double> xold; //!< Coordinates before taking a step
     Array<double> gold; //!< Gradient before taking a step
@@ -106,6 +133,7 @@ public:
 
     // functions for accessing the results
     inline double get_H0() const { return H0_; }
+    inline double get_nhev() const { return udata.nhev;}
 
     /**
      * reset the optiimzer to start a new minimization from x0
