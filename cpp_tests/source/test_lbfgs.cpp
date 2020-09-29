@@ -107,7 +107,7 @@ TEST(LbfgsLJ, SetFuncGradientWorks){
 TEST(LbfgsRosenbrock, Rosebrock_works){
     auto rosenbrock = std::make_shared<pele::RosenBrock> ();
     Array<double> x0(2, 0);
-    pele::MixedOptimizer lbfgs(rosenbrock, x0);
+    pele::CVODEBDFOptimizer lbfgs(rosenbrock, x0);
     // pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 1, 1);
     // pele ::GradientDescent lbfgs(rosenbrock, x0);
     lbfgs.run(2000);

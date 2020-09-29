@@ -1,9 +1,9 @@
 # this file is meant to be parsed by python before being a proper CMakeLists.txt file
 # in particular, the following strings will be set to their proper values by python when
 # making CMakeLists.txt
-set(numpy_include /home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include)
-set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/envs/changebranch3/include/python3.8 /home/praharsh/anaconda3/envs/changebranch3/include/python3.8)
-set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/config-3.8-x86_64-linux-gnu -lpthread -ldl -lutil -lrt -lm -lpython3.8 -Xlinker -export-dynamic")
+set(numpy_include /home/praharsh/anaconda3/envs/myenv/lib/python3.6/site-packages/numpy/core/include)
+set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/envs/myenv/include/python3.6m /home/praharsh/anaconda3/envs/myenv/include/python3.6m)
+set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/envs/myenv/lib/python3.6/config-3.6m-x86_64-linux-gnu -lpthread -ldl -lutil -lrt -lm -lpython3.6m -Xlinker -export-dynamic")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #find_package(PythonLibs)
 #message("PYTHON_LIBRARIES ${PYTHON_LIBRARIES}")
@@ -18,7 +18,7 @@ ENDIF(APPLE)
 ##################################### sundials #######################################
 # TODO: figure out how to remove the extra setup for sundials
 
-set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+# set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
 set(SUNDIALS_INCLUDE_DIR
   /home/praharsh/.local/include
   CACHE PATH "Location of SUNDIALS header files")
@@ -109,6 +109,7 @@ make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/_gradient_descent_cpp.
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/_lbfgs_cpp.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/_modified_fire_cpp.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/_mxopt.cxx)
+make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/cvode_opt.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/potentials/_pythonpotential.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/angleaxis/_cpp_aa.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/utils/_cpp_utils.cxx)

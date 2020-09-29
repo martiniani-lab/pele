@@ -109,7 +109,7 @@ public:
      * Constructor
      */
     MixedOptimizer( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-                    double tol = 1e-4, int T=1, double step=1, double conv_tol= 1e-2, double conv_factor = 2);
+                    double tol = 1e-4, int T=1, double step=1, double conv_tol= 1e-2, double conv_factor = 2, double rtol = 1e-3, double atol = 1e-3);
     /**
      * Destructor
      */

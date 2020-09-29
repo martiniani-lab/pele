@@ -276,7 +276,7 @@ def get_ldflags(opt="--ldflags"):
     getvar = sysconfig.get_config_var
     pyver = sysconfig.get_config_var('VERSION')
     libs = getvar('LIBS').split() + getvar('SYSLIBS').split()
-    libs.append('-lpython'+pyver)
+    libs.append('-lpython'+pyver +'m')
     # add the prefix/lib/pythonX.Y/config dir, but only if there is no
     # shared library in prefix/lib/.
     if opt == '--ldflags':

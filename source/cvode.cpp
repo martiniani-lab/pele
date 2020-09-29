@@ -74,13 +74,18 @@ int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
     pele::Array<double> yw = pele_eq_N_Vector(y);
     udata->nfev += 1;
     
-    Array<double> g = Array<double>(yw.size());
-    double energy = udata->pot_->get_energy_gradient(yw, g);
+    Array<double> g;
+    // double energy = udata->pot_->get_energy_gradient(yw, g);
     double *fdata = NV_DATA_S(ydot);
+    g = Array<double>(fdata, NV_LENGTH_S(ydot));
+
+    // calculate negative grad g
+    double energy = udata->pot_->get_energy_gradient(yw, g);
+#pragma simd
     for (size_t i = 0; i < yw.size(); ++i) {
-        fdata[i] = -g[i];
+        fdata[i] = -fdata[i];
     }
-    udata->stored_grad = (g.copy());
+    udata->stored_grad = (g);
     udata->stored_energy = energy;
     return 0;
 }
