@@ -20,7 +20,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
                                      double rtol,
                                      double atol)
     : GradientOptimizer(potential, x0, tol),
-      cvode_mem(CVodeCreate(CV_ADAMS)), // create cvode memory
+      cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
       N_size(x0.size()),
       t0(0),
       tN(10000.0)
