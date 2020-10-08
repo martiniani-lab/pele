@@ -69,6 +69,10 @@ private:
      * H0 is the initial estimate for the inverse hessian. This is as small as possible, for making a good inverse hessian estimate next time.
      */
     double H0_;
+    /**
+     * User_Data object. This is important for mxopt because it stores the number of getEnergyGradient and getEnegyGradientHessian evaluations. 
+     * We're saving them here instead of the optimizer because we'd need to keep a double count since SUNDIALS needs this object.
+     */
     UserData_ udata;
     void *cvode_mem; /* CVODE memory         */
     size_t N_size;

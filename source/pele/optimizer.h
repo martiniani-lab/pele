@@ -59,6 +59,7 @@ public:
     inline virtual int get_nfev() const = 0;
     inline virtual int get_niter() const = 0;
     inline virtual bool success() = 0;
+    inline virtual int get_nhev() const = 0;    
 };
 
 /**
@@ -80,7 +81,14 @@ protected :
     int verbosity_; /**< How much information to print */
 
     int iter_number_; /**< The current iteration number */
-    int nfev_; /**< The number of function evaluations */
+    /**
+     * number of get_energy_gradient evaluations.
+     */    
+    int nfev_; 
+    /**
+     * number of get_energy_gradient_hessian evaluations
+     */    
+    int nhev;
 
     // variables representing the state of the system
     Array<double> x_; /**< The current coordinates */
@@ -117,6 +125,7 @@ public :
           verbosity_(0),
           iter_number_(0),
           nfev_(0),
+          nhev_(0),          
           x_(x0.copy()),
           f_(0.),
           g_(x0.size()),
@@ -201,6 +210,7 @@ public :
     inline double get_f() const { return f_; }
     inline double get_rms() const { return rms_; }
     inline int get_nfev() const { return nfev_; }
+    inline int get_nhev() const { return nhev_; }    
     inline int get_niter() const { return iter_number_; }
     inline int get_maxiter() const { return maxiter_; }
     inline double get_maxstep() { return maxstep_; }

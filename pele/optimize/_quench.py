@@ -116,8 +116,8 @@ def cg(coords, pot, iprint=-1, tol=1e-3, nsteps=5000, **kwargs):
     return res
 
 
-def steepest_descent(x0, pot, iprint=-1, dx=5e-3, nsteps=100000,
-                     tol=1e-3, maxstep=-1., events=None):
+def steepest_descent(x0, pot, iprint=-1, dx=1e-4, nsteps=10000000,
+                     tol=1e-4, maxstep=-1., events=None):
     """steepest descent minimization
     
     Notes

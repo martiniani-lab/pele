@@ -25,7 +25,7 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
       cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T),
-      conv_tol_(conv_tol), conv_factor_(conv_factor),
+      usephase1(false), conv_tol_(conv_tol), conv_factor_(conv_factor),
       line_search_method(this, step) {
   // set precision of printing
   std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -43,18 +43,21 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
   udata.nhev = 0;
   udata.pot_ = potential_;
   udata.stored_grad = Array<double>(x0.size(), 0);
+  // set tolerances
   CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
   ret = CVodeSetUserData(cvode_mem, &udata);
-
+  // initialize hessian
   A = SUNDenseMatrix(N_size, N_size);
   LS = SUNLinSol_Dense(x0_N, A);
-
   CVodeSetLinearSolver(cvode_mem, LS, A);
   CVodeSetJacFn(cvode_mem, Jac);
+  // pass hessian information
   g_ = udata.stored_grad;
+  // initialize CVODE steps and stop time
   CVodeSetMaxNumSteps(cvode_mem, 100000);
   CVodeSetStopTime(cvode_mem, tN);
   inv_sqrt_size = 1 / sqrt(x_.size());
+  // optmizeer debug level
   std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
 
 #if OPTIMIZER_DEBUG_LEVEL >= 1
@@ -77,32 +80,30 @@ void MixedOptimizer::one_iteration() {
   xold.assign(x_);
   gold.assign(g_);
   // copy the gradient into step
-
-  step.assign(g_);
   // does a convexity check every T iterations
+  // but always starts off in differential equation solver mode
   if (iter_number_ % T_ == 0) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
-    std::cout << "checking convexity"
-              << "\n";
+      std::cout << "checking convexity"
+                << "\n";
 #endif
-    usephase1 = convexity_check();
+      usephase1 = convexity_check();
   }
-
   if (usephase1) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
-    std::cout << " computing phase 1 step"
-              << "\n";
+      std::cout << " computing phase 1 step"
+                << "\n";
 #endif
 
-    compute_phase_1_step(step);
+      compute_phase_1_step(step);
   } else {
 
 #if OPTIMIZER_DEBUG_LEVEL >= 3
-    std::cout << " computing phase 2 step"
-              << "\n";
+      std::cout << " computing phase 2 step"
+                << "\n";
 #endif
-
-    compute_phase_2_step(step);
+      udata.nfev = nfev_;
+      compute_phase_2_step(step);
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
     double stepnorm = line_search_method.line_search(x_, step);
@@ -115,8 +116,7 @@ void MixedOptimizer::one_iteration() {
 
 #if OPTIMIZER_DEBUG_LEVEL >= 2
   std::cout << "mixed optimizer: " << iter_number_ << " E " << f_ << " rms "
-            << rms_ << " nfev " << nfev_ << " step norm " << stepnorm
-            << std::endl;
+            << rms_ << " nfev " << nfev_ << std::endl;
 #endif
   iter_number_ += 1;
 }
@@ -179,12 +179,12 @@ void MixedOptimizer::reset(pele::Array<double> &x0) {
 
 /**
  * checks convexity in the region and updates the convexity flag accordingly
- * convexity flag 0 -> heavily concave function: Use an differential equation
- * solver with adaptive stepping (Check RK45? Check Euler) a good scale for the
- * problem is the inverse hessian. convexity flag true -> concavity below a
- * tolerance. can be solved with newton steps with help convexity flag false ->
- * convex function, use a newton method. possible good flags (Tr(Hess) =
- * Tr(|Hess|))
+ * convexity flag 0/False -> Not near the minimum: Use an differential equation
+ * solver (CVODE_BDF in this example). convexity flag true -> concavity below a
+ * tolerance, we think we're near a minimum. can be solved with newton steps
+with help convexity flag false ->
+ * convex function, We think we're near a minimum, use a newton method to figure
+out the result.
  */
 
 bool MixedOptimizer::convexity_check() {
@@ -195,6 +195,9 @@ bool MixedOptimizer::convexity_check() {
   Eigen::VectorXd eigvals = hessian.eigenvalues().real();
   minimum = eigvals.minCoeff();
   double maximum = eigvals.maxCoeff();
+  if (maximum == 0) {
+    maximum = 1e-8;
+  }
   double convexity_estimate = std::abs(minimum / maximum);
 
   if (minimum < 0 and convexity_estimate >= conv_tol_) {
@@ -263,7 +266,6 @@ Eigen::MatrixXd MixedOptimizer::get_hessian() {
  * Phase 1 The problem does not look convex, Try solving using with sundials
  */
 void MixedOptimizer::compute_phase_1_step(Array<double> step) {
-  // use a a scaled steepest descent step
   /* advance solver just one internal step */
   Array<double> xold = x_;
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
@@ -288,6 +290,7 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
   }
   // this can mess up accuracy if we aren't close to a minimum preferably switch
   // sparse
+  // std::cout << hessian.eigenvalues() << "hessian eigenvalues before \n";
 
   if (minimum_less_than_zero) {
     hessian -= conv_factor_ * minimum *
@@ -300,7 +303,9 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
   eig_eq_pele(r, step);
   // negative sign to switch direction
   // TODO change this to banded
-  q = -scale * hessian.ldlt().solve(r);
+
+  q = -scale * hessian.colPivHouseholderQr().solve(r);
+
   pele_eq_eig(step, q);
 }
 } // namespace pele

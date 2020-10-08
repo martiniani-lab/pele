@@ -72,7 +72,7 @@ int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
 
     UserData udata = (UserData) user_data;
     pele::Array<double> yw = pele_eq_N_Vector(y);
-    udata->nfev += 1;
+
     
     Array<double> g;
     // double energy = udata->pot_->get_energy_gradient(yw, g);
@@ -81,6 +81,7 @@ int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
 
     // calculate negative grad g
     double energy = udata->pot_->get_energy_gradient(yw, g);
+    udata->nfev += 1;
 #pragma simd
     for (size_t i = 0; i < yw.size(); ++i) {
         fdata[i] = -fdata[i];
@@ -93,6 +94,7 @@ int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
 int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
         void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
     UserData udata = (UserData) user_data;
+
     pele::Array<double> yw = pele_eq_N_Vector(y);
     Array<double> g = Array<double>(yw.size());
     Array<double> h = Array<double>(yw.size()*yw.size());
