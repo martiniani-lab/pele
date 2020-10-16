@@ -29,7 +29,6 @@ cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
         self.thisptr.get().set_verbosity(verbosity)
         self.thisptr.get().set_iprint(iprint)
         self.pot = pot
-        
         cdef np.ndarray[double, ndim=1] g_  
         if energy is not None and gradient is not None:
             g_ = gradient

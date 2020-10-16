@@ -23,7 +23,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
       cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
       N_size(x0.size()),
       t0(0),
-      tN(10000.0)
+      tN(10000000.0)
 {
     // dummy t0
     double t0 = 0;
@@ -48,7 +48,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     CVodeSetLinearSolver(cvode_mem, LS, A);
     CVodeSetJacFn(cvode_mem, Jac);
     g_ = udata.stored_grad;
-    CVodeSetMaxNumSteps(cvode_mem, 100000);
+    CVodeSetMaxNumSteps(cvode_mem, 1000000);
     CVodeSetStopTime(cvode_mem, tN);
 };
 

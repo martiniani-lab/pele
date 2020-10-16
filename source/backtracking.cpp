@@ -88,7 +88,6 @@ if(step <= Scalar(0))
                 throw std::logic_error("the moving direction increases the objective function value");}
         const Scalar test_decr = param.ftol * dg_init;
         Scalar width;
-
         int iter;
         for(iter = 0; iter < param.max_linesearch; iter++)
                     {

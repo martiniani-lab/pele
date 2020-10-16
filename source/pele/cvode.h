@@ -87,7 +87,7 @@ public:
                       double tol=1e-5,
                       double rtol=1e-4,
                       double atol=1e-4);
-    inline double get_nhev() const { return udata.nhev;}
+    inline int get_nhev() const { return udata.nhev;}
 
 protected:
     double H02;

@@ -21,50 +21,49 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                                const pele::Array<double> x0, double tol, int T,
                                double step, double conv_tol, double conv_factor,
                                double rtol, double atol)
-    : GradientOptimizer(potential, x0, tol), H0_(1e-10),
-      cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
+    : GradientOptimizer(potential, x0, tol),
+      cvode_mem(CVodeCreate(CV_BDF)), 
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T),
-      usephase1(false), conv_tol_(conv_tol), conv_factor_(conv_factor),
+      usephase1(true), conv_tol_(conv_tol), conv_factor_(conv_factor),
       line_search_method(this, step) {
-  // set precision of printing
-  std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
-  // dummy t0
-  double t0 = 0;
-  std::cout << x0 << "\n";
-  Array<double> x0copy = x0.copy();
-  x0_N = N_Vector_eq_pele(x0copy);
-  // initialization of everything CVODE needs
-  int ret = CVodeInit(cvode_mem, f, t0, x0_N);
-  // initialize userdata
-  udata.rtol = rtol;
-  udata.atol = atol;
-  udata.nfev = 0;
-  udata.nhev = 0;
-  udata.pot_ = potential_;
-  udata.stored_grad = Array<double>(x0.size(), 0);
-  // set tolerances
-  CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
-  ret = CVodeSetUserData(cvode_mem, &udata);
-  // initialize hessian
-  A = SUNDenseMatrix(N_size, N_size);
-  LS = SUNLinSol_Dense(x0_N, A);
-  CVodeSetLinearSolver(cvode_mem, LS, A);
-  CVodeSetJacFn(cvode_mem, Jac);
-  // pass hessian information
-  g_ = udata.stored_grad;
-  // initialize CVODE steps and stop time
-  CVodeSetMaxNumSteps(cvode_mem, 100000);
-  CVodeSetStopTime(cvode_mem, tN);
-  inv_sqrt_size = 1 / sqrt(x_.size());
-  // optmizeer debug level
-  std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
+    // set precision of printing
+    std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
+    // dummy t0
+    double t0 = 0;
+    std::cout << x0 << "\n";
+    Array<double> x0copy = x0.copy();
+    x0_N = N_Vector_eq_pele(x0copy);
+    // initialization of everything CVODE needs
+    int ret = CVodeInit(cvode_mem, f, t0, x0_N);
+    // initialize userdata
+    udata.rtol = rtol;
+    udata.atol = atol;
+    udata.nfev = 0;
+    udata.nhev = 0;
+    udata.pot_ = potential_;
+    udata.stored_grad = Array<double>(x0.size(), 0);
+    // set tolerances
+    CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
+    ret = CVodeSetUserData(cvode_mem, &udata);
+    // initialize hessian
+    A = SUNDenseMatrix(N_size, N_size);
+    LS = SUNLinSol_Dense(x0_N, A);
+    CVodeSetLinearSolver(cvode_mem, LS, A);
+    CVodeSetJacFn(cvode_mem, Jac);
+    // pass hessian information
+    g_ = udata.stored_grad;
+    // initialize CVODE steps and stop time
+    CVodeSetMaxNumSteps(cvode_mem, 100000);
+    CVodeSetStopTime(cvode_mem, tN);
+    inv_sqrt_size = 1 / sqrt(x_.size());
+    // optmizeer debug level
+    std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
 
 #if OPTIMIZER_DEBUG_LEVEL >= 1
-  std::cout << "Mixed optimizer constructed"
-            << "T=" << T_ << "\n";
+    std::cout << "Mixed optimizer constructed"
+              << "T=" << T_ << "\n";
 #endif
-  std::cout << H0_ << "\n";
 }
 /**
  * Does one iteration of the optimization algorithm
@@ -80,88 +79,56 @@ void MixedOptimizer::one_iteration() {
   xold.assign(x_);
   gold.assign(g_);
   // copy the gradient into step
+  step.assign(g_);
+  bool switchtophase2 = false;
   // does a convexity check every T iterations
   // but always starts off in differential equation solver mode
-  if (iter_number_ % T_ == 0) {
+  if (iter_number_ % T_ == 0 and iter_number_>0) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
-      std::cout << "checking convexity"
-                << "\n";
+    std::cout << "checking convexity"
+              << "\n";
 #endif
-      usephase1 = convexity_check();
+    usephase1 = convexity_check();
   }
-  if (usephase1) {
+  if (usephase1 and not switchtophase2) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
-      std::cout << " computing phase 1 step"
-                << "\n";
+    std::cout << " computing phase 1 step"
+              << "\n";
 #endif
 
-      compute_phase_1_step(step);
+    compute_phase_1_step(step);
   } else {
 
 #if OPTIMIZER_DEBUG_LEVEL >= 3
-      std::cout << " computing phase 2 step"
-                << "\n";
+    std::cout << " computing phase 2 step"
+              << "\n";
 #endif
-      udata.nfev = nfev_;
-      compute_phase_2_step(step);
+    compute_phase_2_step(step);
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
     double stepnorm = line_search_method.line_search(x_, step);
+    switchtophase2 = true;
   }
 
   // should think of using line search method within the phase steps
 
   // update inverse hessian estimate
-  update_H0_(xold, gold, x_, g_);
 
-#if OPTIMIZER_DEBUG_LEVEL >= 2
+#if OPTIMIZER_DEBUG_LEVEL >= 3
   std::cout << "mixed optimizer: " << iter_number_ << " E " << f_ << " rms "
             << rms_ << " nfev " << nfev_ << std::endl;
 #endif
+  /**
+   * Checks whether the stop criterion is satisfied: if stop criterion is
+   * satisfied The new version is done. at this point the corresponding values
+   * are added
+   */
+
   iter_number_ += 1;
+
 }
 
-void MixedOptimizer::update_H0_(Array<double> x_old, Array<double> &g_old,
-                                Array<double> x_new, Array<double> &g_new) {
-  // update the lbfgs memory
-  // This updates s_, y_, rho_, and H0_, and k_
-  double ys = 0;
-  double yy = 0;
 
-  Array<double> y_(x_old.size());
-  Array<double> s_(x_old.size());
-
-#pragma simd reduction(+ : ys, yy)
-  for (size_t j2 = 0; j2 < x_.size(); ++j2) {
-    y_[j2] = g_new[j2] - g_old[j2];
-    s_[j2] = x_new[j2] - x_old[j2];
-    ys += y_[j2] * s_[j2];
-    yy += y_[j2] * y_[j2];
-  }
-
-#if OPTIMIZER_DEBUG_LEVEL >= 3
-  std::cout << ys << " YS value \n";
-  std::cout << yy << "YY value \n";
-#endif
-  if (ys == 0.) {
-    ys = 1.;
-
-#if OPTIMIZER_DEBUG_LEVEL >= 2
-    std::cout << "warning: resetting YS to 1." << std::endl;
-#endif
-  }
-  if (yy == 0.) {
-    yy = 1.;
-
-#if OPTIMIZER_DEBUG_LEVEL >= 2
-    std::cout << "warning: resetting YY to 1." << std::endl;
-#endif
-  }
-
-  H0_ = ys / yy;
-
-  // increment k
-}
 
 /**
  * resets the minimizer for usage again
@@ -190,8 +157,7 @@ out the result.
 bool MixedOptimizer::convexity_check() {
 
   hessian = get_hessian();
-  hessian_calculated =
-      true; // pass on the fact that the hessian has been calculated
+  hessian_calculated = true; // pass on the fact that the hessian has been calculated
   Eigen::VectorXd eigvals = hessian.eigenvalues().real();
   minimum = eigvals.minCoeff();
   double maximum = eigvals.maxCoeff();
@@ -232,11 +198,12 @@ bool MixedOptimizer::convexity_check() {
 
 /**
  * Gets the hessian. involves a dense hessian for now. #TODO replace with a
- * sparse hessian
+ * sparse hessian. TODO: Allocate memory once
  */
 Eigen::MatrixXd MixedOptimizer::get_hessian() {
   Array<double> hess(xold.size() * xold.size());
   Array<double> grad(xold.size());
+  
 
   double e = potential_->get_energy_gradient_hessian(
       x_, grad, hess); // preferably switch this to sparse Eigen
@@ -249,7 +216,6 @@ Eigen::MatrixXd MixedOptimizer::get_hessian() {
       hess_dense(i, j) = hess[i + grad.size() * j];
     }
   }
-
   return hess_dense;
 }
 
@@ -268,13 +234,15 @@ Eigen::MatrixXd MixedOptimizer::get_hessian() {
 void MixedOptimizer::compute_phase_1_step(Array<double> step) {
   /* advance solver just one internal step */
   Array<double> xold = x_;
+  // use this variable to compute differences and add to nhev later
+  double udatadiff = udata.nfev;
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
-  iter_number_ += 1;
+  udatadiff = udata.nfev - udatadiff;
+  nfev_ += udatadiff;
   x_ = pele_eq_N_Vector(x0_N);
   g_ = udata.stored_grad;
   rms_ = (norm(g_) / sqrt(x_.size()));
   f_ = udata.stored_energy;
-  nfev_ = udata.nfev;
   step = xold - x_;
 }
 
@@ -303,9 +271,7 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
   eig_eq_pele(r, step);
   // negative sign to switch direction
   // TODO change this to banded
-
   q = -scale * hessian.colPivHouseholderQr().solve(r);
-
   pele_eq_eig(step, q);
 }
 } // namespace pele

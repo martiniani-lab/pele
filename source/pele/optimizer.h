@@ -59,7 +59,7 @@ public:
     inline virtual int get_nfev() const = 0;
     inline virtual int get_niter() const = 0;
     inline virtual bool success() = 0;
-    inline virtual int get_nhev() const = 0;    
+    inline virtual int get_nhev() const = 0;
 };
 
 /**
@@ -83,12 +83,12 @@ protected :
     int iter_number_; /**< The current iteration number */
     /**
      * number of get_energy_gradient evaluations.
-     */    
-    int nfev_; 
+     */
+    int nfev_;
     /**
      * number of get_energy_gradient_hessian evaluations
-     */    
-    int nhev;
+     */
+    int nhev_;
 
     // variables representing the state of the system
     Array<double> x_; /**< The current coordinates */
@@ -98,7 +98,7 @@ protected :
 
     /**
      * This flag keeps track of whether the function and gradient have been
-     * initialized.  This allows the initial function and gradient to be computed
+     * initialized.This allows the initial function and gradient to be computed
      * outside of the constructor and also allows the function and gradient to
      * be passed rather than computed.  The downside is that it complicates the
      * logic because this flag must be checked at all places where the gradient,
@@ -112,7 +112,7 @@ protected :
      * and gradient
      */
 
-    
+
 
 public :
     GradientOptimizer(std::shared_ptr<pele::BasePotential> potential,
@@ -125,7 +125,7 @@ public :
           verbosity_(0),
           iter_number_(0),
           nfev_(0),
-          nhev_(0),          
+          nhev_(0),
           x_(x0.copy()),
           f_(0.),
           g_(x0.size()),
@@ -179,7 +179,7 @@ public :
             throw std::invalid_argument("the gradient has the wrong size");
         }
         if (iter_number_ > 0){
-            std::cout << "warning: setting f and grad after the first iteration.  this is dangerous.\n";
+            std::cout << "warning: setting f and grad after the first iteration.This is dangerous.\n";
         }
         // copy the function and gradient
         f_ = f;
@@ -203,22 +203,20 @@ public :
     inline void set_f(double f_in) { f_ = f_in; }
     inline void set_rms(double rms_in) { rms_ = rms_in; }
 
-    
+
     // functions for accessing the status of the optimizer
     inline Array<double> get_x() const { return x_; }
     inline Array<double> get_g() const { return g_; }
     inline double get_f() const { return f_; }
     inline double get_rms() const { return rms_; }
     inline int get_nfev() const { return nfev_; }
-    inline int get_nhev() const { return nhev_; }    
+    inline int get_nhev() const { return nhev_; }
     inline int get_niter() const { return iter_number_; }
     inline int get_maxiter() const { return maxiter_; }
     inline double get_maxstep() { return maxstep_; }
     inline double get_tol() const {return tol_;}
     inline bool success() { return stop_criterion_satisfied(); }
     inline int get_verbosity_() {return verbosity_;}
-
-    
 
     /**
      * Return true if the termination condition is satisfied, false otherwise
