@@ -9,6 +9,7 @@
 #include "vecn.h"
 #include "distance.h"
 #include <omp.h>
+#include <petscmat.h>
 
 
 

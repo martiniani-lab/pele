@@ -675,8 +675,8 @@ public:
   {
     double energy = m_interaction->energy_gradient(r2, gij, sum_radii(atom_i, atom_j));
     *gij *= sqrt(r2);
-        return energy;
-    }
+    return energy;
+  }
 
     virtual inline double get_interaction_energy_gradient_hessian(double r2, double *gij, double *hij, size_t atom_i, size_t atom_j) const
     {

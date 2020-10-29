@@ -48,6 +48,8 @@ protected:
         for (const size_t subdom_ncell : subdom_ncells) {
             total_cells += subdom_ncell;
         }
+        std::cout << total_cells << "total cells \n";
+
         m_cell_neighbors = std::vector< std::vector<cell_t*> >(total_cells);
         for (std::vector<cell_t*> & neighbors : m_cell_neighbors) {
             neighbors = std::vector<cell_t*>();
@@ -152,6 +154,8 @@ protected:
         m_subdom_limits[0] = 0;
         std::stringstream ncells_stream;
         ncells_stream << "Length per subdomain: ";
+        std::cout << m_nsubdoms << "subdoms \n";
+
         for (size_t isubdom = 0; isubdom < m_nsubdoms; ++isubdom) {
             if(remainder > isubdom) {
                 subdom_len = m_ncells_vec[1] / m_nsubdoms + 1;
@@ -219,6 +223,7 @@ public:
             m_inv_boxvec[idim] = 1 / m_boxvec[idim];
             m_rcell_vec[idim] = m_boxvec[idim] / m_ncells_vec[idim];
         }
+
         calc_subdom_stats();
     }
 
@@ -230,6 +235,7 @@ public:
     {
         // note: the speed of this function is important because it is called
         // once per atom each time get_energy is called.
+
         size_t cum = 1;
         size_t index = 0;
         for (size_t idim = 0; idim < ndim; ++idim) {
@@ -746,8 +752,13 @@ public:
         auto order = pele::Array<size_t>(natoms);
 
         size_t ind = 0;
+        std::cout << m_container.m_cell_atoms.size() << "mcell atoms size \n";
+
         for (auto const & cell_atoms : m_container.m_cell_atoms) {
+            std::cout << cell_atoms.size() << "cell atoms size \n";
+
             for (auto const & atoms : cell_atoms) {
+                std::cout << atoms.size() << "atoms size \n";
                 for (auto const & iatom : atoms) {
                     order[ind] = iatom;
                     ind++;
