@@ -12,7 +12,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 IF(APPLE)
   SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 ENDIF(APPLE)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
+#################################### petsc #############################################
+
+find_package(PETSc REQUIRED)
 
 ##################################### sundials #######################################
 # TODO: figure out how to remove the extra setup for sundials
@@ -104,6 +108,7 @@ function(make_cython_lib cython_cxx_source)
   target_link_libraries(${library_name} pele_lib)
   target_link_libraries(${library_name} ${SUNDIALS_LIBRARIES})
   target_link_libraries(${library_name} ${MPI_LIBRARIES})
+  target_link_libraries(${library_name} PkgConfig::PETSC)
   set_target_properties(${library_name} PROPERTIES PREFIX "")
   message("making library ${library_name} from source ${cython_cxx_source}")
 endfunction(make_cython_lib)
