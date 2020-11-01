@@ -11,7 +11,7 @@ cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport shared_ptr, array_wrap_np
 
 # use external c++ class
-cdef extern from "pele/wca.h" namespace "pele":
+cdef extern from "pele/wca.hpp" namespace "pele":
     cdef cppclass  cWCA "pele::WCA":
         cWCA(double sig, double eps) except +
     cdef cppclass  cWCAPeriodic "pele::WCAPeriodic":

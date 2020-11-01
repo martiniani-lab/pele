@@ -1,4 +1,4 @@
-#include "pele/modified_fire.h"
+#include "pele/modified_fire.hpp"
 
 using std::vector;
 using std::cout;

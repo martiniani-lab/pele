@@ -20,7 +20,7 @@ cdef extern from *:
 
 
 # use external c++ classes
-cdef extern from "pele/distance.h" namespace "pele":
+cdef extern from "pele/distance.hpp" namespace "pele":
     cdef cppclass cppPeriodicDistance "pele::periodic_distance"[ndim]:
         cppPeriodicDistance(_pele.Array[double] box) except +
         void put_atom_in_box(double *)

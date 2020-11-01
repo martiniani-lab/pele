@@ -25,7 +25,7 @@ cdef extern from *:
 #===============================================================================
 
 # use external c++ class
-cdef extern from "pele/pspin_spherical.h" namespace "pele":
+cdef extern from "pele/pspin_spherical.hpp" namespace "pele":
     cdef cppclass cMeanFieldPSpinSpherical "pele::MeanFieldPSpinSpherical"[p]:
         cMeanFieldPSpinSpherical(_pele.Array[double] interaction, size_t nspins, double tol) except +
 

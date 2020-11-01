@@ -16,7 +16,7 @@ from pele.potentials._pele cimport Array, array_wrap_np, shared_ptr
 #===============================================================================
 # pele::FrozenPotentialWrapper
 #===============================================================================
-cdef extern from "pele/frozen_atoms.h" namespace "pele":
+cdef extern from "pele/frozen_atoms.hpp" namespace "pele":
     cdef cppclass  cppFrozenPotentialWrapper "pele::FrozenPotentialWrapper":
         cppFrozenPotentialWrapper(shared_ptr[_pele.cBasePotential] potential,
             Array[double] reference_coords,

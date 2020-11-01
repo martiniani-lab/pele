@@ -35,7 +35,7 @@ cdef vector[int].iterator iter  #iter is declared as being of type vector<int>::
 #===============================================================================
 # pele::Array
 #===============================================================================
-cdef extern from "pele/array.h" namespace "pele":
+cdef extern from "pele/array.hpp" namespace "pele":
     cdef cppclass Array[dtype] :
         Array() except +
         Array(size_t) except +
@@ -48,7 +48,7 @@ cdef extern from "pele/array.h" namespace "pele":
 #===============================================================================
 # pele::BasePotential
 #===============================================================================
-cdef extern from "pele/base_potential.h" namespace "pele":
+cdef extern from "pele/base_potential.hpp" namespace "pele":
     cdef cppclass  cBasePotential "pele::BasePotential":
         cBasePotential() except +
         double get_energy(Array[double] &x) except +
@@ -58,7 +58,7 @@ cdef extern from "pele/base_potential.h" namespace "pele":
         void numerical_gradient(Array[double] &x, Array[double] &grad, double eps) except +
         void numerical_hessian(Array[double] &x, Array[double] &hess, double eps) except +
 
-#cdef extern from "potentialfunction.h" namespace "pele":
+#cdef extern from "potentialfunction.hpp" namespace "pele":
 #    cdef cppclass  cPotentialFunction "pele::PotentialFunction":
 #        cPotentialFunction(
 #            double (*energy)(Array[double] x, void *userdata) except *,
@@ -68,7 +68,7 @@ cdef extern from "pele/base_potential.h" namespace "pele":
 #===============================================================================
 # pele::PairwisePotentialInterface
 #===============================================================================
-cdef extern from "pele/pairwise_potential_interface.h" namespace "pele":
+cdef extern from "pele/pairwise_potential_interface.hpp" namespace "pele":
     cdef cppclass  cPairwisePotentialInterface "pele::PairwisePotentialInterface":
         cPairwisePotentialInterface() except +
         double get_energy(Array[double] &x) except +
@@ -101,7 +101,7 @@ cdef class PairwisePotentialInterface(BasePotential):
 #===============================================================================
 # pele::CombinedPotential
 #===============================================================================
-cdef extern from "pele/combine_potentials.h" namespace "pele":
+cdef extern from "pele/combine_potentials.hpp" namespace "pele":
     cdef cppclass  cCombinedPotential "pele::CombinedPotential":
         cCombinedPotential() except +
         double get_energy(Array[double] &x) except +

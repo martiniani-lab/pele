@@ -13,7 +13,7 @@ from pele.potentials._pele cimport shared_ptr
 #===============================================================================
 
 # use external c++ class
-cdef extern from "pele/harmonic.h" namespace "pele":
+cdef extern from "pele/harmonic.hpp" namespace "pele":
     cdef cppclass cBaseHarmonic "pele::BaseHarmonic":
         cBaseHarmonic(_pele.Array[double] coords, double k, size_t ndim) except +
         void set_k(double) except +

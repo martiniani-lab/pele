@@ -17,7 +17,7 @@ cdef extern from *:
     ctypedef int INT4 "4"   
 
 
-cdef extern from "pele/vecn.h" namespace "pele":
+cdef extern from "pele/vecn.hpp" namespace "pele":
     cdef cppclass VecN "pele::VecN"[N]:
         VecN()
         double & operator[](size_t) except +
@@ -30,7 +30,7 @@ ctypedef VecN[INT3] Vec3
 ctypedef VecN[INT4] Vec4 
 
 # use external c++ class
-cdef extern from "pele/rotations.h" namespace "pele":
+cdef extern from "pele/rotations.hpp" namespace "pele":
     Vec3 c_rotate_aa "pele::rotate_aa" (Vec3 &, Vec3 &) except +
     Vec3 rot_mat_to_aa(Matrix33 & mx) except +
     Vec4 aa_to_quaternion(Vec3 & mx) except +

@@ -19,7 +19,7 @@ from pele.potentials._pele cimport BasePotential
 from pele.potentials._pele cimport array_wrap_np, pele_array_to_np, array_size_t_from_np
 
 # use external c++ class
-cdef extern from "pele/distance.h" namespace "pele":
+cdef extern from "pele/distance.hpp" namespace "pele":
     cdef cppclass DistanceInterface
     
     cdef cppclass CartesianDistanceWrapper "pele::CartesianDistanceWrapper<3>":
@@ -29,7 +29,7 @@ cdef extern from "pele/distance.h" namespace "pele":
         PeriodicDistanceWrapper(_pele.Array[double] boxvec)
 
 
-cdef extern from "pele/aatopology.h" namespace "pele":
+cdef extern from "pele/aatopology.hpp" namespace "pele":
 
     cdef cppclass cppRigidFragment "pele::RigidFragment":
         cppRigidFragment(_pele.Array[double] x,

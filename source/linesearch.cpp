@@ -1,4 +1,4 @@
-#include "pele/linesearch.h"
+#include "pele/linesearch.hpp"
 #include <memory>
 #include <iostream>
 #include <limits>

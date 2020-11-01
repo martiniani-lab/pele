@@ -15,7 +15,7 @@ cdef extern from *:
     ctypedef int INT2 "2"    # a fake type
     ctypedef int INT3 "3"    # a fake type
 
-cdef extern from "pele/inversepower_stillinger.h" namespace "pele":
+cdef extern from "pele/inversepower_stillinger.hpp" namespace "pele":
     cdef cppclass cInversePowerStillinger "pele::InversePowerStillinger"[ndim]:
         cInversePowerStillinger(size_t pow, _pele.Array[double] radii) except +
     cdef cppclass cInversePowerStillingerPeriodic "pele::InversePowerStillingerPeriodic"[ndim]:

@@ -1,30 +1,47 @@
 # this file is meant to be parsed by python before being a proper CMakeLists.txt file
 # in particular, the following strings will be set to their proper values by python when
 # making CMakeLists.txt
-set(numpy_include /home/praharsh/anaconda3/envs/myenv/lib/python3.6/site-packages/numpy/core/include)
-set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/envs/myenv/include/python3.6m /home/praharsh/anaconda3/envs/myenv/include/python3.6m)
-set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/envs/myenv/lib/python3.6/config-3.6m-x86_64-linux-gnu -lpthread -ldl -lutil -lrt -lm -lpython3.6m -Xlinker -export-dynamic")
+set(numpy_include /home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include)
+set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/envs/changebranch3/include/python3.8 /home/praharsh/anaconda3/envs/changebranch3/include/python3.8)
+set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/config-3.8-x86_64-linux-gnu -lpthread -ldl -lutil -lrt -lm -lpython3.8 -Xlinker -export-dynamic")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #find_package(PythonLibs)
 #message("PYTHON_LIBRARIES ${PYTHON_LIBRARIES}")
 #message("PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS}")
-
 # osx makes the suffix for shared object libraries .dylib
 IF(APPLE)
   SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 ENDIF(APPLE)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
+#################################### petsc #############################################
+
+find_package(PETSc REQUIRED)
 
 ##################################### sundials #######################################
 # TODO: figure out how to remove the extra setup for sundials
 
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+# Also includes PETSC
 set(SUNDIALS_INCLUDE_DIR
   /home/praharsh/.local/include
   CACHE PATH "Location of SUNDIALS header files")
 set(SUNDIALS_LIBRARY_DIR
   /home/praharsh/.local/lib
   CACHE PATH "Location of SUNDIALS libraries")
+
+
+# find_package(MPI) #make it REQUIRED, if you want
+
+set(MPI_INCLUDE_DIR
+  /opt/intel/compilers_and_libraries_2020.1.217/linux/mpi/intel64/include
+  CACHE PATH "Location of MPI header files")
+
+set(MPI_LIBRARY_DIR
+  /opt/intel/compilers_and_libraries_2020.1.217/linux/mpi/intel64/bin
+  CACHE PATH "Location of MPI LIBRARIES")
+
+
 
 
 # Find the SUNDIALS libraries
@@ -46,6 +63,9 @@ set(SUNDIALS_LIBRARIES
   ${SUNDIALS_NVEC_LIB}
   ${SUNDIALS_MANYVEC_LIB}
   ${SUNDIALS_EXTRA_LIBS})
+
+set(MPI_LIBRARIES
+  -L${MPI_LIBRARY_DIR})
 #####################################################################################
 
 message("python include dirs: ${PYTHON_INCLUDE_DIRS}")
@@ -53,6 +73,7 @@ message("python ldflags: ${PYTHON_LDFLAGS}")
 message("numpy include dirs: ${numpy_include}")
 include_directories(${numpy_include})
 include_directories(${PYTHON_INCLUDE_DIRS})
+
 # note: We set CMAKE_SHARED_LINKER_FLAGS because I couldn't get it to work using 
 # target_link_librarires().  CMake kept interpreting the flag CoreFoundation
 # as a library and appending -l to it and the compiler would complain
@@ -75,6 +96,7 @@ message("pele include directory: ${pele_include}")
 # NOTE: GLOBBING MIGHT BE A BAD IDEA WHEN ADDING FILES https://stackoverflow.com/questions/1027247/is-it-better-to-specify-source-files-with-glob-or-each-file-individually-in-cmake
 # This is a likely source of undefined symbol errors
 include_directories(${pele_include})
+include_directories(SYSTEM ${MPI_INCLUDE_DIR})
 include_directories(${SUNDIALS_INCLUDE_DIR})
 FILE(GLOB pele_sources ${pele_include}/*.c*)
 add_library(pele_lib SHARED ${pele_sources})
@@ -85,6 +107,8 @@ function(make_cython_lib cython_cxx_source)
   add_library(${library_name} SHARED ${cython_cxx_source})
   target_link_libraries(${library_name} pele_lib)
   target_link_libraries(${library_name} ${SUNDIALS_LIBRARIES})
+  target_link_libraries(${library_name} ${MPI_LIBRARIES})
+  target_link_libraries(${library_name} PkgConfig::PETSC)
   set_target_properties(${library_name} PROPERTIES PREFIX "")
   message("making library ${library_name} from source ${cython_cxx_source}")
 endfunction(make_cython_lib)

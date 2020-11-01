@@ -15,7 +15,7 @@ cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport shared_ptr
 
 
-cdef extern from "pele/atlj.h" namespace "pele":
+cdef extern from "pele/atlj.hpp" namespace "pele":
     cdef cppclass  cATLJ "pele::ATLJ":
         cATLJ(double sig, double eps, double Z) except +
 

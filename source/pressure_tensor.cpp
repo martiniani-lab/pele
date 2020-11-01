@@ -1,5 +1,5 @@
-#include "pele/pressure_tensor.h"
-#include "pele/simple_pairwise_potential.h"
+#include "pele/pressure_tensor.hpp"
+#include "pele/simple_pairwise_potential.hpp"
 
 namespace pele {
 

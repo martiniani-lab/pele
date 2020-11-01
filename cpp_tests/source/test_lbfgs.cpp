@@ -12,6 +12,8 @@
 #include <gtest/gtest.h>
 #include <cmath>
 #include <memory>
+#include <Eigen/Dense>
+using Eigen::MatrixXd;
 
 using pele::Array;
 using std::cout;
@@ -120,6 +122,25 @@ TEST(LbfgsRosenbrock, Rosebrock_works){
     std::cout << x0 << "\n" << " \n";
     std::cout << x << "\n";
     std::cout << "this is okay" << "\n";
+    Eigen::MatrixXf m(3,3);
+    double s2 = sqrt(2);
+    m(0,0) = 2;
+    m(0,1) = -1;
+    m(0,2) = 0;
+    m(1,0) = 1;
+    m(1,1) = 2;
+    m(1,2) = 0;
+    m(2,0) = 0;
+    m(2,1) = 0;
+    m(2,2) = 0;
+    std::cout << "here" << "\n";
+
+    Eigen::VectorXf b(3);
+    b << 1, 0, 0;
+    std::cout << m.colPivHouseholderQr().solve(b) << "solution \n";
+
+    std::cout << m << std::endl;
+    std::cout << b << std::endl;
 }
 
 

@@ -21,7 +21,7 @@ cdef extern from *:
 
 
 # use external c++ class
-cdef extern from "pele/inversepower.h" namespace "pele":
+cdef extern from "pele/inversepower.hpp" namespace "pele":
     cdef cppclass  cInversePower "pele::InversePower"[ndim]:
         cInversePower(double pow, double eps, _pele.Array[double] radii) except +
     cdef cppclass  cInversePowerPeriodic "pele::InversePowerPeriodic"[ndim]:

@@ -17,7 +17,7 @@ from pele.potentials._pele cimport array_wrap_np, array_wrap_np_size_t
 # is
 
 # use external c++ class
-cdef extern from "pele/frenkel.h" namespace "pele":
+cdef extern from "pele/frenkel.hpp" namespace "pele":
     cdef cppclass  cFrenkel "pele::Frenkel":
         cFrenkel(double sig, double eps, double rcut) except +
     cdef cppclass  cFrenkelPeriodic "pele::FrenkelPeriodic":
