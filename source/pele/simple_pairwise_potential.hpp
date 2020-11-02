@@ -95,6 +95,15 @@ public:
         hess.assign(0);
         return add_energy_gradient_hessian(x, grad, hess);
     }
+    /**
+     * calculates a sparse hessian assuming hess is of type SEQSBASIJ
+     */
+    virtual double get_energy_gradient_hessian_sparse(Array<double> const & x, Vec & grad, Mat & hess)
+    {
+        MatZeroEntries(hess);
+        VecZeroEntries(grad);
+        return add_energy_gradient_hessian(x, grad, hess);
+    }
     virtual double add_energy_gradient(Array<double> const & x, Array<double> & grad);
     virtual double add_energy_gradient(Array<double> const & x, std::vector<xsum_small_accumulator> & exact_grad);
     virtual double add_energy_gradient_hessian(Array<double> const & x, Array<double> & grad, Array<double> & hess);
@@ -352,7 +361,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
 
 
 /**
- * Finds a sparse hessian
+ * This calculates a sparse hessian as a petsc matrix, and returns the gradient in a sparse matrix (assuming we're sparse of course)
  */
 template<typename pairwise_interaction, typename distance_policy>
 inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradient_hessian_sparse(Array<double> const & x, Vec & grad, Mat & hess) {
@@ -375,6 +384,8 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     double gradj[m_ndim];             // gradj
     int indicesi[3];    // indices upto 3
     int indicesj[3];    // indices upto 3
+    double Hii_diag;
+    double Hii_off;
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
         size_t i1 = m_ndim * atom_i;
         for (size_t atom_j=0; atom_j<atom_i; ++atom_j){
@@ -390,12 +401,12 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
             e += _interaction->energy_gradient_hessian(r2, &gij, &hij, sum_radii(atom_i, atom_j));
             if (gij != 0) {
 #pragma unroll
-for (size_t k=0; k<m_ndim; ++k) {
-                     gradi[k] = -gij * dr[k];
-                     gradj[k] = gij * dr[k];
-                     indicesi[k] = i1+k;
-                     indicesj[k] = j1+k;
-                 }
+                for (size_t k=0; k<m_ndim; ++k) {
+                    gradi[k] = -gij * dr[k];
+                    gradj[k] = gij * dr[k];
+                    indicesi[k] = i1+k;
+                    indicesj[k] = j1+k;
+                }
                 VecSetValues(grad, m_ndim, indicesi, gradi, ADD_VALUES);
                 VecSetValues(grad, m_ndim, indicesj, gradj, ADD_VALUES);
             }
@@ -411,52 +422,46 @@ for (size_t k=0; k<m_ndim; ++k) {
 #pragma unroll
                 for (size_t k=0; k<m_ndim; ++k){
                     //diagonal block - diagonal terms
-                    double Hii_diag = (hij+gij)*dr[k]*dr[k]/r2 - gij;
+                    Hii_diag = (hij+gij)*dr[k]*dr[k]/r2 - gij;
                     MatSetValue(hess, i1+k, i1+k, Hii_diag, ADD_VALUES);
                     MatSetValue(hess, j1+k, j1+k, Hii_diag, ADD_VALUES);
                     // hess[N*(i1+k)+i1+k] += Hii_diag;
                     // hess[N*(j1+k)+j1+k] += Hii_diag;
                     //off diagonal block - diagonal terms
-                    MatSetValue(hess, i1+k, j1+k, -Hii_diag, ADD_VALUES);
+                    if(i1<j1) {
+                        MatSetValue(hess, i1+k, j1+k, -Hii_diag, ADD_VALUES);
+                    }
+                    else{
+                        MatSetValue(hess, j1+k, i1+k, -Hii_diag, ADD_VALUES);
+                    }
 #pragma unroll
                     for (size_t l = k+1; l<m_ndim; ++l){
                         //diagonal block - off diagonal terms
-                        double Hii_off = (hij+gij)*dr[k]*dr[l]/r2;
+                        Hii_off = (hij+gij)*dr[k]*dr[l]/r2;
                         if (Hii_off !=0)
                             {
-                                MatSetValue(hess, i1 +k, i1+l, Hii_off, ADD_VALUES);
-                                MatSetValue(hess, j1+k, j1+l, Hii_off, ADD_VALUES);
-                                //off diagonal block - off diagonal terms
-                                MatSetValue(hess, i1+k, j1+l, -Hii_off, ADD_VALUES);
-                                MatSetValue(hess, j1+k, i1+l, -Hii_off, ADD_VALUES);
+                                if(k<l) {
+                                    MatSetValue(hess, i1 +k, i1+l, Hii_off, ADD_VALUES);
+                                    MatSetValue(hess, j1+k, j1+l, Hii_off, ADD_VALUES);
+                                }
+                                else{
+                                    MatSetValue(hess, i1 +l, i1+k, Hii_off, ADD_VALUES);
+                                    MatSetValue(hess, j1 +l, j1+k, Hii_off, ADD_VALUES);
+                                }
+                                if(i1+k<j1+l) {
+                                    MatSetValue(hess, i1+k, j1+l, -Hii_off, ADD_VALUES);
+                                }
+                                else{
+                                    MatSetValue(hess, j1+l, i1+k, -Hii_off, ADD_VALUES);
+                                }
+                                if(j1+k<i1+l) {
+                                    MatSetValue(hess, j1+k, i1+l, -Hii_off, ADD_VALUES);
+                                }
+                                else{
+                                    MatSetValue(hess, i1+l, j1+k, -Hii_off, ADD_VALUES);
+                                }
                             }
-                    }
-                    //                     for (size_t k=0; k<m_ndim; ++k){
-                    //                         //diagonal block - diagonal terms
-                    //                         double Hii_diag = (hij+gij)*dr[k]*dr[k]/r2 - gij;
-                    //                         hess[N*(i1+k)+i1+k] += Hii_diag;
-                    //                         hess[N*(j1+k)+j1+k] += Hii_diag;
-                    //                         //off diagonal block - diagonal terms
-                    //                         double Hij_diag = -Hii_diag;
-                    //                         hess[N*(i1+k)+j1+k] = Hij_diag;
-                    //                         hess[N*(j1+k)+i1+k] = Hij_diag;
-                    // #pragma unroll
-                    //                         for (size_t l = k+1; l<m_ndim; ++l){
-                    //                             //diagonal block - off diagonal terms
-                    //                             double Hii_off = (hij+gij)*dr[k]*dr[l]/r2;
-                    //                             hess[N*(i1+k)+i1+l] += Hii_off;
-                    //                             hess[N*(i1+l)+i1+k] += Hii_off;
-                    //                             hess[N*(j1+k)+j1+l] += Hii_off;
-                    //                             hess[N*(j1+l)+j1+k] += Hii_off;
-                    //                             //off diagonal block - off diagonal terms
-                    //                             double Hij_off = -Hii_off;
-                    //                             hess[N*(i1+k)+j1+l] = Hij_off;
-                    //                             hess[N*(i1+l)+j1+k] = Hij_off;
-                    //                             hess[N*(j1+k)+i1+l] = Hij_off;
-                    //                             hess[N*(j1+l)+i1+k] = Hij_off;
-                        
-                    //                         }
-                    
+                    } 
                 }
             }
         }

@@ -952,7 +952,7 @@ void CellLists<distance_policy>::update_container(pele::Array<double> const & co
                     if (isubdom == new_subdom) {
                         m_container.add_atom_to_cell(iatom, new_cell, isubdom);
                     } else {
-                        std::array<long, 2> add_info = {iatom, new_cell};
+                        std::array<long, 2> add_info = {iatom, static_cast<long>(new_cell)};
                         add_atom_queue[new_subdom].push(add_info);
                     }
                 } else {
