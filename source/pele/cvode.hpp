@@ -29,6 +29,7 @@
 #include "backtracking.hpp"
 #include "bracketing.hpp"
 
+#include <petscmat.h>
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_matrix.h"
 #include "sundials/sundials_nvector.h"
@@ -78,6 +79,8 @@ private:
     double tN;
     N_Vector x0_N;
     Array<double> xold;
+    Mat petsc_hess;
+    Vec petsc_grad;
 public:
     void one_iteration();
     // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);

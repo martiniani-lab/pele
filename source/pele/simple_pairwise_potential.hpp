@@ -101,10 +101,19 @@ public:
         VecZeroEntries(grad);
         return add_energy_gradient_hessian_sparse(x, grad, hess);
     }
+    virtual double get_energy_gradient_sparse(Array<double> const & x, Vec & grad)
+    {
+        VecZeroEntries(grad);
+        return add_energy_gradient_sparse(x, grad);
+    }
     virtual double add_energy_gradient(Array<double> const & x, Array<double> & grad);
     virtual double add_energy_gradient(Array<double> const & x, std::vector<xsum_small_accumulator> & exact_grad);
     virtual double add_energy_gradient_hessian(Array<double> const & x, Array<double> & grad, Array<double> & hess);
     virtual double add_energy_gradient_hessian_sparse(Array<double> const & x, Vec & grad, Mat & hess);
+    /**
+     * Calculates a PETSc gradient to be used with sparse calculations
+     */
+    virtual double add_energy_gradient_sparse(Array<double> const & x, Vec & grad);
     virtual void get_neighbors(pele::Array<double> const & coords,
                                pele::Array<std::vector<size_t>> & neighbor_indss,
                                 pele::Array<std::vector<std::vector<double>>> & neighbor_distss,
@@ -357,6 +366,64 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
 }
 
 
+
+/**
+ * This calculates a sparse hessian as a petsc matrix, and returns the gradient in a sparse matrix (assuming we're sparse of course)
+ */
+template<typename pairwise_interaction, typename distance_policy>
+inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradient_sparse(Array<double> const & x, Vec & grad) {
+    double hij, gij;
+    double dr[m_ndim];
+    const size_t natoms = x.size() / m_ndim;
+    if (m_ndim * natoms != x.size()) {
+        throw std::runtime_error("x.size() is not divisible by the number of dimensions");
+    }
+    // if (x.size() != grad.size()) {
+    //     throw std::invalid_argument("the gradient has the wrong size");
+    // }
+    // if (hess.size() != x.size() * x.size()) {
+    //     throw std::invalid_argument("the Hessian has the wrong size");
+    // }
+
+    double e = 0.;
+    double gradi[m_ndim];             // gradi
+    double gradj[m_ndim];             // gradj
+    int indicesi[3];    // indices upto 3
+    int indicesj[3];    // indices upto 3
+    double Hii_diag;
+    double Hii_off;
+    for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
+        size_t i1 = m_ndim * atom_i;
+        for (size_t atom_j=0; atom_j<atom_i; ++atom_j){
+            size_t j1 = m_ndim * atom_j;
+
+            _dist->get_rij(dr, &x[i1], &x[j1]);
+            double r2 = 0;
+#pragma unroll
+            for (size_t k=0; k<m_ndim; ++k) {
+                r2 += dr[k]*dr[k];
+            }
+            
+            e += _interaction->energy_gradient_hessian(r2, &gij, &hij, sum_radii(atom_i, atom_j));
+            if (gij != 0) {
+#pragma unroll
+                for (size_t k=0; k<m_ndim; ++k) {
+                    gradi[k] = -gij * dr[k];
+                    gradj[k] = gij * dr[k];
+                    indicesi[k] = i1+k;
+                    indicesj[k] = j1+k;
+                }
+                VecSetValues(grad, m_ndim, indicesi, gradi, ADD_VALUES);
+                VecSetValues(grad, m_ndim, indicesj, gradj, ADD_VALUES);
+            }
+            VecAssemblyBegin(grad);
+            VecAssemblyEnd(grad);
+        }
+    }
+    VecAssemblyEnd(grad);
+    VecAssemblyEnd(grad);
+}
+
 /**
  * This calculates a sparse hessian as a petsc matrix, and returns the gradient in a sparse matrix (assuming we're sparse of course)
  */
@@ -406,8 +473,6 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
                 VecSetValues(grad, m_ndim, indicesi, gradi, ADD_VALUES);
                 VecSetValues(grad, m_ndim, indicesj, gradj, ADD_VALUES);
             }
-            VecAssemblyBegin(grad);
-            VecAssemblyEnd(grad);
 
             // grad[i1+k] -= gij * dr[k];
             // grad[j1+k] += gij * dr[k];
@@ -462,6 +527,10 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
             }
         }
     }
+    VecAssemblyBegin(grad);
+    VecAssemblyEnd(grad);
+    MatAssemblyBegin(hess, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(hess, MAT_FINAL_ASSEMBLY);
 }
 
 template<typename pairwise_interaction, typename distance_policy>

@@ -49,7 +49,7 @@ else:
     cmake_parallel_args = ["-j" + str(jargs.j)]
 
 #extra compiler args
-cmake_compiler_extra_args = ["-std=c++1z","-Wall", "-Wextra", "-pedantic", "-O3", "-fPIC"]
+cmake_compiler_extra_args = ["-std=c++1z","-Wall", "-Wextra", "-pedantic", "-O1", "-fPIC"]
 cmake_compiler_extra_args = ["-std=c++1z", "-pedantic", "-O3", "-fPIC"]
 if idcompiler.lower() == 'unix':
     cmake_compiler_extra_args += ['-march=native', '-flto', '-fopenmp']

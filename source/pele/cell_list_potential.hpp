@@ -659,7 +659,6 @@ public:
         if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
             return pele::Array<size_t>(0);
         }
-
         update_iterator(coords);
         return m_cell_lists.get_order(natoms);
     }

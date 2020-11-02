@@ -84,7 +84,7 @@ cmake_minimum_required(VERSION 2.8)
 
 
 enable_language(CXX)
-SET(CMAKE_CXX_FLAGS "-std=c++1z -Wall -Wextra -pedantic -O3 -fPIC -march=native -flto -fopenmp")
+SET(CMAKE_CXX_FLAGS "-std=c++1z -pedantic -O3 -fPIC -march=native -flto -fopenmp")
 
 #cmake_policy(SET CMP0015 NEW)
 
