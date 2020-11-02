@@ -10,6 +10,7 @@
 #include "distance.hpp"
 #include <omp.h>
 
+
 #include <petscmat.h>
 #include <petscsystypes.h>
 #include <petscvec.h>
@@ -42,10 +43,6 @@ protected:
     const double m_radii_sca;
     std::shared_ptr<std::vector<xsum_small_accumulator>> exact_gradient;    
     bool exact_gradient_initialized;
-
-
-
-
     SimplePairwisePotential( std::shared_ptr<pairwise_interaction> interaction,
             const Array<double> radii,
             std::shared_ptr<distance_policy> dist=NULL,
@@ -102,7 +99,7 @@ public:
     {
         MatZeroEntries(hess);
         VecZeroEntries(grad);
-        return add_energy_gradient_hessian(x, grad, hess);
+        return add_energy_gradient_hessian_sparse(x, grad, hess);
     }
     virtual double add_energy_gradient(Array<double> const & x, Array<double> & grad);
     virtual double add_energy_gradient(Array<double> const & x, std::vector<xsum_small_accumulator> & exact_grad);
@@ -367,7 +364,6 @@ template<typename pairwise_interaction, typename distance_policy>
 inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradient_hessian_sparse(Array<double> const & x, Vec & grad, Mat & hess) {
     double hij, gij;
     double dr[m_ndim];
-    const size_t N = x.size();
     const size_t natoms = x.size() / m_ndim;
     if (m_ndim * natoms != x.size()) {
         throw std::runtime_error("x.size() is not divisible by the number of dimensions");
