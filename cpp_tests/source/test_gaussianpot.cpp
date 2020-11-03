@@ -2,9 +2,9 @@
 
 #include <gtest/gtest.h>
 
-#include "pele/array.h"
-#include "pele/gaussianpot.h"
-#include "pele/modified_fire.h"
+#include "pele/array.hpp"
+#include "pele/gaussianpot.hpp"
+#include "pele/modified_fire.hpp"
 
 #include "test_utils.hpp"
 

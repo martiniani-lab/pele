@@ -3,10 +3,10 @@
 #include <fstream>
 #include <string>
 
-#include "pele/cell_lists.h"
-#include "pele/lj_cut.h"
-#include "pele/lbfgs.h"
-#include "pele/matrix.h"
+#include "pele/cell_lists.hpp"
+#include "pele/lj_cut.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/matrix.hpp"
 
 #include "bench_utils.hpp"
 

@@ -1,4 +1,4 @@
-#include "pele/array.h"
+#include "pele/array.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <vector>

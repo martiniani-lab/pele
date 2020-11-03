@@ -1,9 +1,9 @@
-#include "pele/vecn.h"
+#include "pele/vecn.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 #include <gtest/gtest.h>
-#include "pele/matrix.h"
+#include "pele/matrix.hpp"
 
 using pele::MatrixAdapter;
 using pele::Array;

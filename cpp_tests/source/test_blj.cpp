@@ -1,10 +1,10 @@
 #include <memory>
 #include "test_utils.hpp"
-#include "pele/lj.h"
-#include "pele/lj_cut.h"
-#include "pele/atomlist_potential.h"
-#include "pele/distance.h"
-#include "pele/combine_potentials.h"
+#include "pele/lj.hpp"
+#include "pele/lj_cut.hpp"
+#include "pele/atomlist_potential.hpp"
+#include "pele/distance.hpp"
+#include "pele/combine_potentials.hpp"
 
 class BLJCutTest :  public PotentialTest
 {

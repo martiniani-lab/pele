@@ -1,9 +1,9 @@
-#include "pele/array.h"
-#include "pele/base_interaction.h"
-#include "pele/base_potential.h"
-#include "pele/wca.h"
-#include "pele/hs_wca.h"
-#include "pele/meta_pow.h"
+#include "pele/array.hpp"
+#include "pele/base_interaction.hpp"
+#include "pele/base_potential.hpp"
+#include "pele/wca.hpp"
+#include "pele/hs_wca.hpp"
+#include "pele/meta_pow.hpp"
 #include "test_utils.hpp"
 
 #include <iostream>

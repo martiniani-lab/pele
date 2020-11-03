@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "pele/distance.h"
+#include "pele/distance.hpp"
 #include "test_utils.hpp"
 
 using pele::Array;

@@ -3,8 +3,8 @@
 
 #include <gtest/gtest.h>
 
-#include "pele/combination.h"
-#include "pele/array.h"
+#include "pele/combination.hpp"
+#include "pele/array.hpp"
 
 using pele::make_combination_generator;
 

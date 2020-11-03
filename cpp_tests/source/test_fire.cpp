@@ -5,8 +5,8 @@
 
 #include <gtest/gtest.h>
 
-#include "pele/lj.h"
-#include "pele/modified_fire.h"
+#include "pele/lj.hpp"
+#include "pele/modified_fire.hpp"
 
 using pele::Array;
 

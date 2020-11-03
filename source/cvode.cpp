@@ -7,13 +7,15 @@
 #include "pele/debug.hpp"
 
 // cvode imports
+#include "petscvec.h"
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_nvector.h"
 #include "sunmatrix/sunmatrix_dense.h"
 #include <cstddef>
 #include <iostream>
 #include <memory>
-
+#include <petscsys.h>
+// #include <petscmat.h>
 
 namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potential,
@@ -28,6 +30,11 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
       tN(10000000.0)
 {
     // dummy t0
+    // initialize petsc
+    PetscInitializeNoArguments();
+    // this assumes that the number of non zeros aren't different
+    MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, hessav, NULL, &petsc_hess);
+    VecCreateSeq(PETSC_COMM_SELF, N_size, &petsc_grad);
     double t0 = 0;
     std::cout << x0 << "\n";
     Array<double> x0copy = x0.copy();
@@ -108,6 +115,4 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
     }
     return 0;
 };
-
-
 } // namespace pele

@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <iostream>
 #include "array.hpp"
+#include <petscmat.h>
+#include <petscvec.h>
 
 
 extern "C" {
@@ -78,6 +80,17 @@ public:
         double energy = get_energy_gradient(x, grad);
         numerical_hessian(x, hess);
         return energy;
+    }
+
+    virtual double get_energy_gradient_hessian_sparse(Array<double> const & x, Mat & grad,
+                                                      Vec & hess)
+    {
+        throw std::runtime_error("sparse methods not written for this class");
+    }
+
+    virtual double get_energy_gradient_sparse(Array<double> const & x, Vec & grad)
+    {
+        throw std::runtime_error("sparse methods not written for this class");
     }
 
     /**

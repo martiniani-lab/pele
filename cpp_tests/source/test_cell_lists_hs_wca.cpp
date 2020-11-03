@@ -1,12 +1,12 @@
 #include <omp.h>
 #include <gtest/gtest.h>
 #include <random>
-#include "pele/array.h"
-#include "pele/cell_lists.h"
-#include "pele/distance.h"
-#include "pele/hs_wca.h"
-#include "pele/inversepower.h"
-#include "pele/modified_fire.h"
+#include "pele/array.hpp"
+#include "pele/cell_lists.hpp"
+#include "pele/distance.hpp"
+#include "pele/hs_wca.hpp"
+#include "pele/inversepower.hpp"
+#include "pele/modified_fire.hpp"
 #include "test_utils.hpp"
 
 using pele::Array;

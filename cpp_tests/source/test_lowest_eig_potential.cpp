@@ -1,7 +1,7 @@
-#include "pele/array.h"
-#include "pele/lowest_eig_potential.h"
-#include "pele/lbfgs.h"
-#include "pele/lj.h"
+#include "pele/array.hpp"
+#include "pele/lowest_eig_potential.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/lj.hpp"
 
 #include <iostream>
 #include <stdexcept>

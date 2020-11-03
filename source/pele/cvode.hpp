@@ -79,8 +79,12 @@ private:
     double tN;
     N_Vector x0_N;
     Array<double> xold;
+    // sparse calculation initializers
     Mat petsc_hess;
     Vec petsc_grad;
+    PetscInt blocksize;
+    // average number of non zeros per block for memory allocation purposes
+    PetscInt hessav;
 public:
     void one_iteration();
     // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);

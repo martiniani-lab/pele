@@ -1,6 +1,6 @@
-#include "pele/array.h"
-#include "pele/lj.h"
-#include "pele/lj_cut.h"
+#include "pele/array.hpp"
+#include "pele/lj.hpp"
+#include "pele/lj_cut.hpp"
 #include "test_utils.hpp"
 
 #include <iostream>

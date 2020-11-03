@@ -8,9 +8,9 @@
 #include <random>
 
 
-#include "pele/array.h"
-#include "pele/lj_cut.h"
-#include "pele/matrix.h"
+#include "pele/array.hpp"
+#include "pele/lj_cut.hpp"
+#include "pele/matrix.hpp"
 
 class Timer {
 public:
