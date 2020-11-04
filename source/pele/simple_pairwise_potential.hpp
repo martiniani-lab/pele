@@ -378,12 +378,11 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     if (m_ndim * natoms != x.size()) {
         throw std::runtime_error("x.size() is not divisible by the number of dimensions");
     }
-    // if (x.size() != grad.size()) {
-    //     throw std::invalid_argument("the gradient has the wrong size");
-    // }
-    // if (hess.size() != x.size() * x.size()) {
-    //     throw std::invalid_argument("the Hessian has the wrong size");
-    // }
+    PetscInt grad_size;
+    VecGetSize(grad, &grad_size);
+    if (x.size() != grad_size) {
+        throw std::invalid_argument("the gradient has the wrong size");
+    }
 
     double e = 0.;
     double gradi[m_ndim];             // gradi
@@ -414,12 +413,11 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
                 VecSetValues(grad, m_ndim, indicesi, gradi, ADD_VALUES);
                 VecSetValues(grad, m_ndim, indicesj, gradj, ADD_VALUES);
             }
-            VecAssemblyBegin(grad);
-            VecAssemblyEnd(grad);
         }
     }
+    VecAssemblyBegin(grad);
     VecAssemblyEnd(grad);
-    VecAssemblyEnd(grad);
+    return e;
 }
 
 /**
@@ -430,15 +428,21 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     double hij, gij;
     double dr[m_ndim];
     const size_t natoms = x.size() / m_ndim;
+    PetscInt grad_size;
+    PetscInt hess_size_x;
+    PetscInt hess_size_y;
+    MatSetType(hess, MATSEQSBAIJ);
+    VecGetSize(grad, &grad_size);
+    MatGetSize(hess, &hess_size_x, &hess_size_y);
     if (m_ndim * natoms != x.size()) {
         throw std::runtime_error("x.size() is not divisible by the number of dimensions");
     }
-    // if (x.size() != grad.size()) {
-    //     throw std::invalid_argument("the gradient has the wrong size");
-    // }
-    // if (hess.size() != x.size() * x.size()) {
-    //     throw std::invalid_argument("the Hessian has the wrong size");
-    // }
+    if (x.size() != grad_size) {
+        throw std::invalid_argument("the gradient has the wrong size");
+    }
+    if ((hess_size_x != x.size()) or (hess_size_y != x.size())) {
+        throw std::invalid_argument("the Hessian has the wrong size");
+    }
 
     double e = 0.;
     double gradi[m_ndim];             // gradi
@@ -447,8 +451,10 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     int indicesj[3];    // indices upto 3
     double Hii_diag;
     double Hii_off;
+
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
         size_t i1 = m_ndim * atom_i;
+
         for (size_t atom_j=0; atom_j<atom_i; ++atom_j){
             size_t j1 = m_ndim * atom_j;
 
@@ -529,6 +535,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     VecAssemblyEnd(grad);
     MatAssemblyBegin(hess, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(hess, MAT_FINAL_ASSEMBLY);
+    return e;
 }
 
 template<typename pairwise_interaction, typename distance_policy>

@@ -33,6 +33,8 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     // initialize petsc
     PetscInitializeNoArguments();
     // this assumes that the number of non zeros aren't different
+    blocksize = 1;
+    hessav = 10;
     MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, hessav, NULL, &petsc_hess);
     VecCreateSeq(PETSC_COMM_SELF, N_size, &petsc_grad);
     double t0 = 0;

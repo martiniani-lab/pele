@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
-
+set(CMAKE_CXX_COMPILER /opt/intel/compilers_and_libraries_2020.1.217/linux/mpi/intel64/bin/mpigxx)
+set(CMAKE_C_COMPILER /opt/intel/compilers_and_libraries_2020.1.217/linux/mpi/intel64/bin/mpigcc)
 project(pele_tests)
 
 # if not specified by user, the standard build type is release
@@ -10,6 +11,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 enable_language(CXX)
 ADD_DEFINITIONS(-std=c++1z -g)
 ADD_DEFINITIONS(-Wall)
+
 
 #set OpenMP
 find_package(OpenMP)
@@ -61,6 +63,8 @@ set(SUNDIALS_LIBRARIES
   ${SUNDIALS_NVEC_LIB}
   ${SUNDIALS_MANYVEC_LIB}
   ${SUNDIALS_EXTRA_LIBS})
+set(MPI_LIBRARIES
+  -L${MPI_LIBRARY_DIR})
 #####################################################################################
 
 # Add and compile the gtest library
@@ -91,8 +95,8 @@ FILE(GLOB sources *.c*)
 add_executable(test_main ${sources})
 target_link_libraries(test_main pele_lib gtest gtest_main pthread)
 target_link_libraries(test_main ${SUNDIALS_LIBRARIES})
-target_link_libraries(test_main PkgConfig::PETSC)
 target_link_libraries(test_main ${MPI_LIBRARIES})
+target_link_libraries(test_main PkgConfig::PETSC)
 
 
 

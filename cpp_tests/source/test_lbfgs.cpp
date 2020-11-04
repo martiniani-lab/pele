@@ -77,12 +77,6 @@ TEST(LbfgsLJ, Reset_Works){
     }
     ASSERT_DOUBLE_EQ(lbfgs1.get_f(), lbfgs2.get_f());
     ASSERT_DOUBLE_EQ(lbfgs1.get_rms(), lbfgs2.get_rms());
-//    ASSERT_EQ(lbfgs1.get_niter(), lbfgs1.get_niter());
-//    ASSERT_GT(lbfgs.get_niter(), 1);
-//    ASSERT_LT(lbfgs.get_rms(), 1e-4);
-//    ASSERT_LT(lbfgs.get_rms(), 1e-4);
-//    ASSERT_NEAR(lbfgs.get_f(), -.25, 1e-10);
-
 
 }
 

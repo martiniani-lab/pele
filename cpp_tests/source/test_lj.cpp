@@ -32,6 +32,8 @@ TEST(LJInteractionTest, EnergyGradient_Works){
     ASSERT_NEAR(g, 9.2454671845389917, 1e-10);
 }
 
+
+
 TEST(LJInteractionTest, Hessian_Works){
     double r2 = 1.1;
     double c6 = 1.2;
