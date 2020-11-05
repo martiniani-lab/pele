@@ -1,6 +1,7 @@
 #ifndef _PELE_CELL_LISTS_H_
 #define _PELE_CELL_LISTS_H_
 
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <exception>
@@ -134,6 +135,30 @@ public:
         m_cell_atoms[isubdom][icell].pop_back();
     }
 };
+
+/**
+ * Gets the cell scale for tests in c++. NOTE: this needs to be tested for all cases
+ */
+double get_ncellx_scale(pele::Array<double> radii, pele::Array<double> boxv,
+                        size_t omp_threads) {
+    double ndim = boxv.size();
+    double ncellsx_max = std::max<size_t>(omp_threads, pow(radii.size(), 1/ndim));
+    double rcut = radii.get_max()*2;
+    size_t ncellsx= boxv[0]/rcut;
+    int ncellsx_scale;
+    if (ncellsx<=ncellsx_max) {
+        if (ncellsx>= omp_threads) {
+            ncellsx_scale = 1;
+        }
+        else {
+            ncellsx_scale = ceil(omp_threads/ncellsx);
+        }
+    }
+    else {
+        ncellsx_scale = ncellsx_max/ncellsx;
+    }
+    return ncellsx_scale;
+}
 
 }
 
@@ -1007,7 +1032,6 @@ void CellLists<distance_policy>::update_container_specific(pele::Array<double> c
         }
     }
 }
-
 } // namespace pele
 
 #endif // #ifndef _PELE_CELL_LISTS_H_
