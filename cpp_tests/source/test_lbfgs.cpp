@@ -13,6 +13,7 @@
 #include <cmath>
 #include <memory>
 #include <Eigen/Dense>
+    
 using Eigen::MatrixXd;
 
 using pele::Array;

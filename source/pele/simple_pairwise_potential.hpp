@@ -365,8 +365,6 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     return e;
 }
 
-
-
 /**
  * This calculates a sparse hessian as a petsc matrix, and returns the gradient in a sparse matrix (assuming we're sparse of course)
  */
