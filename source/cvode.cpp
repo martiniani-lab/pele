@@ -52,10 +52,8 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     udata.stored_grad = Array<double>(x0.size(), 0);
     CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
     ret = CVodeSetUserData(cvode_mem, &udata);
-    
     A = SUNDenseMatrix(N_size, N_size);
     LS = SUNLinSol_Dense(x0_N, A);
-    
     CVodeSetLinearSolver(cvode_mem, LS, A);
     CVodeSetJacFn(cvode_mem, Jac);
     g_ = udata.stored_grad;
