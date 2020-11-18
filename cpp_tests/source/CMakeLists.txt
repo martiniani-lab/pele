@@ -53,16 +53,28 @@ find_library(SUNDIALS_NVEC_LIB
   sundials_nvecserial ${SUNDIALS_LIBRARY_DIR}
   DOC "NVECTOR_SERIAL library")
 
+find_library(SUNDIALS_NVEC_PETSC_LIB
+  sundials_nvecpetsc ${SUNDIALS_LIBRARY_DIR}
+  DOC "NVECTOR_PETSC library")
+
 find_library(SUNDIALS_MANYVEC_LIB
   sundials_nvecmanyvector ${SUNDIALS_LIBRARY_DIR}
   DOC "NVECTOR_MANYVECTOR library")
+
+FIND_LIBRARY(SUNDIALS_NLS_LIB
+  sundials_sunnonlinsolpetscsnes ${SUNDIALS_LIBRARY_DIR}
+  DOC "SUNNonlinearSolver SNES library")
 
 set(SUNDIALS_LIBRARIES
   -L${SUNDIALS_LIBRARY_DIR}
   ${SUNDIALS_SOLVER_LIB}
   ${SUNDIALS_NVEC_LIB}
   ${SUNDIALS_MANYVEC_LIB}
-  ${SUNDIALS_EXTRA_LIBS})
+  ${SUNDIALS_EXTRA_LIBS}
+  ${SUNDIALS_NLS_LIB}
+  ${SUNDIALS_NVEC_PETSC_LIB})
+
+
 set(MPI_LIBRARIES
   -L${MPI_LIBRARY_DIR})
 #####################################################################################

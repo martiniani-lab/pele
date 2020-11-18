@@ -3,18 +3,24 @@
 #include "cvode/cvode.h"
 #include "cvode/cvode_ls.h"
 #include "nvector/nvector_serial.h"
+#include "pele/base_potential.hpp"
 #include "pele/optimizer.hpp"
 #include "pele/debug.hpp"
 
 // cvode imports
+#include "petscsnes.h"
+#include "petscsystypes.h"
 #include "petscvec.h"
 #include "sundials/sundials_linearsolver.h"
+#include "sundials/sundials_nonlinearsolver.h"
 #include "sundials/sundials_nvector.h"
 #include "sunmatrix/sunmatrix_dense.h"
+#include <nvector/nvector_petsc.h>
 #include <cstddef>
 #include <iostream>
 #include <memory>
 #include <petscsys.h>
+#include <sys/types.h>
 // #include <petscmat.h>
 
 namespace pele {
@@ -35,14 +41,42 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     // this assumes that the number of non zeros aren't different
     blocksize = 1;
     hessav = 10;
+    // matrix initialization
     MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, hessav, NULL, &petsc_hess);
     VecCreateSeq(PETSC_COMM_SELF, N_size, &petsc_grad);
-    double t0 = 0;
+    // wrap nvector into petsc array
+    nvec_grad_petsc = N_VMake_Petsc(petsc_grad);
+    VecDuplicate(petsc_grad, &residual);
+
+
+    // SNES create
+    SNESCreate(PETSC_COMM_SELF, &snes);
+    
+
+
+    // we need to pass the potential pointer on to the
+    // Jacobian function as the application context
+    // The potential pointer allows us to use the base potential class to calculate the Jacobian
+    // of the gradient i.e the hessian
+    udataptr = &udata;
+    SNESSetJacobian(snes, petsc_hess, petsc_hess, hessian_wrapper,udataptr);
+     
+    
+    
+    
+
+    
+    
+    
+    
+    
+     double t0 = 0;
     std::cout << x0 << "\n";
     Array<double> x0copy = x0.copy();
     x0_N = N_Vector_eq_pele(x0copy);
     // initialization of everything CVODE needs
     int ret = CVodeInit(cvode_mem, f, t0, x0_N);
+    
     // initialize userdata
     udata.rtol = rtol;
     udata.atol = atol;
@@ -51,6 +85,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     udata.pot_ = potential_;
     udata.stored_grad = Array<double>(x0.size(), 0);
     CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
+    
     ret = CVodeSetUserData(cvode_mem, &udata);
     A = SUNDenseMatrix(N_size, N_size);
     LS = SUNLinSol_Dense(x0_N, A);
@@ -115,4 +150,19 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
     }
     return 0;
 };
+
+
+
+PetscErrorCode hessian_wrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data)
+{
+    UserData udata = (UserData) user_data;
+    // wrap petsc data into pele vec
+    Array<double> x_pele = pele_eq_PetscVec(x);
+    x_pele = pele_eq_PetscVec(x);
+    Vec dummy;
+    udata->pot_->get_energy_gradient_hessian_sparse(x_pele, dummy, Amat);
+    return 0;
+};
+
+
 } // namespace pele

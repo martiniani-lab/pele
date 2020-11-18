@@ -100,43 +100,42 @@ TEST(LbfgsLJ, SetFuncGradientWorks){
     ASSERT_DOUBLE_EQ(lbfgs1.get_f(), lbfgs2.get_f());
 }
 
+// TEST(LbfgsRosenbrock, Rosebrock_works){
+//     auto rosenbrock = std::make_shared<pele::RosenBrock> ();
+//     Array<double> x0(2, 0);
+//     pele::CVODEBDFOptimizer lbfgs(rosenbrock, x0);
+//     // pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 1, 1);
+//     // pele ::GradientDescent lbfgs(rosenbrock, x0);
+//     lbfgs.run(2000);
+//     Array<double> x = lbfgs.get_x();
+//     std::cout << x << "\n";
+//     cout << lbfgs.get_nfev() << " get_nfev() \n";
+//     cout << lbfgs.get_niter() << " get_niter() \n";
+//     cout << lbfgs.get_rms() << " get_rms() \n";
+//     cout << lbfgs.get_rms() << " get_rms() \n";
+//     std::cout << x0 << "\n" << " \n";
+//     std::cout << x << "\n";
+//     std::cout << "this is okay" << "\n";
+//     Eigen::MatrixXf m(3,3);
+//     double s2 = sqrt(2);
+//     m(0,0) = 2;
+//     m(0,1) = -1;
+//     m(0,2) = 0;
+//     m(1,0) = 1;
+//     m(1,1) = 2;
+//     m(1,2) = 0;
+//     m(2,0) = 0;
+//     m(2,1) = 0;
+//     m(2,2) = 0;
+//     std::cout << "here" << "\n";
 
-TEST(LbfgsRosenbrock, Rosebrock_works){
-    auto rosenbrock = std::make_shared<pele::RosenBrock> ();
-    Array<double> x0(2, 0);
-    pele::CVODEBDFOptimizer lbfgs(rosenbrock, x0);
-    // pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 1, 1);
-    // pele ::GradientDescent lbfgs(rosenbrock, x0);
-    lbfgs.run(2000);
-    Array<double> x = lbfgs.get_x();
-    std::cout << x << "\n";
-    cout << lbfgs.get_nfev() << " get_nfev() \n";
-    cout << lbfgs.get_niter() << " get_niter() \n";
-    cout << lbfgs.get_rms() << " get_rms() \n";
-    cout << lbfgs.get_rms() << " get_rms() \n";
-    std::cout << x0 << "\n" << " \n";
-    std::cout << x << "\n";
-    std::cout << "this is okay" << "\n";
-    Eigen::MatrixXf m(3,3);
-    double s2 = sqrt(2);
-    m(0,0) = 2;
-    m(0,1) = -1;
-    m(0,2) = 0;
-    m(1,0) = 1;
-    m(1,1) = 2;
-    m(1,2) = 0;
-    m(2,0) = 0;
-    m(2,1) = 0;
-    m(2,2) = 0;
-    std::cout << "here" << "\n";
+//     Eigen::VectorXf b(3);
+//     b << 1, 0, 0;
+//     std::cout << m.colPivHouseholderQr().solve(b) << "solution \n";
 
-    Eigen::VectorXf b(3);
-    b << 1, 0, 0;
-    std::cout << m.colPivHouseholderQr().solve(b) << "solution \n";
-
-    std::cout << m << std::endl;
-    std::cout << b << std::endl;
-}
+//     std::cout << m << std::endl;
+//     std::cout << b << std::endl;
+// }
 
 
 

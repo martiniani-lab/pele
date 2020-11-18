@@ -506,10 +506,15 @@ TEST_F(CellListsTestMoreHS_WCA, HSWCAMinimizationCartesian_Works) {
     pele::MODIFIED_FIRE opt_cells(pot_cells, x, .1, 1, 1);
     opt_no_cells.run();
     opt_cells.run();
+    std::cout << "here4" << "\n";
     auto x_opt_no_cells = opt_no_cells.get_x();
     auto x_opt_cells = opt_no_cells.get_x();
+    std::cout << "here5" << "\n";
+
     const auto e_opt_no_cells = pot_no_cells->get_energy(x_opt_no_cells);
+    std::cout << "here 5.5" << "\n";
     const auto e_opt_cells = pot_cells->get_energy(x_opt_cells);
+    std::cout << "here 6" << "\n";
     EXPECT_DOUBLE_EQ(e_opt_no_cells, e_opt_cells);
     for (size_t i = 0; i < x_opt_no_cells.size(); ++i) {
         EXPECT_DOUBLE_EQ(x_opt_no_cells[i], x_opt_cells[i]);

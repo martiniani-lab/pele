@@ -751,12 +751,16 @@ public:
         if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
             return NAN;
         }
+        std::cout << "get energy init" << "\n";
+
         update_iterator(coords);
+        std::cout << "iterator updated" << "\n";
         m_eAcc.reset_data(&coords);
+        std::cout << "coords reset" << "\n";
         auto looper = m_cell_lists.get_atom_pair_looper(m_eAcc);
-
+        std::cout << "atoms looper initialized" << "\n";
         looper.loop_through_atom_pairs();
-
+        std::cout << "atoms looped through" << "\n";
         return m_eAcc.get_energy();
     }
 

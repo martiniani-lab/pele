@@ -29,9 +29,16 @@
 #include "backtracking.hpp"
 #include "bracketing.hpp"
 
+
+
+
 #include <petscmat.h>
+#include <sunnonlinsol/sunnonlinsol_petscsnes.h>
+    
+#include "petscvec.h"
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_matrix.h"
+#include "sundials/sundials_nonlinearsolver.h"
 #include "sundials/sundials_nvector.h"
 #include "cvode/cvode_proj.h"
     
@@ -64,6 +71,23 @@ typedef struct UserData_
     std::shared_ptr<pele::BasePotential> pot_;
 } * UserData;
 
+
+// /**
+//  * Data that helps determine the context in which petsc can calculate a hessian
+//  * Contains
+//  * 1. shared pointer to base potential
+//  * 2. reference to coords array
+//  */
+// typedef struct hessdata_
+// {
+    
+// } * hessdata;
+
+
+/**
+ * wrapper around get_energy_gradient_hessian_sparse that helps get the hessian matrix for petsc
+ */
+PetscErrorCode hessian_wrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data);
 /**
  * Not exactly an optimizer but solves for the differential equation $ dx/dt = - \grad{V(x)} $ to
  * arrive at the trajectory to the corresponding minimum
@@ -75,16 +99,22 @@ private:
     size_t N_size;
     SUNMatrix A;
     SUNLinearSolver LS;
+    SUNNonlinearSolver NLS;
     double t0;
     double tN;
+    void * udataptr;
     N_Vector x0_N;
     Array<double> xold;
     // sparse calculation initializers
     Mat petsc_hess;
     Vec petsc_grad;
+    N_Vector nvec_grad_petsc;
+    Vec residual;
     PetscInt blocksize;
     // average number of non zeros per block for memory allocation purposes
     PetscInt hessav;
+
+    SNES                 snes;
 public:
     void one_iteration();
     // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -126,6 +156,20 @@ inline pele::Array<double> pele_eq_N_Vector(N_Vector x) {
         y[i] = NV_Ith_S(x, i);
     }
     return pele::Array<double>(NV_DATA_S(x), N_VGetLength(x)).copy();
+}
+
+
+
+/**
+ * gets the array data and wraps it into a pele Array.
+ * Note: pele arrays are single processor only
+ */
+inline pele::Array<double> pele_eq_PetscVec(Vec x) {
+    double *x_arr;
+    VecGetArray(x, &x_arr);
+    int length;
+    VecGetLocalSize(x, &length);
+    return pele::Array<double>(x_arr, length);
 }
 
 int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);

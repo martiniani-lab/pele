@@ -111,3 +111,4 @@ SUNMatrix_ID SUNMatGetID_PETScSeqSBAIJ(SUNMatrix A)
 {
   return SUNMATRIX_CUSTOM;
 }
+

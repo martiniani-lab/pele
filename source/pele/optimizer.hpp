@@ -18,6 +18,8 @@ namespace pele{
 // public:
 //     blah(double a) {std::cout << "this works" << "\n";};
 //     virtual ~blah() {};
+// 
+// 
 // };
 
 
@@ -160,6 +162,7 @@ public :
             one_iteration();
         }
     }
+    
 
     /**
      * Run the optimzation algorithm for niter iterations or until the

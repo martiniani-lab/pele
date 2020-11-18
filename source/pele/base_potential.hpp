@@ -82,8 +82,8 @@ public:
         return energy;
     }
 
-    virtual double get_energy_gradient_hessian_sparse(Array<double> const & x, Mat & grad,
-                                                      Vec & hess)
+    virtual double get_energy_gradient_hessian_sparse(Array<double> const & x, Vec & grad,
+                                                      Mat & hess)
     {
         throw std::runtime_error("sparse methods not written for this class");
     }
