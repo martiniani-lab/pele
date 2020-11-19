@@ -187,16 +187,14 @@ protected:
    * Creates a new Vec object with data from pele array (cannot wrap data due to
    * PETSc data encapsulation)
    * involves creation of new stuff
-  */
-   inline Vec PetsVec_eq_pele(pele::Array<double> x) {
-     Vec x_petsc;
-     VecCreateSeq(PETSC_COMM_SELF,x.size(), &x_petsc);
-     for (auto i = 0; i < x.size(); ++i) {
-       VecSetValue(x_petsc, i, x[i], INSERT_VALUES);
-     }
-     VecAssemblyBegin(x_petsc);
+   */
+  inline void PetsVec_eq_pele(Vec & x_petsc, pele::Array<double> x) {
+    VecCreateSeq(PETSC_COMM_SELF,x.size(), &x_petsc);
+    for (auto i = 0; i < x.size(); ++i) {
+      VecSetValue(x_petsc, i, x[i], INSERT_VALUES);
+    }
+    VecAssemblyBegin(x_petsc);
     VecAssemblyEnd(x_petsc);
-    return x_petsc;
   }
 
   int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);

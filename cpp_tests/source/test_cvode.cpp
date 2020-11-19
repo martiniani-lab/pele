@@ -6,6 +6,7 @@
 #include "nvector/nvector_petsc.h"
 #include "pele/base_potential.hpp"
 #include "petscsys.h"
+#include "petscsystypes.h"
 #include "petscvec.h"
 #include "petscviewer.h"
 #include "sundials/sundials_nvector.h"
@@ -30,35 +31,44 @@ TEST(CVODELJ, gradFunctionWorks){
     std::cout << x0 << "\n";
     Vec x_petsc;
     Vec minus_grad_petsc;
+    Vec direct_grad;
     VecCreateSeq(PETSC_COMM_SELF, x0.size(), &minus_grad_petsc);
-    VecDuplicate(minus_grad_petsc, &x_petsc);
-
-    rosenbrock->get_energy_gradient_sparse(x0, minus_grad_petsc);
-    VecView(minus_grad_petsc, PETSC_VIEWER_STDOUT_SELF);
+    VecDuplicate(minus_grad_petsc, &direct_grad);
+    rosenbrock->get_energy_gradient_sparse(x0, direct_grad);
     // set relevant user data
     s1.pot_ = rosenbrock;
     s1.neq = x0.size();
     s1.nfev =0;
+    s1.stored_energy =0;
     double dummy;
     N_Vector x_nvec;
-
-    
+    PetsVec_eq_pele(x_petsc, x0);
     x_nvec = N_VMake_Petsc(x_petsc);
     N_Vector minus_grad_nvec;
     VecZeroEntries(minus_grad_petsc);
     minus_grad_nvec = N_VMake_Petsc(minus_grad_petsc);
+
     void * s1_void = &s1;
-    VecView(x_petsc, PETSC_VIEWER_STDOUT_SELF);
     f(dummy, x_nvec, minus_grad_nvec, (void *) &s1);
-    VecView(minus_grad_petsc, PETSC_VIEWER_STDOUT_SELF);
+
+
+    // get values
+    PetscInt ix[] = {0,1,2,3,4,5};
+    double negative_grad_arr[6];
+    double *direct_grad_arr;
+
+    VecGetValues(minus_grad_petsc, 6, ix, negative_grad_arr);
+    VecGetArray(direct_grad, &direct_grad_arr);
+
+    // assert they're the same
+    for (auto i = 0; i < 6; ++i) {
+        ASSERT_NEAR(negative_grad_arr[i], -direct_grad_arr[i], 1e-10);
+    }
     N_VDestroy(x_nvec);
     VecDestroy(&x_petsc);
-    VecDestroy(&minus_grad_petsc);
-    
+    VecDestroy(&minus_grad_petsc);    
     PetscFinalize();
 }
-
-
 
 
 // TEST(CVODELJ, CVODESolverWorks){

@@ -421,7 +421,7 @@ public:
 
 
 /**
- * This is an accumulator that 
+ * This is an accumulator for the hessian
  */
 template <typename pairwise_interaction, typename distance_policy>
 class EnergyGradientHessianAccumulatorSparse {
@@ -445,7 +445,7 @@ public:
 
     EnergyGradientHessianAccumulatorSparse(std::shared_ptr<pairwise_interaction> & interaction,
                                            std::shared_ptr<distance_policy> & dist,
-                                     pele::Array<double> const & radii=pele::Array<double>(0))
+                                           pele::Array<double> const & radii=pele::Array<double>(0))
         : m_interaction(interaction),
           m_dist(dist),
           m_radii(radii)
@@ -562,6 +562,131 @@ public:
             energy += *m_energies[i];
         }
         return energy;
+    }
+};
+
+
+template <typename pairwise_interaction, typename distance_policy>
+class NegativeHessianAccumulatorSparse {
+    const static size_t m_ndim = distance_policy::_ndim;
+    std::shared_ptr<pairwise_interaction> m_interaction;
+    std::shared_ptr<distance_policy> m_dist;
+    const pele::Array<double> * m_coords;
+    const pele::Array<double> m_radii;
+    std::vector<double*> m_energies;
+
+public:
+    Mat * n_hessian_sparse;
+
+    ~NegativeHessianAccumulatorSparse()
+    {
+        for(auto & energy : m_energies) {
+            delete energy;
+        }
+    }
+
+    NegativeHessianAccumulatorSparse(std::shared_ptr<pairwise_interaction> & interaction,
+                                     std::shared_ptr<distance_policy> & dist,
+                                     pele::Array<double> const & radii=pele::Array<double>(0))
+        : m_interaction(interaction),
+          m_dist(dist),
+          m_radii(radii)
+    {
+#ifdef _OPENMP
+        m_energies = std::vector<double*>(omp_get_max_threads());
+#pragma omp parallel
+        {
+            m_energies[omp_get_thread_num()] = new double();
+        }
+#else
+        m_energies = std::vector<double*>(1);
+        m_energies[0] = new double();
+#endif
+    }
+
+    void reset_data(const pele::Array<double> * coords, Mat * negative_hessian_sparse) {
+        m_coords = coords;
+#ifdef _OPENMP
+#pragma omp parallel
+        {
+            *m_energies[omp_get_thread_num()] = 0;
+        }
+#else
+        *m_energies[0] = 0;
+#endif
+        n_hessian_sparse = negative_hessian_sparse;
+    }
+
+    void insert_atom_pair(const size_t atom_i, const size_t atom_j, const size_t isubdom)
+    {
+        pele::VecN<m_ndim, double> dr;
+        const size_t xi_off = m_ndim * atom_i;
+        const size_t xj_off = m_ndim * atom_j;
+        m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
+        double r2 = 0;
+        for (size_t k = 0; k < m_ndim; ++k) {
+            r2 += dr[k] * dr[k];
+        }
+        double gij, hij;
+        double radius_sum = 0;
+        if(m_radii.size() > 0) {
+            radius_sum = m_radii[atom_i] + m_radii[atom_j];
+        }
+#ifdef _OPENMP
+        *m_energies[isubdom] += m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
+#else
+        *m_energies[0] += m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
+#endif
+        //this part is copied from simple_pairwise_potential.h
+        //(even more so than the rest)
+        double Hii_diag;
+        double Hii_off;
+        int N;
+        const size_t i1 = xi_off;
+        const size_t j1 = xj_off;
+        for (size_t k=0; k<m_ndim; ++k){
+            //diagonal block - diagonal terms
+            Hii_diag = (hij+gij)*dr[k]*dr[k]/r2 - gij;
+            MatSetValue(*n_hessian_sparse, i1+k, i1+k, -Hii_diag, ADD_VALUES);
+            MatSetValue(*n_hessian_sparse, j1+k, j1+k, -Hii_diag, ADD_VALUES);
+            // *m_hessian_sparse[N*(i1+k)+i1+k] += Hii_diag;
+            // *m_hessian_sparse[N*(j1+k)+j1+k] += Hii_diag;
+            //off diagonal block - diagonal terms
+            if(i1<j1) {
+                MatSetValue(*n_hessian_sparse, i1+k, j1+k, Hii_diag, ADD_VALUES);
+            }
+            else{
+                MatSetValue(*n_hessian_sparse, j1+k, i1+k, Hii_diag, ADD_VALUES);
+            }
+#pragma unroll
+            for (size_t l = k+1; l<m_ndim; ++l){
+                //diagonal block - off diagonal terms
+                Hii_off = (hij+gij)*dr[k]*dr[l]/r2;
+                if (Hii_off !=0)
+                    {
+                        if(k<l) {
+                            MatSetValue(*n_hessian_sparse, i1 +k, i1+l, -Hii_off, ADD_VALUES);
+                            MatSetValue(*n_hessian_sparse, j1+k, j1+l, -Hii_off, ADD_VALUES);
+                        }
+                        else{
+                            MatSetValue(*n_hessian_sparse, i1 +l, i1+k, -Hii_off, ADD_VALUES);
+                            MatSetValue(*n_hessian_sparse, j1 +l, j1+k, -Hii_off, ADD_VALUES);
+                        }
+                        if(i1+k<j1+l) {
+                            MatSetValue(*n_hessian_sparse, i1+k, j1+l, Hii_off, ADD_VALUES);
+                        }
+                        else{
+                            MatSetValue(*n_hessian_sparse, j1+l, i1+k, Hii_off, ADD_VALUES);
+                        }
+                        if(j1+k<i1+l) {
+                            MatSetValue(*n_hessian_sparse, j1+k, i1+l, Hii_off, ADD_VALUES);
+                        }
+                        else{
+                            MatSetValue(*n_hessian_sparse, i1+l, j1+k, Hii_off, ADD_VALUES);
+                        }
+                    }
+            } 
+        }
     }
 };
 
@@ -700,25 +825,27 @@ protected:
      */
     EnergyGradientHessianAccumulatorSparse<pairwise_interaction, distance_policy> m_eghAccSparse;
     EnergyGradientHessianAccumulator<pairwise_interaction, distance_policy> m_eghAcc;
+    /**
+     * Negative hessian calculator for SNES purposes in basin volume calculations
+     */
+    NegativeHessianAccumulatorSparse<pairwise_interaction, distance_policy> m_nhAcc;
 public:
     ~CellListPotential() {}
     CellListPotential(std::shared_ptr<pairwise_interaction> interaction,
                       std::shared_ptr<distance_policy> dist,
-                      pele::Array<double> const & boxvec,
-                      double rcut, double ncellx_scale,
-                      const pele::Array<double> radii,
-                      const double radii_sca=0.0,
-                      const bool balance_omp=true)
+                      pele::Array<double> const &boxvec, double rcut,
+                      double ncellx_scale, const pele::Array<double> radii,
+                      const double radii_sca = 0.0,
+                      const bool balance_omp = true)
         : PairwisePotentialInterface(radii),
           m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
-          m_interaction(interaction),
-          m_dist(dist),
-          m_radii_sca(radii_sca),
+          m_interaction(interaction), m_dist(dist), m_radii_sca(radii_sca),
           m_eAcc(interaction, dist, m_radii),
           m_egAcc(interaction, dist, m_radii),
           m_eghAcc(interaction, dist, m_radii),
           m_egAccSparse(interaction, dist, m_radii),
           m_eghAccSparse(interaction, dist, m_radii),
+          m_nhAcc(interaction, dist, m_radii),          
           exact_gradient_initialized(false)
     {}
 
@@ -736,6 +863,7 @@ public:
           m_eghAcc(interaction, dist),
           m_egAccSparse(interaction, dist),
           m_eghAccSparse(interaction, dist),
+          m_nhAcc(interaction, dist),
           exact_gradient_initialized(false)
     {}
 
@@ -899,6 +1027,34 @@ for (size_t i=0; i < grad.size(); ++i) {
         MatAssemblyEnd(hess_sparse, MAT_FINAL_ASSEMBLY);
         return m_eghAccSparse.get_energy();
     }
+    virtual void get_negative_hessian_sparse(Array<double> const & coords,
+                                             Mat &n_hess_sparse) {
+        const size_t natoms = coords.size() / m_ndim;
+        if (m_ndim * natoms != coords.size()) {
+            throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
+        }
+        int hess_sparse_size_x;
+        int hess_sparse_size_y;
+        MatGetSize(n_hess_sparse, &hess_sparse_size_x, &hess_sparse_size_y);
+        if (coords.size()*coords.size() != hess_sparse_size_x*hess_sparse_size_y) {
+            throw std::invalid_argument("the Hessian has the wrong size");
+        }
+
+        // if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
+        //     grad.assign(NAN);
+        //     hess.assign(NAN);
+        //     return NAN;
+        // }
+
+        update_iterator(coords);
+        MatZeroEntries(n_hess_sparse);
+        m_nhAcc.reset_data(&coords,&n_hess_sparse);
+        auto looper = m_cell_lists.get_atom_pair_looper(m_nhAcc);
+        looper.loop_through_atom_pairs();
+        MatAssemblyBegin(n_hess_sparse, MAT_FINAL_ASSEMBLY);
+        MatAssemblyEnd(n_hess_sparse, MAT_FINAL_ASSEMBLY);
+    }
+        
 
     virtual void get_neighbors(pele::Array<double> const & coords,
                                pele::Array<std::vector<size_t>> & neighbor_indss,

@@ -88,6 +88,12 @@ public:
         throw std::runtime_error("sparse methods not written for this class");
     }
 
+    virtual void get_negative_hessian_sparse(Array<double> const & x,
+                                             Mat & hess)
+    {
+        throw std::runtime_error("sparse negative hessian method not written for this class");
+    }
+
     virtual double get_energy_gradient_sparse(Array<double> const & x, Vec & grad)
     {
         throw std::runtime_error("sparse methods not written for this class");

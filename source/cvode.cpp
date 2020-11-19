@@ -48,7 +48,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     // wrap nvector into petsc array
     nvec_grad_petsc = N_VMake_Petsc(petsc_grad);
     VecDuplicate(petsc_grad, &residual);
-
+    
 
     // SNES create
     SNESCreate(PETSC_COMM_SELF, &snes);
@@ -134,39 +134,23 @@ int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
 
     UserData udata = (UserData) user_data;
     // wrap local vector as a pele vector
-    std::cout << "are we here"
-              << "\n";
     Array<double> x_pele = pele_eq_PetscVec(N_VGetVector_Petsc(y));
     Array<double> g;
-    std::cout << "petsc vector gotten out" << "\n";
-    // double energy = udata->pot_->get_energy_gradient(yw, g);
-    // g = Array<double>(fdata, NV_LENGTH_S(ydot));
-    // calculate negative grad g
 
     Vec ydot_petsc = N_VGetVector_Petsc(ydot);
-    std::cout << "sparse energy calculated" << "\n";
     double energy = udata->pot_->get_energy_gradient_sparse(x_pele, ydot_petsc);
-    std::cout << "func data"
-              << "\n";
-    std::cout << x_pele << "x pele \n";
- 
-    VecView(ydot_petsc, PETSC_VIEWER_STDOUT_SELF);
     double *func_data;
     VecGetArray(ydot_petsc, &func_data);
     udata->nfev += 1;
-    // 
 #pragma simd
     for (size_t i = 0; i < udata->neq; ++i) {
-      std::cout << i << "i val \n";
-      std::cout << udata->neq << "\n";
-      
-      // func_data[i] = -func_data[i];
-      std::cout << *(func_data) << "func data i\n";
+      func_data[i] = -func_data[i];
     }
-    std::cout << "are we here" << "\n";
+    VecAssemblyBegin(ydot_petsc);
+    VecAssemblyEnd(ydot_petsc);
     // func data reversed
     // udata->stored_grad = (g);
-    // udata->stored_energy = energy;
+    udata->stored_energy = energy;
     return 0;
 }
 
@@ -187,7 +171,10 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
 };
 
 
-
+/**
+ * Negative hessian wrapper. since the Jacobian we get is negative
+ *
+ */
 PetscErrorCode hessian_wrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data)
 {
     UserData udata = (UserData) user_data;
@@ -196,7 +183,7 @@ PetscErrorCode hessian_wrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user
     x_pele = pele_eq_PetscVec(x);
     Vec dummy;
     udata->pot_->get_energy_gradient_hessian_sparse(x_pele, dummy, Amat);
-    return 0;
+    return 0;    
 };
 
 
