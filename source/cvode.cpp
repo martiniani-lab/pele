@@ -2,15 +2,16 @@
 #include "autodiff/reverse/eigen.hpp"
 #include "cvode/cvode.h"
 #include "cvode/cvode_ls.h"
-#include "nvector/nvector_serial.h"
 #include "pele/base_potential.hpp"
 #include "pele/optimizer.hpp"
 #include "pele/debug.hpp"
 
 // cvode imports
+#include "petscmat.h"
 #include "petscsnes.h"
 #include "petscsystypes.h"
 #include "petscvec.h"
+#include "petscviewer.h"
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_nonlinearsolver.h"
 #include "sundials/sundials_nvector.h"
@@ -76,22 +77,25 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     x0_N = N_Vector_eq_pele(x0copy);
     // initialization of everything CVODE needs
     int ret = CVodeInit(cvode_mem, f, t0, x0_N);
-    
     // initialize userdata
     udata.rtol = rtol;
     udata.atol = atol;
     udata.nfev = 0;
     udata.nhev = 0;
+    // current_grad = N_VClone_Petsc(nvec_grad_petsc);
     udata.pot_ = potential_;
+    udata.neq = x0.size();
     udata.stored_grad = Array<double>(x0.size(), 0);
     CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
-    
     ret = CVodeSetUserData(cvode_mem, &udata);
-    A = SUNDenseMatrix(N_size, N_size);
-    LS = SUNLinSol_Dense(x0_N, A);
-    CVodeSetLinearSolver(cvode_mem, LS, A);
-    CVodeSetJacFn(cvode_mem, Jac);
-    g_ = udata.stored_grad;
+    // Linear solver method (use for non petsc purposes)
+    // A = SUNDenseMatrix(N_size, N_size);
+    // LS = SUNLinSol_Dense(x0_N, A);
+    // CVodeSetLinearSolver(cvode_mem, LS, A);
+    // CVodeSetJacFn(cvode_mem, Jac);
+    // Non linear solver attachment
+    CVodeSetNonlinearSolver(cvode_mem, NLS);
+    // g_ = udata.stored_grad;
     CVodeSetMaxNumSteps(cvode_mem, 1000000);
     CVodeSetStopTime(cvode_mem, tN);
 };
@@ -103,35 +107,66 @@ void CVODEBDFOptimizer::one_iteration() {
     Array<double> xold = x_;
     int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
     iter_number_ +=1;
+    double t;
+    CVodeGetCurrentTime(cvode_mem, &t);
+    CVodeGetDky(cvode_mem, t, 1, current_grad);
+    double norm2 = N_VDotProd(current_grad, current_grad);
     x_ = pele_eq_N_Vector(x0_N);
-    g_ = udata.stored_grad;
-    rms_ = (norm(g_)/sqrt(x_.size()));
+    rms_ = (sqrt(norm2/udata.neq));
     f_ = udata.stored_energy;
     nfev_ = udata.nfev;
     Array<double> step = xold-x_;
-
 };
 
+CVODEBDFOptimizer::~CVODEBDFOptimizer() {
+    VecDestroy(&petsc_grad);
+    MatDestroy(&petsc_hess);
+    N_VDestroy(nvec_grad_petsc);
+    N_VDestroy(current_grad);
+    CVodeFree(&cvode_mem);
+};
+
+
+/**
+ * Function assumes an N_Vector wrapped in PETSc
+ */
 int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
 
     UserData udata = (UserData) user_data;
-    pele::Array<double> yw = pele_eq_N_Vector(y);
-
-    
+    // wrap local vector as a pele vector
+    std::cout << "are we here"
+              << "\n";
+    Array<double> x_pele = pele_eq_PetscVec(N_VGetVector_Petsc(y));
     Array<double> g;
+    std::cout << "petsc vector gotten out" << "\n";
     // double energy = udata->pot_->get_energy_gradient(yw, g);
-    double *fdata = NV_DATA_S(ydot);
-    g = Array<double>(fdata, NV_LENGTH_S(ydot));
-
+    // g = Array<double>(fdata, NV_LENGTH_S(ydot));
     // calculate negative grad g
-    double energy = udata->pot_->get_energy_gradient(yw, g);
+
+    Vec ydot_petsc = N_VGetVector_Petsc(ydot);
+    std::cout << "sparse energy calculated" << "\n";
+    double energy = udata->pot_->get_energy_gradient_sparse(x_pele, ydot_petsc);
+    std::cout << "func data"
+              << "\n";
+    std::cout << x_pele << "x pele \n";
+ 
+    VecView(ydot_petsc, PETSC_VIEWER_STDOUT_SELF);
+    double *func_data;
+    VecGetArray(ydot_petsc, &func_data);
     udata->nfev += 1;
+    // 
 #pragma simd
-    for (size_t i = 0; i < yw.size(); ++i) {
-        fdata[i] = -fdata[i];
+    for (size_t i = 0; i < udata->neq; ++i) {
+      std::cout << i << "i val \n";
+      std::cout << udata->neq << "\n";
+      
+      // func_data[i] = -func_data[i];
+      std::cout << *(func_data) << "func data i\n";
     }
-    udata->stored_grad = (g);
-    udata->stored_energy = energy;
+    std::cout << "are we here" << "\n";
+    // func data reversed
+    // udata->stored_grad = (g);
+    // udata->stored_energy = energy;
     return 0;
 }
 
