@@ -611,7 +611,6 @@ TEST(SparseSNES, SparseSNESWorks){
     } else {
         printf("SUCCESS\n");
     }
-
     std::cout << retval << "retvall \n";
 
 }
