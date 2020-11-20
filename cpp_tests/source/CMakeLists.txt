@@ -10,7 +10,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 enable_language(CXX)
 ADD_DEFINITIONS(-std=c++1z -g)
-ADD_DEFINITIONS(-Wall)
+# ADD_DEFINITIONS(-Wall)
 
 
 #set OpenMP

@@ -88,10 +88,7 @@ typedef struct UserData_
   // } * hessdata;
 
 
-  /**
-   * wrapper around get_energy_gradient_hessian_sparse that helps get the hessian matrix for petsc
-   */
-PetscErrorCode hessian_wrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data);
+
   /**
    * Not exactly an optimizer but solves for the differential equation $ dx/dt = - \grad{V(x)} $ to
    * arrive at the trajectory to the corresponding minimum
@@ -110,29 +107,29 @@ private:
   N_Vector x0_N;
   Array<double> xold;
   // sparse calculation initializers
-  Mat petsc_hess;
-  Vec petsc_grad;
-  N_Vector current_grad;
+    Mat petsc_jacobian;
+    Vec petsc_grad;
+    N_Vector current_grad;
        
-  N_Vector nvec_grad_petsc;
-  Vec residual;
-  PetscInt blocksize;
-  // average number of non zeros per block for memory allocation purposes
-  PetscInt hessav;
+    N_Vector nvec_grad_petsc;
+    Vec residual;
+    PetscInt blocksize;
+    // average number of non zeros per block for memory allocation purposes
+    PetscInt hessav;
 
-  SNES  snes;
+    SNES  snes;
 public:
-  void one_iteration();
-  // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-  // static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
-  //                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-  CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potential,
-                    const pele::Array<double> x0,
-                    double tol=1e-5,
-                    double rtol=1e-4,
-                    double atol=1e-4);
-  ~CVODEBDFOptimizer();
-  inline int get_nhev() const { return udata.nhev;}
+    void one_iteration();
+    // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+    // static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+    //                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+    CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potential,
+                      const pele::Array<double> x0,
+                      double tol=1e-5,
+                      double rtol=1e-4,
+                      double atol=1e-4);
+    ~CVODEBDFOptimizer();
+    inline int get_nhev() const { return udata.nhev;}
 
 protected:
     double H02;
@@ -188,7 +185,7 @@ protected:
    * PETSc data encapsulation)
    * involves creation of new stuff
    */
-  inline void PetsVec_eq_pele(Vec & x_petsc, pele::Array<double> x) {
+inline void PetscVec_eq_pele(Vec & x_petsc, pele::Array<double> x) {
     VecCreateSeq(PETSC_COMM_SELF,x.size(), &x_petsc);
     for (auto i = 0; i < x.size(); ++i) {
       VecSetValue(x_petsc, i, x[i], INSERT_VALUES);
@@ -203,6 +200,9 @@ protected:
 static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-
+/**
+ * wrapper around negative hessian which allows for faster computations
+ */
+PetscErrorCode negative_hessian_wrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data);
 } // namespace pele
 #endif

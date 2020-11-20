@@ -14,20 +14,10 @@
 #include "petscviewer.h"
 #include <petscmat.h>
 #include <petscvec.h>
-
-    
-
-
-#include <iostream>
-#include <stdexcept>
-#include <vector>
 #include <gtest/gtest.h>
-#include <cmath>
-#include <memory>
 
-
-using pele::Array;
-
+using namespace pele;
+    
 
 
 
@@ -272,7 +262,6 @@ TEST(CellListsSparseHessianCheck, FullRunPeriodic)
     std::shared_ptr<pele::InversePowerPeriodicCellLists<_ndim> > potcell_sparse = std::make_shared<pele::InversePowerPeriodicCellLists<_ndim>>(power, eps, radii, boxvec, ncellsx_scale);
     std::shared_ptr<pele::InversePowerPeriodic<_ndim> > pot = std::make_shared<pele::InversePowerPeriodic<_ndim> >(power, eps, radii, boxvec);
     double e = potcell->get_energy_gradient_hessian(x, gradcell, hesscell);
-    std::cout << grad-gradcell << "\n";
 
     // Sparse initialization
     double e_sparse;
@@ -285,6 +274,13 @@ TEST(CellListsSparseHessianCheck, FullRunPeriodic)
     MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, nr_dof, nr_dof, hessav, NULL, &petsc_hess);
     e_sparse = potcell_sparse->get_energy_gradient_hessian_sparse(x, petsc_grad, petsc_hess);
     // MatView(petsc_hess, PETSC_VIEWER_STDOUT_SELF);
+    // std::cout << "------------------------------------------" << "\n";
+    // Sparse Negative hessian initialization
+    Mat negative_hess;
+    MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, nr_dof, nr_dof, hessav, NULL, &negative_hess);
+    potcell_sparse->get_negative_hessian_sparse(x, negative_hess);
+    // MatView(negative_hess, PETSC_VIEWER_STDOUT_SELF);
+
 
 
     // get all the values in the gradient
@@ -303,13 +299,15 @@ TEST(CellListsSparseHessianCheck, FullRunPeriodic)
     }
 
     double val;
+    double negative_val;
     for (int i =0; i < nr_dof; ++i) {
         for (int j = i; j < nr_dof; ++j) {
             MatGetValue(petsc_hess, i, j, &val);
+            MatGetValue(negative_hess, i, j, &negative_val);
+            ASSERT_NEAR(val, -negative_val, 1e-10);
             ASSERT_NEAR(val, hesscell[nr_dof*i+j], 1e-10);
         }
     }
-    
 };
 
 

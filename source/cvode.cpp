@@ -7,6 +7,7 @@
 #include "pele/debug.hpp"
 
 // cvode imports
+#include "petscerror.h"
 #include "petscmat.h"
 #include "petscsnes.h"
 #include "petscsystypes.h"
@@ -43,7 +44,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     blocksize = 1;
     hessav = 10;
     // matrix initialization
-    MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, hessav, NULL, &petsc_hess);
+    MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, hessav, NULL, &petsc_jacobian);
     VecCreateSeq(PETSC_COMM_SELF, N_size, &petsc_grad);
     // wrap nvector into petsc array
     nvec_grad_petsc = N_VMake_Petsc(petsc_grad);
@@ -60,7 +61,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     // The potential pointer allows us to use the base potential class to calculate the Jacobian
     // of the gradient i.e the hessian
     udataptr = &udata;
-    SNESSetJacobian(snes, petsc_hess, petsc_hess, hessian_wrapper,udataptr);
+    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, negative_hessian_wrapper,udataptr);
      
     
     
@@ -71,7 +72,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     
     
     
-     double t0 = 0;
+    double t0 = 0;
     std::cout << x0 << "\n";
     Array<double> x0copy = x0.copy();
     x0_N = N_Vector_eq_pele(x0copy);
@@ -120,10 +121,11 @@ void CVODEBDFOptimizer::one_iteration() {
 
 CVODEBDFOptimizer::~CVODEBDFOptimizer() {
     VecDestroy(&petsc_grad);
-    MatDestroy(&petsc_hess);
+    MatDestroy(&petsc_jacobian);
     N_VDestroy(nvec_grad_petsc);
     N_VDestroy(current_grad);
     CVodeFree(&cvode_mem);
+    PetscFinalize();
 };
 
 
@@ -172,19 +174,18 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
 
 
 /**
- * Negative hessian wrapper. since the Jacobian we get is negative
- *
+ * Negative hessian wrapper. since the Jacobian we get is negative of the hessian
  */
-PetscErrorCode hessian_wrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data)
+PetscErrorCode negative_hessian_wrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data)
 {
+    PetscFunctionBeginUser;
     UserData udata = (UserData) user_data;
     // wrap petsc data into pele vec
     Array<double> x_pele = pele_eq_PetscVec(x);
     x_pele = pele_eq_PetscVec(x);
-    Vec dummy;
-    udata->pot_->get_energy_gradient_hessian_sparse(x_pele, dummy, Amat);
-    return 0;    
+    // negative_hessian_sparse handles all matrix assembly;
+    udata->pot_->get_negative_hessian_sparse(x_pele, Precon);
+    PetscFunctionReturn(0);
 };
-
 
 } // namespace pele
