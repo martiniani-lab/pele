@@ -7,6 +7,7 @@
 #include "pele/inversepower.hpp"
 #include "pele/cell_lists.hpp"
 #include "petscviewer.h"
+#include "sundials/sundials_nvector.h"
 #include <cstddef>
 #include <petscerror.h>
 #include <petscsys.h>
@@ -306,17 +307,27 @@ std::cout << "xbraid operations" << "\n";
 
     /* Create content */
     content = NULL;
-    
+    std::cout << (sizeof *content) << "\n";
     content = (N_VectorContent_Petsc) malloc(sizeof *content);
+    std::cout << (sizeof *content) << "\n";
     std::cout << "malloc issue 2.0" << "\n";
     if (content == NULL) { N_VDestroy(v); return(NULL); }
+    // std::cout << "content is not null" << "\n";
 
     /* Attach content */
  v->content = content;
 
     /* Initialize content */
     content->local_length  = local_length;
+    std::cout << local_length << "\n";
+    std::cout << content->local_length << "\n";
+
+
     content->global_length = global_length;
+    std::cout << global_length << "\n";
+    std::cout << content->global_length << "\n";
+
+
     content->comm          = comm;
     content->own_data      = SUNFALSE;
     content->pvec          = NULL;
@@ -494,16 +505,21 @@ TEST(SparseSNES, SparseSNESWorks){
     VecDuplicate(X, &Y);
     VecDuplicate(X, &W);
     // create nvector wrappers
-    // y0 = N_VMake_Petsc(Y0);
+    y0 = N_VMake_Petsc_test(Y0);
+    std::cout << "here" << "\n";
+    N_VPrint_Petsc(y0);
+    std::cout << "here2" << "\n";
+
     // y0 = N_VNewEmpty_Serial(10);
     
     y  = N_VMake_Petsc(Y);
+    
     // y = N_VNewEmpty_Serial(10);
     
     std::cout << "here 2.0" << "\n";
 
-    // w = N_VMake_Petsc_test(W);
-    w = N_VNewEmpty_Serial(10);
+    w = N_VMake_Petsc_test(W);
+    // w = N_VNewEmpty_Serial(10);
     std::cout << "w" << "\n";
 
 

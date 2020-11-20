@@ -44,13 +44,14 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     blocksize = 1;
     hessav = 10;
     // matrix initialization
+    
     MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, hessav, NULL, &petsc_jacobian);
+
     VecCreateSeq(PETSC_COMM_SELF, N_size, &petsc_grad);
+
     // wrap nvector into petsc array
     nvec_grad_petsc = N_VMake_Petsc(petsc_grad);
     VecDuplicate(petsc_grad, &residual);
-    
-
     // SNES create
     SNESCreate(PETSC_COMM_SELF, &snes);
     
@@ -62,8 +63,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     // of the gradient i.e the hessian
     udataptr = &udata;
     SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, negative_hessian_wrapper,udataptr);
-     
-    
+    // this is where we are;
     
     
 
@@ -75,9 +75,23 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     double t0 = 0;
     std::cout << x0 << "\n";
     Array<double> x0copy = x0.copy();
-    x0_N = N_Vector_eq_pele(x0copy);
+    Vec x0_petsc;
+    PetscVec_eq_pele(x0_petsc, x0);
+    VecView(x0_petsc, PETSC_VIEWER_STDOUT_SELF);
+    x0_N = N_VMake_Petsc(x0_petsc);
     // initialization of everything CVODE needs
+
+
+    std::cout << "print " << "\n";
+    N_VPrint_Petsc(x0_N);
+    N_VPrint(x0_N);
+
+    Vec s = N_VGetVector_Petsc(x0_N);
+
+    VecView(s, PETSC_VIEWER_STDOUT_SELF);
+        
     int ret = CVodeInit(cvode_mem, f, t0, x0_N);
+
     // initialize userdata
     udata.rtol = rtol;
     udata.atol = atol;
@@ -94,7 +108,8 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     // LS = SUNLinSol_Dense(x0_N, A);
     // CVodeSetLinearSolver(cvode_mem, LS, A);
     // CVodeSetJacFn(cvode_mem, Jac);
-    // Non linear solver attachment
+    // Non linear solver
+    // std::cout << "here 1" << "\n";
     CVodeSetNonlinearSolver(cvode_mem, NLS);
     // g_ = udata.stored_grad;
     CVodeSetMaxNumSteps(cvode_mem, 1000000);
