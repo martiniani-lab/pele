@@ -69,7 +69,14 @@ for compilation:
 
 1. fortran compiler
 
-#. c++ compiler (must support c++11, GCC 4.6 or similar)
+#. c++ compiler (must support c++17, GCC 7.3 or similar)
+
+#. Petsc configured with mumps
+
+#. sundials
+
+
+TODO: make sure to streamline cmakelists for easy installation by end user
 
 python packages:
 

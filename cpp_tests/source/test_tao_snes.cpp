@@ -11,6 +11,7 @@
 #include "petscmat.h"
 #include "petscsnes.h"
 #include "petscsys.h"
+#include <petscksp.h>
 #include "petscsystypes.h"
 #include "petscvec.h"
 #include "petscviewer.h"
@@ -23,6 +24,7 @@
 #include <pele/lj.hpp>
 #include <pele/pot_utils_tao_snes.hpp>
 #include <petsctao.h>
+    
 using namespace pele;
 
 // Tao tests
@@ -139,63 +141,125 @@ PetscErrorCode FormHessian(Tao tao, Vec X, Mat H, Mat Hpre, void *ptr) {
   PetscFunctionReturn(0);
 }
 
-TEST(TaoNewton, TaoNewtonstepswork) {
-  PetscErrorCode ierr; /* used to check for functions returning nonzeros */
-  PetscReal zero = 0.0;
-  Vec x; /* solution vector */
-  Mat H;
-  Tao tao; /* Tao solver context */
-  PetscBool flg, test_lmvm = PETSC_FALSE;
-  PetscMPIInt size; /* number of processes running */
-  KSP ksp;
-  PC pc;
-  Mat M;
-  Vec in, out, out2;
-  PetscReal mult_solve_dist;
+TEST(TaoNewton3, TaoNewtonstepswork) {
+    PetscErrorCode ierr; /* used to check for functions returning nonzeros */
+    PetscReal zero = 0.0;
+    Vec x; /* solution vector */
+    Mat H;
+    Tao tao; /* Tao solver context */
+    PetscBool flg, test_lmvm = PETSC_FALSE;
+    PetscMPIInt size; /* number of processes running */
+    KSP ksp;
+    PC pc;
+    Mat M;
+    Vec in, out, out2;
+    PetscReal mult_solve_dist;
 
-  // initialize potential and starting coordinates
-  // we're going to be using rosenbrock with petsc routines
-  std::shared_ptr<BasePotential> pot_ = std::make_shared<RosenBrock>(1, 100);
+    // initialize potential and starting coordinates
+    // we're going to be using rosenbrock with petsc routines
+    std::shared_ptr<BasePotential> pot_ = std::make_shared<RosenBrock>(1, 100);
 
-  pot_sptr_wrapper wrapped_pot_;
-  wrapped_pot_.potential_ = pot_;
+    pot_sptr_wrapper wrapped_pot_;
+    wrapped_pot_.potential_ = pot_;
 
 
-  ierr = PetscInitializeNoArguments();
+    ierr = PetscInitializeNoArguments();
 
-  ierr = VecCreateSeq(PETSC_COMM_SELF, 2, &x);
-  ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, 2, 2, 2, NULL, &H);
+    ierr = VecCreateSeq(PETSC_COMM_SELF, 2, &x);
+    ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, 2, 2, 2, NULL, &H);
 
-  ierr = VecSet(x, zero);
+    ierr = VecSet(x, zero);
 
-  // Initialize solver
-  ierr = TaoCreate(PETSC_COMM_SELF, &tao);
-  ierr = TaoSetType(tao,TAOLMVM);
+    // Initialize solver
+    ierr = TaoCreate(PETSC_COMM_SELF, &tao);
+    ierr = TaoSetType(tao,TAOLMVM);
   
-  ierr = TaoSetInitialVector(tao, x);
+    ierr = TaoSetInitialVector(tao, x);
   
 
 
-  ierr = TaoSetObjectiveAndGradientRoutine(tao, TaoBasePotentialFunctionGradient,
-                                           &wrapped_pot_);
-  ierr = TaoSetHessianRoutine(tao, H, H, TaoBasePotentialHessian, &wrapped_pot_);
-  TaoConvergedReason reason;
-  ierr = TaoSolve(tao);
+    ierr = TaoSetObjectiveAndGradientRoutine(tao, TaoBasePotentialFunctionGradient,
+                                             &wrapped_pot_);
+    ierr = TaoSetHessianRoutine(tao, H, H, TaoBasePotentialHessian, &wrapped_pot_);
+    TaoConvergedReason reason;
+    ierr = TaoSolve(tao);
 
-  PetscInt iter;
-  TaoGetIterationNumber(tao, &iter);
-  std::cout << "iterations:" << iter + 1 << "\n";
+    PetscInt iter;
+    TaoGetIterationNumber(tao, &iter);
+    std::cout << "iterations:" << iter + 1 << "\n";
 
-  ierr = TaoGetConvergedReason(tao, &reason);
-  std::cout << reason << "\n";
-  std::cout << TAO_CONVERGED_GATOL << "\n";
-  PetscReal result;
+    ierr = TaoGetConvergedReason(tao, &reason);
+    std::cout << reason << "\n";
+    std::cout << TAO_CONVERGED_GATOL << "\n";
+    PetscReal result;
 
-  std::cout << "objective function value " << TaoGetObjective(tao, &result)
+    std::cout << "objective function value " << TaoGetObjective(tao, &result)
             << "\n";
   Vec result_coords;
   TaoGetSolutionVector(tao, &result_coords);
   std::cout << "result coordinates"
             << "\n";
   VecView(result_coords, PETSC_VIEWER_STDOUT_SELF);
+}
+
+
+TEST(TaoNewtonssas, TaoNewtonstepswork) {
+    PetscErrorCode ierr; /* used to check for functions returning nonzeros */
+    PetscReal zero = 0.0;
+    Vec x; /* solution vector */
+    Mat H;
+    Tao tao; /* Tao solver context */
+    PetscBool flg, test_lmvm = PETSC_FALSE;
+    PetscMPIInt size; /* number of processes running */
+    KSP ksp;
+    PC pc;
+    Mat M;
+    Vec in, out, out2;
+    PetscReal mult_solve_dist;
+    MatMumpsSetIcntl(H,24,1);
+    // initialize potential and starting coordinates
+    // we're going to be using rosenbrock with petsc routines
+    std::shared_ptr<BasePotential> pot_ = std::make_shared<RosenBrock>(1, 100);
+
+    pot_sptr_wrapper wrapped_pot_;
+    wrapped_pot_.potential_ = pot_;
+
+
+    ierr = PetscInitializeNoArguments();
+
+    ierr = VecCreateSeq(PETSC_COMM_SELF, 2, &x);
+    ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, 2, 2, 2, NULL, &H);
+
+    ierr = VecSet(x, zero);
+
+    // Initialize solver
+    ierr = TaoCreate(PETSC_COMM_SELF, &tao);
+    ierr = TaoSetType(tao,TAOLMVM);
+  
+    ierr = TaoSetInitialVector(tao, x);
+  
+
+
+    ierr = TaoSetObjectiveAndGradientRoutine(tao, TaoBasePotentialFunctionGradient,
+                                             &wrapped_pot_);
+    ierr = TaoSetHessianRoutine(tao, H, H, TaoBasePotentialHessian, &wrapped_pot_);
+    TaoConvergedReason reason;
+    ierr = TaoSolve(tao);
+
+    PetscInt iter;
+    TaoGetIterationNumber(tao, &iter);
+    std::cout << "iterations:" << iter + 1 << "\n";
+
+    ierr = TaoGetConvergedReason(tao, &reason);
+    std::cout << reason << "\n";
+    std::cout << TAO_CONVERGED_GATOL << "\n";
+    PetscReal result;
+
+    std::cout << "objective function value " << TaoGetObjective(tao, &result)
+              << "\n";
+    Vec result_coords;
+    TaoGetSolutionVector(tao, &result_coords);
+    std::cout << "result coordinates"
+              << "\n";
+    VecView(result_coords, PETSC_VIEWER_STDOUT_SELF);
 }

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
-set(CMAKE_CXX_COMPILER /opt/intel/compilers_and_libraries_2020.1.217/linux/mpi/intel64/bin/mpigxx)
-set(CMAKE_C_COMPILER /opt/intel/compilers_and_libraries_2020.1.217/linux/mpi/intel64/bin/mpigcc)
+set(CMAKE_CXX_COMPILER /home/praharsh/.local/bin/mpicxx)
+set(CMAKE_C_COMPILER /home/praharsh/.local/bin/mpicc)
 project(pele_tests)
 
 # if not specified by user, the standard build type is release
@@ -37,12 +37,17 @@ set(SUNDIALS_LIBRARY_DIR
   /home/praharsh/.local/lib
   CACHE PATH "Location of SUNDIALS libraries")
 
+set(PETSC_INCLUDE_DIR
+  /home/praharsh/petsc/arch-linux-c-debug/include
+  CACHE PATH "Location of PETSC headers"  
+  )
+
 set(MPI_INCLUDE_DIR
-  /opt/intel/compilers_and_libraries_2020.1.217/linux/mpi/intel64/include
+  /home/praharsh/.local/include
   CACHE PATH "Location of MPI header files")
 
 set(MPI_LIBRARY_DIR
-  /opt/intel/compilers_and_libraries_2020.1.217/linux/mpi/intel64/bin
+  /home/praharsh/.local/include
   CACHE PATH "Location of MPI LIBRARIES")
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
@@ -93,6 +98,7 @@ message("gtest_libs ${gtest_libs}")
 # set the pele include directory
 set(pele_include ../../source)
 include_directories(${pele_include})
+include_directories(${PETSC_INCLUDE_DIR})
 include_directories(${SUNDIALS_INCLUDE_DIR})
 include_directories(${MPI_INCLUDE_DIR})
 message("pele include directory ${pele_include}")
