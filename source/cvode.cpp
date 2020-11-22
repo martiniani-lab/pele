@@ -151,12 +151,14 @@ int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
 
     UserData udata = (UserData) user_data;
     // wrap local vector as a pele vector
-    Array<double> x_pele = pele_eq_PetscVec(N_VGetVector_Petsc(y));
+    // Array<double> x_pele = pele_eq_PetscVec(N_VGetVector_Petsc(y));
+    Vec y_petsc = N_VGetVector_Petsc(y);
+    Vec ydot_petsc = N_VGetVector_Petsc(ydot);
     Array<double> g;
 
-    Vec ydot_petsc = N_VGetVector_Petsc(ydot);
-    double energy = udata->pot_->get_energy_gradient_sparse(x_pele, ydot_petsc);
-    double *func_data;
+    // Vec ydot_petsc = N_VGetVector_Petsc(ydot);
+    double energy = udata->pot_->get_energy_gradient_petsc(y_petsc, ydot_petsc);
+    N_VGetVector_Petsc(y);
     VecGetArray(ydot_petsc, &func_data);
     udata->nfev += 1;
 #pragma simd

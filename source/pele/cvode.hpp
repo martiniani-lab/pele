@@ -53,9 +53,6 @@ extern "C" {
 #include "xsum.h"
 }
 
-
-
-
 namespace pele {
 
 /**
@@ -169,7 +166,8 @@ inline pele::Array<double> pele_eq_N_Vector(N_Vector x) {
 
 /**
  * gets the array data and wraps it into a pele Array.
- * Note: pele arrays are single processor only
+ * Note: pele arrays are single processor only Note: does not
+ * work if restore array is not called later
  */
 inline pele::Array<double> pele_eq_PetscVec(Vec x) {
     double *x_arr;

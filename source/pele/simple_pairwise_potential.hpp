@@ -113,24 +113,47 @@ public:
         MatZeroEntries(hess);
         add_negative_hessian_sparse(x, hess);
     }
+
+    virtual double get_energy_gradient_petsc(Vec x, Vec & grad)
+    {
+        VecZeroEntries(grad);
+        return add_energy_gradient_petsc(x, grad);
+    }
+
+    virtual void get_hessian_petsc(Vec x, Mat &hess)
+    {
+        MatZeroEntries(hess);
+        add_hessian_petsc(x, hess);
+    }
     virtual double add_energy_gradient(Array<double> const & x, Array<double> & grad);
     virtual double add_energy_gradient(Array<double> const & x, std::vector<xsum_small_accumulator> & exact_grad);
     virtual double add_energy_gradient_hessian(Array<double> const & x, Array<double> & grad, Array<double> & hess);
     virtual double add_energy_gradient_hessian_sparse(Array<double> const & x, Vec & grad, Mat & hess);
+    
     virtual void add_negative_hessian_sparse(Array<double> const & x, Mat & hess);
     /**
      * Calculates a PETSc gradient to be used with sparse calculations
      */
     virtual double add_energy_gradient_sparse(Array<double> const & x, Vec & grad);
+
+    /**
+     * Calculates a PETSc gradient and energy to be used with sparse calculations using a read only x
+     */
+    virtual double add_energy_gradient_petsc(Vec x, Vec & grad);
+    /**
+     * Calculates a PETSc hessian to be used with sparse calculation using a read only x
+     */
+    virtual void add_hessian_petsc(Vec x, Mat &hess);
+
     virtual void get_neighbors(pele::Array<double> const & coords,
                                pele::Array<std::vector<size_t>> & neighbor_indss,
-                                pele::Array<std::vector<std::vector<double>>> & neighbor_distss,
-                                const double cutoff_factor = 1.0);
+                               pele::Array<std::vector<std::vector<double>>> & neighbor_distss,
+                               const double cutoff_factor = 1.0);
     virtual void get_neighbors_picky(pele::Array<double> const & coords,
-                                      pele::Array<std::vector<size_t>> & neighbor_indss,
-                                      pele::Array<std::vector<std::vector<double>>> & neighbor_distss,
-                                      pele::Array<short> const & include_atoms,
-                                      const double cutoff_factor = 1.0);
+                                     pele::Array<std::vector<size_t>> & neighbor_indss,
+                                     pele::Array<std::vector<std::vector<double>>> & neighbor_distss,
+                                     pele::Array<short> const & include_atoms,
+                                     const double cutoff_factor = 1.0);
     virtual std::vector<size_t> get_overlaps(Array<double> const & coords);
     virtual inline void get_rij(double * const r_ij, double const * const r1, double const * const r2) const
     {
@@ -426,6 +449,72 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     return e;
 }
 
+
+
+/**
+ * This calculate the energy and gradient as petsc vectors
+ */
+template<typename pairwise_interaction, typename distance_policy>
+inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::add_energy_gradient_petsc(Vec x, Vec & grad) {
+    double hij, gij;
+    double dr[m_ndim];
+    PetscInt xsize;
+    VecGetSize(x, &xsize);
+    const size_t natoms = xsize / m_ndim;
+    
+    if (m_ndim * natoms != xsize) {
+        throw std::runtime_error("x.size() is not divisible by the number of dimensions");
+    }
+    PetscInt grad_size;
+    VecGetSize(grad, &grad_size);
+    if (xsize != grad_size) {
+        throw std::invalid_argument("the gradient has the wrong size");
+    }
+
+    double e = 0.;
+    double gradi[m_ndim];             // gradi
+    double gradj[m_ndim];             // gradj
+    int indicesi[3];    // indices upto 3
+    int indicesj[3];    // indices upto 3
+
+
+    // get read only array from x
+    const double * x_array_read;
+    VecGetArrayRead(x, &x_array_read);
+    
+    for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
+        size_t i1 = m_ndim * atom_i;
+        for (size_t atom_j=0; atom_j<atom_i; ++atom_j){
+            size_t j1 = m_ndim * atom_j;
+
+            _dist->get_rij(dr, &x_array_read[i1], &x_array_read[j1]);
+            double r2 = 0;
+#pragma unroll
+            for (size_t k=0; k<m_ndim; ++k) {
+                r2 += dr[k]*dr[k];
+            }
+            
+            e += _interaction->energy_gradient_hessian(r2, &gij, &hij, sum_radii(atom_i, atom_j));
+            if (gij != 0) {
+#pragma unroll
+                for (size_t k=0; k<m_ndim; ++k) {
+                    gradi[k] = -gij * dr[k];
+                    gradj[k] = gij * dr[k];
+                    indicesi[k] = i1+k;
+                    indicesj[k] = j1+k;
+                }
+                VecSetValues(grad, m_ndim, indicesi, gradi, ADD_VALUES);
+                VecSetValues(grad, m_ndim, indicesj, gradj, ADD_VALUES);
+            }
+        }
+    }
+
+    // restore and assemble
+    VecRestoreArrayRead(x, &x_array_read);
+    VecAssemblyBegin(grad);
+    VecAssemblyEnd(grad);
+    return e;
+}
 /**
  * This calculates a sparse hessian as a petsc matrix, and returns the gradient in a sparse matrix (assuming we're sparse of course)
  */
@@ -544,25 +633,35 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     return e;
 }
 
+
+
+
+
 template<typename pairwise_interaction, typename distance_policy>
-inline void SimplePairwisePotential<pairwise_interaction, distance_policy>::add_negative_hessian_sparse(Array<double> const & x, Mat & hess) {
+inline void SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian_petsc(Vec x, Mat  & hess) {
     double hij, gij;
     double dr[m_ndim];
-    const size_t natoms = x.size() / m_ndim;
+    PetscInt xsize;
+    VecGetSize(x, &xsize);
+    const size_t natoms = xsize / m_ndim;
     PetscInt hess_size_x;
     PetscInt hess_size_y;
     MatSetType(hess, MATSEQSBAIJ);
     MatGetSize(hess, &hess_size_x, &hess_size_y);
-    if (m_ndim * natoms != x.size()) {
+    if (m_ndim * natoms != xsize) {
         throw std::runtime_error("x.size() is not divisible by the number of dimensions");
     }
-    if ((hess_size_x != x.size()) or (hess_size_y != x.size())) {
+    if ((hess_size_x != xsize) or (hess_size_y != xsize)) {
         throw std::invalid_argument("the Hessian has the wrong size");
     }
 
     double e = 0.;
     double Hii_diag;
     double Hii_off;
+    // get read only array from x
+    const double * x_array_read;
+    VecGetArrayRead(x, &x_array_read);
+
 
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
         size_t i1 = m_ndim * atom_i;
@@ -570,7 +669,7 @@ inline void SimplePairwisePotential<pairwise_interaction, distance_policy>::add_
         for (size_t atom_j=0; atom_j<atom_i; ++atom_j){
             size_t j1 = m_ndim * atom_j;
 
-            _dist->get_rij(dr, &x[i1], &x[j1]);
+            _dist->get_rij(dr, &x_array_read[i1], &x_array_read[j1]);
             double r2 = 0;
 #pragma unroll
             for (size_t k=0; k<m_ndim; ++k) {
@@ -627,6 +726,95 @@ inline void SimplePairwisePotential<pairwise_interaction, distance_policy>::add_
             }
         }
     }
+    // restore and assemble
+    VecRestoreArrayRead(x, &x_array_read);
+    MatAssemblyBegin(hess, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(hess, MAT_FINAL_ASSEMBLY);
+}
+
+template<typename pairwise_interaction, typename distance_policy>
+inline void SimplePairwisePotential<pairwise_interaction, distance_policy>::add_negative_hessian_sparse(Array<double> const & x, Mat & hess) {
+    double hij, gij;
+    double dr[m_ndim];
+    const size_t natoms = x.size() / m_ndim;
+    PetscInt hess_size_x;
+    PetscInt hess_size_y;
+    MatSetType(hess, MATSEQSBAIJ);
+    MatGetSize(hess, &hess_size_x, &hess_size_y);
+    if (m_ndim * natoms != x.size()) {
+        throw std::runtime_error("x.size() is not divisible by the number of dimensions");
+    }
+    if ((hess_size_x != x.size()) or (hess_size_y != x.size())) {
+        throw std::invalid_argument("the Hessian has the wrong size");
+    }
+
+    double e = 0.;
+    double Hii_diag;
+    double Hii_off;
+
+    for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
+        size_t i1 = m_ndim * atom_i;
+
+        for (size_t atom_j=0; atom_j<atom_i; ++atom_j){
+            size_t j1 = m_ndim * atom_j;
+
+            _dist->get_rij(dr, &x[i1], &x[j1]);
+            double r2 = 0;
+#pragma unroll
+            for (size_t k=0; k<m_ndim; ++k) {
+                r2 += dr[k]*dr[k];
+            }
+            
+            e += _interaction->energy_gradient_hessian(r2, &gij, &hij, sum_radii(atom_i, atom_j));
+            
+            if (hij != 0) {
+#pragma unroll
+                for (size_t k=0; k<m_ndim; ++k){
+                    //diagonal block - diagonal terms
+                    Hii_diag = (hij+gij)*dr[k]*dr[k]/r2 - gij;
+                    MatSetValue(hess, i1+k, i1+k, -Hii_diag, ADD_VALUES);
+                    MatSetValue(hess, j1+k, j1+k, -Hii_diag, ADD_VALUES);
+                    // hess[N*(i1+k)+i1+k] += Hii_diag;
+                    // hess[N*(j1+k)+j1+k] += Hii_diag;
+                    //off diagonal block - diagonal terms
+                    if(i1<j1) {
+                        MatSetValue(hess, i1+k, j1+k, Hii_diag, ADD_VALUES);
+                    }
+                    else{
+                        MatSetValue(hess, j1+k, i1+k, Hii_diag, ADD_VALUES);
+                    }
+#pragma unroll
+                    for (size_t l = k+1; l<m_ndim; ++l){
+                        //diagonal block - off diagonal terms
+                        Hii_off = (hij+gij)*dr[k]*dr[l]/r2;
+                        if (Hii_off !=0)
+                            {
+                                if(k<l) {
+                                    MatSetValue(hess, i1 +k, i1+l, -Hii_off, ADD_VALUES);
+                                    MatSetValue(hess, j1+k, j1+l, -Hii_off, ADD_VALUES);
+                                }
+                                else{
+                                    MatSetValue(hess, i1 +l, i1+k, -Hii_off, ADD_VALUES);
+                                    MatSetValue(hess, j1 +l, j1+k, -Hii_off, ADD_VALUES);
+                                }
+                                if(i1+k<j1+l) {
+                                    MatSetValue(hess, i1+k, j1+l, Hii_off, ADD_VALUES);
+                                }
+                                else{
+                                    MatSetValue(hess, j1+l, i1+k, Hii_off, ADD_VALUES);
+                                }
+                                if(j1+k<i1+l) {
+                                    MatSetValue(hess, j1+k, i1+l, Hii_off, ADD_VALUES);
+                                }
+                                else{
+                                    MatSetValue(hess, i1+l, j1+k, Hii_off, ADD_VALUES);
+                                }
+                            }
+                    } 
+                }
+            }
+        }
+    }
     MatAssemblyBegin(hess, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(hess, MAT_FINAL_ASSEMBLY);
 }
@@ -658,6 +846,8 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ge
         }
         return e;
     }
+
+
 
 template<typename pairwise_interaction, typename distance_policy>
 void SimplePairwisePotential<pairwise_interaction, distance_policy>::get_neighbors(

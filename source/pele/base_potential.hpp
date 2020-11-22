@@ -99,6 +99,21 @@ public:
         throw std::runtime_error("sparse methods not written for this class");
     }
 
+    virtual double get_energy_gradient_petsc(Vec x, Vec & grad)
+    {
+        throw std::runtime_error("petsc get_energy_gradient not written for this class");
+    }
+
+    /**
+     * note: overwritten should mainly focus on calculating upper triangular
+     * matrix since matrix is symmetrix and petsc symmetric matrix objects only focus on
+     * upper triangular matrices
+     */
+    virtual void get_hessian_petsc(Vec x, Mat & hess)
+    {
+        throw std::runtime_error("petsc get_hessian method not written for this class");
+    }
+    
     /**
      * compute the numerical gradient
      */
