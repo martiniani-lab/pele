@@ -1,3 +1,6 @@
+/**
+ * classes and methods for cell list based potentials
+ */
 #ifndef _PELE_CELL_LIST_POTENTIAL_H
 #define _PELE_CELL_LIST_POTENTIAL_H
 
@@ -567,26 +570,26 @@ public:
 
 
 template <typename pairwise_interaction, typename distance_policy>
-class NegativeHessianAccumulatorSparse {
+class HessianAccumulatorPETSc {
     const static size_t m_ndim = distance_policy::_ndim;
     std::shared_ptr<pairwise_interaction> m_interaction;
     std::shared_ptr<distance_policy> m_dist;
-    const pele::Array<double> * m_coords;
+    const double * m_coords;
     const pele::Array<double> m_radii;
     std::vector<double*> m_energies;
 
 public:
     Mat * n_hessian_sparse;
 
-    ~NegativeHessianAccumulatorSparse()
+    ~HessianAccumulatorPETSc()
     {
         for(auto & energy : m_energies) {
             delete energy;
         }
     }
 
-    NegativeHessianAccumulatorSparse(std::shared_ptr<pairwise_interaction> & interaction,
-                                     std::shared_ptr<distance_policy> & dist,
+    HessianAccumulatorPETSc(std::shared_ptr<pairwise_interaction> & interaction,
+                            std::shared_ptr<distance_policy> & dist,
                                      pele::Array<double> const & radii=pele::Array<double>(0))
         : m_interaction(interaction),
           m_dist(dist),
@@ -603,8 +606,10 @@ public:
         m_energies[0] = new double();
 #endif
     }
-
-    void reset_data(const pele::Array<double> * coords, Mat * negative_hessian_sparse) {
+    /**
+     * In this case reset data uses the pointer from PETSCGetarrayread
+     */
+    void reset_data(const double * coords, Mat * hessian_sparse) {
         m_coords = coords;
 #ifdef _OPENMP
 #pragma omp parallel
@@ -614,7 +619,7 @@ public:
 #else
         *m_energies[0] = 0;
 #endif
-        n_hessian_sparse = negative_hessian_sparse;
+        n_hessian_sparse = hessian_sparse;
     }
 
     void insert_atom_pair(const size_t atom_i, const size_t atom_j, const size_t isubdom)
@@ -622,7 +627,7 @@ public:
         pele::VecN<m_ndim, double> dr;
         const size_t xi_off = m_ndim * atom_i;
         const size_t xj_off = m_ndim * atom_j;
-        m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
+        m_dist->get_rij(dr.data(), m_coords + xi_off, m_coords + xj_off);
         double r2 = 0;
         for (size_t k = 0; k < m_ndim; ++k) {
             r2 += dr[k] * dr[k];
@@ -647,16 +652,16 @@ public:
         for (size_t k=0; k<m_ndim; ++k){
             //diagonal block - diagonal terms
             Hii_diag = (hij+gij)*dr[k]*dr[k]/r2 - gij;
-            MatSetValue(*n_hessian_sparse, i1+k, i1+k, -Hii_diag, ADD_VALUES);
-            MatSetValue(*n_hessian_sparse, j1+k, j1+k, -Hii_diag, ADD_VALUES);
+            MatSetValue(*n_hessian_sparse, i1+k, i1+k, Hii_diag, ADD_VALUES);
+            MatSetValue(*n_hessian_sparse, j1+k, j1+k, Hii_diag, ADD_VALUES);
             // *m_hessian_sparse[N*(i1+k)+i1+k] += Hii_diag;
             // *m_hessian_sparse[N*(j1+k)+j1+k] += Hii_diag;
             //off diagonal block - diagonal terms
             if(i1<j1) {
-                MatSetValue(*n_hessian_sparse, i1+k, j1+k, Hii_diag, ADD_VALUES);
+                MatSetValue(*n_hessian_sparse, i1+k, j1+k, -Hii_diag, ADD_VALUES);
             }
             else{
-                MatSetValue(*n_hessian_sparse, j1+k, i1+k, Hii_diag, ADD_VALUES);
+                MatSetValue(*n_hessian_sparse, j1+k, i1+k, -Hii_diag, ADD_VALUES);
             }
 #pragma unroll
             for (size_t l = k+1; l<m_ndim; ++l){
@@ -665,24 +670,24 @@ public:
                 if (Hii_off !=0)
                     {
                         if(k<l) {
-                            MatSetValue(*n_hessian_sparse, i1 +k, i1+l, -Hii_off, ADD_VALUES);
-                            MatSetValue(*n_hessian_sparse, j1+k, j1+l, -Hii_off, ADD_VALUES);
+                            MatSetValue(*n_hessian_sparse, i1 +k, i1+l, Hii_off, ADD_VALUES);
+                            MatSetValue(*n_hessian_sparse, j1+k, j1+l, Hii_off, ADD_VALUES);
                         }
                         else{
-                            MatSetValue(*n_hessian_sparse, i1 +l, i1+k, -Hii_off, ADD_VALUES);
-                            MatSetValue(*n_hessian_sparse, j1 +l, j1+k, -Hii_off, ADD_VALUES);
+                            MatSetValue(*n_hessian_sparse, i1 +l, i1+k, Hii_off, ADD_VALUES);
+                            MatSetValue(*n_hessian_sparse, j1 +l, j1+k, Hii_off, ADD_VALUES);
                         }
                         if(i1+k<j1+l) {
-                            MatSetValue(*n_hessian_sparse, i1+k, j1+l, Hii_off, ADD_VALUES);
+                            MatSetValue(*n_hessian_sparse, i1+k, j1+l, -Hii_off, ADD_VALUES);
                         }
                         else{
-                            MatSetValue(*n_hessian_sparse, j1+l, i1+k, Hii_off, ADD_VALUES);
+                            MatSetValue(*n_hessian_sparse, j1+l, i1+k, -Hii_off, ADD_VALUES);
                         }
                         if(j1+k<i1+l) {
-                            MatSetValue(*n_hessian_sparse, j1+k, i1+l, Hii_off, ADD_VALUES);
+                            MatSetValue(*n_hessian_sparse, j1+k, i1+l, -Hii_off, ADD_VALUES);
                         }
                         else{
-                            MatSetValue(*n_hessian_sparse, i1+l, j1+k, Hii_off, ADD_VALUES);
+                            MatSetValue(*n_hessian_sparse, i1+l, j1+k, -Hii_off, ADD_VALUES);
                         }
                     }
             } 
@@ -812,6 +817,14 @@ protected:
     const double m_radii_sca;
     std::shared_ptr<std::vector<xsum_small_accumulator>> exact_gradient;
     bool exact_gradient_initialized;
+    /**
+     * Extra container and flag for reading petsc Vecs into pele arrays
+     * These exist because when calculating hessians, the read only petsc vec coordinate data 
+     * cannot be wrapped into a pele array and cell lists need the data in pele arrays
+     * Needs to be replaced when new methods are written
+     */
+    Array<double> stored_coords;
+    bool stored_coords_initialized;
     
 
     EnergyAccumulator<pairwise_interaction, distance_policy> m_eAcc;
@@ -826,9 +839,9 @@ protected:
     EnergyGradientHessianAccumulatorSparse<pairwise_interaction, distance_policy> m_eghAccSparse;
     EnergyGradientHessianAccumulator<pairwise_interaction, distance_policy> m_eghAcc;
     /**
-     * Negative hessian calculator for SNES purposes in basin volume calculations
+     * hessian calculator for SNES purposes in basin volume calculations
      */
-    NegativeHessianAccumulatorSparse<pairwise_interaction, distance_policy> m_nhAcc;
+    HessianAccumulatorPETSc<pairwise_interaction, distance_policy> m_hpAcc;
 public:
     ~CellListPotential() {}
     CellListPotential(std::shared_ptr<pairwise_interaction> interaction,
@@ -840,14 +853,17 @@ public:
         : PairwisePotentialInterface(radii),
           m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
           m_interaction(interaction), m_dist(dist), m_radii_sca(radii_sca),
+          stored_coords(m_radii.size()),
+          stored_coords_initialized(true),
           m_eAcc(interaction, dist, m_radii),
           m_egAcc(interaction, dist, m_radii),
           m_eghAcc(interaction, dist, m_radii),
           m_egAccSparse(interaction, dist, m_radii),
           m_eghAccSparse(interaction, dist, m_radii),
-          m_nhAcc(interaction, dist, m_radii),          
+          m_hpAcc(interaction, dist, m_radii),
           exact_gradient_initialized(false)
-    {}
+    {
+    }
 
     CellListPotential(std::shared_ptr<pairwise_interaction> interaction,
                       std::shared_ptr<distance_policy> dist,
@@ -858,12 +874,13 @@ public:
           m_interaction(interaction),
           m_dist(dist),
           m_radii_sca(0.0),
+          stored_coords_initialized(false),
           m_eAcc(interaction, dist),
           m_egAcc(interaction, dist),
           m_eghAcc(interaction, dist),
           m_egAccSparse(interaction, dist),
           m_eghAccSparse(interaction, dist),
-          m_nhAcc(interaction, dist),
+          m_hpAcc(interaction, dist),
           exact_gradient_initialized(false)
     {}
 
@@ -1027,32 +1044,43 @@ for (size_t i=0; i < grad.size(); ++i) {
         MatAssemblyEnd(hess_sparse, MAT_FINAL_ASSEMBLY);
         return m_eghAccSparse.get_energy();
     }
-    virtual void get_negative_hessian_sparse(Array<double> const & coords,
-                                             Mat &n_hess_sparse) {
-        const size_t natoms = coords.size() / m_ndim;
-        if (m_ndim * natoms != coords.size()) {
-            throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
+    virtual void get_hessian_petsc(Vec x, Mat &hess) {
+        PetscInt x_size;
+        VecGetSize(x, &x_size);
+        const size_t natoms = x_size / m_ndim;
+        if (m_ndim * natoms != x_size) {
+            throw std::runtime_error("xsize is not divisible by the number of dimensions");
         }
         int hess_sparse_size_x;
         int hess_sparse_size_y;
-        MatGetSize(n_hess_sparse, &hess_sparse_size_x, &hess_sparse_size_y);
-        if (coords.size()*coords.size() != hess_sparse_size_x*hess_sparse_size_y) {
+        MatGetSize(hess, &hess_sparse_size_x, &hess_sparse_size_y);
+        if (x_size*x_size != hess_sparse_size_x*hess_sparse_size_y) {
             throw std::invalid_argument("the Hessian has the wrong size");
         }
 
-        // if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
-        //     grad.assign(NAN);
-        //     hess.assign(NAN);
-        //     return NAN;
-        // }
 
-        update_iterator(coords);
-        MatZeroEntries(n_hess_sparse);
-        m_nhAcc.reset_data(&coords,&n_hess_sparse);
-        auto looper = m_cell_lists.get_atom_pair_looper(m_nhAcc);
+        const PetscReal * x_arr;
+
+        VecGetArrayRead(x, &x_arr);
+        if (stored_coords_initialized == false) {
+            stored_coords = Array<double>(x_size, 0);
+            stored_coords_initialized=true;
+        }
+        // maybe rate limiting?
+        for (size_t i = 0; i < x_size; ++i) {
+            stored_coords[i] = x_arr[i];
+        }
+
+
+
+        update_iterator(stored_coords);
+        MatZeroEntries(hess);
+        m_hpAcc.reset_data(x_arr,&hess);
+        auto looper = m_cell_lists.get_atom_pair_looper(m_hpAcc);
         looper.loop_through_atom_pairs();
-        MatAssemblyBegin(n_hess_sparse, MAT_FINAL_ASSEMBLY);
-        MatAssemblyEnd(n_hess_sparse, MAT_FINAL_ASSEMBLY);
+        VecRestoreArrayRead(x, &x_arr);
+        MatAssemblyBegin(hess, MAT_FINAL_ASSEMBLY);
+        MatAssemblyEnd(hess, MAT_FINAL_ASSEMBLY);
     }
         
 

@@ -200,6 +200,6 @@ static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 /**
  * wrapper around negative hessian which allows for faster computations
  */
-PetscErrorCode negative_hessian_wrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data);
+PetscErrorCode SNESJacobianWrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data);
 } // namespace pele
 #endif

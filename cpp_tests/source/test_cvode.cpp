@@ -159,10 +159,10 @@ TEST(CVODEJac, negativehessianworks)
     // MatView(petsc_hess, PETSC_VIEWER_STDOUT_SELF);
 
     // Sparse Negative hessian initialization
-    Mat negative_hess;
-    MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, nr_dof, nr_dof, hessav, NULL, &negative_hess);
-    potcell_sparse->get_negative_hessian_sparse(x, negative_hess);
-    MatView(negative_hess, PETSC_VIEWER_STDOUT_SELF);
+    Mat snes_jacobian;
+    MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, nr_dof, nr_dof, hessav, NULL, &snes_jacobian);
+    potcell_sparse->get_negative_hessian_sparse(x, snes_jacobian);
+    MatView(snes_jacobian, PETSC_VIEWER_STDOUT_SELF);
 
 
     // SNES initialization
@@ -179,7 +179,7 @@ TEST(CVODEJac, negativehessianworks)
     udata.pot_ = potcell_sparse;
     
     // run negative hessian wrapper routine within SNES
-    negative_hessian_wrapper(NLS, x_petsc, dummy, test_jacobian, (void *)(&udata));
+    SNESJacobianWrapper(NLS, x_petsc, dummy, test_jacobian, (void *)(&udata));
 
     // // Viewers
     // MatView(test_jacobian, PETSC_VIEWER_STDOUT_SELF);
@@ -190,7 +190,7 @@ TEST(CVODEJac, negativehessianworks)
     double test_jacobian_val;
     for (int i =0; i < nr_dof; ++i) {
         for (int j = i; j < nr_dof; ++j) {
-            MatGetValue(negative_hess, i, j, &test_negative_hessian_val);
+            MatGetValue(snes_jacobian, i, j, &test_negative_hessian_val);
             MatGetValue(test_jacobian, i, j, &test_jacobian_val);
             ASSERT_NEAR(test_negative_hessian_val, test_jacobian_val, 1e-10);
         }

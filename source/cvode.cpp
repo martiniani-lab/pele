@@ -2,6 +2,7 @@
 #include "autodiff/reverse/eigen.hpp"
 #include "cvode/cvode.h"
 #include "cvode/cvode_ls.h"
+#include "pele/array.hpp"
 #include "pele/base_potential.hpp"
 #include "pele/optimizer.hpp"
 #include "pele/debug.hpp"
@@ -62,7 +63,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potent
     // The potential pointer allows us to use the base potential class to calculate the Jacobian
     // of the gradient i.e the hessian
     udataptr = &udata;
-    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, negative_hessian_wrapper,udataptr);
+    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,udataptr);
     // this is where we are;
     
     
@@ -145,7 +146,14 @@ CVODEBDFOptimizer::~CVODEBDFOptimizer() {
 
 
 /**
- * Function assumes an N_Vector wrapped in PETSc
+ * @brief      Routine to calculate - \grad{V(x)}
+ *
+ * @details    Calculates -\grad{V(y)} to solve the differential equation ydot = - \grad{V(y)}
+ *             using CVODE. the potential V is stored as a shared pointer in the user data
+ *
+ * @param      t: dummy variable for time. Not used
+ *
+ * @return     return type
  */
 int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
 
@@ -158,15 +166,10 @@ int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
 
     // Vec ydot_petsc = N_VGetVector_Petsc(ydot);
     double energy = udata->pot_->get_energy_gradient_petsc(y_petsc, ydot_petsc);
-    N_VGetVector_Petsc(y);
-    VecGetArray(ydot_petsc, &func_data);
-    udata->nfev += 1;
-#pragma simd
-    for (size_t i = 0; i < udata->neq; ++i) {
-      func_data[i] = -func_data[i];
-    }
-    VecAssemblyBegin(ydot_petsc);
-    VecAssemblyEnd(ydot_petsc);
+
+
+    // routine to reverse sign
+    VecScale(ydot_petsc, -1.0);
     // func data reversed
     // udata->stored_grad = (g);
     udata->stored_energy = energy;
@@ -178,8 +181,8 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
     UserData udata = (UserData) user_data;
 
     pele::Array<double> yw = pele_eq_N_Vector(y);
-    Array<double> g = Array<double>(yw.size());
-    Array<double> h = Array<double>(yw.size()*yw.size());
+    Array<double> g(yw.size());
+    Array<double> h(yw.size()*yw.size());
     udata->pot_->get_energy_gradient_hessian(pele_eq_N_Vector(y), g, h);
     udata->nhev += 1;
     double * hessdata = SUNDenseMatrix_Data(J);
@@ -191,17 +194,24 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
 
 
 /**
- * Negative hessian wrapper. since the Jacobian we get is negative of the hessian
+ * @brief      Calculates the Jacobian of the negative gradient i.e -\grad{-\grad{V(x)}}
+ *
+ * @details    Calculates the Jacobian of the negative gradient to solve the differential equation
+ *             ydot = - \grad{V(y)}. This wrapper for using CVODE with the PETSc SNES solver
+ *
+ * @param      NLS: Nonlinear SNES solver
+ *             x  : coordinates of the particles
+ *             Amat: The hessian
+ *             Precon: Preonditioner
+ *             user_data: userdata
+ * @return     PetscErrorCode
  */
-PetscErrorCode negative_hessian_wrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data)
+PetscErrorCode SNESJacobianWrapper(SNES NLS,Vec x,  Mat Amat, Mat Precon, void* user_data)
 {
     PetscFunctionBeginUser;
     UserData udata = (UserData) user_data;
-    // wrap petsc data into pele vec
-    Array<double> x_pele = pele_eq_PetscVec(x);
-    x_pele = pele_eq_PetscVec(x);
-    // negative_hessian_sparse handles all matrix assembly;
-    udata->pot_->get_negative_hessian_sparse(x_pele, Precon);
+    udata->pot_->get_hessian_petsc(x, Precon);
+    MatScale(Precon, -1.0);
     PetscFunctionReturn(0);
 };
 
