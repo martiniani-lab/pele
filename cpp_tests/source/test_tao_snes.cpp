@@ -11,6 +11,7 @@
 #include "petscmat.h"
 #include "petscsnes.h"
 #include "petscsys.h"
+#include <cstddef>
 #include <petscksp.h>
 #include "petscsystypes.h"
 #include "petscvec.h"
@@ -141,7 +142,7 @@ PetscErrorCode FormHessian(Tao tao, Vec X, Mat H, Mat Hpre, void *ptr) {
   PetscFunctionReturn(0);
 }
 
-TEST(TaoNewton3, TaoNewtonstepswork) {
+TEST(TaoNewton, TaoNewtonstepswork) {
     PetscErrorCode ierr; /* used to check for functions returning nonzeros */
     PetscReal zero = 0.0;
     Vec x; /* solution vector */
@@ -158,7 +159,7 @@ TEST(TaoNewton3, TaoNewtonstepswork) {
     // initialize potential and starting coordinates
     // we're going to be using rosenbrock with petsc routines
     std::shared_ptr<BasePotential> pot_ = std::make_shared<RosenBrock>(1, 100);
-
+  
     pot_sptr_wrapper wrapped_pot_;
     wrapped_pot_.potential_ = pot_;
 
@@ -203,63 +204,72 @@ TEST(TaoNewton3, TaoNewtonstepswork) {
 }
 
 
-TEST(TaoNewtonssas, TaoNewtonstepswork) {
+
+/**
+ * Null space computation using mumps
+ */
+TEST(MUMPSNullSpace, MUMPSNullSpaceCalculated) {
     PetscErrorCode ierr; /* used to check for functions returning nonzeros */
-    PetscReal zero = 0.0;
-    Vec x; /* solution vector */
-    Mat H;
-    Tao tao; /* Tao solver context */
-    PetscBool flg, test_lmvm = PETSC_FALSE;
-    PetscMPIInt size; /* number of processes running */
-    KSP ksp;
-    PC pc;
-    Mat M;
-    Vec in, out, out2;
-    PetscReal mult_solve_dist;
-    MatMumpsSetIcntl(H,24,1);
-    // initialize potential and starting coordinates
-    // we're going to be using rosenbrock with petsc routines
-    std::shared_ptr<BasePotential> pot_ = std::make_shared<RosenBrock>(1, 100);
+    // PetscReal zero = 0.0;
+    // Vec x; /* solution vector */
+    // Mat H;
+    // Tao tao; /* Tao solver context */
+    // PetscBool flg, test_lmvm = PETSC_FALSE;
+    // PetscMPIInt size; /* number of processes running */
+    // KSP ksp;
+    // PC pc;
+    // Mat M;
+    // Vec in, out, out2;
+    // PetscReal mult_solve_dist;
 
-    pot_sptr_wrapper wrapped_pot_;
-    wrapped_pot_.potential_ = pot_;
+    PetscInitializeNoArguments();
+    // We generate a 4x4 matrix with a non obvious null space and try to remove it while using a linear solver
 
-
-    ierr = PetscInitializeNoArguments();
-
-    ierr = VecCreateSeq(PETSC_COMM_SELF, 2, &x);
-    ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, 2, 2, 2, NULL, &H);
-
-    ierr = VecSet(x, zero);
-
-    // Initialize solver
-    ierr = TaoCreate(PETSC_COMM_SELF, &tao);
-    ierr = TaoSetType(tao,TAOLMVM);
-  
-    ierr = TaoSetInitialVector(tao, x);
-  
+    double rows = 4;
+    double mat_arr[] = {0, 0, 0, 0,
+        0, 1, 1, 0,
+                        0, 1, 1, 0,
+                        0, 0, 0, 0}; // The eigenvalues of this matrix are 0, 2, 0
 
 
-    ierr = TaoSetObjectiveAndGradientRoutine(tao, TaoBasePotentialFunctionGradient,
-                                             &wrapped_pot_);
-    ierr = TaoSetHessianRoutine(tao, H, H, TaoBasePotentialHessian, &wrapped_pot_);
-    TaoConvergedReason reason;
-    ierr = TaoSolve(tao);
+    double vec_arr[] = {2, 1, 1, 1}; // The goal is to remove the null space while solving A x = b
 
-    PetscInt iter;
-    TaoGetIterationNumber(tao, &iter);
-    std::cout << "iterations:" << iter + 1 << "\n";
 
-    ierr = TaoGetConvergedReason(tao, &reason);
-    std::cout << reason << "\n";
-    std::cout << TAO_CONVERGED_GATOL << "\n";
-    PetscReal result;
+    
+    Mat A;
+    // ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, rows, rows, rows, NULL, &A);
+    MatCreateSeqSBAIJ(PETSC_COMM_SELF,1,rows,rows,rows,NULL,&A);
 
-    std::cout << "objective function value " << TaoGetObjective(tao, &result)
-              << "\n";
-    Vec result_coords;
-    TaoGetSolutionVector(tao, &result_coords);
-    std::cout << "result coordinates"
-              << "\n";
-    VecView(result_coords, PETSC_VIEWER_STDOUT_SELF);
+    PetscInt vals[] = {0, 1, 2, 3};
+
+
+    
+    MatSetValues(A, rows, vals, rows, vals, mat_arr, INSERT_VALUES);
+
+    MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
+    MatView(A, PETSC_VIEWER_STDOUT_SELF);
+
+
+    
+    Mat F,work,V;
+    PetscInt N;
+
+    MatGetFactor(A,MATSOLVERMUMPS,MAT_FACTOR_CHOLESKY,&F);
+    MatMumpsSetIcntl(F,24,1);
+    MatMumpsSetIcntl(F,25,-1);
+    MatCholeskyFactorSymbolic(F, A, NULL, NULL);
+    MatCholeskyFactorNumeric(F, A, NULL);
+        
+    // MatLUFactorSymbolic(F,A,NULL,NULL,NULL);
+    // MatLUFactorNumeric(F,A,NULL);
+    MatMumpsGetInfog(F,28,&N);   /* this is the dimension of the null space */
+    MatCreateDense(PETSC_COMM_SELF,rows,N,PETSC_DETERMINE,PETSC_DETERMINE,NULL,&V);    /* this will contain the null space in the columns */
+    MatDuplicate(V,MAT_DO_NOT_COPY_VALUES,&work);
+    MatMatSolve(F,work,V);
+    std::cout << N << "\n";
+    MatView(V, PETSC_VIEWER_STDOUT_SELF);
+    // MatView(work, PETSC_VIEWER_STDOUT_SELF);
+    // MatView(F, PETSC_VIEWER_STDOUT_SELF);
+    
 }
