@@ -207,6 +207,7 @@ TEST(TaoNewton, TaoNewtonstepswork) {
 
 /**
  * Null space computation using mumps
+ * The null space is used for the gmres solver
  */
 TEST(MUMPSNullSpace, MUMPSNullSpaceCalculated) {
     PetscErrorCode ierr; /* used to check for functions returning nonzeros */
@@ -229,25 +230,39 @@ TEST(MUMPSNullSpace, MUMPSNullSpaceCalculated) {
     double mat_arr[] = {0, 0, 0, 0,
         0, 1, 1, 0,
                         0, 1, 1, 0,
-                        0, 0, 0, 0}; // The eigenvalues of this matrix are 0, 2, 0
+                        0, 0, 0, 0}; // The eigenvalues of this matrix are 0, 2, 0, 0
+
+    // The null space consists of 0, 1, 1, 0 which is what we shall use
+
+    
 
 
-    double vec_arr[] = {2, 1, 1, 1}; // The goal is to remove the null space while solving A x = b
+    double vec_arr[] = {2, 2, 0, 1}; // this is b
+    // The goal is to remove the null space while solving A x = b (should remove)
+
+
+    
 
 
     
     Mat A;
+    Vec b;
     // ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, rows, rows, rows, NULL, &A);
     MatCreateSeqSBAIJ(PETSC_COMM_SELF,1,rows,rows,rows,NULL,&A);
+    VecCreateSeq(PETSC_COMM_SELF, rows, &b);
+    
 
     PetscInt vals[] = {0, 1, 2, 3};
 
 
-    
+    VecSetValues(b, rows, vals, vec_arr, INSERT_VALUES);
     MatSetValues(A, rows, vals, rows, vals, mat_arr, INSERT_VALUES);
 
     MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
+    VecAssemblyBegin(b);
+    VecAssemblyEnd(b);
+    VecView(b, PETSC_VIEWER_STDOUT_SELF);
     MatView(A, PETSC_VIEWER_STDOUT_SELF);
 
 
@@ -267,9 +282,7 @@ TEST(MUMPSNullSpace, MUMPSNullSpaceCalculated) {
     MatCreateDense(PETSC_COMM_SELF,rows,N,PETSC_DETERMINE,PETSC_DETERMINE,NULL,&V);    /* this will contain the null space in the columns */
     MatDuplicate(V,MAT_DO_NOT_COPY_VALUES,&work);
     MatMatSolve(F,work,V);
-    std::cout << N << "\n";
     MatView(V, PETSC_VIEWER_STDOUT_SELF);
-    // MatView(work, PETSC_VIEWER_STDOUT_SELF);
-    // MatView(F, PETSC_VIEWER_STDOUT_SELF);
-    
+    MatView(work, PETSC_VIEWER_STDOUT_SELF);
 }
+

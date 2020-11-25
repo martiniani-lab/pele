@@ -92,7 +92,6 @@ def testing():  # pragma: no cover
 
     print("try a quench")
     from pele.optimize import mylbfgs as quench
-
     ret = quench(coords, lj, iprint=-1)
     print("energy ", ret.energy)
     print("rms gradient", ret.rms)

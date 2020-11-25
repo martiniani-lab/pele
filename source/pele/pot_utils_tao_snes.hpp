@@ -6,7 +6,8 @@
 
 
 
-
+#ifndef _PELE_TAO_FUNCS_H__
+#define _PELE_TAO_FUNCS_H__
 #include "pele/base_potential.hpp"
 #include <petsctao.h>
 #include "pele/array.hpp"
@@ -68,5 +69,7 @@ inline PetscErrorCode TaoBasePotentialHessian(Tao tao,Vec X,Mat H, Mat Hpre, voi
     user->potential_->get_hessian_petsc(X, H);
     PetscFunctionReturn(0);
 }
+
+#endif
 
 
