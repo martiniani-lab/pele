@@ -172,9 +172,9 @@ inline pele::Array<double> pele_eq_N_Vector(N_Vector x) {
 inline pele::Array<double> pele_eq_PetscVec(Vec x) {
     double *x_arr;
     VecGetArray(x, &x_arr);
-    int length;
+    PetscInt length;
     VecGetLocalSize(x, &length);
-    return pele::Array<double>(x_arr, length);
+    return pele::Array<double>(x_arr, (int) length);
 }
 
 /**

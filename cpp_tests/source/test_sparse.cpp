@@ -19,8 +19,6 @@
 using namespace pele;
     
 
-
-
 TEST(sparse_energy_gradient_hessian, Energy_Gradient_Hessian_Works){
     auto lj = std::make_shared<pele::LJ> (1., 1.);
 
@@ -51,7 +49,7 @@ TEST(sparse_energy_gradient_hessian, Energy_Gradient_Hessian_Works){
     Vec petsc_grad;
     PetscInt i_petsc[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     PetscInt j_petsc[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    PetscScalar sparse_hess_vals[N*N];
+    PetscScalar sparse_hess_vals[N * N];    
     MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N, N, hessav, NULL, &petsc_hess);
     VecCreateSeq(PETSC_COMM_SELF, N, &petsc_grad);
     double e_sparse = lj->get_energy_gradient_hessian_sparse(x, petsc_grad, petsc_hess);
@@ -63,7 +61,7 @@ TEST(sparse_energy_gradient_hessian, Energy_Gradient_Hessian_Works){
     for (int i =0; i < N; ++i) {
         for (int j = i; j < N; ++j) {
             MatGetValue(petsc_hess, i, j, &val);
-            ASSERT_NEAR(val, h[N*i+j], 1e-10);   
+            ASSERT_NEAR(val, h[N * i + j], 1e-10);         
         }
     }
 }
@@ -182,7 +180,7 @@ TEST(CellListsSparseGradientCheck, FullRunPeriodic)
     e_sparse = potcell->get_energy_gradient_sparse(x, petsc_grad);
 
     // get all the values in the gradient
-    int vals[nr_dof];
+    PetscInt vals[nr_dof];
     double petsc_grad_vals[nr_dof];
     for (int i; i < nr_dof; ++i) {
         vals[i] = i;
@@ -284,8 +282,8 @@ TEST(CellListsSparseHessianCheck, FullRunPeriodic)
 
 
     // get all the values in the gradient
-    int vals[nr_dof];
-    double petsc_grad_vals[nr_dof];
+    PetscInt vals[nr_dof];
+    PetscReal petsc_grad_vals[nr_dof];
     for (int i; i < nr_dof; ++i) {
         vals[i] = i;
     }

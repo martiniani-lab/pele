@@ -416,8 +416,8 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     double e = 0.;
     double gradi[m_ndim];             // gradi
     double gradj[m_ndim];             // gradj
-    int indicesi[3];    // indices upto 3
-    int indicesj[3];    // indices upto 3
+    PetscInt indicesi[3];    // indices upto 3
+    PetscInt indicesj[3];    // indices upto 3
     for (size_t atom_i=0; atom_i<natoms; ++atom_i) {
         size_t i1 = m_ndim * atom_i;
         for (size_t atom_j=0; atom_j<atom_i; ++atom_j){
@@ -474,11 +474,9 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     double e = 0.;
     double gradi[m_ndim];             // gradi
     double gradj[m_ndim];             // gradj
-    int indicesi[3];    // indices upto 3
-    int indicesj[3];    // indices upto 3
-
-
-    // get read only array from x
+    PetscInt indicesi[3];    // indices upto 3
+    PetscInt indicesj[3];    // indices upto 3
+    // const dounle
     const double * x_array_read;
     VecGetArrayRead(x, &x_array_read);
     
@@ -542,8 +540,8 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::ad
     double e = 0.;
     double gradi[m_ndim];             // gradi
     double gradj[m_ndim];             // gradj
-    int indicesi[3];    // indices upto 3
-    int indicesj[3];    // indices upto 3
+    PetscInt indicesi[3];    // indices upto 3
+    PetscInt indicesj[3];    // indices upto 3
     double Hii_diag;
     double Hii_off;
 

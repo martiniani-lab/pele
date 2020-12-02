@@ -510,7 +510,7 @@ public:
         //(even more so than the rest)
         double Hii_diag;
         double Hii_off;
-        int N;
+        PetscInt N;
         VecGetSize(*m_gradient_sparse, &N);
         const size_t i1 = xi_off;
         const size_t j1 = xj_off;
@@ -959,7 +959,7 @@ for (size_t i=0; i < grad.size(); ++i) {
         if (m_ndim * natoms != coords.size()) {
             throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
         }
-        int grad_sparse_size;
+        PetscInt grad_sparse_size;
         VecGetSize(grad_sparse, &grad_sparse_size);
         if (coords.size() != grad_sparse_size) {
             throw std::invalid_argument("the gradient has the wrong size");
@@ -1013,13 +1013,13 @@ for (size_t i=0; i < grad.size(); ++i) {
         if (m_ndim * natoms != coords.size()) {
             throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
         }
-        int grad_sparse_size;
+        PetscInt grad_sparse_size;
         VecGetSize(grad_sparse, &grad_sparse_size);
         if (coords.size() != grad_sparse_size) {
             throw std::invalid_argument("the gradient has the wrong size");
         }
-        int hess_sparse_size_x;
-        int hess_sparse_size_y;
+        PetscInt hess_sparse_size_x;
+        PetscInt hess_sparse_size_y;
         MatGetSize(hess_sparse, &hess_sparse_size_x, &hess_sparse_size_y);
         if (coords.size()*coords.size() != hess_sparse_size_x*hess_sparse_size_y) {
             throw std::invalid_argument("the Hessian has the wrong size");
@@ -1051,8 +1051,8 @@ for (size_t i=0; i < grad.size(); ++i) {
         if (m_ndim * natoms != x_size) {
             throw std::runtime_error("xsize is not divisible by the number of dimensions");
         }
-        int hess_sparse_size_x;
-        int hess_sparse_size_y;
+        PetscInt hess_sparse_size_x;
+        PetscInt hess_sparse_size_y;
         MatGetSize(hess, &hess_sparse_size_x, &hess_sparse_size_y);
         if (x_size*x_size != hess_sparse_size_x*hess_sparse_size_y) {
             throw std::invalid_argument("the Hessian has the wrong size");

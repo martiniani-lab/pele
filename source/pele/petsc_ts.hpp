@@ -8,7 +8,7 @@
 #include "base_potential.hpp"
 #include "array.hpp"
 #include "debug.hpp"
-
+#include "optimizer.hpp"
 
 #include "petscsnes.h"
 #include "petscsys.h"
@@ -18,7 +18,9 @@
 
 
 namespace pele {
-class PETSCTSOptimizer : public GradientOptimizer {
+
+
+class PETScTSOptimizer : public GradientOptimizer {
 private:
     size_t N_size;
     double t0;
@@ -33,14 +35,12 @@ private:
     SNES  snes;
 public:
     void one_iteration();
-    PETSCTSOptimizer(std::shared_ptr<pele::BasePotential> potential,
+    PETScTSOptimizer(std::shared_ptr<pele::BasePotential> potential,
                      const pele::Array<double> x0,
-                      double tol=1e-5,
-                      double rtol=1e-4,
-                      double atol=1e-4);
-    ~PETSCTSOptimizer();
-
-protected:
+                     double tol=1e-5,
+                     double rtol=1e-4,
+                     double atol=1e-4);
+    ~PETScTSOptimizer();
     
 };
 }
