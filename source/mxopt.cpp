@@ -77,6 +77,12 @@ void MixedOptimizer::one_iteration() {
   hessian_calculated = false;
   // make a copy of the position and gradient
   xold.assign(x_);
+
+
+#if OPTIMIZER_DEBUG_LEVEL >= 3
+  std::cout << xold << "starting position \n";
+#endif  
+  
   gold.assign(g_);
   // copy the gradient into step
   step.assign(g_);
@@ -85,10 +91,10 @@ void MixedOptimizer::one_iteration() {
   // but always starts off in differential equation solver mode
   if (iter_number_ % T_ == 0 and iter_number_>0) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
-    std::cout << "checking convexity"
-              << "\n";
+      std::cout << "checking convexity"
+                << "\n";
 #endif
-    usephase1 = convexity_check();
+      usephase1 = convexity_check();
   }
   if (usephase1 and not switchtophase2) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
@@ -162,7 +168,7 @@ bool MixedOptimizer::convexity_check() {
   minimum = eigvals.minCoeff();
   double maximum = eigvals.maxCoeff();
   if (maximum == 0) {
-    maximum = 1e-8;
+      maximum = 1e-8;
   }
   double convexity_estimate = std::abs(minimum / maximum);
 
@@ -217,7 +223,7 @@ Eigen::MatrixXd MixedOptimizer::get_hessian() {
     }
   }
   return hess_dense;
-}
+ }
 
 // /**
 //  * Phase 1 The problem does not look convex, Try solving using with an
@@ -259,11 +265,19 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
   // this can mess up accuracy if we aren't close to a minimum preferably switch
   // sparse
   // std::cout << hessian.eigenvalues() << "hessian eigenvalues before \n";
-
+  printf(minimum_less_than_zero ? "true" : "false");
+  std::cout  << "\n";
+  
+  std::cout << hessian.eigenvalues() << " eigenvaluess   \n";
+  std::cout << minimum << "minimum value\n";
+  
+  
+  
   if (minimum_less_than_zero) {
-    hessian -= conv_factor_ * minimum *
-               Eigen::MatrixXd::Identity(x_.size(), x_.size());
+      hessian -= conv_factor_ * minimum *
+          Eigen::MatrixXd::Identity(x_.size(), x_.size());
   }
+
 
   Eigen::VectorXd r(step.size());
   Eigen::VectorXd q(step.size());
@@ -271,7 +285,16 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
   eig_eq_pele(r, step);
   // negative sign to switch direction
   // TODO change this to banded
-  q = -scale * hessian.colPivHouseholderQr().solve(r);
+  q = -scale * hessian.fullPivLu().solve(r);
   pele_eq_eig(step, q);
+  
+#if OPTIMIZER_DEBUG_LEVEL >= 3
+  // debug information for gradients  
+      std::cout << q <<" step \n";
+      std::cout << r << "gradient \n";
+      std::cout << hessian.eigenvalues().real() << "hessian eigenvalues \n";
+      Eigen::FullPivLU<Eigen::MatrixXd> lu(hessian);
+      std::cout << lu.kernel() << "\n";
+#endif    
 }
 } // namespace pele

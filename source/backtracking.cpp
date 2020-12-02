@@ -4,6 +4,7 @@
 #include "pele/lsparameters.hpp"
 #include <cmath>
 #include <complex>
+#include <iostream>
 
 
 
@@ -16,8 +17,6 @@ double BacktrackingLineSearch::line_search(Array<double> &x, Array<double> step)
     eig_eq_pele(gradvec, gold_);
     // if the step is too large (greater than 1/20 the box size, force scale it down)
     Scalar stpsize = initial_stpsize;
-    // absolute original stepnorm
-    double absolute_step_norm = norm(step);
     //     if (absolute_step_norm*initial_stpsize>0.3) {
     //         stpsize *= 0.3/absolute_step_norm;
     // #if OPTIMIZER_DEBUG_LEVEL >= 1
@@ -66,7 +65,6 @@ void BacktrackingLineSearch::LSFunc(Scalar& fx, Vector& x, Vector& grad,
 
         // Decreasing and increasing factors
         const Scalar dec = 0.5;
-        const Scalar inc = 2.1;
 
         // Check the value of step
 if(step <= Scalar(0))
@@ -80,6 +78,8 @@ if(step <= Scalar(0))
         Vector y_vec;
         const Scalar dg_init = grad.dot(drt);
 #if OPTIMIZER_DEBUG_LEVEL >= 3
+        std::cout << grad <<" grad \n";
+        std::cout << drt << "drt \n";        
         std::cout << dg_init << " dginit must be less than 0 \n";
 #endif
         // Make sure d points to a descent direction
