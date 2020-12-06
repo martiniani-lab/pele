@@ -37,5 +37,15 @@ pele/potentials/_pele.cxx
 pele/potentials/_pythonpotential.cxx
 pele/version.py
 _ngt_cpp.cxx
+.cache
+.clangd
+CMakeFiles
+.cmake
+.idea
+.vscode
+cmake-build-debug
+CMakeCache.txt
+Makefile
+cmake_install.cmake
 .coverage
 htmlcov

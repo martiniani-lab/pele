@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -7,13 +8,20 @@
 
 #include <gtest/gtest.h>
 
+#include "pele/array.hpp"
 #include "pele/harmonic.hpp"
 #include "pele/meta_pow.hpp"
 
+#include "petscmat.h"
+#include "petscsys.h"
+#include "petscsystypes.h"
+#include "petscvec.h"
+#include "petscviewer.h"
 #include "test_utils.hpp"
 
 using pele::Array;
 using pele::pos_int_pow;
+using std::shared_ptr;
 
 static double const EPS = std::numeric_limits<double>::min();
 #define EXPECT_NEAR_RELATIVE(A, B, T)  EXPECT_NEAR(A/(fabs(A)+fabs(B) + EPS), B/(fabs(A)+fabs(B) + EPS), T)
@@ -129,8 +137,8 @@ TEST_F(HarmonicAtomListTest, EnergyGradient_AgreesWithNumerical){
 }
 
 TEST_F(HarmonicAtomListTest, EnergyGradientHessian_AgreesWithNumerical){
-    test_energy_gradient_hessian();
-}
+    test_energy_gradient_hessian();}
+
 
 class HarmonicNeighborListTest :  public HarmonicAtomListTest {
 public:
@@ -159,4 +167,67 @@ TEST_F(HarmonicNeighborListTest, EnergyGradient_AgreesWithNumerical){
 
 TEST_F(HarmonicNeighborListTest, EnergyGradientHessian_AgreesWithNumerical){
     test_energy_gradient_hessian();
+}
+
+/**
+ * Note that these need to be written into a different testing infrastucture see
+ * https://scicomp.stackexchange.com/questions/8516/any-recommendations-for-unit-testing-frameworks-compatible-with-code-libraries-t
+ */
+TEST(HarmonicPetsc, EnergyGradientWorks) {
+    Vec x0;
+    Vec grad;
+    PetscInt dim = 2;
+    double k = 1;
+    std::shared_ptr<pele::Harmonic> potential = std::make_shared<pele::Harmonic>(Array<double>(2, 0), k, dim);
+    PetscInitializeNoArguments();
+    VecCreateSeq(PETSC_COMM_SELF, dim, &x0);
+    VecDuplicate(x0, &grad);
+    PetscReal coord_vals[2] = {2, 1};
+    PetscInt indices[2] = {0, 1};
+    VecSetValues(x0, 2, indices, coord_vals, INSERT_VALUES);
+    VecAssemblyBegin(x0);
+    VecAssemblyEnd(x0);
+    double energy = potential->get_energy_gradient_petsc(x0, grad);
+    PetscReal grad_vals[2];
+    PetscReal x0_vals[2];    
+    VecGetValues(grad, 2, indices, grad_vals);
+    VecGetValues(x0, 2, indices, x0_vals);
+    for (int i =0; i < 2; ++i) {
+        ASSERT_NEAR(grad_vals[i], x0_vals[i], 1e-10);
+    }
+    PetscFinalize();
+}
+
+/**
+ * Note that these need to be written into a different testing infrastucture see
+ * https://scicomp.stackexchange.com/questions/8516/any-recommendations-for-unit-testing-frameworks-compatible-with-code-libraries-t
+ */
+TEST(HarmonicPetsc, HessianWorks) {
+    Vec x0;
+    Mat hess;
+    PetscInt dim = 2;
+    PetscInt sparse_non_zeros = 1;
+    PetscInt sparse_block_size=1;
+    double k = 1;
+    Array<double> origin = {0, 0};
+    shared_ptr<pele::Harmonic> harmonic = std::make_shared<pele::Harmonic>(origin, k, dim);    
+    // the get_energy_gradient works only for the origin at 0
+    PetscInitializeNoArguments();
+    MatCreateSeqSBAIJ(PETSC_COMM_SELF, sparse_block_size, dim, dim, sparse_non_zeros, NULL, &hess);
+    VecCreateSeq(PETSC_COMM_SELF, dim, &x0);
+    PetscReal coord_vals[2] = {2, 1};
+    PetscInt indices[2] = {0, 1};
+    VecSetValues(x0, 2, indices, coord_vals, INSERT_VALUES);
+    VecAssemblyBegin(x0);
+    VecAssemblyEnd(x0);
+    harmonic->get_hessian_petsc(x0, hess);
+    MatView(hess, PETSC_VIEWER_STDOUT_SELF);
+    PetscReal hess_data[4];
+    MatGetValues(hess, 2, indices, 2, indices, hess_data);
+    PetscReal hess_data_true[4] = {1, 0, 0, 1};
+    for (auto i = 0; i < 4; ++i) {
+        ASSERT_NEAR(hess_data[i], hess_data_true[i], 1e-10);
+    }
+
+    PetscFinalize();
 }
