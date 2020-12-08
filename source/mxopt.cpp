@@ -35,7 +35,7 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
     Array<double> x0copy = x0.copy();
     x0_N = N_Vector_eq_pele(x0copy);
     // initialization of everything CVODE needs
-    int ret = CVodeInit(cvode_mem, f, t0, x0_N);
+    int ret = CVodeInit(cvode_mem, gradient_wrapper, t0, x0_N);
     // initialize userdata
     udata.rtol = rtol;
     udata.atol = atol;
