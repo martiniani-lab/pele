@@ -35,107 +35,30 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     : GradientOptimizer(potential, x0, tol),
       cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
       N_size(x0.size()), t0(0), tN(1.0) {
-  // dummy t0
-  // initialize petsc
   PetscInitializeNoArguments();
-  // this assumes that the number of non zeros aren't different
-  blocksize = 1;
-  hessav = 10;
-  // matrix initialization
-  // MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, hessav, NULL,
-  //                   &petsc_jacobian);
 
-  // MatCreateDense(PETSC_COMM_SELF, N_size, N_size, PETSC_DECIDE, PETSC_DECIDE, NULL, &petsc_jacobian);
-  VecCreateSeq(PETSC_COMM_SELF, N_size, &petsc_grad);
 
-  // wrap nvector into petsc array
-  nvec_grad_petsc = N_VMake_Petsc(petsc_grad);
-  VecDuplicate(petsc_grad, &residual);
+  // The constructor is compartmentalized since there is a lot to setup
+  // This function separation should help with debugging
+
+  setup_gradient();
+
+  setup_coords();
+
+  setup_cvode_data(rtol, atol);
+
+  setup_SNES();
   
-  
-  /////// SNES function details
-  SNESCreate(PETSC_COMM_SELF, &snes);
-  // SNESSetType(snes, SNESNEWTONLS);
-  udataptr = &udata;
+  setup_CVODE();
 
 
-  // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
-  //                 udataptr);
-
-  
-
-  // PETSC VIEWER FORMAT
-  PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_DEFAULT,
-                             &vf);
-  SNESMonitorSet(
-      snes,
-      (PetscErrorCode(*)(SNES, PetscInt, PetscReal, void *))CVODESNESMonitor,
-      vf, (PetscErrorCode(*)(void **))PetscViewerAndFormatDestroy);
-
-
-
-
-
-
-  // we need to pass the potential pointer on to the
-  // Jacobian function as the application context
-  // The potential pointer allows us to use the base potential class to
-  // of the gradient i.e the hessian
-  t0 = 0;
-  std::cout << x0 << "\n";
-  Array<double> x0copy = x0.copy();
-  // We're going to do a bit of manipulation here
-  // because we want the Vec to be owned by
-  // the Nvec implementation, not have a wrapper
-  PetscVec_eq_pele(x0_petsc, x0);
-  x0_N = N_VMake_Petsc(x0_petsc);
-
-  NLS = SUNNonlinSol_PetscSNES(x0_N, snes);
-
-
-  // Jacobian setting
-  MatCreateSNESMF(snes, &petsc_jacobian);
-  SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, MatMFFDComputeJacobian,
-                  0);
-
-  
-  int ierr = CVodeInit(cvode_mem, gradient_wrapper, t0, x0_N); CHKERRCV(ierr);
-  
-  std::cout << ierr << "init return value \n";
-  
-
-
-  ierr = CVodeSetNonlinearSolver(cvode_mem, NLS);
-  CHKERRCV(ierr);
-  // add additonal moniting information
-
-  
-
-
-  // initialize userdata
-  udata.rtol = rtol;
-  udata.atol = atol;
-  udata.nfev = 0;
-  udata.nhev = 0;
-  // current_grad = N_VClone_Petsc(nvec_grad_petsc);
-  udata.pot_ = potential_;
-  udata.neq = x0.size();
-  udata.stored_grad = Array<double>(x0.size(), 0);
-
-  
-  
-  CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
-  ierr = CVodeSetUserData(cvode_mem, &udata);
-  CVodeSetMaxNumSteps(cvode_mem, 1000000);
-  CVodeSetStopTime(cvode_mem, tN);
-  std::cout << "step check"
-            << "\n";
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
   flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);  
   CHKERRCV(flag);
   std::cout << "construction happened"
             << "\n";
   VecView(N_VGetVector_Petsc(x0_N), PETSC_VIEWER_STDOUT_SELF);
+
 };
 
 void CVODEBDFOptimizer::one_iteration() {

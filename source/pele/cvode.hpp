@@ -27,6 +27,7 @@
 #include "nvector/nvector_petsc.h"
 #include "nwpele.hpp"
 #include "optimizer.hpp"
+#include "petsc_interface.hpp"
 
 #include <petscmat.h>
 #include <sunnonlinsol/sunnonlinsol_petscsnes.h>
@@ -47,14 +48,32 @@
 /**
  * Checks sundials error and appropriately throws exception
  */
-#define CHKERRCV(value) {if(value!=0){throw "sundials failed with exception";}}
-
+#define CHKERRCV(value)                                                        \
+  {                                                                            \
+    if (value != 0) {                                                          \
+      throw "sundials failed with exception";                                  \
+    }                                                                          \
+  }
 
 extern "C" {
 #include "xsum.h"
 }
 
 namespace pele {
+
+int gradient_wrapper(double t, N_Vector y, N_Vector ydot, void *user_data);
+int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
+        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+/**
+ * wrapper around negative hessian which allows for faster computations
+ */
+PetscErrorCode SNESJacobianWrapper(SNES NLS, Vec x, Mat Amat, Mat Precon,
+                                   void *user_data);
+PetscErrorCode CVODESNESMonitor(SNES snes, PetscInt its, PetscReal fnorm,
+                                PetscViewerAndFormat *vf);
 
 /**
  * user data passed to CVODE
@@ -122,6 +141,84 @@ private:
   KSP ksp;
   PC pc;
 
+  ///////////////////////////////////////////////////////////////////////////
+  //               functions that are part of the constructor              //
+  ///////////////////////////////////////////////////////////////////////////
+
+  /**
+   * helper function to set up coordinates in the constructor
+   */
+  inline void setup_gradient() {
+    // non zero structure for sparse matrices
+    blocksize = 1;
+    hessav = 10;
+    VecCreateSeq(PETSC_COMM_SELF, N_size, &petsc_grad);
+    nvec_grad_petsc = N_VMake_Petsc(petsc_grad);
+  }
+  /**
+   * helper function to set up coordinates in the constructor
+   */
+  inline void setup_coords() {
+    // this should only be called in the constructor
+    // since that is where x_=x0
+    PetscVec_eq_pele(x0_petsc, x_);
+    x0_N = N_VMake_Petsc(x0_petsc);
+  }
+
+  /**
+   * helper function to set up coordinates in the constructor
+   */
+  inline void setup_cvode_data(double rtol, double atol) {
+    // shouldn't need this line
+    udataptr = &udata;
+    // initialize userdata
+    udata.rtol = rtol;
+    udata.atol = atol;
+    udata.nfev = 0;
+    udata.nhev = 0;
+    udata.pot_ = potential_;
+    udata.neq = N_size;
+    // TODO: remove this
+    udata.stored_grad = Array<double>(N_size, 0);
+  }
+  /**
+   * Helper function to set up SNES wrapped into Petsc
+   */
+  inline void setup_SNES() {
+    SNESCreate(PETSC_COMM_SELF, &snes);
+
+    // // PETSC VIEWER FORMAT should make monitor setting optional
+    // PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_DEFAULT,
+    //                            &vf);
+    // SNESMonitorSet(
+    //     snes,
+    //     (PetscErrorCode(*)(SNES, PetscInt, PetscReal, void *))CVODESNESMonitor,
+    //     vf, (PetscErrorCode(*)(void **))PetscViewerAndFormatDestroy);
+
+    NLS = SUNNonlinSol_PetscSNES(x0_N, snes);
+      // Jacobian setting
+    MatCreateSNESMF(snes, &petsc_jacobian);
+    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, MatMFFDComputeJacobian,
+                    0);
+    
+  };
+
+  /**
+   * CVODE setup needs to be called after SNES
+   */
+  inline void setup_CVODE() {
+  
+  int ierr = CVodeInit(cvode_mem, gradient_wrapper, t0, x0_N); CHKERRCV(ierr);
+  
+  ierr = CVodeSetNonlinearSolver(cvode_mem, NLS); CHKERRCV(ierr);
+  ierr = CVodeSStolerances(cvode_mem, udata.rtol, udata.atol); CHKERRCV(ierr);
+  ierr = CVodeSetUserData(cvode_mem, &udata); CHKERRCV(ierr);
+
+  // should be infty tbh
+  CVodeSetMaxNumSteps(cvode_mem, 1000000);
+  CVodeSetStopTime(cvode_mem, tN);
+  };
+
 public:
   void one_iteration();
   // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -133,78 +230,12 @@ public:
                     double rtol = 1e-4, double atol = 1e-4);
   ~CVODEBDFOptimizer();
   inline int get_nhev() const { return udata.nhev; }
-
+  /**
+   * helper functions to compartmentalize the constructor
+   */
 protected:
   double H02;
 };
 
-/**
- * creates a new N_vector_petsc array array that wraps around the pele array
- * data
- */
-inline N_Vector N_Vector_eq_pele(pele::Array<double> x) {
-  N_Vector y;
-  Vec y_petsc;
-  VecCreateSeq(PETSC_COMM_SELF, x.size(), &y_petsc);
-  for (size_t i = 0; i < x.size(); ++i) {
-    VecSetValue(y_petsc, i, x[i], INSERT_VALUES);
-  }
-  VecAssemblyBegin(y_petsc);
-  VecAssemblyEnd(y_petsc);
-  y = N_VMake_Petsc(y_petsc);
-  return y;
-}
-
-/**
- * Creates a new pele array with data belonging to an N_Vector petsc arra
- */
-
-inline pele::Array<double> pele_eq_N_Vector(N_Vector x) {
-  Vec x_petsc = N_VGetVector_Petsc(x);
-  double *x_data;
-  VecGetArray(x_petsc, &x_data);
-  return pele::Array<double>(x_data, N_VGetLength(x)).copy();
-}
-
-/**
- * gets the array data and wraps it into a pele Array.
- * Note: pele arrays are single processor only Note: does not
- * work if restore array is not called later
- */
-inline pele::Array<double> pele_eq_PetscVec(Vec x) {
-  double *x_arr;
-  VecGetArray(x, &x_arr);
-  PetscInt length;
-  VecGetLocalSize(x, &length);
-  return pele::Array<double>(x_arr, (int)length);
-}
-
-/**
- * Creates a new Vec object with data from pele array (cannot wrap data due to
- * PETSc data encapsulation)
- * involves creation of new stuff
- */
-inline void PetscVec_eq_pele(Vec &x_petsc, pele::Array<double> x) {
-    VecCreateSeq(PETSC_COMM_SELF, x.size(), &x_petsc);
-  for (auto i = 0; i < x.size(); ++i) {
-    VecSetValue(x_petsc, i, x[i], INSERT_VALUES);
-  }
-  VecAssemblyBegin(x_petsc);
-  VecAssemblyEnd(x_petsc);
-}
-
-int gradient_wrapper(double t, N_Vector y, N_Vector ydot, void *user_data);
-int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
-        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
-                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-/**
- * wrapper around negative hessian which allows for faster computations
- */
-PetscErrorCode SNESJacobianWrapper(SNES NLS, Vec x, Mat Amat, Mat Precon,
-                                   void *user_data);
-PetscErrorCode CVODESNESMonitor(SNES snes, PetscInt its, PetscReal fnorm,
-                                PetscViewerAndFormat *vf);
 } // namespace pele
 #endif
