@@ -23,7 +23,6 @@ public:
     std::shared_ptr<pele::RBTopology> rbtopology;
     VecN<3> p0;
 
-
     Array<double> make_otp_x()
     {
         Array<double> x(3*3);

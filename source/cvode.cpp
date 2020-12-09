@@ -35,11 +35,13 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     : GradientOptimizer(potential, x0, tol),
       cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
       N_size(x0.size()), t0(0), tN(1.0) {
+
   PetscInitializeNoArguments();
 
 
   // The constructor is compartmentalized since there is a lot to setup
   // This function separation should help with debugging
+  // also these functions could use parameters to setup differently
 
   setup_gradient();
 
@@ -51,14 +53,14 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
   
   setup_CVODE();
 
-
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
-  flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);  
+  flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
+  
+
   CHKERRCV(flag);
   std::cout << "construction happened"
             << "\n";
   VecView(N_VGetVector_Petsc(x0_N), PETSC_VIEWER_STDOUT_SELF);
-
 };
 
 void CVODEBDFOptimizer::one_iteration() {
@@ -134,32 +136,25 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
   return 0;
 };
 
-/**
- * @brief      Calculates the Jacobian of the negative gradient i.e
- * -\grad{-\grad{V(x)}}
- *
- * @details    Calculates the Jacobian of the negative gradient to solve the
- * differential equation ydot = - \grad{V(y)}. This wrapper for using CVODE with
- * the PETSc SNES solver
- *
- * @param      NLS: Nonlinear SNES solver
- *             x  : coordinates of the particles
- *             Amat: The hessian
- *             Precon: Preonditioner
- *             user_data: userdata
- * @return     PetscErrorCode
- */
+
 PetscErrorCode SNESJacobianWrapper(SNES NLS, Vec x, Mat Amat, Mat Precon,
                                    void *user_data) {
   PetscFunctionBeginUser;
-  std::cout << "here"
-            << "\n";
+  
   UserData udata = (UserData)user_data;
+  
   udata->pot_->get_hessian_petsc(x, Precon);
-  MatScale(Precon, -1.0);
-  MatCopy(Precon, Amat, SAME_NONZERO_PATTERN);
+  
+  double gamma;
+  CVodeGetCurrentGamma(udata->cvode_mem_ptr, &gamma);
+
+  // I-\gamma(-H) = I + \gamma H
+  MatScale(Precon, gamma);
+  MatShift(Precon, 1);
+
   PetscFunctionReturn(0);
 };
+
 
 
 /**

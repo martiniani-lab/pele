@@ -12,6 +12,11 @@ enable_language(CXX)
 ADD_DEFINITIONS(-std=c++1z -g)
 # ADD_DEFINITIONS(-Wall)
 
+# optimize debugging experience
+# debug builds with max information
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Og -g3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -g3")
+
 
 #set OpenMP
 find_package(OpenMP)

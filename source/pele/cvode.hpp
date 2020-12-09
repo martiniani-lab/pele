@@ -33,6 +33,7 @@
 #include <sunnonlinsol/sunnonlinsol_petscsnes.h>
 
 #include "cvode/cvode_proj.h"
+#include "petscsnes.h"
 #include "petscsys.h"
 #include "petscsystypes.h"
 #include "petscvec.h"
@@ -67,8 +68,23 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
 static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+
+
 /**
- * wrapper around negative hessian which allows for faster computations
+ * @brief      Wrapper for CVODE to get the Jacobian for the Newton Calculation
+ *
+ * @details    Calculates I - \gamma J where J = -H and H is the hessian. Gamma
+ *             is obtained from the User content
+ *
+ * @param      SNES NLS: Nonlinear solver
+ *                Vec x: Coordinate at which the Jacobian is calculated
+ *                Mat Amat: Matrix calculation
+ *                Mat Precon: Preconditioner: since we're not using any, the
+ *                            matrix is assumed the same as Amat.
+ *                            WARNING: this is not explicitly set
+ *                void *user_data: user context. Needs cvode_mem
+ *
+ * @return     void *
  */
 PetscErrorCode SNESJacobianWrapper(SNES NLS, Vec x, Mat Amat, Mat Precon,
                                    void *user_data);
@@ -79,6 +95,7 @@ PetscErrorCode CVODESNESMonitor(SNES snes, PetscInt its, PetscReal fnorm,
  * user data passed to CVODE
  */
 typedef struct UserData_ {
+  void *cvode_mem_ptr; // reference to CVODE for getting Gamma in Jacobian
   double rtol; /* integration tolerances */
   double atol;
   size_t nfev;               // number of gradient(function) evaluations
@@ -134,9 +151,9 @@ private:
   Vec residual;
   PetscInt blocksize;
   // average number of non zeros per block for memory allocation purposes
-  PetscInt hessav;
+  PetscInt nz_hess;
 
-  // corresponding SNES, KSP and preconditioner contexts
+  // corresponding SNES, KSP and preconditioner nz_hesss
   SNES snes;
   KSP ksp;
   PC pc;
@@ -149,9 +166,7 @@ private:
    * helper function to set up coordinates in the constructor
    */
   inline void setup_gradient() {
-    // non zero structure for sparse matrices
-    blocksize = 1;
-    hessav = 10;
+
     VecCreateSeq(PETSC_COMM_SELF, N_size, &petsc_grad);
     nvec_grad_petsc = N_VMake_Petsc(petsc_grad);
   }
@@ -178,6 +193,7 @@ private:
     udata.nhev = 0;
     udata.pot_ = potential_;
     udata.neq = N_size;
+    udata.cvode_mem_ptr = cvode_mem;
     // TODO: remove this
     udata.stored_grad = Array<double>(N_size, 0);
   }
@@ -188,35 +204,59 @@ private:
     SNESCreate(PETSC_COMM_SELF, &snes);
 
     // // PETSC VIEWER FORMAT should make monitor setting optional
-    // PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_DEFAULT,
+    // PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,
+    // PETSC_VIEWER_DEFAULT,
     //                            &vf);
     // SNESMonitorSet(
     //     snes,
-    //     (PetscErrorCode(*)(SNES, PetscInt, PetscReal, void *))CVODESNESMonitor,
-    //     vf, (PetscErrorCode(*)(void **))PetscViewerAndFormatDestroy);
+    //     (PetscErrorCode(*)(SNES, PetscInt, PetscReal, void
+    //     *))CVODESNESMonitor, vf, (PetscErrorCode(*)(void
+    //     **))PetscViewerAndFormatDestroy);
 
     NLS = SUNNonlinSol_PetscSNES(x0_N, snes);
-      // Jacobian setting
-    MatCreateSNESMF(snes, &petsc_jacobian);
-    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, MatMFFDComputeJacobian,
-                    0);
+    
+
+    // // matrix approach
+    setup_Jacobian();
+    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
+                    SNESJacobianWrapper, &udata);
+    // // Matrix free approach
+    // MatCreateSNESMF(snes, &petsc_jacobian);
+    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, MatMFFDComputeJacobian,
+    //                 0);
+
     
   };
+
+  /**
+   * Helper function to set up Jacobian. should be within setup_SNES
+   */
+  inline void setup_Jacobian() {
+    // non zero structure for sparse matrices
+    blocksize = 1;
+    nz_hess = 10;
+    MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, nz_hess,
+                      NULL, &petsc_jacobian);
+  }
 
   /**
    * CVODE setup needs to be called after SNES
    */
   inline void setup_CVODE() {
-  
-  int ierr = CVodeInit(cvode_mem, gradient_wrapper, t0, x0_N); CHKERRCV(ierr);
-  
-  ierr = CVodeSetNonlinearSolver(cvode_mem, NLS); CHKERRCV(ierr);
-  ierr = CVodeSStolerances(cvode_mem, udata.rtol, udata.atol); CHKERRCV(ierr);
-  ierr = CVodeSetUserData(cvode_mem, &udata); CHKERRCV(ierr);
 
-  // should be infty tbh
-  CVodeSetMaxNumSteps(cvode_mem, 1000000);
-  CVodeSetStopTime(cvode_mem, tN);
+    int ierr = CVodeInit(cvode_mem, gradient_wrapper, t0, x0_N);
+    CHKERRCV(ierr);
+
+    ierr = CVodeSetNonlinearSolver(cvode_mem, NLS);
+    CHKERRCV(ierr);
+    ierr = CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
+    CHKERRCV(ierr);
+    ierr = CVodeSetUserData(cvode_mem, &udata);
+    CHKERRCV(ierr);
+
+    // should be infty tbh
+    CVodeSetMaxNumSteps(cvode_mem, 1000000);
+    CVodeSetStopTime(cvode_mem, tN);
   };
 
 public:
