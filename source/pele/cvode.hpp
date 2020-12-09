@@ -9,6 +9,8 @@
 #include "base_potential.hpp"
 #include "debug.hpp"
 #include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -56,6 +58,19 @@
     }                                                                          \
   }
 
+/**
+ * Checks sundials error for our single step case and appropriately throws
+ * exception Ignores exception value of 1. since t for us is only a parameter
+ */
+
+#define CHKERRCV_ONE_STEP(value)                                               \
+  {                                                                            \
+    if (value != 0 && value != 1) {                                            \
+      printf("sundials single step failed");                                   \
+      std::exit(EXIT_FAILURE);                                                 \
+    }                                                                          \
+  }
+
 extern "C" {
 #include "xsum.h"
 }
@@ -68,7 +83,6 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
 static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-
 
 /**
  * @brief      Wrapper for CVODE to get the Jacobian for the Newton Calculation
@@ -96,7 +110,7 @@ PetscErrorCode CVODESNESMonitor(SNES snes, PetscInt its, PetscReal fnorm,
  */
 typedef struct UserData_ {
   void *cvode_mem_ptr; // reference to CVODE for getting Gamma in Jacobian
-  double rtol; /* integration tolerances */
+  double rtol;         /* integration tolerances */
   double atol;
   size_t nfev;               // number of gradient(function) evaluations
   size_t nhev;               // number of hessian (jacobian) evaluations
@@ -163,12 +177,13 @@ private:
   ///////////////////////////////////////////////////////////////////////////
 
   /**
-   * helper function to set up coordinates in the constructor
+   * helper function to set up gradient and current gradient in the constructor
    */
   inline void setup_gradient() {
 
     VecCreateSeq(PETSC_COMM_SELF, N_size, &petsc_grad);
     nvec_grad_petsc = N_VMake_Petsc(petsc_grad);
+    current_grad = N_VClone_Petsc(nvec_grad_petsc);
   }
   /**
    * helper function to set up coordinates in the constructor
@@ -214,18 +229,16 @@ private:
     //     **))PetscViewerAndFormatDestroy);
 
     NLS = SUNNonlinSol_PetscSNES(x0_N, snes);
-    
 
     // // matrix approach
     setup_Jacobian();
-    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
-                    SNESJacobianWrapper, &udata);
+    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
+                    &udata);
     // // Matrix free approach
     // MatCreateSNESMF(snes, &petsc_jacobian);
-    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, MatMFFDComputeJacobian,
+    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
+    // MatMFFDComputeJacobian,
     //                 0);
-
-    
   };
 
   /**
@@ -235,8 +248,8 @@ private:
     // non zero structure for sparse matrices
     blocksize = 1;
     nz_hess = 10;
-    MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, nz_hess,
-                      NULL, &petsc_jacobian);
+    MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, nz_hess, NULL,
+                      &petsc_jacobian);
   }
 
   /**

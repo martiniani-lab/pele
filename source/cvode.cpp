@@ -41,7 +41,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
 
   // The constructor is compartmentalized since there is a lot to setup
   // This function separation should help with debugging
-  // also these functions could use parameters to setup differently
+  // also these functions could use parameters to be set differently
 
   setup_gradient();
 
@@ -67,7 +67,7 @@ void CVODEBDFOptimizer::one_iteration() {
   /* advance solver just one internal step */
   Array<double> xold = x_;
   VecView(N_VGetVector_Petsc(x0_N), PETSC_VIEWER_STDOUT_SELF);
-  int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);  CHKERRCV(flag);
+  int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);CHKERRCV_ONE_STEP(flag);
   iter_number_ += 1;
   double t;
   CVodeGetCurrentTime(cvode_mem, &t);
@@ -117,6 +117,7 @@ int gradient_wrapper(double t, N_Vector y, N_Vector ydot, void *user_data) {
   // func data reversed
   // udata->stored_grad = (g);
   udata->stored_energy = energy;
+  udata->nfev += 1;
   return 0;
 }
 
@@ -144,14 +145,14 @@ PetscErrorCode SNESJacobianWrapper(SNES NLS, Vec x, Mat Amat, Mat Precon,
   UserData udata = (UserData)user_data;
   
   udata->pot_->get_hessian_petsc(x, Precon);
-  
+
   double gamma;
   CVodeGetCurrentGamma(udata->cvode_mem_ptr, &gamma);
 
   // I-\gamma(-H) = I + \gamma H
   MatScale(Precon, gamma);
   MatShift(Precon, 1);
-
+  udata->nhev += 1;
   PetscFunctionReturn(0);
 };
 
