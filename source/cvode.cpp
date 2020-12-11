@@ -46,29 +46,21 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
   setup_gradient();
 
   setup_coords();
-
+  
   setup_cvode_data(rtol, atol);
 
   setup_SNES();
-  
+
   setup_CVODE();
 
-  int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
-  flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
-  
-
-  CHKERRCV(flag);
-  std::cout << "construction happened"
-            << "\n";
-  VecView(N_VGetVector_Petsc(x0_N), PETSC_VIEWER_STDOUT_SELF);
 };
 
 void CVODEBDFOptimizer::one_iteration() {
   /* advance solver just one internal step */
   Array<double> xold = x_;
-  VecView(N_VGetVector_Petsc(x0_N), PETSC_VIEWER_STDOUT_SELF);
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);CHKERRCV_ONE_STEP(flag);
   iter_number_ += 1;
+  std::cout << iter_number_ << "\n";
   double t;
   CVodeGetCurrentTime(cvode_mem, &t);
   // first derivative
@@ -78,7 +70,7 @@ void CVODEBDFOptimizer::one_iteration() {
   rms_ = (sqrt(norm2 / udata.neq));
   f_ = udata.stored_energy;
   nfev_ = udata.nfev;
-  Array<double> step = xold - x_;
+  Array<double> step = xold - x_;  
 };
 
 CVODEBDFOptimizer::~CVODEBDFOptimizer() {
@@ -117,8 +109,8 @@ int gradient_wrapper(double t, N_Vector y, N_Vector ydot, void *user_data) {
   // func data reversed
   // udata->stored_grad = (g);
   udata->stored_energy = energy;
-  udata->nfev += 1;
-  return 0;
+  udata->nfev += 1;  
+  return 0;  
 }
 
 int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
@@ -128,6 +120,7 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
   pele::Array<double> yw = pele_eq_N_Vector(y);
   Array<double> g(yw.size());
   Array<double> h(yw.size() * yw.size());
+
   udata->pot_->get_energy_gradient_hessian(pele_eq_N_Vector(y), g, h);
   udata->nhev += 1;
   double *hessdata = SUNDenseMatrix_Data(J);
@@ -138,21 +131,26 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
 };
 
 
-PetscErrorCode SNESJacobianWrapper(SNES NLS, Vec x, Mat Amat, Mat Precon,
+PetscErrorCode SNESJacobianWrapper(SNES NLS, Vec dummy, Mat Amat, Mat Precon,
                                    void *user_data) {
   PetscFunctionBeginUser;
-  
   UserData udata = (UserData)user_data;
   
-  udata->pot_->get_hessian_petsc(x, Precon);
-
+  N_Vector x_n;
   double gamma;
+  // We have to go with a bit of pointer manipulation since this interface sucks
+  CVodeGetCurrentState(udata->cvode_mem_ptr, &x_n); 
   CVodeGetCurrentGamma(udata->cvode_mem_ptr, &gamma);
+  
+  udata->pot_->get_hessian_petsc(N_VGetVector_Petsc(x_n), Precon);
 
   // I-\gamma(-H) = I + \gamma H
   MatScale(Precon, gamma);
   MatShift(Precon, 1);
+  // MatView(Precon, PETSC_VIEWER_STDOUT_SELF);
+  // MatView(Amat, PETSC_VIEWER_STDOUT_SELF);
   udata->nhev += 1;
+
   PetscFunctionReturn(0);
 };
 

@@ -14,8 +14,8 @@ ADD_DEFINITIONS(-std=c++1z -g)
 
 # optimize debugging experience
 # debug builds with max information
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Og -g3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -g3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -ggdb3 -fsanitize=address -fno-omit-frame-pointer -fno-inline")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb3 -fsanitize=address -fno-omit-frame-pointer -fno-inline")
 
 
 #set OpenMP

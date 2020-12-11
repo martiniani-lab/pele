@@ -35,6 +35,9 @@
 #include <sunnonlinsol/sunnonlinsol_petscsnes.h>
 
 #include "cvode/cvode_proj.h"
+#include "petscksp.h"
+#include "petscpc.h"
+#include "petscpctypes.h"
 #include "petscsnes.h"
 #include "petscsys.h"
 #include "petscsystypes.h"
@@ -54,7 +57,8 @@
 #define CHKERRCV(value)                                                        \
   {                                                                            \
     if (value != 0) {                                                          \
-      throw "sundials failed with exception";                                  \
+      throw std::runtime_error(                                                \
+          "Sundials function returned the wrong exit code");                   \
     }                                                                          \
   }
 
@@ -66,8 +70,8 @@
 #define CHKERRCV_ONE_STEP(value)                                               \
   {                                                                            \
     if (value != 0 && value != 1) {                                            \
-      printf("sundials single step failed");                                   \
-      std::exit(EXIT_FAILURE);                                                 \
+      throw std::runtime_error(                                                \
+          "Sundials single step returned the wrong value");                    \
     }                                                                          \
   }
 
@@ -155,6 +159,7 @@ private:
   N_Vector x0_N;
   Vec x0_petsc;
 
+
   Array<double> xold;
   PetscViewerAndFormat *vf;
   // sparse calculation initializers
@@ -219,26 +224,30 @@ private:
     SNESCreate(PETSC_COMM_SELF, &snes);
 
     // // PETSC VIEWER FORMAT should make monitor setting optional
-    // PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,
-    // PETSC_VIEWER_DEFAULT,
-    //                            &vf);
-    // SNESMonitorSet(
-    //     snes,
-    //     (PetscErrorCode(*)(SNES, PetscInt, PetscReal, void
-    //     *))CVODESNESMonitor, vf, (PetscErrorCode(*)(void
-    //     **))PetscViewerAndFormatDestroy);
+    PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_DEFAULT,
+                               &vf);
+    SNESMonitorSet(
+        snes,
+        (PetscErrorCode(*)(SNES, PetscInt, PetscReal, void *))CVODESNESMonitor,
+        vf, (PetscErrorCode(*)(void **))PetscViewerAndFormatDestroy);
 
+    SNESGetKSP(snes, &ksp);
+    KSPGetPC(ksp, &pc);
+
+    
+    N_VPrint_Petsc(x0_N);
     NLS = SUNNonlinSol_PetscSNES(x0_N, snes);
 
     // // matrix approach
-    setup_Jacobian();
-    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
-                    &udata);
-    // // Matrix free approach
-    // MatCreateSNESMF(snes, &petsc_jacobian);
-    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
-    // MatMFFDComputeJacobian,
-    //                 0);
+    // PCSetType(pc, PCCHOLESKY);
+    // setup_Jacobian();
+    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
+    //                 &udata);
+    // Matrix free approach
+    MatCreateSNESMF(snes, &petsc_jacobian);
+    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
+    MatMFFDComputeJacobian,
+                    0);
   };
 
   /**
@@ -247,9 +256,11 @@ private:
   inline void setup_Jacobian() {
     // non zero structure for sparse matrices
     blocksize = 1;
-    nz_hess = 10;
-    MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, nz_hess, NULL,
-                      &petsc_jacobian);
+    nz_hess = 16;
+
+    MatCreateDense(PETSC_COMM_SELF, N_size, N_size, PETSC_DECIDE, PETSC_DECIDE, NULL, &petsc_jacobian);
+    // MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, nz_hess, NULL,
+    //                   &petsc_jacobian);
   }
 
   /**

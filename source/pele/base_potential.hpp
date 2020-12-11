@@ -101,7 +101,7 @@ public:
 
     virtual double get_energy_gradient_petsc(Vec x, Vec & grad)
     {
-        throw std::runtime_error("petsc get_energy_gradient not written for this class");
+        throw std::runtime_error("petsc get_energy_gradient_petsc not written for this class");
     }
 
     /**

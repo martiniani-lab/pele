@@ -121,7 +121,7 @@ public:
     }
 
     virtual void get_hessian_petsc(Vec x, Mat &hess)
-    {
+    {   MatSetUp(hess);
         MatZeroEntries(hess);
         add_hessian_petsc(x, hess);
     }

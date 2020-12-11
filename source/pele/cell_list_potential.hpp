@@ -568,6 +568,99 @@ public:
     }
 };
 
+template <typename pairwise_interaction, typename distance_policy>
+class EnergyGradientAccumulatorPETSc {
+    const static size_t m_ndim = distance_policy::_ndim;
+    std::shared_ptr<pairwise_interaction> m_interaction;
+    std::shared_ptr<distance_policy> m_dist;
+    const double * m_coords;
+    const pele::Array<double> m_radii;
+    std::vector<double*> m_energies;
+
+public:
+    Vec * m_gradient_petsc;
+
+    ~EnergyGradientAccumulatorPETSc()
+    {
+        for(auto & energy : m_energies) {
+            delete energy;
+        }
+    }
+
+    EnergyGradientAccumulatorPETSc(std::shared_ptr<pairwise_interaction> & interaction,
+                            std::shared_ptr<distance_policy> & dist,
+                                     pele::Array<double> const & radii=pele::Array<double>(0))
+        : m_interaction(interaction),
+          m_dist(dist),
+          m_radii(radii)
+    {
+#ifdef _OPENMP
+        m_energies = std::vector<double*>(omp_get_max_threads());
+#pragma omp parallel
+        {
+            m_energies[omp_get_thread_num()] = new double();
+        }
+#else
+        m_energies = std::vector<double*>(1);
+        m_energies[0] = new double();
+#endif
+    }
+    /**
+     * In this case reset data uses the pointer from PETSCGetarrayread
+     */
+    void reset_data(const double * coords, Vec * gradient_petsc) {
+        m_coords = coords;
+#ifdef _OPENMP
+#pragma omp parallel
+        {
+            *m_energies[omp_get_thread_num()] = 0;
+        }
+#else
+        *m_energies[0] = 0;
+#endif
+        m_gradient_petsc = gradient_petsc;
+    }
+
+    void insert_atom_pair(const size_t atom_i, const size_t atom_j, const size_t isubdom)
+    {
+        pele::VecN<m_ndim, double> dr;
+        const size_t xi_off = m_ndim * atom_i;
+        const size_t xj_off = m_ndim * atom_j;
+        m_dist->get_rij(dr.data(), m_coords + xi_off, m_coords + xj_off);
+        double r2 = 0;
+        for (size_t k = 0; k < m_ndim; ++k) {
+            r2 += dr[k] * dr[k];
+        }
+        double gij;
+        double radius_sum = 0;
+        if(m_radii.size() > 0) {
+            radius_sum = m_radii[atom_i] + m_radii[atom_j];
+        }
+
+
+        m_interaction->energy_gradient(r2, &gij, radius_sum);
+
+#ifdef _OPENMP
+        *m_energies[isubdom] += m_interaction->energy_gradient(r2, &gij, radius_sum);
+#else
+        *m_energies[0] += m_interaction->energy_gradient(r2, &gij, radius_sum);
+#endif
+        if (gij != 0) {
+            for (size_t k = 0; k < m_ndim; ++k) {
+                dr[k] *= gij;
+                VecSetValue(*m_gradient_petsc, xi_off+k, -dr[k], ADD_VALUES);
+                VecSetValue(*m_gradient_petsc, xj_off+k, dr[k], ADD_VALUES);
+            }
+        }
+    }
+    double get_energy() {
+        double energy = 0;
+        for(size_t i = 0; i < m_energies.size(); ++i) {
+            energy += *m_energies[i];
+        }
+        return energy;
+    }    
+};
 
 template <typename pairwise_interaction, typename distance_policy>
 class HessianAccumulatorPETSc {
@@ -837,9 +930,13 @@ protected:
      * PETSc gradient hessian methods for sparse calculations
      */
     EnergyGradientHessianAccumulatorSparse<pairwise_interaction, distance_policy> m_eghAccSparse;
+    /**
+     * PETSc gradient energy methods for SNES purposes for the CVODE Solver. This uses only Vec as input
+     */
+    EnergyGradientAccumulatorPETSc<pairwise_interaction, distance_policy> m_egAccPetsc;
     EnergyGradientHessianAccumulator<pairwise_interaction, distance_policy> m_eghAcc;
     /**
-     * hessian calculator for SNES purposes in basin volume calculations
+     * hessian calculator for SNES purposes for the CVODE solver
      */
     HessianAccumulatorPETSc<pairwise_interaction, distance_policy> m_hpAcc;
 public:
@@ -853,7 +950,7 @@ public:
         : PairwisePotentialInterface(radii),
           m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
           m_interaction(interaction), m_dist(dist), m_radii_sca(radii_sca),
-          stored_coords(m_radii.size()),
+          stored_coords(m_radii.size()*m_ndim),
           stored_coords_initialized(true),
           m_eAcc(interaction, dist, m_radii),
           m_egAcc(interaction, dist, m_radii),
@@ -861,6 +958,7 @@ public:
           m_egAccSparse(interaction, dist, m_radii),
           m_eghAccSparse(interaction, dist, m_radii),
           m_hpAcc(interaction, dist, m_radii),
+          m_egAccPetsc(interaction, dist, m_radii),
           exact_gradient_initialized(false)
     {
     }
@@ -881,6 +979,7 @@ public:
           m_egAccSparse(interaction, dist),
           m_eghAccSparse(interaction, dist),
           m_hpAcc(interaction, dist),
+          m_egAccPetsc(interaction, dist),
           exact_gradient_initialized(false)
     {}
 
@@ -896,16 +995,12 @@ public:
         if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
             return NAN;
         }
-        std::cout << "get energy init" << "\n";
+
 
         update_iterator(coords);
-        std::cout << "iterator updated" << "\n";
         m_eAcc.reset_data(&coords);
-        std::cout << "coords reset" << "\n";
         auto looper = m_cell_lists.get_atom_pair_looper(m_eAcc);
-        std::cout << "atoms looper initialized" << "\n";
         looper.loop_through_atom_pairs();
-        std::cout << "atoms looped through" << "\n";
         return m_eAcc.get_energy();
     }
 
@@ -976,6 +1071,47 @@ for (size_t i=0; i < grad.size(); ++i) {
         return m_egAccSparse.get_energy();
     }
 
+
+    virtual double get_energy_gradient_petsc(Vec x, Vec &grad) {
+        PetscInt x_size;
+        VecGetSize(x, &x_size);
+        const size_t natoms = x_size / m_ndim;
+        if (m_ndim * natoms != x_size) {
+            throw std::runtime_error("xsize is not divisible by the number of dimensions");
+        }
+
+
+        PetscInt vec_sparse_size;
+        VecGetSize(grad, &vec_sparse_size);
+        if (x_size != vec_sparse_size) {
+            throw std::invalid_argument("the gradient has the wrong size");
+        }
+
+
+        const PetscReal * x_arr;
+
+        VecGetArrayRead(x, &x_arr);
+        if (stored_coords_initialized == false) {
+            stored_coords = Array<double>(x_size, 0);
+            stored_coords_initialized=true;
+        }
+        // maybe rate limiting?
+        for (size_t i = 0; i < x_size; ++i) {
+            stored_coords[i] = x_arr[i];
+        }
+
+        update_iterator(stored_coords);
+        VecZeroEntries(grad);
+        
+        m_egAccPetsc.reset_data(x_arr,&grad);
+        auto looper = m_cell_lists.get_atom_pair_looper(m_egAccPetsc);
+        looper.loop_through_atom_pairs();
+        VecRestoreArrayRead(x, &x_arr);
+        VecAssemblyBegin(grad);
+        VecAssemblyEnd(grad);
+        return m_egAccPetsc.get_energy();
+    }
+    
     virtual double get_energy_gradient_hessian(Array<double> const & coords,
                                                Array<double> & grad, Array<double> & hess)
     {
