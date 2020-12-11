@@ -50,7 +50,13 @@ else:
 
 #extra compiler args
 # cmake_compiler_extra_args = ["-std=c++1z","-Wall", "-Wextra", "-pedantic", "-O1", "-fPIC"]
-cmake_compiler_extra_args = ["-std=c++1z", "-pedantic", "-O3", "-fPIC"]
+
+# TODO: make sure these choices can be selected from the command line
+cmake_compiler_extra_args_performance = ["-std=c++1z", "-pedantic", "-O3", "-fPIC"]
+cmake_compiler_extra_args_debug = ["-std=c++1z", "-pedantic", "-ggdb3", '-O0']
+cmake_compiler_extra_args = cmake_compiler_extra_args_debug
+
+
 if idcompiler.lower() == 'unix':
     cmake_compiler_extra_args += ['-march=native', '-flto', '-fopenmp']
 else:

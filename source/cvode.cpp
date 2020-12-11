@@ -74,10 +74,21 @@ void CVODEBDFOptimizer::one_iteration() {
 };
 
 CVODEBDFOptimizer::~CVODEBDFOptimizer() {
+    // created in setup grad
   VecDestroy(&petsc_grad);
-  MatDestroy(&petsc_jacobian);
   N_VDestroy(nvec_grad_petsc);
+  N_VDestroy(current_grad);
+
+  // created in setup coords
+  VecDestroy(&x0_petsc);
+  N_VDestroy(x0_N);
+
+  // SNESfree
+  SNESDestroy(&snes);
+  
+  MatDestroy(&petsc_jacobian);
   CVodeFree(&cvode_mem);
+  SUNNonlinSolFree(NLS);
   PetscFinalize();
 };
 

@@ -293,10 +293,12 @@ TEST(CVST, CVODESolverWorksIP){
 
     
     pele::CVODEBDFOptimizer optimizer(potcell, x);
-    optimizer.run();
+    optimizer.run(1);
     std::cout << optimizer.get_nfev() << "nfev \n";
     std::cout << optimizer.get_nhev() << "nhev \n";
-    std::cout << optimizer.get_rms() << "rms \n";    
+    std::cout << optimizer.get_rms() << "rms \n";
+    std::cout << optimizer.get_niter() << "\n";
+
 }
 
 
@@ -310,12 +312,13 @@ TEST(CVODESolverTest, CVODESolverWorks){
     Array<double> x0(2, 0);
     // x0[2] = 1.0;
     // constructor
-    pele::CVODEBDFOptimizer lbfgs(rosenbrock, x0);
+    pele::CVODEBDFOptimizer optimizer(rosenbrock, x0);
     
-    lbfgs.run();
-    std::cout << lbfgs.get_nfev() << "nfev \n";
-    std::cout << lbfgs.get_nhev() << "nhev \n";
-    std::cout << lbfgs.get_rms() << "rms \n";    
+    optimizer.run();
+    std::cout << optimizer.get_nfev() << "nfev \n";
+    std::cout << optimizer.get_nhev() << "nhev \n";
+    std::cout << optimizer.get_rms() << "rms \n";
+    std::cout << optimizer.get_niter() << "niter \n";
 }
 
 TEST(CVODEPETSCex, CVODEPETScexworks)

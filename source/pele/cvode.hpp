@@ -239,15 +239,16 @@ private:
     NLS = SUNNonlinSol_PetscSNES(x0_N, snes);
 
     // // matrix approach
-    // PCSetType(pc, PCCHOLESKY);
-    // setup_Jacobian();
-    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
-    //                 &udata);
-    // Matrix free approach
-    MatCreateSNESMF(snes, &petsc_jacobian);
-    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
-    MatMFFDComputeJacobian,
-                    0);
+    PCSetType(pc, PCCHOLESKY);
+    setup_Jacobian();
+    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
+                    &udata);
+
+    // // Matrix free approach
+    // MatCreateSNESMF(snes, &petsc_jacobian);
+    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
+    // MatMFFDComputeJacobian,
+    //                 0);
   };
 
   /**
