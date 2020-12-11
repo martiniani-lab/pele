@@ -158,8 +158,13 @@ private:
   // Since they should point to the same data
   N_Vector x0_N;
   Vec x0_petsc;
-
-
+  // important snes variable
+  PetscReal snes_abstol=0;
+  PetscReal snes_reltol=0;
+  PetscReal snes_stol=0;
+  PetscInt snes_maxit=0;
+  PetscInt snes_maxf=0;
+    
   Array<double> xold;
   PetscViewerAndFormat *vf;
   // sparse calculation initializers
@@ -176,6 +181,7 @@ private:
   SNES snes;
   KSP ksp;
   PC pc;
+    SNESLineSearch line_search;
 
   ///////////////////////////////////////////////////////////////////////////
   //               functions that are part of the constructor              //
@@ -222,33 +228,39 @@ private:
    */
   inline void setup_SNES() {
     SNESCreate(PETSC_COMM_SELF, &snes);
-
-    // // PETSC VIEWER FORMAT should make monitor setting optional
-    PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_DEFAULT,
-                               &vf);
-    SNESMonitorSet(
-        snes,
-        (PetscErrorCode(*)(SNES, PetscInt, PetscReal, void *))CVODESNESMonitor,
-        vf, (PetscErrorCode(*)(void **))PetscViewerAndFormatDestroy);
-
+    // SNESGetTolerances(snes, &snes_abstol, &snes_reltol, &snes_stol, &snes_maxit,
+    //                   &snes_maxf);
+    snes_abstol = 1e-10;
+    snes_reltol = 1e-8;
+    snes_stol = PETSC_DEFAULT;
+    snes_maxit = 4;
+    snes_maxf = 3;
+    SNESSetTolerances(snes, snes_abstol, snes_reltol, snes_stol, snes_maxit, snes_maxf);
+    SNESGetLineSearch(snes, &line_search);
+    SNESLineSearchSetType(line_search, SNESLINESEARCHBASIC);
+    // // // PETSC VIEWER FORMAT should make monitor setting optional
+    // PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,
+    // PETSC_VIEWER_DEFAULT,
+    //                            &vf);
+    // SNESMonitorSet(
+    //     snes,
+    //     (PetscErrorCode(*)(SNES, PetscInt, PetscReal, void
+    //     *))CVODESNESMonitor, vf, (PetscErrorCode(*)(void
+    //     **))PetscViewerAndFormatDestroy);
     SNESGetKSP(snes, &ksp);
     KSPGetPC(ksp, &pc);
-
-    
-    N_VPrint_Petsc(x0_N);
     NLS = SUNNonlinSol_PetscSNES(x0_N, snes);
 
     // // matrix approach
-    PCSetType(pc, PCCHOLESKY);
-    setup_Jacobian();
-    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
-                    &udata);
-
-    // // Matrix free approach
-    // MatCreateSNESMF(snes, &petsc_jacobian);
-    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
-    // MatMFFDComputeJacobian,
-    //                 0);
+    // PCSetType(pc, PCCHOLESKY);
+    // setup_Jacobian();
+    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
+    //                 &udata);
+    // Matrix free approach
+    MatCreateSNESMF(snes, &petsc_jacobian);
+    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
+    MatMFFDComputeJacobian,
+                    0);
   };
 
   /**
@@ -259,8 +271,10 @@ private:
     blocksize = 1;
     nz_hess = 16;
 
-    MatCreateDense(PETSC_COMM_SELF, N_size, N_size, PETSC_DECIDE, PETSC_DECIDE, NULL, &petsc_jacobian);
-    // MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, nz_hess, NULL,
+    MatCreateDense(PETSC_COMM_SELF, N_size, N_size, PETSC_DECIDE, PETSC_DECIDE,
+                   NULL, &petsc_jacobian);
+    // MatCreateSeqSBAIJ(PETSC_COMM_SELF, blocksize, N_size, N_size, nz_hess,
+    // NULL,
     //                   &petsc_jacobian);
   }
 
@@ -292,9 +306,19 @@ public:
   //                tmp3);
   CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potential,
                     const pele::Array<double> x0, double tol = 1e-5,
-                    double rtol = 1e-4, double atol = 1e-4);
+                    double rtol = 1e-6, double atol = 1e-6);
   ~CVODEBDFOptimizer();
   inline int get_nhev() const { return udata.nhev; }
+  inline void print_SNES_Tolerances() {
+    SNESGetTolerances(snes, &snes_abstol, &snes_reltol, &snes_stol, &snes_maxit,
+                      &snes_maxf);
+
+    std::cout << snes_maxit << "snes_maxit\n";
+    std::cout << snes_stol << "snes_stol\n";
+    std::cout << snes_reltol << "snes_reltol\n";
+    std::cout << snes_abstol << "snes_abstol\n";
+    std::cout << snes_maxf << "snes_maxf\n";
+  };
   /**
    * helper functions to compartmentalize the constructor
    */

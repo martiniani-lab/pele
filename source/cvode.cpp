@@ -60,7 +60,6 @@ void CVODEBDFOptimizer::one_iteration() {
   Array<double> xold = x_;
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);CHKERRCV_ONE_STEP(flag);
   iter_number_ += 1;
-  std::cout << iter_number_ << "\n";
   double t;
   CVodeGetCurrentTime(cvode_mem, &t);
   // first derivative
@@ -89,7 +88,6 @@ CVODEBDFOptimizer::~CVODEBDFOptimizer() {
   MatDestroy(&petsc_jacobian);
   CVodeFree(&cvode_mem);
   SUNNonlinSolFree(NLS);
-  PetscFinalize();
 };
 
 /**
