@@ -1,0 +1,98 @@
+#ifndef _SUNDIALS_PETSC_H
+#define _SUNDIALS_PETSC_H
+
+
+
+/*
+  UNDER WORK
+  Probably need to keep it here since
+  it depends on implicit SUNDIALS variables until the corresponding interface
+  is built.
+*/
+
+#include <algorithm>
+#include <petscksp.h>
+#include <petscmat.h>
+
+
+#include <petscvec.h>
+#include <sundials/sundials_nonlinearsolver.h>
+#include <sundials/sundials_nvector.h>
+#include <sundials/sundials_types.h>
+#include <cvode/cvode.h>
+#include <petscsnes.h>
+
+/* TODO remove this*/
+#include "/home/praharsh/Dropbox/research/bv-libraries/sundials/src/cvode/cvode_impl.h"
+
+/*****************************************************************************/
+/*                                   General structs                         */
+/*****************************************************************************/
+
+/* User supplied Jacobian function prototype */
+typedef PetscErrorCode (*CVSNESJacFn)(PetscReal t, Vec x, Mat J,
+                                      void *user_data);
+
+/*
+  context passed on to the delayed hessian
+*/
+typedef struct {
+  /* memory information */
+  void *cvode_mem; /* cvode memory */
+
+  /* TODO: remove this since user data is in cvode_mem */
+  void *user_mem; /* user data */
+
+  /* jacobian calculation information */
+  booleantype jok;   /* check for whether jacobian needs to be updated */
+  booleantype *jcur; /* whether to use saved copy of jacobian */
+  realtype gamma;
+  PetscReal t;
+
+  /* Linear solver, matrix and vector objects/pointers */
+  /* NOTE: some of this might be uneccessary since it maybe stored
+     in the KSP solver */
+  Mat savedJ;                /* savedJ = old Jacobian                        */
+  Vec ycur;                  /* CVODE current y vector in Newton Iteration   */
+  Vec fcur;                  /* fcur = f(tn, ycur)                           */
+  CVSNESJacFn user_jac_func; /* user defined Jacobian function */
+  booleantype
+      scalesol; /* exposed to user (Check delayed matrix versions later)*/
+} * CVLSPETScMem;
+
+
+/*****************************************************************************/
+/*                           function declarations                           */
+/*****************************************************************************/
+
+
+/* Main Jacobian to be passed to SNES for delayed jacobian calculation */
+PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre, void *context);
+
+/* presolve function for the KSP solver KSPPreOnly could do this for the conditioner */
+PetscErrorCode cvLSPresolveKSP(KSP ksp, Vec b, Vec x, void *ctx);
+
+/* postsolve function for the KSP solver */
+PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context);
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+
+#endif
+
