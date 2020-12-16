@@ -14,8 +14,13 @@ ADD_DEFINITIONS(-std=c++1z -g)
 
 # optimize debugging experience
 # debug builds with max information
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -ggdb3 -fsanitize=address -fno-omit-frame-pointer -fno-inline")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb3 -fsanitize=address -fno-omit-frame-pointer -fno-inline")
+
+# force home directory include for me for language understanding
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I/home/praharsh/.local/include -O0 -ggdb3 -fno-omit-frame-pointer -fno-inline")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/home/praharsh/.local/include -O0 -ggdb3 -fno-omit-frame-pointer -fno-inline")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+
 
 
 #set OpenMP
@@ -34,16 +39,33 @@ find_package(PETSc REQUIRED)
 
 
 
-# set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+
+
+# set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING )
+# Specify the path to SUNDIALS header files
 set(SUNDIALS_INCLUDE_DIR
-  /home/praharsh/.local/include
+  /home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include
   CACHE PATH "Location of SUNDIALS header files")
+
+# Specify the path to SUNDIALS libraries
 set(SUNDIALS_LIBRARY_DIR
-  /home/praharsh/.local/lib
+  /home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/lib
   CACHE PATH "Location of SUNDIALS libraries")
+
+
+
+
+
+
+
 
 set(PETSC_INCLUDE_DIR
   /home/praharsh/petsc/arch-linux-c-debug/include
+  CACHE PATH "Location of PETSC headers"  
+  )
+
+set(PETSC_INCLUDE_DIR_2
+  /home/praharsh/.local/include
   CACHE PATH "Location of PETSC headers"  
   )
 
@@ -54,6 +76,8 @@ set(MPI_INCLUDE_DIR
 set(MPI_LIBRARY_DIR
   /home/praharsh/.local/include
   CACHE PATH "Location of MPI LIBRARIES")
+
+
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
   sundials_cvode ${SUNDIALS_LIBRARY_DIR}
@@ -84,7 +108,6 @@ set(SUNDIALS_LIBRARIES
   ${SUNDIALS_NLS_LIB}
   ${SUNDIALS_NVEC_PETSC_LIB})
 
-
 set(MPI_LIBRARIES
   -L${MPI_LIBRARY_DIR})
 #####################################################################################
@@ -102,11 +125,13 @@ message("gtest_libs ${gtest_libs}")
 
 # set the pele include directory
 set(pele_include ../../source)
+include_directories(${PETSC_INCLUDE_DIR_2})
+include_directories(${SUNDIALS_INCLUDE_DIR})
 include_directories(${pele_include})
 include_directories(${PETSC_INCLUDE_DIR})
-include_directories(${SUNDIALS_INCLUDE_DIR})
-include_directories(${MPI_INCLUDE_DIR})
+include_directories(SYSTEM ${MPI_INCLUDE_DIR})
 message("pele include directory ${pele_include}")
+message("sundials include directory ${SUNDIALS_INCLUDE_DIR}")
 
 # build the pele library
 FILE(GLOB pele_sources ${pele_include}/*.c*)

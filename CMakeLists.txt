@@ -21,24 +21,26 @@ find_package(PETSc REQUIRED)
 ##################################### sundials #######################################
 # TODO: figure out how to remove the extra setup for sundials
 
-# set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
-# Also includes PETSC
+
 set(SUNDIALS_INCLUDE_DIR
-  /home/praharsh/.local/include
+  /home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include
   CACHE PATH "Location of SUNDIALS header files")
+
+# Specify the path to SUNDIALS libraries
 set(SUNDIALS_LIBRARY_DIR
-  /home/praharsh/.local/lib
+  /home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/lib
   CACHE PATH "Location of SUNDIALS libraries")
+
 
 
 # find_package(MPI) #make it REQUIRED, if you want
 
 set(MPI_INCLUDE_DIR
-  /opt/intel/compilers_and_libraries_2020.1.217/linux/mpi/intel64/include
+  /home/praharsh/.local/include
   CACHE PATH "Location of MPI header files")
 
 set(MPI_LIBRARY_DIR
-  /opt/intel/compilers_and_libraries_2020.1.217/linux/mpi/intel64/bin
+  /home/praharsh/.local/include
   CACHE PATH "Location of MPI LIBRARIES")
 
 
@@ -96,7 +98,7 @@ cmake_minimum_required(VERSION 2.8)
 
 
 enable_language(CXX)
-SET(CMAKE_CXX_FLAGS "-std=c++1z -pedantic -O3 -fPIC -march=native -flto -fopenmp")
+SET(CMAKE_CXX_FLAGS "-I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp")
 
 #cmake_policy(SET CMP0015 NEW)
 
@@ -109,7 +111,7 @@ message("pele include directory: ${pele_include}")
 # This is a likely source of undefined symbol errors
 include_directories(${pele_include})
 include_directories(SYSTEM ${MPI_INCLUDE_DIR})
-include_directories(${SUNDIALS_INCLUDE_DIR})
+include_directories(SYSTEM ${SUNDIALS_INCLUDE_DIR})
 FILE(GLOB pele_sources ${pele_include}/*.c*)
 add_library(pele_lib SHARED ${pele_sources})
 
