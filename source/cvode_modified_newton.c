@@ -129,3 +129,4 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
     VecScale(b, TWO / (ONE + cv_mem->cv_gamrat));
   }
 }
+

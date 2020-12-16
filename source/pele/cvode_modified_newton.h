@@ -9,8 +9,6 @@
   it depends on implicit SUNDIALS variables until the corresponding interface
   is built.
 */
-
-#include <algorithm>
 #include <petscksp.h>
 #include <petscmat.h>
 
@@ -74,6 +72,7 @@ PetscErrorCode cvLSPresolveKSP(KSP ksp, Vec b, Vec x, void *ctx);
 
 /* postsolve function for the KSP solver */
 PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context);
+
 
 
 

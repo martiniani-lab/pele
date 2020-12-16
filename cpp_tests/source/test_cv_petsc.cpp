@@ -43,7 +43,9 @@
 #include "pele/cell_lists.hpp"
 #include "pele/harmonic.hpp"
 #include "pele/inversepower.hpp"
+#include <cstdio>
 #include <iostream>
+#include <math.h>
 #include <petscdm.h>
 #include <petscdmda.h>
 
@@ -57,6 +59,7 @@
 #include "petscviewer.h"
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_nvector.h"
+#include "sundials/sundials_types.h"
 #include <memory>
 // #include <pele/array.hpp>
 // #include <pele/cvode.hpp>
@@ -66,9 +69,10 @@
 #include <cvode/cvode.h>
 #include <nvector/nvector_petsc.h>
 #include <nvector/nvector_serial.h>
-#include <sunmatrix/sunmatrix_dense.h>
 #include <sunlinsol/sunlinsol_dense.h>
+#include <sunmatrix/sunmatrix_dense.h>
 #include <sunnonlinsol/sunnonlinsol_petscsnes.h>
+#include <unistd.h>
 
 /* Precision specific formatting macros */
 #if defined(SUNDIALS_EXTENDED_PRECISION)
@@ -101,24 +105,19 @@
 #define ZERO RCONST(0.0)
 #define ONE RCONST(1.0)
 #define TWO RCONST(2.0)
+#define HUNDRED RCONST(100.0)
 
 #include <gtest/gtest.h>
 
 /* User-defined data structure */
 typedef struct UserData_ {
-  realtype alpha; /* particle velocity */
-
-  int orbits;      /* number of orbits */
-  realtype torbit; /* orbit time       */
+  realtype a; /* particle velocity */
+  realtype b; // rosenbrock location
 
   realtype rtol; /* integration tolerances */
   realtype atol;
 
-  int proj;    /* enable/disable solution projection */
-  int projerr; /* enable/disable error projection */
-
   int tstop; /* use tstop mode */
-  int nout;  /* number of outputs per orbit */
 
 } * UserData;
 
@@ -129,11 +128,6 @@ static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
 
 /* Utility functions */
 static int InitUserData(UserData udata);
-static int PrintUserData(UserData udata);
-static void InputHelp();
-static int ComputeSolution(realtype t, N_Vector y, UserData udata);
-static int ComputeError(realtype t, N_Vector y, N_Vector e, realtype *ec,
-                        UserData udata);
 static int PrintStats(void *cvode_mem);
 static int check_retval(void *returnvalue, const char *funcname, int opt);
 
@@ -147,7 +141,7 @@ TEST(CVDP, CVM) {
   int totalout = 0;      /* output counter             */
   realtype t = ZERO;     /* current integration time   */
   realtype dtout = ZERO; /* output spacing             */
-  realtype tout = ZERO;  /* next output time           */
+  realtype tout = 10000;  /* next output time           */
   realtype ec = ZERO;    /* constraint error           */
   UserData udata = NULL; /* user data structure        */
 
@@ -158,29 +152,35 @@ TEST(CVDP, CVM) {
   SUNMatrix A = NULL;        /* Jacobian matrix      */
   SUNLinearSolver LS = NULL; /* linear solver        */
 
+  /* minimum identification */
+  double norm2;       /* norm of the funtion */
+  double wnorm;       /* norm weighted by length  for identification */
+  double minimum_tol; /* tolerance with which the minimum is identified */
+  
+  
+  minimum_tol = 1e-6;    /* minimum tolerance */
+  double maxsteps = 400; /* maximum number of steps to run the solver for */  
+
   udata = (UserData)malloc(sizeof *udata);
   retval = InitUserData(udata);
- 
 
   /* Create serial vector to store the solution */
   y = N_VNew_Serial(2);
- 
 
   /* Set initial contion */
-  ydata    = N_VGetArrayPointer(y);
+  ydata = N_VGetArrayPointer(y);
   ydata[0] = ONE;
-  ydata[1] = ONE;
+  ydata[1] = ZERO;
 
+  
   /* Create serial vector to store the solution error */
   e = N_VClone(y);
- 
 
   /* Set initial error */
   N_VConst(ZERO, e);
 
   /* Create CVODE memory */
   cvode_mem = CVodeCreate(CV_BDF);
- 
 
   /* Initialize CVODE */
   retval = CVodeInit(cvode_mem, f, t, y);
@@ -203,62 +203,34 @@ TEST(CVDP, CVM) {
   /* Set a user-supplied Jacobian function */
   retval = CVodeSetJacFn(cvode_mem, Jac);
 
-
-
   /* Set max steps between outputs */
   retval = CVodeSetMaxNumSteps(cvode_mem, 100000);
 
-  /* Output problem setup */
-  retval = PrintUserData(udata);
-
-  /* Output initial condition */
-  printf("\n     t            x              y");
-  printf("             err x          err y       err constr\n");
+  N_Vector grad;
+  grad = N_VClone(y);
 
 
-  /* Integrate in time and periodically output the solution and error */
-  if (udata->nout > 0)
-  {
-    totalout = udata->orbits * udata->nout;
-    dtout    = udata->torbit / udata->nout;
-  }
-  else
-  {
-    totalout = 1;
-    dtout    = udata->torbit * udata->orbits;
-  }
-  tout = dtout;
-
-  for (out = 0; out < totalout; out++)
-  {
-    /* Stop at output time (do not interpolate output) */
-    if (udata->tstop || udata->nout == 0)
-    {
-      retval = CVodeSetStopTime(cvode_mem, tout);
-    }
-
-    /* Advance in time */
-    retval = CVode(cvode_mem, tout, y, &t, CV_NORMAL);
-
-    /* Output solution and error */
-    if (udata->nout > 0)
-    {
-      retval = ComputeError(t, y, e, &ec, udata);
-    }
-
-    /* Update output time */
-    if (out < totalout - 1)
-    {
-      tout += dtout;
-    }
-    else
-    {
-      tout = udata->torbit * udata->orbits;
+  
+  // break out if close to a minimum
+  for (int nstep = 0; nstep < maxsteps; ++nstep) {
+    // take a step
+    retval = CVode(cvode_mem, tout, y, &t, CV_ONE_STEP);
+    // obtain  the gradient
+    
+    CVodeGetDky(cvode_mem, t, 1, grad);
+    norm2 = N_VDotProd(grad, grad);
+    /* calculate norm accounting for length */
+    wnorm = sqrt(norm2 / N_VGetLength(y));
+    N_VPrint(grad);
+    double gamma;    
+    CVodeGetCurrentGamma(cvode_mem, &gamma);
+    std::cout << wnorm << "\n";
+    /* break out when the minimum is found */
+    if (wnorm < minimum_tol) {
+        break;
     }
   }
-
   /* Output final solution and error to screen */
-  ComputeError(t, y, e, &ec, udata);
 
   /* Print some final statistics */
   PrintStats(cvode_mem);
@@ -268,7 +240,6 @@ TEST(CVDP, CVM) {
   SUNMatDestroy(A);
   SUNLinSolFree(LS);
   CVodeFree(&cvode_mem);
-
 }
 
 /* -----------------------------------------------------------------------------
@@ -281,9 +252,18 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
   realtype *ydata = N_VGetArrayPointer(y);
   realtype *fdata = N_VGetArrayPointer(ydot);
 
-  fdata[0] = -(udata->alpha) * ydata[0];
-  fdata[1] = -(udata->alpha) * ydata[0];
+  /* extract member variables */
+  realtype m_a = udata->a;
+  realtype m_b = udata->b;
 
+  /* rosenbrock calculation */
+  /* 1. first calculate gradient */
+  fdata[0] = 4 * m_b * ydata[0] * ydata[0] * ydata[0] -
+             4 * m_b * ydata[0] * ydata[1] + 2 * m_a * ydata[0] - 2 * m_a;
+  fdata[1] = 2 * m_b * (ydata[1] - ydata[0] * ydata[0]);
+  /* 2. then take the negative */
+  fdata[0] = -fdata[0];
+  fdata[1] = -fdata[1];
   return (0);
 }
 
@@ -292,11 +272,24 @@ static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
   UserData udata = (UserData)user_data;
   realtype *Jdata = SUNDenseMatrix_Data(J);
+  realtype *ydata = N_VGetArrayPointer(y);
 
-  Jdata[0] = -(udata->alpha);
-  Jdata[1] = ZERO;
-  Jdata[2] = ZERO;
-  Jdata[3] = -(udata->alpha);
+  /* extract member variables */
+  realtype m_a = udata->a;
+  realtype m_b = udata->b;
+
+  /* rosenbrock jacobian */
+  /* 1. first calculate jacobian */
+  Jdata[0] = 2 + 8 * m_b * ydata[0] * ydata[0] -
+             4 * m_b * (-ydata[0] * ydata[0] + ydata[1]);
+  Jdata[1] = -4 * m_b * ydata[0];
+  Jdata[2] = -4 * m_b * ydata[0];
+  Jdata[3] = 2 * m_b;
+  /* 2. then take the negative */
+  Jdata[0] = -Jdata[0];
+  Jdata[1] = -Jdata[1];
+  Jdata[2] = -Jdata[2];
+  Jdata[3] = -Jdata[3];
   return (0);
 }
 
@@ -308,39 +301,11 @@ static int InitUserData(UserData udata) {
   int arg_idx = 1;
 
   /* set default values */
-  udata->alpha = ONE;
-
-  udata->orbits = 100;
-  udata->torbit = (TWO * PI) / udata->alpha;
+  udata->a = ONE;
+  udata->b = HUNDRED;
 
   udata->rtol = RCONST(1.0e-4);
   udata->atol = RCONST(1.0e-9);
-
-  udata->proj = 1;
-  udata->projerr = 0;
-
-  udata->tstop = 0;
-  udata->nout = 0;
-
-  return (0);
-}
-
-static int PrintUserData(UserData udata) {
-  if (udata == NULL)
-    return (-1);
-
-  printf("\nParticle traveling on the unit circle example\n");
-  printf("---------------------------------------------\n");
-  printf("alpha      = %0.4" ESYM "\n", udata->alpha);
-  printf("num orbits = %d\n", udata->orbits);
-  printf("---------------------------------------------\n");
-  printf("rtol       = %" GSYM "\n", udata->rtol);
-  printf("atol       = %" GSYM "\n", udata->atol);
-  printf("proj sol   = %d\n", udata->proj);
-  printf("proj err   = %d\n", udata->projerr);
-  printf("nout       = %d\n", udata->nout);
-  printf("tstop      = %d\n", udata->tstop);
-  printf("---------------------------------------------\n");
 
   return (0);
 }
@@ -359,32 +324,6 @@ static void InputHelp() {
   return;
 }
 
-/* Compute the analytical solution */
-static int ComputeSolution(realtype t, N_Vector y, UserData udata) {
-  realtype *ydata = N_VGetArrayPointer(y);
-  ydata[0] = COS((udata->alpha) * t);
-  ydata[1] = SIN((udata->alpha) * t);
-  return (0);
-}
-
-/* Compute the error in the solution and constraint */
-static int ComputeError(realtype t, N_Vector y, N_Vector e, realtype *ec,
-                        UserData udata) {
-  realtype *ydata = N_VGetArrayPointer(y);
-  int retval;
-
-  /* solution error */
-  retval = ComputeSolution(t, e, udata);
-  if (check_retval(&retval, "ComputeSolution", 1))
-    return (1);
-  N_VLinearSum(ONE, y, -ONE, e, e);
-
-  /* constraint error */
-  *ec = ydata[0] * ydata[0] + ydata[1] * ydata[1] - ONE;
-
-  return (0);
-}
-
 /* Print final statistics */
 static int PrintStats(void *cvode_mem) {
   int retval;
@@ -396,8 +335,6 @@ static int PrintStats(void *cvode_mem) {
   check_retval(&retval, "CVodeGetNumRhsEvals", 1);
   retval = CVodeGetNumLinSolvSetups(cvode_mem, &nsetups);
   check_retval(&retval, "CVodeGetNumLinSolvSetups", 1);
-  retval = CVodeGetNumErrTestFails(cvode_mem, &netf);
-  check_retval(&retval, "CVodeGetNumErrTestFails", 1);
   retval = CVodeGetNumNonlinSolvIters(cvode_mem, &nni);
   check_retval(&retval, "CVodeGetNumNonlinSolvIters", 1);
   retval = CVodeGetNumNonlinSolvConvFails(cvode_mem, &ncfn);
@@ -416,7 +353,6 @@ static int PrintStats(void *cvode_mem) {
 
   printf("Number of nonlinear solver iterations = %-6ld\n", nni);
   printf("Number of convergence failures = %-6ld\n", ncfn);
-  printf("Number of error test failures = %-6ld\n", netf);
 
   return (0);
 }
