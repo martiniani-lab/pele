@@ -1,6 +1,5 @@
-#ifndef _SUNDIALS_PETSC_H
-#define _SUNDIALS_PETSC_H
-
+#ifndef _CVODE_PETSC_MN_H
+#define _CVODE_PETSC_MN_H
 
 
 /*
@@ -41,11 +40,12 @@ typedef struct {
   /* TODO: remove this since user data is in cvode_mem */
   void *user_mem; /* user data */
 
+    /* TODO */
+  CVSNESJacFn user_jac_func; /* user defined Jacobian function */  
+
   /* jacobian calculation information */
   booleantype jok;   /* check for whether jacobian needs to be updated */
   booleantype *jcur; /* whether to use saved copy of jacobian */
-  realtype gamma;
-  PetscReal t;
 
   /* Linear solver, matrix and vector objects/pointers */
   /* NOTE: some of this might be uneccessary since it maybe stored
@@ -53,7 +53,7 @@ typedef struct {
   Mat savedJ;                /* savedJ = old Jacobian                        */
   Vec ycur;                  /* CVODE current y vector in Newton Iteration   */
   Vec fcur;                  /* fcur = f(tn, ycur)                           */
-  CVSNESJacFn user_jac_func; /* user defined Jacobian function */
+
   booleantype
       scalesol; /* exposed to user (Check delayed matrix versions later)*/
 } * CVLSPETScMem;
@@ -74,9 +74,20 @@ PetscErrorCode cvLSPresolveKSP(KSP ksp, Vec b, Vec x, void *ctx);
 PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context);
 
 
+/* Memory setup for modified newton */
+CVLSPETScMem CVODE_MN_PETSc_memsetup(void *cvode_mem, void *user_mem,
+                                     CVSNESJacFn func, booleantype scalesol, Mat Jac, Vec y);
 
 
-    
+
+
+
+
+
+
+
+
+
 
 
 

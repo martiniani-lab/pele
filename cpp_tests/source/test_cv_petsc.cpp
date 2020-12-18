@@ -44,6 +44,7 @@
 #include "pele/harmonic.hpp"
 #include "pele/inversepower.hpp"
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <math.h>
 #include <petscdm.h>
@@ -58,6 +59,8 @@
 #include "petscvec.h"
 #include "petscviewer.h"
 #include "sundials/sundials_linearsolver.h"
+#include "sundials/sundials_matrix.h"
+#include "sundials/sundials_nonlinearsolver.h"
 #include "sundials/sundials_nvector.h"
 #include "sundials/sundials_types.h"
 #include <memory>
@@ -73,6 +76,12 @@
 #include <sunmatrix/sunmatrix_dense.h>
 #include <sunnonlinsol/sunnonlinsol_petscsnes.h>
 #include <unistd.h>
+
+#include <pele/cvode_modified_newton.h>
+
+
+/* gtest */
+#include <gtest/gtest.h>
 
 /* Precision specific formatting macros */
 #if defined(SUNDIALS_EXTENDED_PRECISION)
@@ -107,7 +116,7 @@
 #define TWO RCONST(2.0)
 #define HUNDRED RCONST(100.0)
 
-#include <gtest/gtest.h>
+
 
 /* User-defined data structure */
 typedef struct UserData_ {
@@ -131,6 +140,11 @@ static int InitUserData(UserData udata);
 static int PrintStats(void *cvode_mem);
 static int check_retval(void *returnvalue, const char *funcname, int opt);
 
+int rosenbrock_minus_gradient_petsc(PetscReal t, N_Vector x, N_Vector xdot,
+                                    void *user_data);
+PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
+                                          void *user_data);    
+
 /**
  * This runs a comparison between CVODE one step with sundials dense and
  * otherwise
@@ -145,12 +159,24 @@ TEST(CVDP, CVM) {
   realtype ec = ZERO;    /* constraint error           */
   UserData udata = NULL; /* user data structure        */
 
+
+  
+  /* Setup for dense solver */
   void *cvode_mem = NULL;    /* CVODE memory         */
   N_Vector y = NULL;         /* solution vector      */
   realtype *ydata = NULL;    /* solution vector data */
-  N_Vector e = NULL;         /* error vector         */
   SUNMatrix A = NULL;        /* Jacobian matrix      */
   SUNLinearSolver LS = NULL; /* linear solver        */
+
+
+  
+  /* Setup for Petsc solver */
+  void *cvode_mem_PETSc = NULL;    /* CVODE memory         */
+  N_Vector y_petsc = NULL;         /* solution vector wrapper around petsc vector  */
+  Vec y_vec;                       /* solution vector petsc */
+  UserData udata_petsc = NULL;     /* user data for the petsc version */
+  Mat Jacobian;
+  
 
   /* minimum identification */
   double norm2;       /* norm of the funtion */
@@ -159,39 +185,59 @@ TEST(CVDP, CVM) {
   
   
   minimum_tol = 1e-6;    /* minimum tolerance */
-  double maxsteps = 400; /* maximum number of steps to run the solver for */  
+  double maxsteps = 400; /* maximum number of steps to run the solver for */
 
+  /* allocate memory for the user data */
   udata = (UserData)malloc(sizeof *udata);
   retval = InitUserData(udata);
+  udata_petsc = (UserData)malloc(sizeof *udata_petsc);
+  retval = InitUserData(udata_petsc);
+  
 
   /* Create serial vector to store the solution */
   y = N_VNew_Serial(2);
 
-  /* Set initial contion */
+  /* Create petsc vector to store the solution */
+  VecCreateSeq(PETSC_COMM_SELF, 2, &y_vec);
+  y_petsc = N_VMake_Petsc(y_vec);
+  
+
+  /* Set initial condition */
   ydata = N_VGetArrayPointer(y);
   ydata[0] = ONE;
   ydata[1] = ZERO;
+  /* set values petsc */
+  PetscInt y_index[2] = {0, 1};
+  VecSetValues(y_vec, 2, y_index, ydata, INSERT_VALUES);
 
   
-  /* Create serial vector to store the solution error */
-  e = N_VClone(y);
 
-  /* Set initial error */
-  N_VConst(ZERO, e);
 
   /* Create CVODE memory */
   cvode_mem = CVodeCreate(CV_BDF);
+  cvode_mem_PETSc = CVodeCreate(CV_BDF);
 
   /* Initialize CVODE */
   retval = CVodeInit(cvode_mem, f, t, y);
+  retval = CVodeInit(cvode_mem, rosenbrock_minus_gradient_petsc, t, y);  
 
   /* Attach user-defined data structure to CVODE */
   retval = CVodeSetUserData(cvode_mem, udata);
+  retval = CVodeSetUserData(cvode_mem_PETSc, udata);  
 
   /* Set integration tolerances */
   retval = CVodeSStolerances(cvode_mem, udata->rtol, udata->atol);
+  retval = CVodeSStolerances(cvode_mem_PETSc, udata_petsc->rtol, udata_petsc->atol);
+  
+  
 
-  /* Create dense SUNMatrix for use in linear solves */
+
+
+  /* -----------------------------------------------------------------------------
+   * Solver setup dense
+   * ---------------------------------------------------------------------------*/
+
+  /* Create dense SUNMatrix for use in linear solves */  
   A = SUNDenseMatrix(2, 2);
 
   /* Create dense SUNLinearSolver object */
@@ -206,17 +252,39 @@ TEST(CVDP, CVM) {
   /* Set max steps between outputs */
   retval = CVodeSetMaxNumSteps(cvode_mem, 100000);
 
+  /* -----------------------------------------------------------------------------
+   * Solver setup petsc
+   * ---------------------------------------------------------------------------*/
+  SNES snes;
+  KSP ksp;
+  SUNNonlinearSolver NLS;
+  
+
+
+
+  /* Initialize nonlinear solver */
+  SNESCreate(PETSC_COMM_SELF, &snes);
+  NLS = SUNNonlinSol_PetscSNES(y_petsc, snes);
+
+  /* attach solver to CVODE */
+  SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
+                  &udata);
+  
+  
+  
+  
+
+  
   N_Vector grad;
   grad = N_VClone(y);
-
-
   
   // break out if close to a minimum
   for (int nstep = 0; nstep < maxsteps; ++nstep) {
     // take a step
+
+   /* TODO check whether a postsolve function can be provided to sundials */
     retval = CVode(cvode_mem, tout, y, &t, CV_ONE_STEP);
     // obtain  the gradient
-    
     CVodeGetDky(cvode_mem, t, 1, grad);
     norm2 = N_VDotProd(grad, grad);
     /* calculate norm accounting for length */
@@ -243,7 +311,7 @@ TEST(CVDP, CVM) {
 }
 
 /* -----------------------------------------------------------------------------
- * Functions provided to CVODE
+ * Functions provided to CVODE for dense calculations
  * ---------------------------------------------------------------------------*/
 
 /* Compute the right-hand side function, y' = f(t,y) */
@@ -374,6 +442,139 @@ static int check_retval(void *returnvalue, const char *funcname, int opt) {
       return (1);
     }
   }
-
   return (0);
+}
+
+
+/* -----------------------------------------------------------------------------
+ * Functions for Petsc Implementation
+ * ---------------------------------------------------------------------------*/
+
+
+
+/* computes -\grad{f(t,x)} in the CVODE expected format. this is (- hessian) of
+   the rosenbrock funtion t in this problem is a dummy variable to parametrize
+   path */
+PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
+                                          void *user_data) {
+  /* Declarations */
+  PetscErrorCode ierr;
+  UserData data;
+  double m_a;           /* member a */
+  double m_b;           /* member b */
+  PetscReal hessarr[4]; /* hessian data*/
+
+  /* extract information from user data */
+  data = (UserData)user_data;
+  m_a = data->a;
+  m_b = data->b;
+
+  /* initalize jacobian to zero */
+  MatZeroEntries(J);
+
+  /* Illustration of how to deal with symmetric matrices */
+  /* get the jacobian type */
+  MatType Jac_type;
+  MatGetType(J, &Jac_type);
+
+  /* get read only array from vector */
+  const double *x_arr;
+  VecGetArrayRead(x, &x_arr);
+
+  /* if the hessian is symmetric assume that the matrix is upper triangular */
+  if (strcmp(Jac_type, MATSBAIJ) || strcmp(Jac_type, MATSEQSBAIJ) ||
+      strcmp(Jac_type, MATMPISBAIJ)) {
+    hessarr[0] = 2 + 8 * m_b * x_arr[0] * x_arr[0] -
+                 4 * m_b * (-x_arr[0] * x_arr[0] + x_arr[1]);
+    hessarr[1] = -4 * m_b * x_arr[0];
+    hessarr[2] = 0; /* 0 since symmetric */
+    hessarr[3] = 2 * m_b;
+  } else {
+    hessarr[0] = 2 + 8 * m_b * x_arr[0] * x_arr[0] -
+                 4 * m_b * (-x_arr[0] * x_arr[0] + x_arr[1]);
+    hessarr[1] = -4 * m_b * x_arr[0];
+    hessarr[2] =  -4 * m_b * x_arr[0];
+    hessarr[3] = 2 * m_b;
+  }
+
+  /* restore array */
+  VecRestoreArrayRead(x, &x_arr);
+
+  PetscInt idxm[] = {0, 1};
+  MatSetValues(J, 2, idxm, 2, idxm, hessarr, INSERT_VALUES);
+  MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
+
+  /* take the negative since J = -H */
+  MatScale(J, -1.0);
+  return (0);
+}
+
+
+/* computes f(t,x) in the CVODE expected format. this is (- gradient) of the
+   rosenbrock funtion Here t is a dummy variable to parametrize the path */
+int rosenbrock_minus_gradient_petsc(PetscReal t, N_Vector x, N_Vector xdot,
+                                    void *user_data) {
+  /* declarations */
+  PetscErrorCode ierr;
+  Vec x_petsc = N_VGetVector_Petsc(x);
+  Vec xdot_petsc = N_VGetVector_Petsc(xdot);
+  UserData data;
+  double m_a; /* member a */
+  double m_b; /* member b */
+
+  /* get read only array from vector */
+  const double *x_arr;
+  VecGetArrayRead(x_petsc, &x_arr);
+
+  /* extract information from user data */
+  data = (UserData)user_data;
+  m_a = data->a;
+  m_b = data->b;
+
+  /* initalize to zero*/
+  ierr = VecZeroEntries(xdot_petsc);
+  CHKERRQ(ierr);
+  /* First calculate the gradient \grad{V(x)}*/
+  ierr = VecSetValue(xdot_petsc, 0,
+                     4 * m_b * x_arr[0] * x_arr[0] * x_arr[0] -
+                         4 * m_b * x_arr[0] * x_arr[1] + 2 * m_a * x_arr[0] -
+                         2 * m_a,
+                     INSERT_VALUES);
+  CHKERRQ(ierr);
+  ierr = VecSetValue(xdot_petsc, 1, 2 * m_b * (x_arr[1] - x_arr[0] * x_arr[0]),
+                     INSERT_VALUES);
+  CHKERRQ(ierr);
+
+  /* restore read array */
+  ierr = VecRestoreArrayRead(x_petsc, &x_arr);
+  CHKERRQ(ierr);
+
+  /* assemble the vector */
+  ierr = VecAssemblyBegin(xdot_petsc);
+  CHKERRQ(ierr);
+  ierr = VecAssemblyEnd(xdot_petsc);
+  CHKERRQ(ierr);
+
+  /* scale the vector by -1. since xdot is -\grad{V(x)} */
+  ierr = VecScale(xdot_petsc, -1.0);
+
+  CHKERRQ(ierr);
+  return (0);
+}
+
+
+/* -----------------------------------------------------------------------------
+ * Sets up solver information
+ * ---------------------------------------------------------------------------*/
+PetscErrorCode CVODE_MN_PETSc_Create(void *cvode_mem, void *user_mem,
+                                       CVSNESJacFn func) {
+    CVLSPETScMem cvode_modified_newton_mem;
+
+    /* initalize */
+    cvode_modified_newton_mem = (CVLSPETScMem) malloc(sizeof *cvode_modified_newton_mem);
+    
+    /* allocate memory sufficient memory*/
+    
+    
 }

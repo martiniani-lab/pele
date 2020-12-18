@@ -7,11 +7,13 @@
 
 /* no more dependencies */
 
+#include "pele/cvode_modified_newton.h"
 #include "cvode/cvode.h"
+#include <petscmat.h>
 #include <petscsnes.h>
 #include <petscsystypes.h>
+#include <petscvec.h>
 #include <sundials/sundials_types.h>
-#include "pele/cvode_modified_newton.h"
 
 /* private macros */
 #define ONE RCONST(1.0)
@@ -58,6 +60,7 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre,
   CVodeMem cv_mem;
   int retval;
   PetscReal gamma;
+  PetscReal t;
 
   CVodeGetCurrentGamma(cvls_petsc_mem->cvode_mem, &gamma);
 
@@ -79,9 +82,11 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre,
     ierr = MatZeroEntries(A);
     CHKERRQ(ierr);
 
+    /* get current time */
+    CVodeGetCurrentTime(cvls_petsc_mem->cvode_mem, &t);
     /* compute new jacobian matrix */
-    ierr = cvls_petsc_mem->user_jac_func(cvls_petsc_mem->t, X, A,
-                                         cvls_petsc_mem->user_mem);
+
+    ierr = cvls_petsc_mem->user_jac_func(t, X, A, cvls_petsc_mem->user_mem);
     CHKERRQ(ierr);
     /* Update saved jacobian copy */
     /* TODO: expose nonzero structure usage */
@@ -130,3 +135,36 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
   }
 }
 
+/* allocates extra memory for running the modified newton algorithm using
+ * PETSc*/
+CVLSPETScMem CVODE_MN_PETSc_mem_Create(void *cvode_mem, void *user_mem,
+                                       CVSNESJacFn func, booleantype scalesol,
+                                       Mat Jac, Vec y) {
+  CVLSPETScMem content;
+
+  /* allocate memory for content */
+  content = (CVLSPETScMem)malloc(sizeof *content);
+
+  /* assign memory pointers */
+  content->cvode_mem = cvode_mem;
+  content->user_mem = user_mem;
+
+  /* assign user jacobian function pointer */
+  content->user_jac_func = func;
+
+  /* set up initial calculation information */
+  content->jok = 0;
+
+  /* assign memory for the saved jacobian */
+  /* we may not have to do this */
+  MatDuplicate(Jac, MAT_SHARE_NONZERO_PATTERN, &content->savedJ);
+
+  /* assign memory for the vectors */
+  VecDuplicate(y, &content->ycur);
+  VecDuplicate(y, &content->fcur);
+
+  /* whether to scale the solution after the solve or not */
+  content->scalesol = scalesol;
+
+  return content;
+}
