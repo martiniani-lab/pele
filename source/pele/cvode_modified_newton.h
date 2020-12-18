@@ -56,7 +56,7 @@ typedef struct {
 
   booleantype
       scalesol; /* exposed to user (Check delayed matrix versions later)*/
-} * CVLSPETScMem;
+} * CVMNPETScMem;
 
 
 /*****************************************************************************/
@@ -75,11 +75,11 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context);
 
 
 /* Memory setup for modified newton */
-CVLSPETScMem CVODE_MN_PETSc_memsetup(void *cvode_mem, void *user_mem,
-                                     CVSNESJacFn func, booleantype scalesol, Mat Jac, Vec y);
+CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
+                                CVSNESJacFn func, booleantype scalesol, Mat Jac, Vec y);
 
 
-
+PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem);
 
 
 

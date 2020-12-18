@@ -9,6 +9,7 @@
 
 #include "pele/cvode_modified_newton.h"
 #include "cvode/cvode.h"
+#include <petscerror.h>
 #include <petscmat.h>
 #include <petscsnes.h>
 #include <petscsystypes.h>
@@ -49,8 +50,8 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre,
                               void *context) {
   PetscFunctionBegin;
   /* storage for petsc memory */
-  CVLSPETScMem cvls_petsc_mem;
-  cvls_petsc_mem = (CVLSPETScMem)context;
+  CVMNPETScMem cvls_petsc_mem;
+  cvls_petsc_mem = (CVMNPETScMem)context;
   /* if solution scaling is not used this is a bad idea */
   if (!cvls_petsc_mem->scalesol) {
     PetscFunctionReturn(0);
@@ -121,8 +122,8 @@ PetscErrorCode cvLSPresolveKSP(KSP ksp, Vec b, Vec x, void *ctx) { return 0; }
   -----------------------------------------------------------------*/
 PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
   /* storage for petsc memory */
-  CVLSPETScMem cvls_petsc_mem;
-  cvls_petsc_mem = (CVLSPETScMem)context;
+  CVMNPETScMem cvls_petsc_mem;
+  cvls_petsc_mem = (CVMNPETScMem)context;
   if (!cvls_petsc_mem->scalesol) {
     PetscFunctionReturn(0);
   }
@@ -137,13 +138,13 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
 
 /* allocates extra memory for running the modified newton algorithm using
  * PETSc*/
-CVLSPETScMem CVODE_MN_PETSc_mem_Create(void *cvode_mem, void *user_mem,
+CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
                                        CVSNESJacFn func, booleantype scalesol,
                                        Mat Jac, Vec y) {
-  CVLSPETScMem content;
+  CVMNPETScMem content;
 
   /* allocate memory for content */
-  content = (CVLSPETScMem)malloc(sizeof *content);
+  content = (CVMNPETScMem)malloc(sizeof *content);
 
   /* assign memory pointers */
   content->cvode_mem = cvode_mem;
@@ -168,3 +169,26 @@ CVLSPETScMem CVODE_MN_PETSc_mem_Create(void *cvode_mem, void *user_mem,
 
   return content;
 }
+
+
+
+/* destructor for cvmnpetscmem */
+PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem) {
+  if (cvmnpetscmem == NULL) {
+      return 0;
+  }
+  PetscErrorCode ierr;
+
+  /* destroy vectors/matrices */
+  ierr = MatDestroy(&((*cvmnpetscmem)->savedJ));CHKERRQ(ierr);
+  ierr = VecDestroy(&((*cvmnpetscmem)->fcur));CHKERRQ(ierr);
+  ierr = VecDestroy(&((*cvmnpetscmem)->ycur));CHKERRQ(ierr);
+
+  /* Free matrix vectors */
+  free(cvmnpetscmem);
+  cvmnpetscmem = NULL;
+  return 0;
+}
+
+
+
