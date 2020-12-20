@@ -171,7 +171,8 @@ CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
 
   /* whether to scale the solution after the solve or not */
   content->scalesol = scalesol;
-
+ 
+  
   return content;
 }
 
@@ -181,7 +182,6 @@ PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem) {
     return 0;
   }
   PetscErrorCode ierr;
-
   /* destroy vectors/matrices */
   ierr = MatDestroy(&((*cvmnpetscmem)->savedJ));
   CHKERRQ(ierr);
@@ -189,7 +189,6 @@ PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem) {
   CHKERRQ(ierr);
   ierr = VecDestroy(&((*cvmnpetscmem)->ycur));
   CHKERRQ(ierr);
-
   /* Free matrix vectors */
   free(cvmnpetscmem);
   cvmnpetscmem = NULL;
@@ -246,9 +245,12 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem) {
     
     /* force the solver to be just use the preconditioner only */
     KSPSetType(ksp, KSPPREONLY);
-
-    /* checks that the preconditioner is only LU or CHOLESKY */
-
+    
+    if (pc_type==PETSC_NULL) {
+        PCSetType(pc, PCLU);
+        printf("pc set type \n");
+        PCGetType(pc, &pc_type);
+    }
 
     /* If the Preconditioner is not LU or Cholesky, return no support exit code */
     if (!(strcmp(pc_type, PCLU) || strcmp(pc_type, PCCHOLESKY))) {

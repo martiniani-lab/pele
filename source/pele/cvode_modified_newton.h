@@ -2,22 +2,29 @@
 #define _CVODE_PETSC_MN_H
 
 
+
+
+#include <petscksp.h>
+#include <petscmat.h>
+
+#include <cvode/cvode.h>
+#include <petscsnes.h>
+#include <petscvec.h>
+#include <sundials/sundials_nonlinearsolver.h>
+#include <sundials/sundials_nvector.h>
+#include <sundials/sundials_types.h>
+
+#ifdef __cplusplus /* wrapper to enable C++ usage */
+extern "C" {
+#endif
+
 /*
   UNDER WORK
   Probably need to keep it here since
   it depends on implicit SUNDIALS variables until the corresponding interface
   is built.
 */
-#include <petscksp.h>
-#include <petscmat.h>
 
-
-#include <petscvec.h>
-#include <sundials/sundials_nonlinearsolver.h>
-#include <sundials/sundials_nvector.h>
-#include <sundials/sundials_types.h>
-#include <cvode/cvode.h>
-#include <petscsnes.h>
 
 /* TODO remove this*/
 #include "/home/praharsh/Dropbox/research/bv-libraries/sundials/src/cvode/cvode_impl.h"
@@ -40,8 +47,8 @@ typedef struct {
   /* TODO: remove this since user data is in cvode_mem */
   void *user_mem; /* user data */
 
-    /* TODO */
-  CVSNESJacFn user_jac_func; /* user defined Jacobian function */  
+  /* TODO */
+  CVSNESJacFn user_jac_func; /* user defined Jacobian function */
 
   /* jacobian calculation information */
   booleantype jok;   /* check for whether jacobian needs to be updated */
@@ -50,59 +57,46 @@ typedef struct {
   /* Linear solver, matrix and vector objects/pointers */
   /* NOTE: some of this might be uneccessary since it maybe stored
      in the KSP solver */
-  Mat savedJ;                /* savedJ = old Jacobian                        */
-  Vec ycur;                  /* CVODE current y vector in Newton Iteration   */
-  Vec fcur;                  /* fcur = f(tn, ycur)                           */
+  Mat savedJ; /* savedJ = old Jacobian                        */
+  Vec ycur;   /* CVODE current y vector in Newton Iteration   */
+  Vec fcur;   /* fcur = f(tn, ycur)                           */
 
   booleantype
       scalesol; /* exposed to user (Check delayed matrix versions later)*/
 } * CVMNPETScMem;
 
-
 /*****************************************************************************/
 /*                           function declarations                           */
 /*****************************************************************************/
 
-
 /* Main Jacobian to be passed to SNES for delayed jacobian calculation */
 PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre, void *context);
 
-/* presolve function for the KSP solver KSPPreOnly could do this for the conditioner */
+/* presolve function for the KSP solver KSPPreOnly could do this for the
+ * conditioner */
 PetscErrorCode cvLSPresolveKSP(KSP ksp, Vec b, Vec x, void *ctx);
 
 /* postsolve function for the KSP solver */
 PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context);
 
-
 /* Memory setup for modified newton */
+/* TODO: break up the setup */
 CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
-                                CVSNESJacFn func, booleantype scalesol, Mat Jac, Vec y);
+                                CVSNESJacFn func, booleantype scalesol, Mat Jac,
+                                Vec y);
 
-
+/* destructor */
 PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem);
 
+/* SNES setup */
+PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem);
 
+/*
 
+*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-
+#ifdef __cplusplus /* wrapper to enable C++ usage */
+}
 #endif
 
+#endif /* end header guard */
