@@ -75,7 +75,7 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre,
   /* check jacobian needs to be updated */
   if (cvls_petsc_mem->jok) {
     /* use saved copy of jacobian */
-    *(cvls_petsc_mem->jcur) = PETSC_FALSE;
+    (cvls_petsc_mem->jcur) = PETSC_FALSE;
 
     /* Overwrite linear system matrix with saved J
        Assuming different non zero structure */
@@ -84,7 +84,7 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre,
     CHKERRQ(ierr);
   } else {
     /* call jac() to update the function */
-    *(cvls_petsc_mem->jcur) = PETSC_TRUE;
+    (cvls_petsc_mem->jcur) = PETSC_TRUE;
     ierr = MatZeroEntries(A);
     CHKERRQ(ierr);
 
@@ -159,7 +159,9 @@ CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
   content->user_jac_func = func;
 
   /* set up initial calculation information */
-  content->jok = 0;
+  content->jok = PETSC_FALSE;
+  /* TODO: check whether it needs to be updated */
+  content->jcur = PETSC_TRUE;
 
   /* assign memory for the saved jacobian */
   /* we may not have to do this */
@@ -171,8 +173,7 @@ CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
 
   /* whether to scale the solution after the solve or not */
   content->scalesol = scalesol;
- 
-  
+
   return content;
 }
 
@@ -232,33 +233,36 @@ PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem) {
    TODO: maybe remove the wrapper around the setup by defining a
    wrapped around free function
  * ---------------------------------------------------------------------------*/
-PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem) {
-    PetscFunctionBegin;
-    KSP ksp;
-    PC pc;
-    PCType pc_type;
-    /* get all necessary contexts */
-    SNESGetKSP(snes, &ksp);
-    KSPGetPC(ksp, &pc);
-    PCGetType(pc, &pc_type);    
+PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac) {
+  PetscFunctionBegin;
+  KSP ksp;
+  PC pc;
+  PCType pc_type;
+  /* get all necessary contexts */
+  SNESGetKSP(snes, &ksp);
+  KSPGetPC(ksp, &pc);
+  PCGetType(pc, &pc_type);
 
-    
-    /* force the solver to be just use the preconditioner only */
-    KSPSetType(ksp, KSPPREONLY);
-    
-    if (pc_type==PETSC_NULL) {
-        PCSetType(pc, PCLU);
-        printf("pc set type \n");
-        PCGetType(pc, &pc_type);
-    }
+  /* force the solver to be just use the preconditioner only */
+  KSPSetType(ksp, KSPPREONLY);
 
-    /* If the Preconditioner is not LU or Cholesky, return no support exit code */
-    if (!(strcmp(pc_type, PCLU) || strcmp(pc_type, PCCHOLESKY))) {
-        PetscFunctionReturn(PETSC_ERR_SUP);
-    }
+  if (pc_type == PETSC_NULL) {
+    PCSetType(pc, PCLU);
+    printf("pc set type \n");
+    PCGetType(pc, &pc_type);
+  }
 
-    /* set presolve and postsolve */
-    KSPSetPreSolve(ksp, cvLSPreSolveKSP, (void *) cvmnmem);
-    KSPSetPostSolve(ksp, cvLSPostSolveKSP, (void *)cvmnmem);
-    PetscFunctionReturn(0);
+  /* If the Preconditioner is not LU or Cholesky, return no support exit code */
+  if (!(strcmp(pc_type, PCLU) || strcmp(pc_type, PCCHOLESKY))) {
+    PetscFunctionReturn(PETSC_ERR_SUP);
+  }
+
+  KSPSetPreSolve(ksp, cvLSPreSolveKSP, (void *)cvmnmem);
+  KSPSetPostSolve(ksp, cvLSPostSolveKSP, (void *)cvmnmem);
+
+  /* pass the wrapped jacobian function on to SNES */
+  SNESSetJacobian(snes, Jac, Jac, CVDelayedJSNES, cvmnmem);
+
+  /* Set the jacobian function */
+  PetscFunctionReturn(0);
 }

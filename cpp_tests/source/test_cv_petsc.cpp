@@ -327,6 +327,8 @@ TEST(CVPet, CVM) {
   KSP ksp;
   SUNNonlinearSolver NLS;
   PC pc;
+  SNESLineSearch ls;
+  
 
   /* memory for CVODE solver using modified newton approach.
      The user data contexts is attached to this*/
@@ -337,7 +339,11 @@ TEST(CVPet, CVM) {
   NLS = SUNNonlinSol_PetscSNES(y_nv_petsc, snes);
 
   SNESGetKSP(snes, &ksp);
+  SNESGetLineSearch(snes, &ls);
+  
   SNESSetType(snes, SNESNEWTONLS);
+  /* defaults to no line search*/
+  SNESLineSearchSetType(ls, SNESLINESEARCHBASIC);
   
   KSPGetPC(ksp, &pc);
 
@@ -350,7 +356,7 @@ TEST(CVPet, CVM) {
                          rosenbrock_minus_Jac_petsc, 1, Jac_petsc, y_vec);
 
   /* Attach setup to the SNES Solver */
-  CVSNESMNSetup(snes, cv_mn_petsc_mem);
+  CVSNESMNSetup(snes, cv_mn_petsc_mem, Jac_petsc);
 
   // Attach nonlinear solver to petsc
   CVodeSetNonlinearSolver(cvode_mem_PETSc, NLS);

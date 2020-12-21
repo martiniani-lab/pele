@@ -1,14 +1,12 @@
 #ifndef _CVODE_PETSC_MN_H
 #define _CVODE_PETSC_MN_H
 
-
-
-
 #include <petscksp.h>
 #include <petscmat.h>
 
 #include <cvode/cvode.h>
 #include <petscsnes.h>
+#include <petscsystypes.h>
 #include <petscvec.h>
 #include <sundials/sundials_nonlinearsolver.h>
 #include <sundials/sundials_nvector.h>
@@ -24,7 +22,6 @@ extern "C" {
   it depends on implicit SUNDIALS variables until the corresponding interface
   is built.
 */
-
 
 /* TODO remove this*/
 #include "/home/praharsh/Dropbox/research/bv-libraries/sundials/src/cvode/cvode_impl.h"
@@ -51,9 +48,8 @@ typedef struct {
   CVSNESJacFn user_jac_func; /* user defined Jacobian function */
 
   /* jacobian calculation information */
-  booleantype jok;   /* check for whether jacobian needs to be updated */
-  booleantype *jcur; /* whether to use saved copy of jacobian */
-
+  PetscBool jok;   /* check for whether jacobian needs to be updated */
+  PetscBool jcur;          /* whether to use saved copy of jacobian */
   /* Linear solver, matrix and vector objects/pointers */
   /* NOTE: some of this might be uneccessary since it maybe stored
      in the KSP solver */
@@ -89,7 +85,7 @@ CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
 PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem);
 
 /* SNES setup */
-PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem);
+PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac);
 
 /*
 
