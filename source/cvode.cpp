@@ -1,5 +1,5 @@
 #include "pele/cvode.h"
-#include "autodiff/reverse/eigen.hpp"
+#include "Eigen/src/Core/Matrix.h"
 #include "cvode/cvode.h"
 #include "cvode/cvode_ls.h"
 #include "nvector/nvector_serial.h"
@@ -66,6 +66,37 @@ void CVODEBDFOptimizer::one_iteration() {
     nfev_ = udata.nfev;
     Array<double> step = xold-x_;
 
+    // really hacky way to output $lambdamin/lambdamax on a low tolerance run
+    // simply print the energy and lambdamin/lambdamax as csv values and write stdout to file
+    // then plot them using python
+
+    // get hessian routine
+    Array<double> hess(xold.size() * xold.size());
+    Array<double> grad(xold.size());
+    double e = potential_->get_energy_gradient_hessian(x_, grad, hess);
+    Eigen::MatrixXd hess_dense(xold.size(), xold.size());
+    udata.nhev += 1;
+    hess_dense.setZero();
+    for (size_t i = 0; i < xold.size(); ++i) {
+        for (size_t j = 0; j < xold.size(); ++j) {
+            hess_dense(i, j) = hess[i + grad.size() * j];
+        }
+    }
+    // calculate minimum and maximum eigenvalue 
+    Eigen::VectorXd eigvals = hess_dense.eigenvalues().real();
+    double minimum = eigvals.minCoeff();
+    double maximum = eigvals.maxCoeff();
+
+    double convexity_estimate;
+
+    if (minimum<0) {
+        convexity_estimate = std::abs(minimum / maximum);
+    }
+    else {
+        convexity_estimate = 0;
+    }
+    std::cout << e << "," << convexity_estimate << "\n";
+    // TODO: This is terrible C++ code but write it better
 };
 
 int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
