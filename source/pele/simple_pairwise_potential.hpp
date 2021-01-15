@@ -646,6 +646,7 @@ inline void SimplePairwisePotential<pairwise_interaction, distance_policy>::add_
     PetscInt hess_size_y;
     MatSetType(hess, MATSEQSBAIJ);
     MatGetSize(hess, &hess_size_x, &hess_size_y);
+    MatSetUp(hess);
     if (m_ndim * natoms != xsize) {
         throw std::runtime_error("x.size() is not divisible by the number of dimensions");
     }

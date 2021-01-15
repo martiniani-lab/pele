@@ -90,6 +90,7 @@ static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 
 /**
  * @brief      Wrapper for CVODE to get the Jacobian for the Newton Calculation
+ *             Note: This should replicate the same in cvLsLinSys
  *
  * @details    Calculates I - \gamma J where J = -H and H is the hessian. Gamma
  *             is obtained from the User content
@@ -252,15 +253,15 @@ private:
     NLS = SUNNonlinSol_PetscSNES(x0_N, snes);
 
     // // matrix approach
-    // PCSetType(pc, PCCHOLESKY);
-    // setup_Jacobian();
-    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
-    //                 &udata);
+    PCSetType(pc, PCLU);
+    setup_Jacobian();
+    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
+                    &udata);
     // Matrix free approach
-    MatCreateSNESMF(snes, &petsc_jacobian);
-    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
-    MatMFFDComputeJacobian,
-                    0);
+    // MatCreateSNESMF(snes, &petsc_jacobian);
+    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
+    // MatMFFDComputeJacobian,
+    //                 0);
   };
 
   /**

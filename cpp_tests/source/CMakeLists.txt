@@ -15,9 +15,20 @@ ADD_DEFINITIONS(-std=c++1z -g)
 # optimize debugging experience
 # debug builds with max information
 
-# force home directory include for me for language understanding
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I/home/praharsh/.local/include -O0 -ggdb3 -fno-omit-frame-pointer -fno-inline")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/home/praharsh/.local/include -O0 -ggdb3 -fno-omit-frame-pointer -fno-inline")
+
+
+# Flags useful for debugging
+# 1. -ggdb3: for memory analysis with gdb
+# 2. -O0 disable all optimizations
+# 3. -fsanitize=address checking memory leaks quickly and uninitialized memory quickly
+
+
+# for a full list of options  for memory checking and profiling 
+# check https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html
+
+# force home directory include for me for LSP
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I/home/praharsh/.local/include -O0 -fsanitize=address -ggdb3 -fno-omit-frame-pointer -fno-inline")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/home/praharsh/.local/include -O0 -ggdb3 -fsanitize=address -fno-omit-frame-pointer -fno-inline")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 

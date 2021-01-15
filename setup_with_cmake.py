@@ -51,9 +51,13 @@ else:
 #extra compiler args
 # cmake_compiler_extra_args = ["-std=c++1z","-Wall", "-Wextra", "-pedantic", "-O1", "-fPIC"]
 
+
+
+# also add ext
 # TODO: make sure these choices can be selected from the command line
 cmake_compiler_extra_args_performance = ["-std=c++1z", "-pedantic", "-O3", "-fPIC"]
-cmake_compiler_extra_args_debug = ["-std=c++1z", "-pedantic", "-ggdb3", '-O0']
+# force include to for compile commands
+cmake_compiler_extra_args_debug = ["-I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/", "-std=c++1z", "-pedantic", "-ggdb3", '-O0']
 cmake_compiler_extra_args = cmake_compiler_extra_args_debug
 
 
@@ -324,8 +328,8 @@ def set_compiler_env(compiler_id):
     
     if compiler_id.lower() in ("unix"):
         print(env, 'eeenv')
-        env["CC"] = (subprocess.check_output(["which", "gcc-9"])).decode(encoding).rstrip('\n')
-        env["CXX"] = (subprocess.check_output(["which", "g++-9"])).decode(encoding).rstrip('\n')
+        env["CC"] = (subprocess.check_output(["which", "gcc"])).decode(encoding).rstrip('\n')
+        env["CXX"] = (subprocess.check_output(["which", "g++"])).decode(encoding).rstrip('\n')
         env["LD"] = (subprocess.check_output(["which", "ld"])).decode(encoding).rstrip('\n')
         env["AR"] = (subprocess.check_output(["which", "ar"])).decode(encoding).rstrip('\n')
     elif compiler_id.lower() in ("intel"):

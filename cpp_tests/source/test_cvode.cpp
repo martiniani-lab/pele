@@ -253,6 +253,7 @@ TEST(CVST, CVODESolverWorksIP){
 #ifdef _OPENMP
     omp_set_num_threads(1);
 #endif
+    // phi = 0.7
     nr_particles = 32;
     nr_dof = nr_particles * _ndim;
     eps =1.0;
@@ -293,7 +294,7 @@ TEST(CVST, CVODESolverWorksIP){
 
     
     pele::CVODEBDFOptimizer optimizer(potcell, x);
-    optimizer.run(1);
+    optimizer.run(20);
     std::cout << optimizer.get_nfev() << "nfev \n";
     std::cout << optimizer.get_nhev() << "nhev \n";
     std::cout << optimizer.get_rms() << "rms \n";
@@ -447,7 +448,6 @@ TEST(CVODEPETSCex, CVODEPETScexworks)
     CVodeFree(&cvode_mem);
     /* ierr = VecDestroy(&x); */
     /* N_VDestroy_Petsc(nvecx); */
-    
     N_VDestroy(nvecx);
     ierr = SUNNonlinSolFree(NLS);
     ierr = VecDestroy(&x);

@@ -48,15 +48,16 @@ typedef struct {
   CVSNESJacFn user_jac_func; /* user defined Jacobian function */
 
   /* jacobian calculation information */
-  PetscBool jok;   /* check for whether jacobian needs to be updated */
-  PetscBool jcur;          /* whether to use saved copy of jacobian */
+  PetscBool jok;  /* check for whether jacobian needs to be updated */
+  PetscBool jcur; /* whether to use saved copy of jacobian */
   /* Linear solver, matrix and vector objects/pointers */
   /* NOTE: some of this might be uneccessary since it maybe stored
      in the KSP solver */
-  Mat savedJ; /* savedJ = old Jacobian                        */
-  Vec ycur;   /* CVODE current y vector in Newton Iteration   */
-  Vec fcur;   /* fcur = f(tn, ycur)                           */
-
+  Mat savedJ;         /* savedJ = old Jacobian                        */
+  Vec ycur;           /* CVODE current y vector in Newton Iteration   */
+  Vec fcur;           /* fcur = f(tn, ycur)                           */
+  PetscReal gammap;   /* Previous gamma */
+  PetscReal gammarat; /* ratio of previous gamma to current gamma */
   booleantype
       scalesol; /* exposed to user (Check delayed matrix versions later)*/
 } * CVMNPETScMem;
@@ -88,7 +89,7 @@ PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem);
 PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac);
 
 /*
-
+SNES shell solver
 */
 
 #ifdef __cplusplus /* wrapper to enable C++ usage */

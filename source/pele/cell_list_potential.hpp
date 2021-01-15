@@ -1193,7 +1193,7 @@ for (size_t i=0; i < grad.size(); ++i) {
         if (x_size*x_size != hess_sparse_size_x*hess_sparse_size_y) {
             throw std::invalid_argument("the Hessian has the wrong size");
         }
-
+        MatSetUp(hess);
 
         const PetscReal * x_arr;
 

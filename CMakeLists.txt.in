@@ -111,7 +111,7 @@ message("pele include directory: ${pele_include}")
 # This is a likely source of undefined symbol errors
 include_directories(${pele_include})
 include_directories(SYSTEM ${MPI_INCLUDE_DIR})
-include_directories(SYSTEM ${SUNDIALS_INCLUDE_DIR})
+include_directories(${SUNDIALS_INCLUDE_DIR})
 FILE(GLOB pele_sources ${pele_include}/*.c*)
 add_library(pele_lib SHARED ${pele_sources})
 

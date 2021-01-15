@@ -9,6 +9,7 @@
 
 #include "pele/cvode_modified_newton.h"
 #include "cvode/cvode.h"
+#include <math.h>
 #include <petscerror.h>
 #include <petscksp.h>
 #include <petscmat.h>
@@ -97,6 +98,7 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre,
     /* Update saved jacobian copy */
     /* TODO: expose nonzero structure usage */
     /* I'm not sure this makes sense */
+    /* TODO: fix savedJ not initalized */
     MatCopy(A, cvls_petsc_mem->savedJ, DIFFERENT_NONZERO_PATTERN);
   }
   /* do A = I - \gamma J */
@@ -132,10 +134,9 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
   if (!cvls_petsc_mem->scalesol) {
     PetscFunctionReturn(0);
   }
-
   CVodeMem cv_mem;
-  cv_mem = (CVodeMem)context;
-
+  cv_mem = (CVodeMem) context;
+  /* needs changes */
   if (cv_mem->cv_gamrat != ONE) {
     VecScale(b, TWO / (ONE + cv_mem->cv_gamrat));
   }
@@ -154,6 +155,8 @@ CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
   /* assign memory pointers */
   content->cvode_mem = cvode_mem;
   content->user_mem = user_mem;
+  CVodeMem cv_mem;
+  
 
   /* assign user jacobian function pointer */
   content->user_jac_func = func;
@@ -161,18 +164,18 @@ CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
   /* set up initial calculation information */
   content->jok = PETSC_FALSE;
   /* TODO: check whether it needs to be updated */
-  content->jcur = PETSC_TRUE;
-
+  content->jcur = PETSC_TRUE;  
   /* assign memory for the saved jacobian */
   /* we may not have to do this */
-  MatDuplicate(Jac, MAT_SHARE_NONZERO_PATTERN, &content->savedJ);
-
   /* assign memory for the vectors */
   VecDuplicate(y, &content->ycur);
   VecDuplicate(y, &content->fcur);
 
   /* whether to scale the solution after the solve or not */
   content->scalesol = scalesol;
+
+  /* initialize saved jacobian */
+  MatDuplicate(Jac, MAT_DO_NOT_COPY_VALUES, &content->savedJ);
 
   return content;
 }

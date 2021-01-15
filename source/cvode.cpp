@@ -55,7 +55,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
 
 };
 
-void CVODEBDFOptimizer::one_iteration() {
+void CVODEBDFOptimizer::one_iteration() {  
   /* advance solver just one internal step */
   Array<double> xold = x_;
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);CHKERRCV_ONE_STEP(flag);
@@ -71,6 +71,7 @@ void CVODEBDFOptimizer::one_iteration() {
   nfev_ = udata.nfev;
   Array<double> step = xold - x_;  
 };
+
 
 CVODEBDFOptimizer::~CVODEBDFOptimizer() {
     // created in setup grad
@@ -115,12 +116,13 @@ int gradient_wrapper(double t, N_Vector y, N_Vector ydot, void *user_data) {
   
   // routine to reverse sign
   VecScale(ydot_petsc, -1.0);
-  // func data reversed
+
   // udata->stored_grad = (g);
   udata->stored_energy = energy;
   udata->nfev += 1;  
   return 0;  
 }
+
 
 int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
         N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
@@ -140,6 +142,23 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
 };
 
 
+
+
+
+
+
+
+
+/**
+ * @brief SNESJacobianWrapper
+ *
+ * @param NLS Nonlinear solver
+ * @param dummy dummy variable for position (which we're getting from CVODE)
+ * @param Amat 
+ * @param Precon Description of Precon
+ * @param user_data Description of user_data
+ * @return PetscErrorCode
+ */
 PetscErrorCode SNESJacobianWrapper(SNES NLS, Vec dummy, Mat Amat, Mat Precon,
                                    void *user_data) {
   PetscFunctionBeginUser;

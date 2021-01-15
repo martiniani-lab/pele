@@ -83,7 +83,8 @@
 #include <petsctao.h>
 #include <sunlinsol/sunlinsol_dense.h>
 #include <sunmatrix/sunmatrix_dense.h>
-#include <sunnonlinsol/sunnonlinsol_petscsnes.h>
+#include "pele/sunnonlinsol_petscsnes.h"
+// #include <sunnonlinsol/sunnonlinsol_petscsnes.h>
 #include <unistd.h>
 
 /* gtest */
@@ -172,7 +173,7 @@ TEST(CVDP, CVM) {
   realtype *ydata = NULL;    /* solution vector data */
   N_Vector e = NULL;         /* error vector         */
   SUNMatrix A = NULL;        /* Jacobian matrix      */
-  SUNLinearSolver LS = NULL; /* linear solver        */
+  SUNLinearSolver LS = NULL; /* linear solver        */  
 
   /* minimum identification */
   double norm2;       /* norm of the funtion */
