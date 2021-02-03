@@ -1,6 +1,7 @@
 #ifndef _PELE_MIXED_OPT_H__
 #define _PELE_MIXED_OPT_H__
 
+#include <cstddef>
 #include <vector>
 #include <memory>
 #include "base_potential.h"
@@ -96,6 +97,14 @@ private:
     Eigen::MatrixXd hessian;
     bool usephase1;
     /**
+     * number of phase 1 steps
+     */
+    size_t n_phase_1_steps;
+    /**
+     * number of phase 2 steps
+     */
+    size_t n_phase_2_steps;
+    /**
      * tolerance for convexity. the smaller, the more convex the problem
      * needs to be before switching to newton
      */
@@ -131,6 +140,8 @@ public:
      */
     virtual void reset(pele::Array<double> &x0);
     inline int get_nhev() const { return udata.nhev;}
+    inline int get_n_phase_1_steps() {return n_phase_1_steps;}
+    inline int get_n_phase_2_steps() {return n_phase_2_steps;}
 
 private:
 

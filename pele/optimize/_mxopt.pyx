@@ -22,7 +22,8 @@ cdef extern from "pele/mxopt.h" namespace "pele":
                           double, double, double,
                           double, double) except +
         double get_nhev() except +
-
+        int get_n_phase_1_steps() except +
+        int get_n_phase_2_steps() except +
 
 cdef class _Cdef_MixedOptimizer_CPP(_pele_opt.GradientOptimizer):
     """This class is the python interface for the c++ MixedOptimizer implementation
@@ -45,6 +46,8 @@ cdef class _Cdef_MixedOptimizer_CPP(_pele_opt.GradientOptimizer):
         cdef cppMixedOptimizer* mxopt_ptr = <cppMixedOptimizer*> self.thisptr.get()
         res = super(_Cdef_MixedOptimizer_CPP, self).get_result()
         res["nhev"] = float(mxopt_ptr.get_nhev())
+        res["n_phase_1"] = int(mxopt_ptr.get_n_phase_1_steps())
+        res["n_phase_2"] = int(mxopt_ptr.get_n_phase_2_steps())
         return res
 
 class MixedOptimizer_CPP(_Cdef_MixedOptimizer_CPP):

@@ -26,6 +26,7 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T),
       usephase1(true), conv_tol_(conv_tol), conv_factor_(conv_factor),
+      n_phase_1_steps(0), n_phase_2_steps(0),
       line_search_method(this, step) {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -244,6 +245,7 @@ void MixedOptimizer::compute_phase_1_step(Array<double> step) {
   rms_ = (norm(g_) / sqrt(x_.size()));
   f_ = udata.stored_energy;
   step = xold - x_;
+  n_phase_1_steps +=1;
 }
 
 /**
@@ -273,5 +275,6 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
   // TODO change this to banded
   q = -scale * hessian.colPivHouseholderQr().solve(r);
   pele_eq_eig(step, q);
+  n_phase_2_steps+=1;
 }
 } // namespace pele
