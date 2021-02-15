@@ -116,6 +116,13 @@
 #define SQRT(x) (sqrtl((x)))
 #endif
 
+
+/*!
+ * This exists because strcmp doesn't follow
+ * the true false convention and returns 0
+ * if the strings are the same
+ */
+#define same_string(x, y) (strcmp(x, y) ==0)
 /* Problem Constants */
 #define PI RCONST(3.141592653589793238462643383279502884197169)
 #define ZERO RCONST(0.0)
@@ -301,8 +308,12 @@ TEST(CVPet, CVM) {
   N_Vector grad = N_VClone(y_nv_petsc);
 
   /* create matrix for jacobian calculation */
-  MatCreateDense(PETSC_COMM_SELF, dim, dim, PETSC_DECIDE, PETSC_DECIDE, NULL,
-                 &Jac_petsc);
+  // MatCreateDense(PETSC_COMM_SELF, dim, dim, PETSC_DECIDE, PETSC_DECIDE, NULL,
+  //                &Jac_petsc);
+  std::cout << "heello" << "\n";
+
+  MatCreateSeqSBAIJ(PETSC_COMM_SELF, 2 ,2 ,2 ,2,NULL,&Jac_petsc);
+  std::cout << "heeloo 2" << "\n";
 
   /* Set initial condition */
   PetscReal ydata[2];
@@ -371,8 +382,10 @@ TEST(CVPet, CVM) {
   maxsteps = 400;
   // break out if close to a minimum
   for (int nstep = 0; nstep < maxsteps; ++nstep) {
+      
     // take a step
     N_VPrint_Petsc(y_nv_petsc);
+    std::cout << "y_nv_petsc" << "\n";
     /* TODO check whether a postsolve function can be provided to sundials */
     retval = CVode(cvode_mem_PETSc, tout, y_nv_petsc, &t_petsc, CV_ONE_STEP);
     std::cout << retval << " retval petsc \n";
@@ -590,6 +603,9 @@ static int check_retval(void *returnvalue, const char *funcname, int opt) {
 
 /* computes -\grad{f(t,x)} in the CVODE expected format. this is (- hessian) of
    the rosenbrock funtion t in this problem is a dummy variable to parametrize
+   (note. user data should contain a pointer to the memory, since that is where
+   The position is implemented)
+   X here is NOT the Position.
    path */
 PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
                                           void *user_data) {
@@ -617,9 +633,20 @@ PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
   const double *x_arr;
   VecGetArrayRead(x, &x_arr);
 
+  std::cout << Jac_type << "\n";
+  std::cout << same_string(Jac_type, MATSBAIJ) << "\n";
+  std::cout << same_string(Jac_type, MATSEQSBAIJ) << "\n";
+  std::cout << same_string(Jac_type, MATMPISBAIJ) << "\n";
+  std::cout << (same_string(Jac_type, MATSBAIJ) || same_string(Jac_type, MATSEQSBAIJ) ||
+      same_string(Jac_type, MATMPISBAIJ)) << "\n";
+
+
+  
+
+
   /* if the hessian is symmetric assume that the matrix is upper triangular */
-  if (strcmp(Jac_type, MATSBAIJ) || strcmp(Jac_type, MATSEQSBAIJ) ||
-      strcmp(Jac_type, MATMPISBAIJ)) {
+  if (same_string(Jac_type, MATSBAIJ) || same_string(Jac_type, MATSEQSBAIJ) ||
+      same_string(Jac_type, MATMPISBAIJ)) {
     hessarr[0] = 2 + 8 * m_b * x_arr[0] * x_arr[0] -
                  4 * m_b * (-x_arr[0] * x_arr[0] + x_arr[1]);
     hessarr[1] = -4 * m_b * x_arr[0];

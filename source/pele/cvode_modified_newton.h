@@ -62,6 +62,11 @@ typedef struct {
       scalesol; /* exposed to user (Check delayed matrix versions later)*/
 } * CVMNPETScMem;
 
+
+
+
+
+
 /*****************************************************************************/
 /*                           function declarations                           */
 /*****************************************************************************/

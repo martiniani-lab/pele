@@ -9,6 +9,7 @@
 
 #include "pele/cvode_modified_newton.h"
 #include "cvode/cvode.h"
+#include "nvector/nvector_petsc.h"
 #include <math.h>
 #include <petscerror.h>
 #include <petscksp.h>
@@ -34,7 +35,10 @@
   Wrapper to imitate what the linear system solver does in
   cvLsLinSys with what the Jacobian wrapper does in Petsc.
 
-  Calculates a delayed J_{snes} = I - \gamma J_{cvode}
+  Calculates a delayed J_{snes}(delta_x_res) = I - \gamma J_{cvode}(x(0) + delta_x_res)
+  (
+  See equation 10.5, 10.6 and 10.7 in the CVODE manual
+  )
 
   Warning: In sundials language the Jacobian is the gradient of
   the RHS of the ODE,
@@ -49,10 +53,19 @@
 
   This difference in language is important to keep in mind. since
   this function is called by SNESSetJacobian which refers the
-  Jacobian in SNES language.
-  Both of these are related by A = J_{SNES} = I-\gamma J_{cvode}
+  Jacobian in SNES language. We also have to note that these jacobians
+  are evaluated at /different points/
+
+
+  Both of these are related by
+
+  A = J_{SNES}(delta_x_res) = I-\gamma J_{cvode}(x_shifted)
+
+  where x_shifted = x_0 + x_res. x_0 is the initial guess of the ODE solver
+  and x_shifted is done at a different value.
+
   -----------------------------------------------------------------*/
-PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre,
+PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
                               void *context) {
   PetscFunctionBegin;
   /* storage for petsc memory */
@@ -68,8 +81,13 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre,
   int retval;
   PetscReal gamma;
   PetscReal t;
+  N_Vector x_n;
+  Vec x_n_petsc;
 
+  CVodeGetCurrentState(cvls_petsc_mem->cvode_mem, &x_n);
+  N_VPrint_Petsc(x_n);
   CVodeGetCurrentGamma(cvls_petsc_mem->cvode_mem, &gamma);
+  x_n_petsc = N_VGetVector_Petsc(x_n);
 
   cv_mem = (CVodeMem)(cvls_petsc_mem->cvode_mem);
 
@@ -77,7 +95,6 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre,
   if (cvls_petsc_mem->jok) {
     /* use saved copy of jacobian */
     (cvls_petsc_mem->jcur) = PETSC_FALSE;
-
     /* Overwrite linear system matrix with saved J
        Assuming different non zero structure */
     /* TODO: expose the NON zero structure usage */
@@ -88,12 +105,13 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec X, Mat A, Mat Jpre,
     (cvls_petsc_mem->jcur) = PETSC_TRUE;
     ierr = MatZeroEntries(A);
     CHKERRQ(ierr);
+    
+    
+    
 
-    /* get current time */
-    CVodeGetCurrentTime(cvls_petsc_mem->cvode_mem, &t);
+    
     /* compute new jacobian matrix */
-
-    ierr = cvls_petsc_mem->user_jac_func(t, X, A, cvls_petsc_mem->user_mem);
+    ierr = cvls_petsc_mem->user_jac_func(t, x_n_petsc, A, cvls_petsc_mem->user_mem);
     CHKERRQ(ierr);
     /* Update saved jacobian copy */
     /* TODO: expose nonzero structure usage */
@@ -135,11 +153,14 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
     PetscFunctionReturn(0);
   }
   CVodeMem cv_mem;
-  cv_mem = (CVodeMem) context;
+  cv_mem = (CVodeMem) cvls_petsc_mem->cvode_mem;
   /* needs changes */
+  PetscReal gamma;
+  CVodeGetCurrentGamma(cvls_petsc_mem->cvode_mem, &gamma);
   if (cv_mem->cv_gamrat != ONE) {
     VecScale(b, TWO / (ONE + cv_mem->cv_gamrat));
   }
+  return 0;
 }
 
 /* allocates extra memory for running the modified newton algorithm using
@@ -236,7 +257,7 @@ PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem) {
    TODO: maybe remove the wrapper around the setup by defining a
    wrapped around free function
  * ---------------------------------------------------------------------------*/
-PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac) {
+PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat) {
   PetscFunctionBegin;
   KSP ksp;
   PC pc;
@@ -264,7 +285,7 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac) {
   KSPSetPostSolve(ksp, cvLSPostSolveKSP, (void *)cvmnmem);
 
   /* pass the wrapped jacobian function on to SNES */
-  SNESSetJacobian(snes, Jac, Jac, CVDelayedJSNES, cvmnmem);
+  SNESSetJacobian(snes, Jac_mat, Jac_mat, CVDelayedJSNES, cvmnmem);
 
   /* Set the jacobian function */
   PetscFunctionReturn(0);
