@@ -20,6 +20,7 @@
 #include <petscsys.h>
 #include <petscsystypes.h>
 #include <petscvec.h>
+#include <stdio.h>
 #include <string.h>
 #include <sundials/sundials_types.h>
 
@@ -105,11 +106,6 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
     (cvls_petsc_mem->jcur) = PETSC_TRUE;
     ierr = MatZeroEntries(A);
     CHKERRQ(ierr);
-    
-    
-    
-
-    
     /* compute new jacobian matrix */
     ierr = cvls_petsc_mem->user_jac_func(t, x_n_petsc, A, cvls_petsc_mem->user_mem);
     CHKERRQ(ierr);
@@ -117,7 +113,13 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
     /* TODO: expose nonzero structure usage */
     /* I'm not sure this makes sense */
     /* TODO: fix savedJ not initalized */
-    MatCopy(A, cvls_petsc_mem->savedJ, DIFFERENT_NONZERO_PATTERN);
+    printf("here");
+    /* MatCopy(A, cvls_petsc_mem->savedJ, DIFFERENT_NONZERO_PATTERN); */
+    /* copy pointer from created A to the jacobian */
+    cvls_petsc_mem->savedJ = A;
+    MatView(A, 0);
+    MatView(cvls_petsc_mem->savedJ, 0);
+    printf("here 2");
   }
   /* do A = I - \gamma J */
   ierr = MatScale(A, -gamma);
@@ -195,8 +197,6 @@ CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
   /* whether to scale the solution after the solve or not */
   content->scalesol = scalesol;
 
-  /* initialize saved jacobian */
-  MatDuplicate(Jac, MAT_DO_NOT_COPY_VALUES, &content->savedJ);
 
   return content;
 }
@@ -275,6 +275,8 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat) {
     printf("pc set type \n");
     PCGetType(pc, &pc_type);
   }
+  /* set up memory for saved J */
+  
 
   /* If the Preconditioner is not LU or Cholesky, return no support exit code */
   if (!(strcmp(pc_type, PCLU) || strcmp(pc_type, PCCHOLESKY))) {

@@ -641,7 +641,7 @@ PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
       same_string(Jac_type, MATMPISBAIJ)) << "\n";
 
 
-  
+
 
 
   /* if the hessian is symmetric assume that the matrix is upper triangular */
@@ -650,7 +650,7 @@ PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
     hessarr[0] = 2 + 8 * m_b * x_arr[0] * x_arr[0] -
                  4 * m_b * (-x_arr[0] * x_arr[0] + x_arr[1]);
     hessarr[1] = -4 * m_b * x_arr[0];
-    hessarr[2] = 0; /* 0 since symmetric */
+    // hessarr[2] = 0;             /* 0 since symmetric you should probably remove */ 
     hessarr[3] = 2 * m_b;
   } else {
     hessarr[0] = 2 + 8 * m_b * x_arr[0] * x_arr[0] -
@@ -721,8 +721,7 @@ int rosenbrock_minus_gradient_petsc(PetscReal t, N_Vector x, N_Vector xdot,
   CHKERRQ(ierr);
 
   /* scale the vector by -1. since xdot is -\grad{V(x)} */
-  ierr = VecScale(xdot_petsc, -1.0);
-
+  ierr = VecScale(xdot_petsc, -1.0);  
   CHKERRQ(ierr);
   return (0);
 }

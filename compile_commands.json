@@ -1,0 +1,232 @@
+[
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_ngt_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_ngt_cpp.dir/pele/rates/_ngt_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/rates/_ngt_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/rates/_ngt_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_pressure_tensor_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_pressure_tensor.dir/pele/utils/_pressure_tensor.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/utils/_pressure_tensor.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/utils/_pressure_tensor.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_cpp_utils_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_cpp_utils.dir/pele/utils/_cpp_utils.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/utils/_cpp_utils.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/utils/_cpp_utils.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_lj_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_lj_cpp.dir/pele/potentials/_lj_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_lj_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_lj_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_frenkel_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_frenkel.dir/pele/potentials/_frenkel.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_frenkel.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_frenkel.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_inversepower_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_inversepower_cpp.dir/pele/potentials/_inversepower_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_inversepower_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_inversepower_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_sumgaussianpot_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_sumgaussianpot_cpp.dir/pele/potentials/_sumgaussianpot_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_sumgaussianpot_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_sumgaussianpot_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_inversepower_stillinger_cut_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_inversepower_stillinger_cut_cpp.dir/pele/potentials/_inversepower_stillinger_cut_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_inversepower_stillinger_cut_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_inversepower_stillinger_cut_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_frozen_dof_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_frozen_dof.dir/pele/potentials/_frozen_dof.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_frozen_dof.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_frozen_dof.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_wca_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_wca_cpp.dir/pele/potentials/_wca_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_wca_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_wca_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_inversepower_stillinger_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_inversepower_stillinger_cpp.dir/pele/potentials/_inversepower_stillinger_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_inversepower_stillinger_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_inversepower_stillinger_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Datlj_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/atlj.dir/pele/potentials/atlj.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/atlj.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/atlj.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_put_in_box_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_put_in_box_cpp.dir/pele/distance/_put_in_box_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/distance/_put_in_box_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/distance/_put_in_box_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_modified_fire_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_modified_fire_cpp.dir/pele/optimize/_modified_fire_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/_modified_fire_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/_modified_fire_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_harmonic_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_harmonic_cpp.dir/pele/potentials/_harmonic_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_harmonic_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_harmonic_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/aatopology.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/aatopology.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/aatopology.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/atlj.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/atlj.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/atlj.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/backtracking.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/backtracking.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/backtracking.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/bracketing.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/bracketing.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/bracketing.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/cvode.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/cvode.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/cvode.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/cc -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -fPIC   -o CMakeFiles/pele_lib.dir/source/cvode_modified_newton.c.o   -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/cvode_modified_newton.c",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/cvode_modified_newton.c"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/lbfgs.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/lbfgs.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/lbfgs.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/linesearch.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/linesearch.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/linesearch.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/modified_fire.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/modified_fire.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/modified_fire.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/more_thuente.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/more_thuente.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/more_thuente.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/mxopt.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/mxopt.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/mxopt.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/nwpele.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/nwpele.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/nwpele.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/cc -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -fPIC   -o CMakeFiles/pele_lib.dir/source/pbinary.c.o   -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/pbinary.c",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/pbinary.c"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/petsc_ts.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/petsc_ts.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/petsc_ts.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/pressure_tensor.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/pressure_tensor.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/pressure_tensor.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/pele_lib.dir/source/rotations.cpp.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/rotations.cpp",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/rotations.cpp"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/cc -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -fPIC   -o CMakeFiles/pele_lib.dir/source/sunmatrix_petsc.c.o   -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/sunmatrix_petsc.c",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/sunmatrix_petsc.c"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/cc -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -fPIC   -o CMakeFiles/pele_lib.dir/source/sunnonlinsol_petscsnes.c.o   -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/sunnonlinsol_petscsnes.c",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/sunnonlinsol_petscsnes.c"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/cc -Dpele_lib_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -fPIC   -o CMakeFiles/pele_lib.dir/source/xsum.c.o   -c /home/praharsh/Dropbox/research/bv-libraries/pele/source/xsum.c",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/source/xsum.c"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_hs_wca_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_hs_wca_cpp.dir/pele/potentials/_hs_wca_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_hs_wca_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_hs_wca_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_get_distance_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_get_distance_cpp.dir/pele/distance/_get_distance_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/distance/_get_distance_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/distance/_get_distance_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_pele_opt_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_pele_opt.dir/pele/optimize/_pele_opt.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/_pele_opt.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/_pele_opt.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_cpp_aa_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_cpp_aa.dir/pele/angleaxis/_cpp_aa.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/angleaxis/_cpp_aa.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/angleaxis/_cpp_aa.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_pele_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_pele.dir/pele/potentials/_pele.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_pele.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_pele.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_pspin_spherical_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_pspin_spherical_cpp.dir/pele/potentials/_pspin_spherical_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_pspin_spherical_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_pspin_spherical_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_lbfgs_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_lbfgs_cpp.dir/pele/optimize/_lbfgs_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/_lbfgs_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/_lbfgs_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -Dcvode_opt_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/cvode_opt.dir/pele/optimize/cvode_opt.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/cvode_opt.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/cvode_opt.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_gradient_descent_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_gradient_descent_cpp.dir/pele/optimize/_gradient_descent_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/_gradient_descent_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/_gradient_descent_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_mxopt_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_mxopt.dir/pele/optimize/_mxopt.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/_mxopt.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/optimize/_mxopt.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_morse_cpp_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_morse_cpp.dir/pele/potentials/_morse_cpp.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_morse_cpp.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_morse_cpp.cxx"
+},
+{
+  "directory": "/home/praharsh/Dropbox/research/bv-libraries/pele",
+  "command": "/usr/bin/c++  -D_pythonpotential_EXPORTS -I/home/praharsh/anaconda3/envs/changebranch3/lib/python3.8/site-packages/numpy/core/include -I/home/praharsh/anaconda3/envs/changebranch3/include/python3.8 -I/home/praharsh/Dropbox/research/bv-libraries/pele/source -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include -isystem /home/praharsh/.local/include  -I/home/praharsh/Dropbox/research/bv-libraries/sundials/SN_EXT/include/ -std=c++1z -pedantic -ggdb3 -O0 -march=native -flto -fopenmp -fPIC   -o CMakeFiles/_pythonpotential.dir/pele/potentials/_pythonpotential.cxx.o -c /home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_pythonpotential.cxx",
+  "file": "/home/praharsh/Dropbox/research/bv-libraries/pele/pele/potentials/_pythonpotential.cxx"
+}
+]
