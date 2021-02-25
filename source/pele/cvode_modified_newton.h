@@ -60,6 +60,10 @@ typedef struct {
   PetscReal gammarat; /* ratio of previous gamma to current gamma */
   booleantype
       scalesol; /* exposed to user (Check delayed matrix versions later)*/
+  PetscBool x;
+
+    PetscBool recoverable;      /* boolean that tells us whether the error is recoverable */
+
 } * CVMNPETScMem;
 
 
@@ -93,8 +97,14 @@ PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem);
 /* SNES setup */
 PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac);
 
+
+/* convergence test written with for SNES */
+PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,
+                                    PetscReal gnorm, PetscReal f,
+                                    SNESConvergedReason *reason, void *cctx);
+
 /*
-SNES shell solver
+  SNES shell solver
 */
 
 #ifdef __cplusplus /* wrapper to enable C++ usage */

@@ -15,6 +15,7 @@
  * This is the implementation file for the SUNNonlinearSolver module
  * implementation that interfaces to the PETSc SNES nonlinear solvers.
  * ---------------------------------------------------------------------------*/
+#include <petscsystypes.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -25,7 +26,7 @@
 #include "pele/sunnonlinsol_petscsnes.h"
 #include <nvector/nvector_petsc.h>
 #include <sundials/sundials_math.h>
-
+#include "pele/cvode_modified_newton.h"
 
 
 #define SUNNLS_SNES_CONTENT(NLS) ( (SUNNonlinearSolverContent_PetscSNES)(NLS->content) )
@@ -37,9 +38,10 @@ static PetscErrorCode PetscSysFnMN(SNES snes, Vec x, Vec f, void *ctx);
 /*==============================================================================
   Constructor
   ============================================================================*/
+/* create a SUNNonlinearSolver wrapper for the PETSc SNES solverk
+*/
 
-/* create a SUNNonlinearSolver wrapper for the PETSc SNES context */
-SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes)
+SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes, CVMNPETScMem ctx)
 {
   int ierr;
   SUNNonlinearSolver NLS;
@@ -86,6 +88,9 @@ SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes)
    */
 
   content->snes = snes;
+
+  /* get pointer to the modified newton memory */
+  content->mn_ctx = ctx;
 
   /* Create all internal vectors */
   content->y = N_VCloneEmpty(y);
@@ -171,6 +176,12 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
   SNESConvergedReason reason;
   int retval;
 
+  CVMNPETScMem cvls_petsc_mem;
+  cvls_petsc_mem = (CVMNPETScMem) SUNNLS_SNES_CONTENT(NLS)->mn_ctx;
+
+  CVodeMem cv_mem;
+  cv_mem = (CVodeMem) cv_mem;
+
   /* check that the inputs are non-null */
   if ( (NLS == NULL) ||
        (y0  == NULL) ||
@@ -184,10 +195,39 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
 
   /* reset convergence failure count */
   SUNNLS_SNES_CONTENT(NLS)->nconvfails = 0;
+  
+  PetscBool jbad;
 
+
+
+  
   /* call petsc SNES solve */
-  ierr = SNESSolve(SUNNLS_SNESOBJ(NLS), NULL, N_VGetVector_Petsc(y));
+  for (;;) {
+      
+      /* Pre SNES solve routine */
+      /* pre SNES setup for delayed jacobian */
+      ierr = SNESSolve(SUNNLS_SNESOBJ(NLS), NULL, N_VGetVector_Petsc(y));
+      /* Post SNES solve routine */
+      /* TODO: Replace the following with convergence checks that we get from within KSP */
+      /* TODO: Change the SNES convergence test to the one used by the newton one */
+      if (ierr==0) {
+          break;
+      }
+      else {
+          
+          
+      }
+      /* recoverable failed */
+      if (ierr==1) {
+          jbad=PETSC_TRUE;
+      }
+      /* if recoverable convergence failure indicate that the jacobian needs to be recalulted */
+  }
 
+
+  if (ierr==0) {
+      ierr ==0;
+  }
   
   /* check if the call to the system function failed */
   if (SUNNLS_SNES_CONTENT(NLS)->sysfn_last_err != SUN_NLS_SUCCESS)

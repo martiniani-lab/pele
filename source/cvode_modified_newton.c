@@ -28,6 +28,9 @@
 #define ONE RCONST(1.0)
 #define TWO RCONST(2.0)
 
+#define CRDOWN RCONST(0.3)      /* convergence rate estimate */
+#define RDIV RCONST(2.0)        /* declare divergence if del/delp > RDIV */
+#define NLS_MAXCOR 3            /* Maximum number of corrector iterations */
 /*****************************************************************************/
 /*                                General functions                          */
 /*****************************************************************************/
@@ -87,6 +90,8 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
 
   CVodeGetCurrentState(cvls_petsc_mem->cvode_mem, &x_n);
   N_VPrint_Petsc(x_n);
+
+
   CVodeGetCurrentGamma(cvls_petsc_mem->cvode_mem, &gamma);
   x_n_petsc = N_VGetVector_Petsc(x_n);
 
@@ -109,13 +114,12 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
     /* compute new jacobian matrix */
     ierr = cvls_petsc_mem->user_jac_func(t, x_n_petsc, A, cvls_petsc_mem->user_mem);
     CHKERRQ(ierr);
+
     /* Update saved jacobian copy */
     /* TODO: expose nonzero structure usage */
     /* I'm not sure this makes sense */
     /* TODO: fix savedJ not initalized */
-    printf("here");
-    /* MatCopy(A, cvls_petsc_mem->savedJ, DIFFERENT_NONZERO_PATTERN); */
-    /* copy pointer from created A to the jacobian */
+    MatCopy(A, cvls_petsc_mem->savedJ, DIFFERENT_NONZERO_PATTERN);
     cvls_petsc_mem->savedJ = A;
     MatView(A, 0);
     MatView(cvls_petsc_mem->savedJ, 0);
@@ -139,6 +143,7 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
 
  TODO: THis is not necessary for us since we're planning to go with a
  solver. but iterative solvers need this set up
+
   -----------------------------------------------------------------*/
 PetscErrorCode cvLSPreSolveKSP(KSP ksp, Vec b, Vec x, void *ctx) { return 0; }
 
@@ -146,6 +151,7 @@ PetscErrorCode cvLSPreSolveKSP(KSP ksp, Vec b, Vec x, void *ctx) { return 0; }
   Calls the post solve routine for the KSP Solver to emulate the
   functionality of the cvode solver to rescale the step if
   Here the application context is the cvode memory
+
   -----------------------------------------------------------------*/
 PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
   /* storage for petsc memory */
@@ -196,7 +202,6 @@ CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
 
   /* whether to scale the solution after the solve or not */
   content->scalesol = scalesol;
-
 
   return content;
 }
@@ -291,4 +296,18 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat) {
 
   /* Set the jacobian function */
   PetscFunctionReturn(0);
+}
+
+/* convergence test written with for SNES as done by CVODE */
+/* Well if this is going to be bad might as well  */
+/* I'm going to assume the relative tolerances aren't different in different
+   directions. note that xnorm, fnorm and
+   gnorm are Petsc functions so it makes our lives easier */
+PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,
+                                    PetscReal gnorm, PetscReal fnorm,
+                                    SNESConvergedReason *reason, void *cctx) {
+    /* we don't use the norms because they're not weighted   */
+
+
+    
 }

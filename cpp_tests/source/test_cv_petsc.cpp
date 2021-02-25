@@ -242,12 +242,14 @@ TEST(CVDP, CVM) {
     // take a step
     retval = CVode(cvode_mem, tout, y, &t, CV_ONE_STEP);
     // obtain  the gradient
-
+    std::cout << "gradient :" << "\n";
+    N_VPrint_Serial(grad);
+    std::cout << "y:" << "\n";
+    N_VPrint_Serial(y);
     CVodeGetDky(cvode_mem, t, 1, grad);
     norm2 = N_VDotProd(grad, grad);
     /* calculate norm accounting for length */
     wnorm = sqrt(norm2 / N_VGetLength(y));
-    N_VPrint(grad);
     double gamma;
     CVodeGetCurrentGamma(cvode_mem, &gamma);
     std::cout << wnorm << "\n";
@@ -269,7 +271,6 @@ TEST(CVDP, CVM) {
 }
 
 TEST(CVPet, CVM) {
-
   PetscInitializeNoArguments();
   /* initial setup */
   realtype tout = 10000; /* next output time           */
@@ -291,6 +292,7 @@ TEST(CVPet, CVM) {
   minimum_tol = 1e-6;    /* minimum tolerance */
   double maxsteps = 400; /* maximum number of steps to run the solver for */
 
+
   /* allocate memory */
   udata_petsc = (UserData)malloc(sizeof *udata_petsc);
   retval = InitUserData(udata_petsc);
@@ -299,6 +301,7 @@ TEST(CVPet, CVM) {
   int dim = 2;
   VecCreateSeq(PETSC_COMM_SELF, dim, &y_vec);
   y_nv_petsc = N_VMake_Petsc(y_vec);
+
 
   /* -----------------------------------------------------------------------------
    * initialize vectors for storing memory
@@ -348,7 +351,7 @@ TEST(CVPet, CVM) {
 
   /* Initialize nonlinear solver */
   SNESCreate(PETSC_COMM_SELF, &snes);
-  NLS = SUNNonlinSol_PetscSNES(y_nv_petsc, snes);
+  NLS = SUNNonlinSol_PetscSNES(y_nv_petsc, snes, cv_mn_petsc_mem);
 
   SNESGetKSP(snes, &ksp);
   SNESGetLineSearch(snes, &ls);
@@ -356,6 +359,9 @@ TEST(CVPet, CVM) {
   SNESSetType(snes, SNESNEWTONLS);
   /* defaults to no line search*/
   SNESLineSearchSetType(ls, SNESLINESEARCHBASIC);
+  /* turn off computation of norms in line search */
+  SNESLineSearchSetComputeNorms(ls, PETSC_TRUE);
+  
   
   KSPGetPC(ksp, &pc);
 
@@ -379,7 +385,6 @@ TEST(CVPet, CVM) {
   /* -----------------------------------------------------------------------------
    * main run
    * ---------------------------------------------------------------------------*/
-  maxsteps = 400;
   // break out if close to a minimum
   for (int nstep = 0; nstep < maxsteps; ++nstep) {
       
@@ -399,8 +404,11 @@ TEST(CVPet, CVM) {
     VecGetSize(N_VGetVector_Petsc(grad), &length);
     wnorm = norm/sqrt(length);
 
-    /* TODO check for ops cloning */
+    std::cout << "gradient :" << "\n";
     N_VPrint_Petsc(grad);
+    std::cout << "y:" << "\n";
+    N_VPrint_Petsc(y_nv_petsc);
+    /* TODO check for ops cloning */
     double gamma;
     CVodeGetCurrentGamma(cvode_mem_PETSc, &gamma);
     std::cout << wnorm << "\n";
@@ -417,7 +425,6 @@ TEST(CVPet, CVM) {
   /* SUNMatDestroy(A); */
   /* SUNLinSolFree(LS); */
   /* CVodeFree(&cvode_mem); */
-
   PetscFinalize();
 }
 
@@ -624,6 +631,7 @@ PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
   /* initalize jacobian to zero */
   MatZeroEntries(J);
 
+  
   /* Illustration of how to deal with symmetric matrices */
   /* get the jacobian type */
   MatType Jac_type;
@@ -676,7 +684,8 @@ PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
 }
 
 /* computes f(t,x) in the CVODE expected format. this is (- gradient) of the
-   rosenbrock funtion Here t is a dummy variable to parametrize the path */
+   rosenbrock funtion Here t is a dummy variable to parametrize the path
+   */
 int rosenbrock_minus_gradient_petsc(PetscReal t, N_Vector x, N_Vector xdot,
                                     void *user_data) {
   /* declarations */

@@ -24,12 +24,14 @@
 #ifndef _SUNNONLINSOL_PETSCSNES_H
 #define _SUNNONLINSOL_PETSCSNES_H
 
-#include "sundials/sundials_types.h"
-#include "sundials/sundials_nvector.h"
+#include "cvode_modified_newton.h"
 #include "sundials/sundials_nonlinearsolver.h"
+#include "sundials/sundials_nvector.h"
+#include "sundials/sundials_types.h"
 #include <petscsnes.h>
+#include <petscsystypes.h>
 
-#ifdef __cplusplus  /* wrapper to enable C++ usage */
+#ifdef __cplusplus /* wrapper to enable C++ usage */
 extern "C" {
 #endif
 
@@ -38,12 +40,14 @@ extern "C" {
  * ---------------------------------------------------------------------------*/
 
 struct _SUNNonlinearSolverContent_PetscSNES {
-  int sysfn_last_err;              /* last error returned by the system function Sys */
-  PetscErrorCode petsc_last_err;   /* last error return by PETSc */
-  long int nconvfails;             /* number of nonlinear converge failures (recoverable or not) */
-  long int nni;                    /* number of nonlinear iterations */
-  void *imem;                      /* SUNDIALS integrator memory */
-  SNES snes;                       /* PETSc SNES context */
+  int sysfn_last_err; /* last error returned by the system function Sys */
+  PetscErrorCode petsc_last_err; /* last error return by PETSc */
+  long int nconvfails; /* number of nonlinear converge failures (recoverable or
+                          not) */
+  long int nni;        /* number of nonlinear iterations */
+  void *imem;          /* SUNDIALS integrator memory */
+  SNES snes;           /* PETSc SNES context */
+  CVMNPETScMem mn_ctx;    /* pointer to the context for the petsc memory */
   Vec r;                           /* nonlinear residual */
   N_Vector y, f;                   /* wrappers for PETSc vectors in system function */
   /* functions provided by the integrator */
@@ -58,7 +62,7 @@ typedef struct _SUNNonlinearSolverContent_PetscSNES *SUNNonlinearSolverContent_P
 
 /* Constructor to create solver and allocates memory */
 
-SUNDIALS_EXPORT SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes);
+    SUNDIALS_EXPORT SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes, CVMNPETScMem ctx);
 
 /* SUNNonlinearSolver API functions */
 
