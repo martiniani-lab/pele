@@ -47,7 +47,6 @@ struct _SUNNonlinearSolverContent_PetscSNES {
   long int nni;        /* number of nonlinear iterations */
   void *imem;          /* SUNDIALS integrator memory */
   SNES snes;           /* PETSc SNES context */
-  CVMNPETScMem mn_ctx;    /* pointer to the context for the petsc memory */
   Vec r;                           /* nonlinear residual */
   N_Vector y, f;                   /* wrappers for PETSc vectors in system function */
   /* functions provided by the integrator */

@@ -16,6 +16,7 @@
  * implementation that interfaces to the PETSc SNES nonlinear solvers.
  * ---------------------------------------------------------------------------*/
 #include <petscsystypes.h>
+#include <petscviewer.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,6 +24,7 @@
 #include <petscsnes.h>
 
 
+#include "cvode/cvode.h"
 #include "pele/sunnonlinsol_petscsnes.h"
 #include <nvector/nvector_petsc.h>
 #include <sundials/sundials_math.h>
@@ -89,8 +91,7 @@ SUNNonlinearSolver SUNNonlinSol_PetscSNES(N_Vector y, SNES snes, CVMNPETScMem ct
 
   content->snes = snes;
 
-  /* get pointer to the modified newton memory */
-  content->mn_ctx = ctx;
+
 
   /* Create all internal vectors */
   content->y = N_VCloneEmpty(y);
@@ -177,10 +178,11 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
   int retval;
 
   CVMNPETScMem cvls_petsc_mem;
-  cvls_petsc_mem = (CVMNPETScMem) SUNNLS_SNES_CONTENT(NLS)->mn_ctx;
 
-  CVodeMem cv_mem;
-  cv_mem = (CVodeMem) cv_mem;
+  SNESGetApplicationContext(SUNNLS_SNESOBJ(NLS), cvls_petsc_mem);
+  /* cvls_petsc_mem = (CVMNPETScMem) snes_app_ctx; */
+  
+  
 
   /* check that the inputs are non-null */
   if ( (NLS == NULL) ||
@@ -188,7 +190,6 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
        (y   == NULL) ||
        (w   == NULL) )
     return SUN_NLS_MEM_NULL;
-
   /* store a pointer to the integrator memory so it can be
    * accessed in the system function */
   SUNNLS_SNES_CONTENT(NLS)->imem = mem;
@@ -198,11 +199,28 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
   
   PetscBool jbad;
 
-
-
-  
+  PetscInt step;
+  PetscBool setup = PETSC_FALSE;
+  long int cvode_num_step = 0;
+  CVodeGetNumSteps(mem, &cvode_num_step);
+  cvls_petsc_mem->cvode_mem = mem;
   /* call petsc SNES solve */
   for (;;) {
+      
+      /* jok check */
+      printf("---------iteration:");
+      printf("%d", cvode_num_step);
+      if (cvode_num_step==0) {
+          printf("hello there");
+          cvls_petsc_mem->jok = PETSC_FALSE;
+      }
+      else{
+          printf("------- this is set");
+          cvls_petsc_mem->jok = PETSC_FALSE;
+      }
+      printf("this works");
+      printf("%d", cvls_petsc_mem->jok);
+      
       
       /* Pre SNES solve routine */
       /* pre SNES setup for delayed jacobian */
@@ -217,17 +235,16 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
           
           
       }
-      /* recoverable failed */
-      if (ierr==1) {
-          jbad=PETSC_TRUE;
-      }
+      /* printf("ierr"); */
+      /* /\* recoverable failed *\/ */
+      /* if (ierr==1) { */
+      /*     cvls_petsc_mem->jok=PETSC_FALSE; */
+      /* } */
       /* if recoverable convergence failure indicate that the jacobian needs to be recalulted */
   }
 
 
-  if (ierr==0) {
-      ierr ==0;
-  }
+
   
   /* check if the call to the system function failed */
   if (SUNNLS_SNES_CONTENT(NLS)->sysfn_last_err != SUN_NLS_SUCCESS)

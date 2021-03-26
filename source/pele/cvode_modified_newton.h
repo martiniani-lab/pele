@@ -62,14 +62,10 @@ typedef struct {
       scalesol; /* exposed to user (Check delayed matrix versions later)*/
   PetscBool x;
 
-    PetscBool recoverable;      /* boolean that tells us whether the error is recoverable */
+  PetscBool
+      recoverable; /* boolean that tells us whether the error is recoverable */
 
 } * CVMNPETScMem;
-
-
-
-
-
 
 /*****************************************************************************/
 /*                           function declarations                           */
@@ -87,16 +83,17 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context);
 
 /* Memory setup for modified newton */
 /* TODO: break up the setup */
-CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
-                                CVSNESJacFn func, booleantype scalesol, Mat Jac,
-                                Vec y);
+PetscErrorCode CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
+                                  CVSNESJacFn func, booleantype scalesol,
+                                  Mat Jac, Vec y, CVMNPETScMem content);
 
 /* destructor */
 PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem);
 
-/* SNES setup */
-PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac);
-
+    /* SetUp */
+PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
+                             CVSNESJacFn func, void *user_mem, void *cvode_mem,
+                             Vec y, booleantype scalesol);
 
 /* convergence test written with for SNES */
 PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,

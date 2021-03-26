@@ -71,13 +71,14 @@
   -----------------------------------------------------------------*/
 PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
                               void *context) {
-  PetscFunctionBegin;
   /* storage for petsc memory */
+
   CVMNPETScMem cvls_petsc_mem;
-  cvls_petsc_mem = (CVMNPETScMem)context;
+  CVMNPETScMem cvls_petsc_mem_2;
+  SNESGetApplicationContext(snes, (void **) &cvls_petsc_mem);
   /* if solution scaling is not used this is a bad idea */
   if (!cvls_petsc_mem->scalesol) {
-    PetscFunctionReturn(0);
+      return 0;
   }
   PetscErrorCode ierr;
   /* cvode memory */
@@ -88,28 +89,39 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
   N_Vector x_n;
   Vec x_n_petsc;
 
+  
   CVodeGetCurrentState(cvls_petsc_mem->cvode_mem, &x_n);
+  printf("jok : %d \n", cvls_petsc_mem->jok);
+  /* printf("jok_2 : %d \n", cvls_petsc_mem_2->jok); */
+  int steps;
+  CVodeGetNumSteps(cvls_petsc_mem->cvode_mem, &steps);
+  printf("num steps : %d \n", steps);
   N_VPrint_Petsc(x_n);
 
 
   CVodeGetCurrentGamma(cvls_petsc_mem->cvode_mem, &gamma);
   x_n_petsc = N_VGetVector_Petsc(x_n);
+  int cvode_steps;
 
   cv_mem = (CVodeMem)(cvls_petsc_mem->cvode_mem);
-
   /* check jacobian needs to be updated */
+  printf("jok (inside delayed snes) = ");
+  printf("%d", cvls_petsc_mem->jok);
   if (cvls_petsc_mem->jok) {
     /* use saved copy of jacobian */
     (cvls_petsc_mem->jcur) = PETSC_FALSE;
     /* Overwrite linear system matrix with saved J
        Assuming different non zero structure */
     /* TODO: expose the NON zero structure usage */
-    ierr = MatCopy(cvls_petsc_mem->savedJ, A, DIFFERENT_NONZERO_PATTERN);
+    /* ierr = MatCopy(cvls_petsc_mem->savedJ, A, DIFFERENT_NONZERO_PATTERN); */
+    A = cvls_petsc_mem->savedJ;
     CHKERRQ(ierr);
+    printf("branch 1 -------- \n");
   } else {
     /* call jac() to update the function */
     (cvls_petsc_mem->jcur) = PETSC_TRUE;
     ierr = MatZeroEntries(A);
+    printf("this is great\n");
     CHKERRQ(ierr);
     /* compute new jacobian matrix */
     ierr = cvls_petsc_mem->user_jac_func(t, x_n_petsc, A, cvls_petsc_mem->user_mem);
@@ -119,18 +131,19 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
     /* TODO: expose nonzero structure usage */
     /* I'm not sure this makes sense */
     /* TODO: fix savedJ not initalized */
-    MatCopy(A, cvls_petsc_mem->savedJ, DIFFERENT_NONZERO_PATTERN);
+    /* MatCopy(A, cvls_petsc_mem->savedJ, DIFFERENT_NONZERO_PATTERN); */
     cvls_petsc_mem->savedJ = A;
     MatView(A, 0);
     MatView(cvls_petsc_mem->savedJ, 0);
     printf("here 2");
+    printf("branch 2 --------- \n ");
   }
   /* do A = I - \gamma J */
   ierr = MatScale(A, -gamma);
   CHKERRQ(ierr);
   ierr = MatShift(A, 1.0);
   CHKERRQ(ierr);
-  PetscFunctionReturn(0);
+  return 0;
 }
 
 /*-----------------------------------------------------------------
@@ -168,43 +181,15 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
   if (cv_mem->cv_gamrat != ONE) {
     VecScale(b, TWO / (ONE + cv_mem->cv_gamrat));
   }
+  /* TODO Figure out how to add recoverable cases from cvode_ls 1677:25 here */
+  /* we can do that later considering it's not as necessary */
+
   return 0;
 }
 
 /* allocates extra memory for running the modified newton algorithm using
  * PETSc*/
-CVMNPETScMem CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
-                                CVSNESJacFn func, booleantype scalesol, Mat Jac,
-                                Vec y) {
-  CVMNPETScMem content;
 
-  /* allocate memory for content */
-  content = (CVMNPETScMem)malloc(sizeof *content);
-
-  /* assign memory pointers */
-  content->cvode_mem = cvode_mem;
-  content->user_mem = user_mem;
-  CVodeMem cv_mem;
-  
-
-  /* assign user jacobian function pointer */
-  content->user_jac_func = func;
-
-  /* set up initial calculation information */
-  content->jok = PETSC_FALSE;
-  /* TODO: check whether it needs to be updated */
-  content->jcur = PETSC_TRUE;  
-  /* assign memory for the saved jacobian */
-  /* we may not have to do this */
-  /* assign memory for the vectors */
-  VecDuplicate(y, &content->ycur);
-  VecDuplicate(y, &content->fcur);
-
-  /* whether to scale the solution after the solve or not */
-  content->scalesol = scalesol;
-
-  return content;
-}
 
 /* destructor for cvmnpetscmem */
 PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem) {
@@ -261,12 +246,31 @@ PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem) {
 
    TODO: maybe remove the wrapper around the setup by defining a
    wrapped around free function
+   #TODO attaching func is duplicated
  * ---------------------------------------------------------------------------*/
-PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat) {
-  PetscFunctionBegin;
+PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat, CVSNESJacFn func,void * user_mem, void *cvode_mem, Vec y, booleantype scalesol) {
+  /* PetscFunctionBegin; */
+    if (cvmnmem==NULL) {
+        cvmnmem = (CVMNPETScMem)malloc(sizeof *cvmnmem);
+    }
+    CVodeMem cv_mem;
+
   KSP ksp;
   PC pc;
   PCType pc_type;
+  cvmnmem->jok = PETSC_FALSE;
+  printf("this is being called");
+  /* TODO: check whether it needs to be updated */
+  cvmnmem->jcur = PETSC_TRUE;  
+  /* assign memory for the saved jacobian */
+  MatDuplicate(Jac_mat, MAT_DO_NOT_COPY_VALUES, &cvmnmem->savedJ);
+  /* we may not have to do this */
+  /* assign memory for the vectors */
+  VecDuplicate(y, &cvmnmem->ycur);
+  VecDuplicate(y, &cvmnmem->fcur);
+
+  /* whether to scale the solution after the solve or not */
+  cvmnmem->scalesol = scalesol;
   /* get all necessary contexts */
   SNESGetKSP(snes, &ksp);
   KSPGetPC(ksp, &pc);
@@ -274,7 +278,6 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat) {
 
   /* force the solver to be just use the preconditioner only */
   KSPSetType(ksp, KSPPREONLY);
-
   if (pc_type == PETSC_NULL) {
     PCSetType(pc, PCLU);
     printf("pc set type \n");
@@ -292,10 +295,16 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat) {
   KSPSetPostSolve(ksp, cvLSPostSolveKSP, (void *)cvmnmem);
 
   /* pass the wrapped jacobian function on to SNES */
-  SNESSetJacobian(snes, Jac_mat, Jac_mat, CVDelayedJSNES, cvmnmem);
-
+ /* SNESSetJacobian(snes, Jac_mat, Jac_mat, CVDelayedJSNES, cvmnmem); */
+  /* TODO: make this the only approach */
+  /* SNESSetApplicationContext(snes, &cvmnmem); */
+  /* SNESGetApplicationContext(snes, (void **) &cvmnmem); */
+  /* assign memory pointers */
+  cvmnmem->user_mem = user_mem;
+  cvmnmem->user_jac_func = func;
+  printf("setup done for modified newton \n");
   /* Set the jacobian function */
-  PetscFunctionReturn(0);
+  /* PetscFunctionReturn(0); */
 }
 
 /* convergence test written with for SNES as done by CVODE */
