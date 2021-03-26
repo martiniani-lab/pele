@@ -102,6 +102,7 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
   CVodeGetCurrentGamma(cvls_petsc_mem->cvode_mem, &gamma);
   x_n_petsc = N_VGetVector_Petsc(x_n);
   int cvode_steps;
+  
 
   cv_mem = (CVodeMem)(cvls_petsc_mem->cvode_mem);
   /* check jacobian needs to be updated */
@@ -293,12 +294,14 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat, CVSNE
 
   KSPSetPreSolve(ksp, cvLSPreSolveKSP, (void *)cvmnmem);
   KSPSetPostSolve(ksp, cvLSPostSolveKSP, (void *)cvmnmem);
-
+  
   /* pass the wrapped jacobian function on to SNES */
- /* SNESSetJacobian(snes, Jac_mat, Jac_mat, CVDelayedJSNES, cvmnmem); */
+  SNESSetJacobian(snes, Jac_mat, Jac_mat, CVDelayedJSNES, cvmnmem);
   /* TODO: make this the only approach */
-  /* SNESSetApplicationContext(snes, &cvmnmem); */
-  /* SNESGetApplicationContext(snes, (void **) &cvmnmem); */
+  cvmnmem->user_mem = user_mem;
+  cvmnmem->user_jac_func = func;
+  SNESSetApplicationContext(snes, cvmnmem);
+  SNESGetApplicationContext(snes, (void **) &cvmnmem);
   /* assign memory pointers */
   cvmnmem->user_mem = user_mem;
   cvmnmem->user_jac_func = func;

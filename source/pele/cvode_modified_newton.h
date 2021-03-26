@@ -61,7 +61,7 @@ typedef struct {
   booleantype
       scalesol; /* exposed to user (Check delayed matrix versions later)*/
   PetscBool x;
-
+    
   PetscBool
       recoverable; /* boolean that tells us whether the error is recoverable */
 

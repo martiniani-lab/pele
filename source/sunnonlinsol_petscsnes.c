@@ -179,7 +179,7 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
 
   CVMNPETScMem cvls_petsc_mem;
 
-  SNESGetApplicationContext(SUNNLS_SNESOBJ(NLS), cvls_petsc_mem);
+  SNESGetApplicationContext(SUNNLS_SNESOBJ(NLS), (void **) &cvls_petsc_mem);
   /* cvls_petsc_mem = (CVMNPETScMem) snes_app_ctx; */
   
   
@@ -196,7 +196,8 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
 
   /* reset convergence failure count */
   SUNNLS_SNES_CONTENT(NLS)->nconvfails = 0;
-  
+
+
   PetscBool jbad;
 
   PetscInt step;
@@ -205,6 +206,7 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
   CVodeGetNumSteps(mem, &cvode_num_step);
   cvls_petsc_mem->cvode_mem = mem;
   /* call petsc SNES solve */
+  Vec func;
   for (;;) {
       
       /* jok check */
@@ -216,34 +218,29 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
       }
       else{
           printf("------- this is set");
-          cvls_petsc_mem->jok = PETSC_FALSE;
+          cvls_petsc_mem->jok = PETSC_TRUE;
+          SNESSetInitialFunction(SUNNLS_SNESOBJ(NLS), cvls_petsc_mem->fcur);
       }
       printf("this works");
       printf("%d", cvls_petsc_mem->jok);
-      
-      
       /* Pre SNES solve routine */
       /* pre SNES setup for delayed jacobian */
       ierr = SNESSolve(SUNNLS_SNESOBJ(NLS), NULL, N_VGetVector_Petsc(y));
       /* Post SNES solve routine */
       /* TODO: Replace the following with convergence checks that we get from within KSP */
       /* TODO: Change the SNES convergence test to the one used by the newton one */
+
       if (ierr==0) {
           break;
       }
-      else {
-          
-          
+      else {          
       }
-      /* printf("ierr"); */
-      /* /\* recoverable failed *\/ */
-      /* if (ierr==1) { */
-      /*     cvls_petsc_mem->jok=PETSC_FALSE; */
-      /* } */
-      /* if recoverable convergence failure indicate that the jacobian needs to be recalulted */
+      
   }
 
-
+  
+  SNESGetFunction(SUNNLS_SNESOBJ(NLS), &(cvls_petsc_mem->fcur), NULL, NULL);
+ 
 
   
   /* check if the call to the system function failed */
@@ -260,6 +257,11 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
    * determine if and why the system converged/diverged so we can determine
    * if it is a recoverable failure or success
    */
+
+  
+  
+  SNESGetFunction(SUNNLS_SNESOBJ(NLS), &func, NULL, NULL);
+  
 
   ierr = SNESGetConvergedReason(SUNNLS_SNESOBJ(NLS), &reason);
   if (ierr != 0) {
@@ -278,7 +280,6 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS,
     /* update convergence failure count */
     SUNNLS_SNES_CONTENT(NLS)->nconvfails++;
   }
-
   return retval;
 }
 
@@ -370,6 +371,8 @@ int SUNNonlinSolGetSysFn_PetscSNES(SUNNonlinearSolver NLS, SUNNonlinSolSysFn* Sy
   *SysFn = SUNNLS_SNES_CONTENT(NLS)->Sys;
   return SUN_NLS_SUCCESS;
 }
+
+
 
 /* get the number of iterations performed in the last solve */
 int SUNNonlinSolGetNumIters_PetscSNES(SUNNonlinearSolver NLS, long int* nni)

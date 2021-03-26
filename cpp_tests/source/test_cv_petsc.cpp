@@ -40,6 +40,7 @@
  *---------------------------------------------------------------*/
 
 #include <csignal>
+#include <cstddef>
 #include <math.h>
 #include <petscdm.h>
 #include <petscdmda.h>
@@ -76,6 +77,7 @@
 // #include <pele/array.hpp>
 // #include <pele/cvode.hpp>
 // #include <pele/lj.hpp>
+#include "pele/sunnonlinsol_petscsnes.h"
 #include <cvode/cvode.h>
 #include <nvector/nvector_petsc.h>
 #include <nvector/nvector_serial.h>
@@ -83,7 +85,6 @@
 #include <petsctao.h>
 #include <sunlinsol/sunlinsol_dense.h>
 #include <sunmatrix/sunmatrix_dense.h>
-#include "pele/sunnonlinsol_petscsnes.h"
 // #include <sunnonlinsol/sunnonlinsol_petscsnes.h>
 #include <unistd.h>
 
@@ -116,13 +117,12 @@
 #define SQRT(x) (sqrtl((x)))
 #endif
 
-
 /*!
  * This exists because strcmp doesn't follow
  * the true false convention and returns 0
  * if the strings are the same
  */
-#define same_string(x, y) (strcmp(x, y) ==0)
+#define same_string(x, y) (strcmp(x, y) == 0)
 /* Problem Constants */
 #define PI RCONST(3.141592653589793238462643383279502884197169)
 #define ZERO RCONST(0.0)
@@ -140,7 +140,7 @@ typedef struct UserData_ {
 
   int tstop; /* use tstop mode */
 
-    /* TODO: fix this within petsc */
+  /* TODO: fix this within petsc */
   int njac_petsc; /* jacobian evaluations for the petsc solver */
 
 } * UserData;
@@ -153,7 +153,7 @@ static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
 /* Utility functions */
 static int InitUserData(UserData udata);
 static int PrintStats(void *cvode_mem);
-static int PrintStats_petsc(void *cvode_mem, void * user_data);
+static int PrintStats_petsc(void *cvode_mem, void *user_data);
 static int check_retval(void *returnvalue, const char *funcname, int opt);
 
 int rosenbrock_minus_gradient_petsc(PetscReal t, N_Vector x, N_Vector xdot,
@@ -180,15 +180,15 @@ TEST(CVDP, CVM) {
   realtype *ydata = NULL;    /* solution vector data */
   N_Vector e = NULL;         /* error vector         */
   SUNMatrix A = NULL;        /* Jacobian matrix      */
-  SUNLinearSolver LS = NULL; /* linear solver        */  
+  SUNLinearSolver LS = NULL; /* linear solver        */
 
   /* minimum identification */
   double norm2;       /* norm of the funtion */
   double wnorm;       /* norm weighted by length  for identification */
   double minimum_tol; /* tolerance with which the minimum is identified */
 
-  minimum_tol = 1e-6;    /* minimum tolerance */
-  double maxsteps = 400; /* maximum number of steps to run the solver for */
+  minimum_tol = 1e-6;   /* minimum tolerance */
+  double maxsteps = 10; /* maximum number of steps to run the solver for */
 
   udata = (UserData)malloc(sizeof *udata);
   retval = InitUserData(udata);
@@ -237,14 +237,16 @@ TEST(CVDP, CVM) {
   N_Vector grad;
   grad = N_VClone(y);
 
-  // break out if close to a minimum
-  for (int nstep = 0; nstep < maxsteps; ++nstep) {
+  // break out if close to a minimum  for (int nstep = 0; nstep < maxsteps; ++nstep) {
     // take a step
     retval = CVode(cvode_mem, tout, y, &t, CV_ONE_STEP);
     // obtain  the gradient
-    std::cout << "gradient :" << "\n";
+    std::cout << "gradient :"
+              << "\n";
+
     N_VPrint_Serial(grad);
-    std::cout << "y:" << "\n";
+    std::cout << "y:"
+              << "\n";
     N_VPrint_Serial(y);
     CVodeGetDky(cvode_mem, t, 1, grad);
     norm2 = N_VDotProd(grad, grad);
@@ -285,13 +287,12 @@ TEST(CVPet, CVM) {
   realtype t_petsc = ZERO; /* current integration time petsc  */
 
   /* minimum identification */
-  double norm;       /* norm of the funtion */
+  double norm;        /* norm of the funtion */
   double wnorm;       /* norm weighted by length  for identification */
   double minimum_tol; /* tolerance with which the minimum is identified */
 
-  minimum_tol = 1e-6;    /* minimum tolerance */
-  double maxsteps = 400; /* maximum number of steps to run the solver for */
-
+  minimum_tol = 1e-6;   /* minimum tolerance */
+  double maxsteps = 10; /* maximum number of steps to run the solver for */
 
   /* allocate memory */
   udata_petsc = (UserData)malloc(sizeof *udata_petsc);
@@ -302,7 +303,6 @@ TEST(CVPet, CVM) {
   VecCreateSeq(PETSC_COMM_SELF, dim, &y_vec);
   y_nv_petsc = N_VMake_Petsc(y_vec);
 
-
   /* -----------------------------------------------------------------------------
    * initialize vectors for storing memory
    * ---------------------------------------------------------------------------*/
@@ -311,13 +311,14 @@ TEST(CVPet, CVM) {
   N_Vector grad = N_VClone(y_nv_petsc);
 
   /* create matrix for jacobian calculation */
-  // MatCreateDense(PETSC_COMM_SELF, dim, dim, PETSC_DECIDE, PETSC_DECIDE, NULL,
-  //                &Jac_petsc);
-  std::cout << "heello" << "\n";
+  MatCreateDense(PETSC_COMM_SELF, dim, dim, PETSC_DECIDE, PETSC_DECIDE, NULL,
+                 &Jac_petsc);
+  std::cout << "heello"
+            << "\n";
 
-  MatCreateSeqSBAIJ(PETSC_COMM_SELF, 2 ,2 ,2 ,2,NULL,&Jac_petsc);
-  std::cout << "heeloo 2" << "\n";
-
+  // MatCreateSeqSBAIJ(PETSC_COMM_SELF, 2 ,2 ,2 ,2,NULL,&Jac_petsc);
+  std::cout << "heeloo 2"
+            << "\n";
   /* Set initial condition */
   PetscReal ydata[2];
   ydata[0] = ONE;
@@ -343,11 +344,10 @@ TEST(CVPet, CVM) {
   SUNNonlinearSolver NLS;
   PC pc;
   SNESLineSearch ls;
-  
 
   /* memory for CVODE solver using modified newton approach.
      The user data contexts is attached to this*/
-  CVMNPETScMem cv_mn_petsc_mem;
+  CVMNPETScMem cv_mn_petsc_mem = NULL;
 
   /* Initialize nonlinear solver */
   SNESCreate(PETSC_COMM_SELF, &snes);
@@ -355,30 +355,26 @@ TEST(CVPet, CVM) {
 
   SNESGetKSP(snes, &ksp);
   SNESGetLineSearch(snes, &ls);
-  
+
   SNESSetType(snes, SNESNEWTONLS);
   /* defaults to no line search*/
   SNESLineSearchSetType(ls, SNESLINESEARCHBASIC);
   /* turn off computation of norms in line search */
   SNESLineSearchSetComputeNorms(ls, PETSC_TRUE);
-  
-  
+
   KSPGetPC(ksp, &pc);
 
   PCSetType(pc, PCCHOLESKY);
 
-  /* set up solver to use modified newton */
 
-  cv_mn_petsc_mem =
-      CVODEMNPETScCreate(cvode_mem_PETSc, udata_petsc,
-                         rosenbrock_minus_Jac_petsc, 1, Jac_petsc, y_vec);
+
+
 
   /* Attach setup to the SNES Solver */
-  CVSNESMNSetup(snes, cv_mn_petsc_mem, Jac_petsc);
+  CVSNESMNSetup(snes, cv_mn_petsc_mem, Jac_petsc, rosenbrock_minus_Jac_petsc, udata_petsc, cvode_mem_PETSc, y_vec, 1);
 
   // Attach nonlinear solver to petsc
   CVodeSetNonlinearSolver(cvode_mem_PETSc, NLS);
-
 
   /* workspace for getting gradient out */
 
@@ -387,26 +383,28 @@ TEST(CVPet, CVM) {
    * ---------------------------------------------------------------------------*/
   // break out if close to a minimum
   for (int nstep = 0; nstep < maxsteps; ++nstep) {
-      
+
     // take a step
     N_VPrint_Petsc(y_nv_petsc);
-    std::cout << "y_nv_petsc" << "\n";
+    std::cout << "y_nv_petsc"
+              << "\n";
     /* TODO check whether a postsolve function can be provided to sundials */
     retval = CVode(cvode_mem_PETSc, tout, y_nv_petsc, &t_petsc, CV_ONE_STEP);
     std::cout << retval << " retval petsc \n";
 
-
     CVodeGetDky(cvode_mem_PETSc, t_petsc, 1, grad);
     /* calculate norm accounting for length */
     VecNorm(N_VGetVector_Petsc(grad), NORM_2, &norm);
-    
+
     PetscInt length;
     VecGetSize(N_VGetVector_Petsc(grad), &length);
-    wnorm = norm/sqrt(length);
+    wnorm = norm / sqrt(length);
 
-    std::cout << "gradient :" << "\n";
+    std::cout << "gradient :"
+              << "\n";
     N_VPrint_Petsc(grad);
-    std::cout << "y:" << "\n";
+    std::cout << "y:"
+              << "\n";
     N_VPrint_Petsc(y_nv_petsc);
     /* TODO check for ops cloning */
     double gamma;
@@ -420,11 +418,6 @@ TEST(CVPet, CVM) {
 
   /* Print some final statistics */
   PrintStats_petsc(cvode_mem_PETSc, udata_petsc);
-  /* Free memory */
-  /* N_VDestroy(y); */
-  /* SUNMatDestroy(A); */
-  /* SUNLinSolFree(LS); */
-  /* CVodeFree(&cvode_mem); */
   PetscFinalize();
 }
 
@@ -476,7 +469,7 @@ static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
   Jdata[1] = -Jdata[1];
   Jdata[2] = -Jdata[2];
   Jdata[3] = -Jdata[3];
-  
+
   return (0);
 }
 
@@ -547,13 +540,12 @@ static int PrintStats(void *cvode_mem) {
 }
 
 /* Print final statistics Petsc */
-static int PrintStats_petsc(void *cvode_mem, void * user_data) {
+static int PrintStats_petsc(void *cvode_mem, void *user_data) {
   int retval;
   long int nst, nfe, nsetups, nje, nni, ncfn, netf;
   UserData udata;
-  udata = (UserData) user_data;
-  
-  
+  udata = (UserData)user_data;
+
   retval = CVodeGetNumSteps(cvode_mem, &nst);
   check_retval(&retval, "CVodeGetNumSteps", 1);
   retval = CVodeGetNumRhsEvals(cvode_mem, &nfe);
@@ -569,7 +561,6 @@ static int PrintStats_petsc(void *cvode_mem, void * user_data) {
   /* TODO: change this in CVODE */
   nje = udata->njac_petsc;
 
-  
   printf("\nIntegration Statistics:\n");
 
   printf("Number of steps taken = %-6ld\n", nst);
@@ -631,7 +622,6 @@ PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
   /* initalize jacobian to zero */
   MatZeroEntries(J);
 
-  
   /* Illustration of how to deal with symmetric matrices */
   /* get the jacobian type */
   MatType Jac_type;
@@ -645,12 +635,10 @@ PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
   std::cout << same_string(Jac_type, MATSBAIJ) << "\n";
   std::cout << same_string(Jac_type, MATSEQSBAIJ) << "\n";
   std::cout << same_string(Jac_type, MATMPISBAIJ) << "\n";
-  std::cout << (same_string(Jac_type, MATSBAIJ) || same_string(Jac_type, MATSEQSBAIJ) ||
-      same_string(Jac_type, MATMPISBAIJ)) << "\n";
-
-
-
-
+  std::cout << (same_string(Jac_type, MATSBAIJ) ||
+                same_string(Jac_type, MATSEQSBAIJ) ||
+                same_string(Jac_type, MATMPISBAIJ))
+            << "\n";
 
   /* if the hessian is symmetric assume that the matrix is upper triangular */
   if (same_string(Jac_type, MATSBAIJ) || same_string(Jac_type, MATSEQSBAIJ) ||
@@ -658,7 +646,8 @@ PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
     hessarr[0] = 2 + 8 * m_b * x_arr[0] * x_arr[0] -
                  4 * m_b * (-x_arr[0] * x_arr[0] + x_arr[1]);
     hessarr[1] = -4 * m_b * x_arr[0];
-    // hessarr[2] = 0;             /* 0 since symmetric you should probably remove */ 
+    // hessarr[2] = 0;             /* 0 since symmetric you should probably
+    // remove */
     hessarr[3] = 2 * m_b;
   } else {
     hessarr[0] = 2 + 8 * m_b * x_arr[0] * x_arr[0] -
@@ -679,7 +668,7 @@ PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
   /* take the negative since J = -H */
   MatScale(J, -1.0);
   /* increase jacobian evaluations */
-  data->njac_petsc +=1;
+  data->njac_petsc += 1;
   return (0);
 }
 
@@ -730,7 +719,7 @@ int rosenbrock_minus_gradient_petsc(PetscReal t, N_Vector x, N_Vector xdot,
   CHKERRQ(ierr);
 
   /* scale the vector by -1. since xdot is -\grad{V(x)} */
-  ierr = VecScale(xdot_petsc, -1.0);  
+  ierr = VecScale(xdot_petsc, -1.0);
   CHKERRQ(ierr);
   return (0);
 }
