@@ -43,13 +43,22 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
   // This function separation should help with debugging
   // also these functions could use parameters to be set differently
 
+
+
   setup_gradient();
 
+  std::cout << "hello" << "\n";
+
+
   setup_coords();
+
   
   setup_cvode_data(rtol, atol);
 
+  std::cout << "SNES Setup" << "\n";
   setup_SNES();
+
+  std::cout << "coordinate setup" << "\n";
 
   setup_CVODE();
 
@@ -57,6 +66,9 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
 
 void CVODEBDFOptimizer::one_iteration() {  
   /* advance solver just one internal step */
+    std::cout << "step no" << iter_number_ << "\n";
+    
+    
   Array<double> xold = x_;
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);CHKERRCV_ONE_STEP(flag);
   iter_number_ += 1;
@@ -159,22 +171,15 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
  * @param user_data Description of user_data
  * @return PetscErrorCode
  */
-PetscErrorCode SNESJacobianWrapper(SNES NLS, Vec dummy, Mat Amat, Mat Precon,
-                                   void *user_data) {
+PetscErrorCode SNESJacobianWrapper(PetscReal t, Vec x, Mat J, void * user_data) {
   PetscFunctionBeginUser;
   UserData udata = (UserData)user_data;
+
   
-  N_Vector x_n;
-  double gamma;
-  // We have to go with a bit of pointer manipulation since this interface sucks
-  CVodeGetCurrentState(udata->cvode_mem_ptr, &x_n); 
-  CVodeGetCurrentGamma(udata->cvode_mem_ptr, &gamma);
-  
-  udata->pot_->get_hessian_petsc(N_VGetVector_Petsc(x_n), Precon);
+  udata->pot_->get_hessian_petsc(x, J);
 
   // I-\gamma(-H) = I + \gamma H
-  MatScale(Precon, gamma);
-  MatShift(Precon, 1);
+  MatScale(J, -1.0);
   // MatView(Precon, PETSC_VIEWER_STDOUT_SELF);
   // MatView(Amat, PETSC_VIEWER_STDOUT_SELF);
   udata->nhev += 1;

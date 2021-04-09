@@ -32,9 +32,9 @@
 #include "petsc_interface.hpp"
 
 #include <petscmat.h>
-#include <sunnonlinsol/sunnonlinsol_petscsnes.h>
 
 #include "cvode/cvode_proj.h"
+#include "cvode_modified_newton.h"
 #include "petscksp.h"
 #include "petscpc.h"
 #include "petscpctypes.h"
@@ -46,6 +46,7 @@
 #include "sundials/sundials_matrix.h"
 #include "sundials/sundials_nonlinearsolver.h"
 #include "sundials/sundials_nvector.h"
+#include "sunnonlinsol_petscsnes.h"
 
 #include <cvode/cvode.h>               /* access to CVODE                 */
 #include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
@@ -105,8 +106,7 @@ static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
  *
  * @return     void *
  */
-PetscErrorCode SNESJacobianWrapper(SNES NLS, Vec x, Mat Amat, Mat Precon,
-                                   void *user_data);
+PetscErrorCode SNESJacobianWrapper(PetscReal t, Vec x, Mat J, void * user_data);
 PetscErrorCode CVODESNESMonitor(SNES snes, PetscInt its, PetscReal fnorm,
                                 PetscViewerAndFormat *vf);
 
@@ -160,12 +160,12 @@ private:
   N_Vector x0_N;
   Vec x0_petsc;
   // important snes variable
-  PetscReal snes_abstol=0;
-  PetscReal snes_reltol=0;
-  PetscReal snes_stol=0;
-  PetscInt snes_maxit=0;
-  PetscInt snes_maxf=0;
-    
+  PetscReal snes_abstol = 0;
+  PetscReal snes_reltol = 0;
+  PetscReal snes_stol = 0;
+  PetscInt snes_maxit = 0;
+  PetscInt snes_maxf = 0;
+
   Array<double> xold;
   PetscViewerAndFormat *vf;
   // sparse calculation initializers
@@ -177,12 +177,13 @@ private:
   PetscInt blocksize;
   // average number of non zeros per block for memory allocation purposes
   PetscInt nz_hess;
+  CVMNPETScMem cv_mn_petsc_mem = NULL;
 
   // corresponding SNES, KSP and preconditioner nz_hesss
   SNES snes;
   KSP ksp;
   PC pc;
-    SNESLineSearch line_search;
+  SNESLineSearch line_search;
 
   ///////////////////////////////////////////////////////////////////////////
   //               functions that are part of the constructor              //
@@ -228,35 +229,61 @@ private:
    * Helper function to set up SNES wrapped into Petsc
    */
   inline void setup_SNES() {
-    SNESCreate(PETSC_COMM_SELF, &snes);
-    // SNESGetTolerances(snes, &snes_abstol, &snes_reltol, &snes_stol, &snes_maxit,
-    //                   &snes_maxf);
-    snes_abstol = 1e-10;
-    snes_reltol = 1e-8;
-    snes_stol = PETSC_DEFAULT;
-    snes_maxit = 4;
-    snes_maxf = 3;
-    SNESSetTolerances(snes, snes_abstol, snes_reltol, snes_stol, snes_maxit, snes_maxf);
-    SNESGetLineSearch(snes, &line_search);
-    SNESLineSearchSetType(line_search, SNESLINESEARCHBASIC);
-    // // // PETSC VIEWER FORMAT should make monitor setting optional
-    // PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,
-    // PETSC_VIEWER_DEFAULT,
-    //                            &vf);
-    // SNESMonitorSet(
-    //     snes,
-    //     (PetscErrorCode(*)(SNES, PetscInt, PetscReal, void
-    //     *))CVODESNESMonitor, vf, (PetscErrorCode(*)(void
-    //     **))PetscViewerAndFormatDestroy);
-    SNESGetKSP(snes, &ksp);
-    KSPGetPC(ksp, &pc);
-    NLS = SUNNonlinSol_PetscSNES(x0_N, snes);
 
-    // // matrix approach
-    PCSetType(pc, PCLU);
-    setup_Jacobian();
-    SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian, SNESJacobianWrapper,
-                    &udata);
+      setup_Jacobian();
+    SNESCreate(PETSC_COMM_SELF, &snes);
+    // SNESGetTolerances(snes, &snes_abstol, &snes_reltol, &snes_stol,
+    // &snes_maxit,
+    //                   &snes_maxf);
+    
+    NLS = SUNNonlinSol_PetscSNES(x0_N, snes, cv_mn_petsc_mem);
+
+
+    CVSNESMNSetup(snes,
+                  cv_mn_petsc_mem,
+                  petsc_jacobian,
+                  SNESJacobianWrapper,
+                  udataptr, cvode_mem, x0_petsc, 1);
+
+    
+    CVodeSetNonlinearSolver(cvode_mem, NLS);
+    // CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat, CVSNESJacFn
+    // func, void *user_mem, void *cvode_mem, Vec y, int scalesol)
+
+    // SNESSetTolerances(snes, snes_abstol, snes_reltol, snes_stol, snes_maxit,
+    // snes_maxf); SNESGetLineSearch(snes, &line_search);
+    // SNESLineSearchSetType(line_search, SNESLINESEARCHBASIC);
+    // // // // PETSC VIEWER FORMAT should make monitor setting optional
+    // // PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD,
+    // // PETSC_VIEWER_DEFAULT,
+    // //                            &vf);
+    // // SNESMonitorSet(
+    // //     snes,
+    // //     (PetscErrorCode(*)(SNES, PetscInt, PetscReal, void
+    // //     *))CVODESNESMonitor, vf, (PetscErrorCode(*)(void
+    // //     **))PetscViewerAndFormatDestroy);
+    // SNESGetKSP(snes, &ksp);
+    // KSPGetPC(ksp, &pc);
+
+
+
+    SNESGetKSP(snes, &ksp);
+    SNESGetLineSearch(snes, &line_search);
+
+    SNESSetType(snes, SNESNEWTONLS);
+  /* defaults to no line search*/
+    SNESLineSearchSetType(line_search, SNESLINESEARCHBASIC);
+  /* turn off computation of norms in line search */
+
+    KSPGetPC(ksp, &pc);
+
+    PCSetType(pc, PCCHOLESKY);
+
+    // // // matrix approach
+    // PCSetType(pc, PCLU);
+
+    // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,
+    // SNESJacobianWrapper, &udata);
     // Matrix free approach
     // MatCreateSNESMF(snes, &petsc_jacobian);
     // SNESSetJacobian(snes, petsc_jacobian, petsc_jacobian,

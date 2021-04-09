@@ -1,6 +1,7 @@
 #ifndef _CVODE_PETSC_MN_H
 #define _CVODE_PETSC_MN_H
 
+#include "nvector/nvector_petsc.h"
 #include <petscksp.h>
 #include <petscmat.h>
 
@@ -8,6 +9,7 @@
 #include <petscsnes.h>
 #include <petscsystypes.h>
 #include <petscvec.h>
+#include <sundials/sundials_math.h>
 #include <sundials/sundials_nonlinearsolver.h>
 #include <sundials/sundials_nvector.h>
 #include <sundials/sundials_types.h>
@@ -61,9 +63,20 @@ typedef struct {
   booleantype
       scalesol; /* exposed to user (Check delayed matrix versions later)*/
   PetscBool x;
-    
+
   PetscBool
       recoverable; /* boolean that tells us whether the error is recoverable */
+
+  /* Convergence test data to be passed */
+  /* These are only pointers */
+  N_Vector delta; /* pointer for the residue to be passed */
+  N_Vector w;
+  PetscReal tol;
+ PetscInt m_local;           /* nonlinear solver iterations */
+
+  Vec yguess; /* Initial guess storage (HAS to be initialized) */
+  N_Vector
+      yguess_nvec; /* pointer to initial guess to save reallocating memory */
 
 } * CVMNPETScMem;
 
@@ -90,7 +103,7 @@ PetscErrorCode CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
 /* destructor */
 PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem);
 
-    /* SetUp */
+/* SetUp */
 PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
                              CVSNESJacFn func, void *user_mem, void *cvode_mem,
                              Vec y, booleantype scalesol);

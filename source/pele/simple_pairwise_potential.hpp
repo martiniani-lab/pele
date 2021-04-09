@@ -644,7 +644,7 @@ inline void SimplePairwisePotential<pairwise_interaction, distance_policy>::add_
     const size_t natoms = xsize / m_ndim;
     PetscInt hess_size_x;
     PetscInt hess_size_y;
-    MatSetType(hess, MATSEQSBAIJ);
+    // MatSetType(hess, MATSEQSBAIJ);
     MatGetSize(hess, &hess_size_x, &hess_size_y);
     MatSetUp(hess);
     if (m_ndim * natoms != xsize) {

@@ -41,7 +41,9 @@
 
 #include <csignal>
 #include <cstddef>
+#include <functional>
 #include <math.h>
+#include <new>
 #include <petscdm.h>
 #include <petscdmda.h>
 
@@ -182,13 +184,14 @@ TEST(CVDP, CVM) {
   SUNMatrix A = NULL;        /* Jacobian matrix      */
   SUNLinearSolver LS = NULL; /* linear solver        */
 
+
   /* minimum identification */
   double norm2;       /* norm of the funtion */
   double wnorm;       /* norm weighted by length  for identification */
   double minimum_tol; /* tolerance with which the minimum is identified */
 
   minimum_tol = 1e-6;   /* minimum tolerance */
-  double maxsteps = 10; /* maximum number of steps to run the solver for */
+  double maxsteps = 69; /* maximum number of steps to run the solver for */
 
   udata = (UserData)malloc(sizeof *udata);
   retval = InitUserData(udata);
@@ -200,6 +203,7 @@ TEST(CVDP, CVM) {
   ydata = N_VGetArrayPointer(y);
   ydata[0] = ONE;
   ydata[1] = ZERO;
+  
 
   /* Create serial vector to store the solution error */
   e = N_VClone(y);
@@ -237,7 +241,8 @@ TEST(CVDP, CVM) {
   N_Vector grad;
   grad = N_VClone(y);
 
-  // break out if close to a minimum  for (int nstep = 0; nstep < maxsteps; ++nstep) {
+  // break out if close to a minimum
+  for (int nstep = 0; nstep < maxsteps; ++nstep) {
     // take a step
     retval = CVode(cvode_mem, tout, y, &t, CV_ONE_STEP);
     // obtain  the gradient
@@ -254,6 +259,7 @@ TEST(CVDP, CVM) {
     wnorm = sqrt(norm2 / N_VGetLength(y));
     double gamma;
     CVodeGetCurrentGamma(cvode_mem, &gamma);
+    printf("Gamma %d \n", gamma);
     std::cout << wnorm << "\n";
     /* break out when the minimum is found */
     if (wnorm < minimum_tol) {
@@ -292,7 +298,7 @@ TEST(CVPet, CVM) {
   double minimum_tol; /* tolerance with which the minimum is identified */
 
   minimum_tol = 1e-6;   /* minimum tolerance */
-  double maxsteps = 10; /* maximum number of steps to run the solver for */
+  double maxsteps = 400; /* maximum number of steps to run the solver for */
 
   /* allocate memory */
   udata_petsc = (UserData)malloc(sizeof *udata_petsc);
@@ -306,6 +312,8 @@ TEST(CVPet, CVM) {
   /* -----------------------------------------------------------------------------
    * initialize vectors for storing memory
    * ---------------------------------------------------------------------------*/
+
+  
 
   /* clone the gradient */
   N_Vector grad = N_VClone(y_nv_petsc);
@@ -360,7 +368,6 @@ TEST(CVPet, CVM) {
   /* defaults to no line search*/
   SNESLineSearchSetType(ls, SNESLINESEARCHBASIC);
   /* turn off computation of norms in line search */
-  SNESLineSearchSetComputeNorms(ls, PETSC_TRUE);
 
   KSPGetPC(ksp, &pc);
 
@@ -383,19 +390,24 @@ TEST(CVPet, CVM) {
    * ---------------------------------------------------------------------------*/
   // break out if close to a minimum
   for (int nstep = 0; nstep < maxsteps; ++nstep) {
-
+      
     // take a step
     N_VPrint_Petsc(y_nv_petsc);
     std::cout << "y_nv_petsc"
               << "\n";
+
+    if (nstep==66) {
+        printf("this is it");
+        int blash =3;
+    }
     /* TODO check whether a postsolve function can be provided to sundials */
     retval = CVode(cvode_mem_PETSc, tout, y_nv_petsc, &t_petsc, CV_ONE_STEP);
-    std::cout << retval << " retval petsc \n";
+    
 
+    
     CVodeGetDky(cvode_mem_PETSc, t_petsc, 1, grad);
     /* calculate norm accounting for length */
     VecNorm(N_VGetVector_Petsc(grad), NORM_2, &norm);
-
     PetscInt length;
     VecGetSize(N_VGetVector_Petsc(grad), &length);
     wnorm = norm / sqrt(length);
@@ -409,6 +421,7 @@ TEST(CVPet, CVM) {
     /* TODO check for ops cloning */
     double gamma;
     CVodeGetCurrentGamma(cvode_mem_PETSc, &gamma);
+    printf("Gamma out %d \n", gamma);
     std::cout << wnorm << "\n";
     /* break out when the minimum is found */
     if (wnorm < minimum_tol) {
@@ -688,7 +701,7 @@ int rosenbrock_minus_gradient_petsc(PetscReal t, N_Vector x, N_Vector xdot,
   /* get read only array from vector */
   const double *x_arr;
   VecGetArrayRead(x_petsc, &x_arr);
-
+  
   /* extract information from user data */
   data = (UserData)user_data;
   m_a = data->a;
