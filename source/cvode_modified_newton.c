@@ -503,7 +503,7 @@ PetscErrorCode  SNESLineSearchApply_CVODE(SNESLineSearch linesearch, void *ctx)
 
   
   ierr = VecCopy(W, X);CHKERRQ(ierr);
-
+  ierr = SNESComputeFunction(snes, X,F);CHKERRQ(ierr);
 
 
   /* printf("convergence reason: %d \n", reason); */
@@ -512,9 +512,9 @@ PetscErrorCode  SNESLineSearchApply_CVODE(SNESLineSearch linesearch, void *ctx)
      in which case we don't need to recalculate the function */
   ierr = CVodeConvergenceTest(snes, it, xnorm, gnorm, ynorm, &reason, cctx); CHKERRQ(ierr);
 
-  if (!reason) {
-      ierr = SNESComputeFunction(snes, X,F);CHKERRQ(ierr);
-  }
+  /* if (!reason) { */
+
+  /* } */
   
   /* if it hasn't converged yet then calculate the gradient */
 

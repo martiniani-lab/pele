@@ -225,7 +225,8 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS, N_Vector y0, N_Vector y,
     /* pre SNES setup for delayed jacobian */
 
     
-
+    /* initial convergence test has not been called. This needs to be refactored */
+    cvls_petsc_mem->ctest_called = PETSC_FALSE;
     
     ierr = SNESSolve(SUNNLS_SNESOBJ(NLS), NULL, N_VGetVector_Petsc(y));
 
