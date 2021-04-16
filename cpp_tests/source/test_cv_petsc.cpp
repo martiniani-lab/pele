@@ -131,7 +131,7 @@
 #define ONE RCONST(1.0)
 #define TWO RCONST(2.0)
 #define HUNDRED RCONST(100.0)
-#define MAXSTEPS 10
+#define MAXSTEPS 5
 
 /* User-defined data structure */
 typedef struct UserData_ {
@@ -295,6 +295,67 @@ TEST(CVPet, CVM) {
   Mat Jac_petsc;
   realtype t_petsc = ZERO; /* current integration time petsc  */
 
+  void *cvode_mem = NULL;    /* CVODE memory         */
+  N_Vector y = NULL;         /* solution vector      */
+  realtype *ydata = NULL;    /* solution vector data */
+  N_Vector e = NULL;         /* error vector         */
+  SUNMatrix A = NULL;        /* Jacobian matrix      */
+  SUNLinearSolver LS = NULL; /* linear solver        */
+  UserData udata = NULL; /* user data structure        */
+  realtype t = ZERO;     /* current integration time   */
+
+  udata = (UserData)malloc(sizeof *udata);
+  retval = InitUserData(udata);
+
+  N_Vector y_diff;
+
+
+
+  // ------------------- CVODE SETUP without petsc
+
+  /* Create serial vector to store the solution */
+  y = N_VNew_Serial(2);
+
+  /* Create serial vector to store the solution error */
+  e = N_VClone(y);
+
+  y_diff = N_VClone(y);
+
+/* Set initial contion */
+  ydata = N_VGetArrayPointer(y);
+  ydata[0] = ONE;
+  ydata[1] = ZERO;
+
+  /* Create CVODE memory */
+  cvode_mem = CVodeCreate(CV_BDF);
+  /* Initialize CVODE */
+  retval = CVodeInit(cvode_mem, f, t, y);
+  
+    /* Attach user-defined data structure to CVODE */
+  retval = CVodeSetUserData(cvode_mem, udata);
+
+
+  /* Set integration tolerances */
+  retval = CVodeSStolerances(cvode_mem, udata->rtol, udata->atol);
+
+    /* Create dense SUNMatrix for use in linear solves */
+  A = SUNDenseMatrix(2, 2);
+
+  /* Create dense SUNLinearSolver object */
+  LS = SUNLinSol_Dense(y, A);
+
+  /* Attach the matrix and linear solver to CVODE */
+  retval = CVodeSetLinearSolver(cvode_mem, LS, A);
+
+  /* Set a user-supplied Jacobian function */
+  retval = CVodeSetJacFn(cvode_mem, Jac);
+
+  /* Set max steps between outputs */
+  retval = CVodeSetMaxNumSteps(cvode_mem, 100000);
+  N_Vector grad = N_VClone(y);
+
+  // ------------------- end CVODE setup without petsc
+
   /* minimum identification */
   double norm;        /* norm of the funtion */
   double wnorm;       /* norm weighted by length  for identification */
@@ -311,16 +372,18 @@ TEST(CVPet, CVM) {
   int dim = 2;
   VecCreateSeq(PETSC_COMM_SELF, dim, &y_vec);
   y_nv_petsc = N_VMake_Petsc(y_vec);
+  /* clone the gradient */
+  N_Vector grad_petsc = N_VClone(y_nv_petsc);
 
-  /* -----------------------------------------------------------------------------
-   * initialize vectors for storing memory
-   * ---------------------------------------------------------------------------*/
+
+  // /* -----------------------------------------------------------------------------
+  //  * initialize vectors for storing memory
+  //  * ---------------------------------------------------------------------------*/
 
 
   
 
-  /* clone the gradient */
-  N_Vector grad = N_VClone(y_nv_petsc);
+
 
   /* create matrix for jacobian calculation */
   MatCreateDense(PETSC_COMM_SELF, dim, dim, PETSC_DECIDE, PETSC_DECIDE, NULL,
@@ -330,15 +393,15 @@ TEST(CVPet, CVM) {
   std::cout << "heeloo 2"
             << "\n";
   /* Set initial condition */
-  PetscReal ydata[2];
-  ydata[0] = ONE;
-  ydata[1] = ZERO;
+  PetscScalar ydata_petsc[2];
+  ydata_petsc[0] = ONE;
+  ydata_petsc[1] = ZERO;
 
   /* set values petsc */
   PetscInt y_index[2] = {0, 1};
-  VecSetValues(y_vec, dim, y_index, ydata, INSERT_VALUES);
+  VecSetValues(y_vec, dim, y_index, ydata_petsc, INSERT_VALUES);
 
-  cvode_mem_PETSc = CVodeCreate(CV_BDF);
+    cvode_mem_PETSc = CVodeCreate(CV_BDF);
   retval = CVodeInit(cvode_mem_PETSc, rosenbrock_minus_gradient_petsc, t_petsc,
                      y_nv_petsc);
 
@@ -346,9 +409,15 @@ TEST(CVPet, CVM) {
   retval =
       CVodeSStolerances(cvode_mem_PETSc, udata_petsc->rtol, udata_petsc->atol);
 
+  PetscScalar *ydata_values_petsc;
+
+
   /* -----------------------------------------------------------------------------
    * Solver setup petsc
    * ---------------------------------------------------------------------------*/
+
+  
+
   SNES snes;
   KSP ksp;
   SUNNonlinearSolver NLS;
@@ -383,6 +452,8 @@ TEST(CVPet, CVM) {
   // Attach nonlinear solver to petsc
   CVodeSetNonlinearSolver(cvode_mem_PETSc, NLS);
 
+  PetscReal * y_diff_vals;
+
   /* workspace for getting gradient out */
 
   /* -----------------------------------------------------------------------------
@@ -391,10 +462,6 @@ TEST(CVPet, CVM) {
   // break out if close to a minimum
   for (int nstep = 0; nstep < maxsteps; ++nstep) {
       std::cout << "--------- Step:" << nstep << "\n";
-    // take a step
-    N_VPrint_Petsc(y_nv_petsc);
-    std::cout << "y_nv_petsc"
-              << "\n";
 
     if (nstep==66) {
         printf("this is it");
@@ -402,22 +469,54 @@ TEST(CVPet, CVM) {
     }
     /* TODO check whether a postsolve function can be provided to sundials */
     retval = CVode(cvode_mem_PETSc, tout, y_nv_petsc, &t_petsc, CV_ONE_STEP);
-    
+    retval = CVode(cvode_mem, tout, y, &t, CV_ONE_STEP);
 
     
-    CVodeGetDky(cvode_mem_PETSc, t_petsc, 1, grad);
+    
+    
+    CVodeGetDky(cvode_mem_PETSc, t_petsc, 1, grad_petsc);
+    CVodeGetDky(cvode_mem, t, 1, grad);
     /* calculate norm accounting for length */
-    VecNorm(N_VGetVector_Petsc(grad), NORM_2, &norm);
+    VecNorm(N_VGetVector_Petsc(grad_petsc), NORM_2, &norm);
     PetscInt length;
-    VecGetSize(N_VGetVector_Petsc(grad), &length);
+    VecGetSize(N_VGetVector_Petsc(grad_petsc), &length);
     wnorm = norm / sqrt(length);
 
-    std::cout << "gradient :"
-              << "\n";
-    N_VPrint_Petsc(grad);
-    std::cout << "y:"
+    // std::cout << "gradient :"
+    //           << "\n";
+    // N_VPrint_Petsc(grad_petsc);
+    std::cout << "y petsc:"
               << "\n";
     N_VPrint_Petsc(y_nv_petsc);
+
+
+    // Block for calculatin vector differences
+    VecGetArray(y_vec, &ydata_values_petsc);
+    ydata = N_VGetArrayPointer(y);
+    y_diff_vals = N_VGetArrayPointer(y_diff);
+    y_diff_vals[0] = ydata[0] - ydata_values_petsc[0];
+    y_diff_vals[1] = ydata[1] - ydata_values_petsc[1];
+    VecRestoreArray(y_vec, &ydata_values_petsc);
+
+
+
+
+    
+
+    
+
+    
+    std::cout << "y:"
+              << "\n";
+    N_VPrint_Serial(y);
+
+    std::cout << "----- difference y" << "\n";
+
+    N_VPrint_Serial(y_diff);
+
+    std::cout << "-------" << "\n";
+    
+    
     /* TODO check for ops cloning */
     double gamma;
     CVodeGetCurrentGamma(cvode_mem_PETSc, &gamma);
@@ -429,6 +528,12 @@ TEST(CVPet, CVM) {
     }
   }
 
+
+  /* Free memory */
+  N_VDestroy(y);
+  SUNMatDestroy(A);
+  SUNLinSolFree(LS);
+  CVodeFree(&cvode_mem);
   /* Print some final statistics */
   PrintStats_petsc(cvode_mem_PETSc, udata_petsc);
   PetscFinalize();
@@ -495,7 +600,7 @@ static int InitUserData(UserData udata) {
 
   /* set default values */
   udata->a = ONE;
-  udata->b = HUNDRED;
+  udata->b = 0.1;
 
   udata->rtol = RCONST(1.0e-4);
   udata->atol = RCONST(1.0e-9);
@@ -659,6 +764,7 @@ PetscErrorCode rosenbrock_minus_Jac_petsc(PetscReal t, Vec x, Mat J,
     hessarr[0] = 2 + 8 * m_b * x_arr[0] * x_arr[0] -
                  4 * m_b * (-x_arr[0] * x_arr[0] + x_arr[1]);
     hessarr[1] = -4 * m_b * x_arr[0];
+    hessarr[2] = -4 * m_b * x_arr[0];
     // hessarr[2] = 0;             /* 0 since symmetric you should probably
     // remove */
     hessarr[3] = 2 * m_b;
