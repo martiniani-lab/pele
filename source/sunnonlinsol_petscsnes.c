@@ -223,7 +223,13 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS, N_Vector y0, N_Vector y,
     }
     /* Pre SNES solve routine */
     /* pre SNES setup for delayed jacobian */
+
+    
+
+    
     ierr = SNESSolve(SUNNLS_SNESOBJ(NLS), NULL, N_VGetVector_Petsc(y));
+
+    
     /* Post SNES solve routine */
     /* TODO: Replace the following with convergence checks that we get from
      * within KSP */

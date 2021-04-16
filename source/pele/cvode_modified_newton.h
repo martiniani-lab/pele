@@ -37,7 +37,7 @@ typedef PetscErrorCode (*CVSNESJacFn)(PetscReal t, Vec x, Mat J,
                                       void *user_data);
 
 /*
-  context passed on to the delayed hessian
+  context passed on to the delayed hessian. TODO: encapsulate this data structure
 */
 typedef struct {
   /* memory information */
@@ -77,7 +77,8 @@ typedef struct {
   Vec yguess; /* Initial guess storage (HAS to be initialized) */
   N_Vector
       yguess_nvec; /* pointer to initial guess to save reallocating memory */
-
+    PetscBool ctest_called;     /* whether convergence test has been called */
+    SNESConvergedReason c_reason; /* convergence reason if test passes */
 } * CVMNPETScMem;
 
 /*****************************************************************************/
@@ -114,8 +115,9 @@ PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,
                                     SNESConvergedReason *reason, void *cctx);
 
 /*
-  SNES shell solver
+  SNES shell line search
 */
+    PetscErrorCode  SNESLineSearchApply_CVODE(SNESLineSearch linesearch, void *ctx);
 
 #ifdef __cplusplus /* wrapper to enable C++ usage */
 }

@@ -131,6 +131,7 @@
 #define ONE RCONST(1.0)
 #define TWO RCONST(2.0)
 #define HUNDRED RCONST(100.0)
+#define MAXSTEPS 10
 
 /* User-defined data structure */
 typedef struct UserData_ {
@@ -191,7 +192,7 @@ TEST(CVDP, CVM) {
   double minimum_tol; /* tolerance with which the minimum is identified */
 
   minimum_tol = 1e-6;   /* minimum tolerance */
-  double maxsteps = 69; /* maximum number of steps to run the solver for */
+  double maxsteps = MAXSTEPS; /* maximum number of steps to run the solver for */
 
   udata = (UserData)malloc(sizeof *udata);
   retval = InitUserData(udata);
@@ -244,6 +245,8 @@ TEST(CVDP, CVM) {
   // break out if close to a minimum
   for (int nstep = 0; nstep < maxsteps; ++nstep) {
     // take a step
+      std::cout << "--------- Step:" << nstep << "\n";
+
     retval = CVode(cvode_mem, tout, y, &t, CV_ONE_STEP);
     // obtain  the gradient
     std::cout << "gradient :"
@@ -298,7 +301,7 @@ TEST(CVPet, CVM) {
   double minimum_tol; /* tolerance with which the minimum is identified */
 
   minimum_tol = 1e-6;   /* minimum tolerance */
-  double maxsteps = 400; /* maximum number of steps to run the solver for */
+  double maxsteps = MAXSTEPS; /* maximum number of steps to run the solver for */
 
   /* allocate memory */
   udata_petsc = (UserData)malloc(sizeof *udata_petsc);
@@ -313,6 +316,7 @@ TEST(CVPet, CVM) {
    * initialize vectors for storing memory
    * ---------------------------------------------------------------------------*/
 
+
   
 
   /* clone the gradient */
@@ -321,8 +325,6 @@ TEST(CVPet, CVM) {
   /* create matrix for jacobian calculation */
   MatCreateDense(PETSC_COMM_SELF, dim, dim, PETSC_DECIDE, PETSC_DECIDE, NULL,
                  &Jac_petsc);
-  std::cout << "heello"
-            << "\n";
 
   // MatCreateSeqSBAIJ(PETSC_COMM_SELF, 2 ,2 ,2 ,2,NULL,&Jac_petsc);
   std::cout << "heeloo 2"
@@ -366,9 +368,7 @@ TEST(CVPet, CVM) {
 
   SNESSetType(snes, SNESNEWTONLS);
   /* defaults to no line search*/
-  SNESLineSearchSetType(ls, SNESLINESEARCHBASIC);
   /* turn off computation of norms in line search */
-
   KSPGetPC(ksp, &pc);
 
   PCSetType(pc, PCCHOLESKY);
@@ -390,7 +390,7 @@ TEST(CVPet, CVM) {
    * ---------------------------------------------------------------------------*/
   // break out if close to a minimum
   for (int nstep = 0; nstep < maxsteps; ++nstep) {
-      
+      std::cout << "--------- Step:" << nstep << "\n";
     // take a step
     N_VPrint_Petsc(y_nv_petsc);
     std::cout << "y_nv_petsc"

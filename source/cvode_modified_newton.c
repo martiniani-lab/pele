@@ -176,6 +176,9 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
     VecScale(b, TWO / (ONE + cv_mem->cv_gamrat));
   }
 
+  /* Tell the solver that the convergence test hasn't been called for this step */
+  cvls_petsc_mem->ctest_called = PETSC_FALSE;
+
   return 0;
 }
 
@@ -248,15 +251,28 @@ PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem) {
 PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
                              CVSNESJacFn func, void *user_mem, void *cvode_mem,
                              Vec y, booleantype scalesol) {
+    PetscErrorCode ierr;
   /* PetscFunctionBegin; */
   if (cvmnmem == NULL) {
     cvmnmem = (CVMNPETScMem)malloc(sizeof *cvmnmem);
   }
   CVodeMem cv_mem;
-
+  SNESSetType(snes, SNESNEWTONLS);
   KSP ksp;
   PC pc;
   PCType pc_type;
+  SNESLineSearch snes_linesearch;
+  SNESGetKSP(snes, &ksp);
+  KSPGetPC(ksp, &pc);
+  PCGetType(pc, &pc_type);
+  PCSetType(pc, PCCHOLESKY);
+  SNESGetLineSearch(snes, &snes_linesearch);
+  ierr = SNESLineSearchSetType(snes_linesearch, SNESLINESEARCHSHELL);
+  printf("ierrrr %d \n", ierr);
+  ierr = SNESLineSearchShellSetUserFunc(snes_linesearch, SNESLineSearchApply_CVODE, cvmnmem);
+  printf("ierrrr %d \n", ierr);
+  
+  
   cvmnmem->jok = PETSC_FALSE;
   /* TODO: check whether it needs to be updated */
   cvmnmem->jcur = PETSC_TRUE;
@@ -279,9 +295,7 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
   /* whether to scale the solution after the solve or not */
   cvmnmem->scalesol = scalesol;
   /* get all necessary contexts */
-  SNESGetKSP(snes, &ksp);
-  KSPGetPC(ksp, &pc);
-  PCGetType(pc, &pc_type);
+
 
   /* force the solver to be just use the preconditioner only */
   KSPSetType(ksp, KSPPREONLY);
@@ -317,9 +331,15 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
   SNESSetConvergenceTest(snes, CVodeConvergenceTest, NULL, NULL);
 
   /* Norm schedule */
-  SNESLineSearch snes_linesearch;
-  SNESGetLineSearch(snes, &snes_linesearch);
+
+
+  /* SNESGetLineSearch(snes, &snes_linesearch); */
   SNESLineSearchSetComputeNorms(snes_linesearch, PETSC_FALSE);
+
+
+
+  /* defaults to no line search*/
+
 
   /* Make sure a lagged jacobian is used */
   SNESSetLagJacobianPersists(snes, PETSC_TRUE);
@@ -337,7 +357,8 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
 /**
  * @brief      Reproduces CV convergence test from CVODE
  *
- * @details    Details are borrowed from cvNlsConvTest private function in cvode
+ * @details    Details are borrowed from cvNlsConvTest private function in cvode. Note: this function is not self contained.
+ *             a second call to this outside the loop messes up the calculation. TODO: change this behavior
  *
  * @param      snes SNES object (should contain context to CVMNPETScMem)
  *             (NORMS are not calculated so they should be undefined)
@@ -353,6 +374,14 @@ PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,
 
   CVMNPETScMem cvls_petsc_mem;
   SNESGetApplicationContext(snes, (void **)&cvls_petsc_mem);
+
+
+  /* checks */
+  if (cvls_petsc_mem->ctest_called) {
+      *reason = cvls_petsc_mem->c_reason;
+      PetscFunctionReturn(0);
+  }
+  cvls_petsc_mem->ctest_called = PETSC_TRUE;
 
   PetscInt m, retval;
   PetscReal del;
@@ -388,13 +417,14 @@ PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,
 
   /* KSPGetSolution(ksp, &delta_petsc); */
   /* SNESGetSolutionUpdate(snes, &delta_petsc); */
-
+  
   N_VLinearSum(ONE, ycor, ONE, delta, ycor);
 
   /* /\* TODO: Ideally this line should be in KSP *\/ */
   del = N_VWrmsNorm(delta, ewt);
 
   *reason = SNES_CONVERGED_ITERATING;
+  cvls_petsc_mem->c_reason = SNES_CONVERGED_ITERATING;
   /* (Important) Prevents convergence from happening before getting to KSP
      KSP has a convergence test before the problem gets solved*/
 
@@ -423,18 +453,74 @@ PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,
 
     cv_mem->cv_acnrmcur = SUNTRUE;
     *reason = SNES_CONVERGED_FNORM_ABS; /* Placeholder for all convergences */
+    cvls_petsc_mem->c_reason = *reason;
     return (0); /* Nonlinear system was solved successfully */
   }
 
   /* check if the iteration seems to be diverging */
   if ((m > 1) && (del > RDIV * cv_mem->cv_delp)) {
     *reason = SNES_DIVERGED_FUNCTION_DOMAIN;
+    cvls_petsc_mem->c_reason = *reason;
     return (0);
   }
 
   /* Save norm of correction and loop again */
   cv_mem->cv_delp = del;
 
+
   /* Not yet converged */
   return (0);
+}
+
+
+/*
+  Line search for CVODE
+*/
+PetscErrorCode  SNESLineSearchApply_CVODE(SNESLineSearch linesearch, void *ctx)
+{
+  PetscBool      changed_y, changed_w;
+  PetscErrorCode ierr;
+  Vec            X, F, Y, W;
+  SNES           snes;
+  PetscReal      gnorm, xnorm, ynorm, lambda;
+  PetscBool      domainerror;
+
+  /* convergence test data */
+  PetscFunctionBegin;
+  ierr = SNESLineSearchGetVecs(linesearch, &X, &F, &Y, &W, NULL);CHKERRQ(ierr);
+  ierr = SNESLineSearchGetLambda(linesearch, &lambda);CHKERRQ(ierr);
+  ierr = SNESLineSearchGetSNES(linesearch, &snes);CHKERRQ(ierr);
+  ierr = SNESLineSearchSetReason(linesearch, SNES_LINESEARCH_SUCCEEDED);CHKERRQ(ierr);
+
+  /* dummy info */
+  SNESConvergedReason reason;
+  void *cctx;
+  PetscInt it;
+  
+  /* perform update */
+  ierr = VecWAXPY(W,-lambda,Y,X);CHKERRQ(ierr);
+  /* copy the solution over */
+
+  
+  ierr = VecCopy(W, X);CHKERRQ(ierr);
+
+
+
+  /* printf("convergence reason: %d \n", reason); */
+ 
+  /* THe custom line search skips a function calculation /if/ the function has already converged
+     in which case we don't need to recalculate the function */
+  ierr = CVodeConvergenceTest(snes, it, xnorm, gnorm, ynorm, &reason, cctx); CHKERRQ(ierr);
+
+  if (!reason) {
+      ierr = SNESComputeFunction(snes, X,F);CHKERRQ(ierr);
+  }
+  
+  /* if it hasn't converged yet then calculate the gradient */
+
+
+
+
+
+  PetscFunctionReturn(0);
 }

@@ -58,6 +58,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
   std::cout << "SNES Setup" << "\n";
   setup_SNES();
 
+
   std::cout << "coordinate setup" << "\n";
 
   setup_CVODE();
@@ -74,14 +75,21 @@ void CVODEBDFOptimizer::one_iteration() {
   iter_number_ += 1;
   double t;
   CVodeGetCurrentTime(cvode_mem, &t);
+
+  N_VPrint_Petsc(x0_N);
   // first derivative
   CVodeGetDky(cvode_mem, t, 1, current_grad);
   double norm2 = N_VDotProd(current_grad, current_grad);
+  std::cout << "grad:" << norm2 << "\n";
+  std::cout << "tol" <<tol_ << "\n";
+
+
   x_ = pele_eq_N_Vector(x0_N);
   rms_ = (sqrt(norm2 / udata.neq));
+  std::cout << "tol" << rms_ << "\n";
   f_ = udata.stored_energy;
   nfev_ = udata.nfev;
-  Array<double> step = xold - x_;  
+  Array<double> step = xold - x_; 
 };
 
 
