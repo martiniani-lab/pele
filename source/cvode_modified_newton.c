@@ -92,7 +92,7 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
   N_Vector x_n;
   Vec x_n_petsc;
 
-  int steps;
+  long int steps;
   CVodeGetNumSteps(cvls_petsc_mem->cvode_mem, &steps);
   CVodeGetCurrentState(cvls_petsc_mem->cvode_mem, &x_n);
   CVodeGetCurrentGamma(cvls_petsc_mem->cvode_mem, &gamma);
@@ -101,9 +101,8 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
 
   cv_mem = (CVodeMem)(cvls_petsc_mem->cvode_mem);
   /* check jacobian needs to be updated */
-  if (cvls_petsc_mem->jok) {
+  if (!(cvls_petsc_mem->jcur)) {
     /* use saved copy of jacobian */
-    (cvls_petsc_mem->jcur) = PETSC_FALSE;
     /* Overwrite linear system matrix with saved J
        Assuming different non zero structure */
     /* TODO: expose the NON zero structure usage */
@@ -114,7 +113,6 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
     CHKERRQ(ierr);
   } else {
     /* call jac() to update the function */
-    (cvls_petsc_mem->jcur) = PETSC_TRUE;
     ierr = MatZeroEntries(A);
     CHKERRQ(ierr);
     /* compute new jacobian matrix */
@@ -130,8 +128,10 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
     cvls_petsc_mem->savedJ = A;
   }
 
-
   /* do A = I - \gamma J */
+
+
+
   ierr = MatScale(A, -gamma);
   CHKERRQ(ierr);
   ierr = MatShift(A, 1.0);
@@ -170,13 +170,15 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
   CVodeMem cv_mem;
   cv_mem = (CVodeMem)cvls_petsc_mem->cvode_mem;
 
+
   if (cv_mem->cv_gamrat != ONE) {
     VecScale(b, TWO / (ONE + cv_mem->cv_gamrat));
   }
+  printf("gamma ratio inside cv %f \n", cv_mem->cv_gamrat);
 
-  /* Tell the solver that the convergence test hasn't been called for this step */
+  /* Tell the solver that the convergence test hasn't been called for this step
+   */
   cvls_petsc_mem->ctest_called = PETSC_FALSE;
-
   return 0;
 }
 
@@ -246,32 +248,47 @@ PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem) {
    wrapped around free function
    #TODO attaching func is duplicated
  * ---------------------------------------------------------------------------*/
-PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
+PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem * cvmnmem_ptr, Mat Jac_mat,
                              CVSNESJacFn func, void *user_mem, void *cvode_mem,
                              Vec y, booleantype scalesol) {
-    PetscErrorCode ierr;
-  /* PetscFunctionBegin; */
-  if (cvmnmem == NULL) {
-    cvmnmem = (CVMNPETScMem)malloc(sizeof *cvmnmem);
+    
+  if (*cvmnmem_ptr == NULL) {
+      *cvmnmem_ptr = (CVMNPETScMem)malloc(sizeof **cvmnmem_ptr);
   }
-  CVodeMem cv_mem;
+
+  
+
+  PetscErrorCode ierr;
+  /* PetscFunctionBegin; */
+
+  CVMNPETScMem cvmnmem =  * cvmnmem_ptr;
   SNESSetType(snes, SNESNEWTONLS);
   KSP ksp;
   PC pc;
   PCType pc_type;
   SNESLineSearch snes_linesearch;
+
   SNESGetKSP(snes, &ksp);
   KSPGetPC(ksp, &pc);
   PCGetType(pc, &pc_type);
   PCSetType(pc, PCCHOLESKY);
+
   SNESGetLineSearch(snes, &snes_linesearch);
   ierr = SNESLineSearchSetType(snes_linesearch, SNESLINESEARCHSHELL);
   printf("ierrrr %d \n", ierr);
-  ierr = SNESLineSearchShellSetUserFunc(snes_linesearch, SNESLineSearchApply_CVODE, cvmnmem);
+  ierr = SNESLineSearchShellSetUserFunc(snes_linesearch,
+                                        SNESLineSearchApply_CVODE, cvmnmem);
   printf("ierrrr %d \n", ierr);
+
   
-  
-  cvmnmem->jok = PETSC_FALSE;
+  cvmnmem->cvode_mem = cvode_mem;
+
+  CVodeMem cv_mem = (CVodeMem) cvode_mem;
+
+  cv_mem->cv_lsetup = Lsolve_dummy;
+  N_Vector x;
+
+  cvmnmem->jcur = PETSC_FALSE;
   /* TODO: check whether it needs to be updated */
   cvmnmem->jcur = PETSC_TRUE;
   /* assign memory for the saved jacobian */
@@ -294,7 +311,6 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
   cvmnmem->scalesol = scalesol;
   /* get all necessary contexts */
 
-
   /* force the solver to be just use the preconditioner only */
   KSPSetType(ksp, KSPPREONLY);
   if (pc_type == PETSC_NULL) {
@@ -313,9 +329,7 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
 
   /* Set tolerances note that only evaluations and steps matter since
      we have our own convergence test */
-  SNESSetTolerances(snes, PETSC_DEFAULT, PETSC_DEFAULT,PETSC_DEFAULT, 3, 10);
-  
-  
+  SNESSetTolerances(snes, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 3, 10);
 
   /* pass the wrapped jacobian function on to SNES */
   SNESSetJacobian(snes, Jac_mat, Jac_mat, CVDelayedJSNES, cvmnmem);
@@ -330,24 +344,21 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
 
   /* Norm schedule */
 
-
   /* SNESGetLineSearch(snes, &snes_linesearch); */
   SNESLineSearchSetComputeNorms(snes_linesearch, PETSC_FALSE);
 
-
-
   /* defaults to no line search*/
 
-
-  /* Make sure a lagged jacobian is used */
-  SNESSetLagJacobianPersists(snes, PETSC_TRUE);
-  SNESSetLagJacobian(snes, -2);
-
+  /* /\* Make sure a lagged jacobian is used *\/ */
+  /* SNESSetLagJacobianPersists(snes, PETSC_TRUE); */
+  /* SNESSetLagJacobian(snes, 1); */
+  cvmnmem->jcur = PETSC_FALSE;
   /* assign memory pointers */
   cvmnmem->user_mem = user_mem;
   cvmnmem->user_jac_func = func;
+
   /* Set the jacobian function */
-  /* PetscFunctionReturn(0); */
+  PetscFunctionReturn(0);
 }
 
 /* Private function */
@@ -355,8 +366,10 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
 /**
  * @brief      Reproduces CV convergence test from CVODE
  *
- * @details    Details are borrowed from cvNlsConvTest private function in cvode. Note: this function is not self contained.
- *             a second call to this outside the loop messes up the calculation. TODO: change this behavior
+ * @details    Details are borrowed from cvNlsConvTest private function in
+ cvode. Note: this function is not self contained.
+ *             a second call to this outside the loop messes up the calculation.
+ TODO: change this behavior
  *
  * @param      snes SNES object (should contain context to CVMNPETScMem)
  *             (NORMS are not calculated so they should be undefined)
@@ -373,11 +386,10 @@ PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,
   CVMNPETScMem cvls_petsc_mem;
   SNESGetApplicationContext(snes, (void **)&cvls_petsc_mem);
 
-
   /* checks */
   if (cvls_petsc_mem->ctest_called) {
-      *reason = cvls_petsc_mem->c_reason;
-      PetscFunctionReturn(0);
+    *reason = cvls_petsc_mem->c_reason;
+    PetscFunctionReturn(0);
   }
   cvls_petsc_mem->ctest_called = PETSC_TRUE;
 
@@ -407,15 +419,13 @@ PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,
 
   N_VSetVector_Petsc(delta, delta_petsc);
 
-
-  
   /* N_Vector delta = cvls_petsc_mem->y; */
   N_Vector ewt = cvls_petsc_mem->w;
   PetscReal tol = cvls_petsc_mem->tol;
 
   /* KSPGetSolution(ksp, &delta_petsc); */
   /* SNESGetSolutionUpdate(snes, &delta_petsc); */
-  
+
   N_VLinearSum(ONE, ycor, ONE, delta, ycor);
 
   /* /\* TODO: Ideally this line should be in KSP *\/ */
@@ -465,60 +475,70 @@ PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,
   /* Save norm of correction and loop again */
   cv_mem->cv_delp = del;
 
-
   /* Not yet converged */
   return (0);
 }
 
-
 /*
   Line search for CVODE
 */
-PetscErrorCode  SNESLineSearchApply_CVODE(SNESLineSearch linesearch, void *ctx)
-{
-  PetscBool      changed_y, changed_w;
+PetscErrorCode SNESLineSearchApply_CVODE(SNESLineSearch linesearch, void *ctx) {
+  PetscBool changed_y, changed_w;
   PetscErrorCode ierr;
-  Vec            X, F, Y, W;
-  SNES           snes;
-  PetscReal      gnorm, xnorm, ynorm, lambda;
-  PetscBool      domainerror;
+  Vec X, F, Y, W;
+  SNES snes;
+  PetscReal gnorm, xnorm, ynorm, lambda;
+  PetscBool domainerror;
 
   /* convergence test data */
   PetscFunctionBegin;
-  ierr = SNESLineSearchGetVecs(linesearch, &X, &F, &Y, &W, NULL);CHKERRQ(ierr);
-  ierr = SNESLineSearchGetLambda(linesearch, &lambda);CHKERRQ(ierr);
-  ierr = SNESLineSearchGetSNES(linesearch, &snes);CHKERRQ(ierr);
-  ierr = SNESLineSearchSetReason(linesearch, SNES_LINESEARCH_SUCCEEDED);CHKERRQ(ierr);
+  ierr = SNESLineSearchGetVecs(linesearch, &X, &F, &Y, &W, NULL);
+  CHKERRQ(ierr);
+  ierr = SNESLineSearchGetLambda(linesearch, &lambda);
+  CHKERRQ(ierr);
+  ierr = SNESLineSearchGetSNES(linesearch, &snes);
+  CHKERRQ(ierr);
+  ierr = SNESLineSearchSetReason(linesearch, SNES_LINESEARCH_SUCCEEDED);
+  CHKERRQ(ierr);
 
   /* dummy info */
   SNESConvergedReason reason;
   void *cctx;
   PetscInt it;
-  
+
   /* perform update */
-  ierr = VecWAXPY(W,-lambda,Y,X);CHKERRQ(ierr);
+  ierr = VecWAXPY(W, -lambda, Y, X);
+  CHKERRQ(ierr);
   /* copy the solution over */
 
-  
-  ierr = VecCopy(W, X);CHKERRQ(ierr);
-
-
+  ierr = VecCopy(W, X);
+  CHKERRQ(ierr);
 
   /* printf("convergence reason: %d \n", reason); */
- 
-  /* THe custom line search skips a function calculation /if/ the function has already converged
-     in which case we don't need to recalculate the function */
-  ierr = CVodeConvergenceTest(snes, it, xnorm, gnorm, ynorm, &reason, cctx); CHKERRQ(ierr);
+
+  /* THe custom line search skips a function calculation /if/ the function has
+     already converged in which case we don't need to recalculate the function
+   */
+  ierr = CVodeConvergenceTest(snes, it, xnorm, gnorm, ynorm, &reason, cctx);
+  CHKERRQ(ierr);
 
   if (!reason) {
-      ierr = SNESComputeFunction(snes, X,F);CHKERRQ(ierr);
+    ierr = SNESComputeFunction(snes, X, F);
+    CHKERRQ(ierr);
   }
-  
+
   /* if it hasn't converged yet then calculate the gradient */
-
-
-
-
 
   PetscFunctionReturn(0);
 }
+
+
+/*
+Dummy linear solver for cvode to tell cvode to perform calculations for
+linear solver
+*/
+int Lsolve_dummy(struct CVodeMemRec *cv_mem, int convfail,
+                   N_Vector ypred, N_Vector fpred, booleantype *jcurPtr,
+                   N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3) {
+    return 0;
+};

@@ -240,7 +240,7 @@ private:
 
 
     CVSNESMNSetup(snes,
-                  cv_mn_petsc_mem,
+                  &cv_mn_petsc_mem,
                   petsc_jacobian,
                   SNESJacobianWrapper,
                   udataptr, cvode_mem, x0_petsc, 1);

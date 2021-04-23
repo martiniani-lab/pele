@@ -37,7 +37,8 @@ typedef PetscErrorCode (*CVSNESJacFn)(PetscReal t, Vec x, Mat J,
                                       void *user_data);
 
 /*
-  context passed on to the delayed hessian. TODO: encapsulate this data structure
+  context passed on to the delayed hessian. TODO: encapsulate this data
+  structure
 */
 typedef struct {
   /* memory information */
@@ -50,7 +51,6 @@ typedef struct {
   CVSNESJacFn user_jac_func; /* user defined Jacobian function */
 
   /* jacobian calculation information */
-  PetscBool jok;  /* check for whether jacobian needs to be updated */
   PetscBool jcur; /* whether to use saved copy of jacobian */
   /* Linear solver, matrix and vector objects/pointers */
   /* NOTE: some of this might be uneccessary since it maybe stored
@@ -72,13 +72,13 @@ typedef struct {
   N_Vector delta; /* pointer for the residue to be passed */
   N_Vector w;
   PetscReal tol;
- PetscInt m_local;           /* nonlinear solver iterations */
+  PetscInt m_local; /* nonlinear solver iterations */
 
   Vec yguess; /* Initial guess storage (HAS to be initialized) */
   N_Vector
       yguess_nvec; /* pointer to initial guess to save reallocating memory */
-    PetscBool ctest_called;     /* whether convergence test has been called */
-    SNESConvergedReason c_reason; /* convergence reason if test passes */
+  PetscBool ctest_called;       /* whether convergence test has been called */
+  SNESConvergedReason c_reason; /* convergence reason if test passes */
 } * CVMNPETScMem;
 
 /*****************************************************************************/
@@ -105,7 +105,7 @@ PetscErrorCode CVODEMNPETScCreate(void *cvode_mem, void *user_mem,
 PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem);
 
 /* SetUp */
-PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem cvmnmem, Mat Jac_mat,
+PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem *cvmnmem_ptr, Mat Jac_mat,
                              CVSNESJacFn func, void *user_mem, void *cvode_mem,
                              Vec y, booleantype scalesol);
 
@@ -117,7 +117,13 @@ PetscErrorCode CVodeConvergenceTest(SNES snes, PetscInt it, PetscReal xnorm,
 /*
   SNES shell line search
 */
-    PetscErrorCode  SNESLineSearchApply_CVODE(SNESLineSearch linesearch, void *ctx);
+PetscErrorCode SNESLineSearchApply_CVODE(SNESLineSearch linesearch, void *ctx);
+
+/* dummy linear solver to tell cvode to calculate constants for the linear
+ * solver */
+int Lsolve_dummy(struct CVodeMemRec *cv_mem, int convfail, N_Vector ypred,
+                 N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1,
+                 N_Vector vtemp2, N_Vector vtemp3);
 
 #ifdef __cplusplus /* wrapper to enable C++ usage */
 }

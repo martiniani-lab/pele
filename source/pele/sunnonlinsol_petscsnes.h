@@ -25,6 +25,7 @@
 #define _SUNNONLINSOL_PETSCSNES_H
 
 #include "cvode_modified_newton.h"
+#include "sundials/sundials_export.h"
 #include "sundials/sundials_nonlinearsolver.h"
 #include "sundials/sundials_nvector.h"
 #include "sundials/sundials_types.h"
@@ -94,6 +95,7 @@ SUNDIALS_EXPORT int SUNNonlinSolGetPetscError_PetscSNES(SUNNonlinearSolver NLS,
 SUNDIALS_EXPORT int SUNNonlinSolGetSysFn_PetscSNES(SUNNonlinearSolver NLS,
                                                    SUNNonlinSolSysFn *SysFn);
 
+SUNDIALS_EXPORT int CvodeSetup_PETSc(CVMNPETScMem cvls_petsc_mem);
 
 
 
