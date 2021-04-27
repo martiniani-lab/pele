@@ -66,6 +66,7 @@ typedef struct {
 
   PetscBool
       recoverable; /* boolean that tells us whether the error is recoverable */
+  PetscInt cv_nsetups;
 
   /* Convergence test data to be passed */
   /* These are only pointers */

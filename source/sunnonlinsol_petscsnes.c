@@ -232,7 +232,8 @@ int SUNNonlinSolSolve_PetscSNES(SUNNonlinearSolver NLS, N_Vector y0, N_Vector y,
     /* pre SNES setup for delayed jacobian */
 
     if (callLSetup) {
-        retval = CvodeSetup_PETSc(cvls_petsc_mem);
+      retval = CvodeSetup_PETSc(cvls_petsc_mem);
+      cvls_petsc_mem->cv_nsetups++;
     }
 
     /* cvls_petsc_mem->jcur = (cvls_petsc_mem->jok || ); */
@@ -465,8 +466,8 @@ int CvodeSetup_PETSc(CVMNPETScMem cvls_petsc_mem) {
 
   cv_mem->cv_gamrat = ONE;
   cv_mem->cv_gammap = cv_mem->cv_gamma;
-  cv_mem->cv_crate  = ONE;
-  cv_mem->cv_nstlp  = cv_mem->cv_nst;
-  
+  cv_mem->cv_crate = ONE;
+  cv_mem->cv_nstlp = cv_mem->cv_nst;
+
   return (0);
 }

@@ -132,7 +132,7 @@
 #define ONE RCONST(1.0)
 #define TWO RCONST(2.0)
 #define HUNDRED RCONST(100.0)
-#define MAXSTEPS 3
+#define MAXSTEPS 15
 
 /* User-defined data structure */
 typedef struct UserData_ {
@@ -157,7 +157,8 @@ static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
 /* Utility functions */
 static int InitUserData(UserData udata);
 static int PrintStats(void *cvode_mem);
-static int PrintStats_petsc(void *cvode_mem, void *user_data);
+static int PrintStats_petsc(void *cvode_mem, void *user_data,
+                            CVMNPETScMem cv_mn_mem);
 static int check_retval(void *returnvalue, const char *funcname, int opt);
 
 int rosenbrock_minus_gradient_petsc(PetscReal t, N_Vector x, N_Vector xdot,
@@ -194,7 +195,6 @@ TEST(CVDP, CVM) {
   minimum_tol = 1e-6; /* minimum tolerance */
   double maxsteps =
       MAXSTEPS; /* maximum number of steps to run the solver for */
-
   udata = (UserData)malloc(sizeof *udata);
   retval = InitUserData(udata);
 
@@ -385,8 +385,6 @@ TEST(CVPet, CVM) {
                  &Jac_petsc);
 
   // MatCreateSeqSBAIJ(PETSC_COMM_SELF, 2 ,2 ,2 ,2,NULL,&Jac_petsc);
-  std::cout << "heeloo 2"
-            << "\n";
   /* Set initial condition */
   PetscScalar ydata_petsc[2];
   ydata_petsc[0] = ONE;
@@ -395,6 +393,14 @@ TEST(CVPet, CVM) {
   /* set values petsc */
   PetscInt y_index[2] = {0, 1};
   VecSetValues(y_vec, dim, y_index, ydata_petsc, INSERT_VALUES);
+  VecAssemblyBegin(y_vec);
+  VecAssemblyEnd(y_vec);
+  Vec x;
+  VecDuplicate(y_vec, &x);
+  VecSet(x, 0.00000001);
+  VecAXPY(y_vec, 1, x);
+
+  VecView(y_vec, 0);
 
   cvode_mem_PETSc = CVodeCreate(CV_BDF);
   retval = CVodeInit(cvode_mem_PETSc, rosenbrock_minus_gradient_petsc, t_petsc,
@@ -437,16 +443,14 @@ TEST(CVPet, CVM) {
   /* Attach setup to the SNES Solver */
   CVSNESMNSetup(snes, &cv_mn_petsc_mem, Jac_petsc, rosenbrock_minus_Jac_petsc,
                 udata_petsc, &cvode_mem_PETSc, y_vec, 1);
-  std::cout << "this is cv_mem " << cv_mn_petsc_mem->jcur << "\n";
-  std::cout << "this is cv_mem" << cv_mn_petsc_mem->cvode_mem << "\n";
 
   // cv_mn_petsc_mem->cvode_mem = cvode_mem_PETSc;
 
   // Attach nonlinear solver to petsc
   CVodeSetNonlinearSolver(cvode_mem_PETSc, NLS);
-  // patch the nonlinear solver for
+  // patch the linear solver data calculations for Petsc
   CVodeMem cv_mem = (CVodeMem)cvode_mem_PETSc;
-  cvode_mem
+  cv_mem->cv_lsetup = &Lsolve_dummy;
 
   PetscReal *y_diff_vals;
 
@@ -461,12 +465,8 @@ TEST(CVPet, CVM) {
   for (int nstep = 0; nstep < maxsteps; ++nstep) {
     std::cout << "--------- Step:" << nstep << "\n";
 
-    if (nstep == 66) {
-      printf("this is it");
-      int blash = 3;
-    }
-
     // cv_mn_petsc_mem->cvode_mem = cvode_mem;
+
     /* TODO check whether a postsolve function can be provided to sundials */
     retval = CVode(cvode_mem_PETSc, tout, y_nv_petsc, &t_petsc, CV_ONE_STEP);
 
@@ -529,7 +529,7 @@ TEST(CVPet, CVM) {
   SUNLinSolFree(LS);
   CVodeFree(&cvode_mem);
   /* Print some final statistics */
-  PrintStats_petsc(cvode_mem_PETSc, udata_petsc);
+  PrintStats_petsc(cvode_mem_PETSc, udata_petsc, cv_mn_petsc_mem);
   PetscFinalize();
 }
 
@@ -652,7 +652,8 @@ static int PrintStats(void *cvode_mem) {
 }
 
 /* Print final statistics Petsc */
-static int PrintStats_petsc(void *cvode_mem, void *user_data) {
+static int PrintStats_petsc(void *cvode_mem, void *user_data,
+                            CVMNPETScMem cv_mn_mem) {
   int retval;
   long int nst, nfe, nsetups, nje, nni, ncfn, netf;
   UserData udata;
@@ -678,7 +679,8 @@ static int PrintStats_petsc(void *cvode_mem, void *user_data) {
   printf("Number of steps taken = %-6ld\n", nst);
   printf("Number of function evaluations = %-6ld\n", nfe);
 
-  printf("Number of linear solver setups = %-6ld\n", nsetups);
+  std::cout << "number of linear solver setups " << cv_mn_mem->cv_nsetups
+            << "\n";
   printf("Number of Jacobian evaluations = %-6ld\n", nje);
 
   printf("Number of nonlinear solver iterations = %-6ld\n", nni);

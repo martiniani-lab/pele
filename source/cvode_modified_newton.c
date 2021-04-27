@@ -101,15 +101,13 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
 
   cv_mem = (CVodeMem)(cvls_petsc_mem->cvode_mem);
   /* check jacobian needs to be updated */
-  if (!(cvls_petsc_mem->jcur)) {
+  if ((cvls_petsc_mem->jcur)) {
     /* use saved copy of jacobian */
     /* Overwrite linear system matrix with saved J
        Assuming different non zero structure */
     /* TODO: expose the NON zero structure usage */
     /* ierr = MatCopy(cvls_petsc_mem->savedJ, A, DIFFERENT_NONZERO_PATTERN); */
     A = cvls_petsc_mem->savedJ;
-    CVodeGetCurrentState(cvls_petsc_mem->cvode_mem, &x_n);
-
     CHKERRQ(ierr);
   } else {
     /* call jac() to update the function */
@@ -120,6 +118,8 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
     /* TODO: add NULL checks for error handling */
     ierr = cvls_petsc_mem->user_jac_func(t, x_n_petsc, A,
                                          cvls_petsc_mem->user_mem);
+    printf("value at which jacobian is calculated");
+    VecView(x_n_petsc, 0);
     /* Update saved jacobian copy */
     /* TODO: expose nonzero structure usage */
     /* I'm not sure this makes sense */
@@ -130,11 +130,12 @@ PetscErrorCode CVDelayedJSNES(SNES snes, Vec delta_x_res, Mat A, Mat Jpre,
 
   /* do A = I - \gamma J */
 
-
-
   ierr = MatScale(A, -gamma);
+  printf("\n gamma %f \n", gamma);
   CHKERRQ(ierr);
   ierr = MatShift(A, 1.0);
+  printf("solver matrix");
+  MatView(A, 0);
   CHKERRQ(ierr);
   return 0;
 }
@@ -169,7 +170,6 @@ PetscErrorCode cvLSPostSolveKSP(KSP ksp, Vec b, Vec x, void *context) {
   }
   CVodeMem cv_mem;
   cv_mem = (CVodeMem)cvls_petsc_mem->cvode_mem;
-
 
   if (cv_mem->cv_gamrat != ONE) {
     VecScale(b, TWO / (ONE + cv_mem->cv_gamrat));
@@ -248,20 +248,18 @@ PetscErrorCode CVODEMNPTScFree(CVMNPETScMem *cvmnpetscmem) {
    wrapped around free function
    #TODO attaching func is duplicated
  * ---------------------------------------------------------------------------*/
-PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem * cvmnmem_ptr, Mat Jac_mat,
+PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem *cvmnmem_ptr, Mat Jac_mat,
                              CVSNESJacFn func, void *user_mem, void *cvode_mem,
                              Vec y, booleantype scalesol) {
-    
-  if (*cvmnmem_ptr == NULL) {
-      *cvmnmem_ptr = (CVMNPETScMem)malloc(sizeof **cvmnmem_ptr);
-  }
 
-  
+  if (*cvmnmem_ptr == NULL) {
+    *cvmnmem_ptr = (CVMNPETScMem)malloc(sizeof **cvmnmem_ptr);
+  }
 
   PetscErrorCode ierr;
   /* PetscFunctionBegin; */
 
-  CVMNPETScMem cvmnmem =  * cvmnmem_ptr;
+  CVMNPETScMem cvmnmem = *cvmnmem_ptr;
   SNESSetType(snes, SNESNEWTONLS);
   KSP ksp;
   PC pc;
@@ -280,10 +278,9 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem * cvmnmem_ptr, Mat Jac_mat,
                                         SNESLineSearchApply_CVODE, cvmnmem);
   printf("ierrrr %d \n", ierr);
 
-  
   cvmnmem->cvode_mem = cvode_mem;
 
-  CVodeMem cv_mem = (CVodeMem) cvode_mem;
+  CVodeMem cv_mem = (CVodeMem)cvode_mem;
 
   cv_mem->cv_lsetup = Lsolve_dummy;
   N_Vector x;
@@ -333,9 +330,12 @@ PetscErrorCode CVSNESMNSetup(SNES snes, CVMNPETScMem * cvmnmem_ptr, Mat Jac_mat,
 
   /* pass the wrapped jacobian function on to SNES */
   SNESSetJacobian(snes, Jac_mat, Jac_mat, CVDelayedJSNES, cvmnmem);
+
   /* TODO: make this the only approach */
   cvmnmem->user_mem = user_mem;
   cvmnmem->user_jac_func = func;
+  cvmnmem->cv_nsetups = 0;
+
   SNESSetApplicationContext(snes, cvmnmem);
   SNESGetApplicationContext(snes, (void **)&cvmnmem);
 
@@ -532,13 +532,12 @@ PetscErrorCode SNESLineSearchApply_CVODE(SNESLineSearch linesearch, void *ctx) {
   PetscFunctionReturn(0);
 }
 
-
 /*
 Dummy linear solver for cvode to tell cvode to perform calculations for
 linear solver
 */
-int Lsolve_dummy(struct CVodeMemRec *cv_mem, int convfail,
-                   N_Vector ypred, N_Vector fpred, booleantype *jcurPtr,
-                   N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3) {
-    return 0;
+int Lsolve_dummy(struct CVodeMemRec *cv_mem, int convfail, N_Vector ypred,
+                 N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1,
+                 N_Vector vtemp2, N_Vector vtemp3) {
+  return 0;
 };
