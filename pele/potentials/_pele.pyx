@@ -23,6 +23,12 @@ cdef class BasePotential(object):
                                                    array_wrap_np(grad))
         return e, grad
 
+    def getEnergyGradientInPlace(self, np.ndarray[double, ndim=1] x not None, np.ndarray[double, ndim=1] grad):
+        # redirect the call to the c++ class
+        e = self.thisptr.get().get_energy_gradient(array_wrap_np(x),
+                                                   array_wrap_np(grad))
+        return e
+
     def getEnergy(self, np.ndarray[double, ndim=1] x not None):
         # redirect the call to the c++ class
         return self.thisptr.get().get_energy(array_wrap_np(x))
