@@ -31,6 +31,12 @@ cdef class BasePotential(object):
         e, grad = self.getEnergyGradient(x)
         return grad
 
+    def getEnergyGradientInPlace(self, np.ndarray[double, ndim=1] x not None, np.ndarray[double, ndim=1] grad):
+        # redirect the call to the c++ class
+        e = self.thisptr.get().get_energy_gradient(array_wrap_np(x),
+                                                   array_wrap_np(grad))
+        return e
+
     def getEnergyGradientHessian(self, np.ndarray[double, ndim=1] x not None):
         cdef np.ndarray[double, ndim=1] grad = np.zeros(x.size)
         cdef np.ndarray[double, ndim=1] hess = np.zeros(x.size**2)
