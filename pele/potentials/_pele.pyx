@@ -45,6 +45,20 @@ cdef class BasePotential(object):
                                                            array_wrap_np(hess))
         return e, grad, hess.reshape([x.size, x.size])
 
+    def getEnergyGradientHessianInPlace(self, np.ndarray[double, ndim=1] x, np.ndarray[double, ndim=1] grad, np.ndarray[double, ndim=1] hess):
+        """
+        In Place gradient and hessian calls
+        """
+        e = self.thisptr.get().get_energy_gradient_hessian(array_wrap_np(x),
+                                                           array_wrap_np(grad),
+                                                           array_wrap_np(hess))
+        # even though x, grad have same dimension
+        # this extra check ensures that x, grad have
+        # the same dimension
+        # by raising an error otherwise
+        return e
+
+
     def getHessian(self, np.ndarray[double, ndim=1] x not None):
         cdef np.ndarray[double, ndim=1] hess = np.zeros(x.size**2)
         self.thisptr.get().get_hessian(array_wrap_np(x), array_wrap_np(hess))
