@@ -2,6 +2,7 @@
 # distutils: language = C++
 """
 import numpy as np
+from numpy.core.fromnumeric import _compress_dispatcher, ndim
 
 cimport numpy as np
 from cpython cimport bool
@@ -44,15 +45,37 @@ cdef extern from "pele/inversepower.h" namespace "pele":
 cdef class InversePower(_pele.PairwisePotentialInterface):
     """define the python interface to the c++ InversePower implementation
     """
-    cpdef bool periodic
+    cdef bool periodic
+    cdef float pow
+    cdef float eps
+    cdef int ndim
+    cdef double[:] radii
+    cdef double[:] boxvec
+    cdef bool use_cell_lists
+    cdef float ncellx_scale
     def __cinit__(self, pow, eps, radii, ndim=3, boxvec=None, boxl=None,
                   use_cell_lists=False, ncellx_scale=1.0):
+        
+        # stored for pickling
+        self.pow = pow
+        self.eps = eps
+        self.radii = radii
+        self.ndim = ndim
+
+        self.use_cell_lists = bool(use_cell_lists)
+        self.ncellx_scale = ncellx_scale
+
         assert(ndim == 2 or ndim == 3)
         assert not (boxvec is not None and boxl is not None)
         if boxl is not None:
             boxvec = [boxl] * ndim
         cdef np.ndarray[double, ndim=1] bv
         cdef np.ndarray[double, ndim=1] radiic = np.array(radii, dtype=float)
+
+        self.radii = radiic
+        self.boxvec = np.array(boxvec)
+
+
 
         if use_cell_lists:
             if boxvec is None:
@@ -189,3 +212,11 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
             return False
         else:
             return True
+
+    def __reduce__(self):
+        d = {}
+        return (self.__class__, (self, self.pow, self.eps, self.radii, self.ndim, self.boxvec, None,
+                  self.use_cell_lists, self.ncellx_scale), d)
+
+    def __setstate__(self, d):
+        pass
