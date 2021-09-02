@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 enable_language(CXX)
-ADD_DEFINITIONS(-std=c++1z -g)
+ADD_DEFINITIONS(-std=c++20 -O3 -march=native -DNDEBUG)
 ADD_DEFINITIONS(-Wall)
 
 #set OpenMP
@@ -23,10 +23,10 @@ endif()
 
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
 set(SUNDIALS_INCLUDE_DIR
-  /home/praharsh/.local/include
+  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
   CACHE PATH "Location of SUNDIALS header files")
 set(SUNDIALS_LIBRARY_DIR
-  /home/praharsh/.local/lib
+  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
   CACHE PATH "Location of SUNDIALS libraries")
 
 

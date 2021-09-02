@@ -1,9 +1,9 @@
 # this file is meant to be parsed by python before being a proper CMakeLists.txt file
 # in particular, the following strings will be set to their proper values by python when
 # making CMakeLists.txt
-set(numpy_include /home/praharsh/anaconda3/lib/python3.8/site-packages/numpy/core/include)
-set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/include/python3.8 /home/praharsh/anaconda3/include/python3.8)
-set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/lib/python3.8/config-3.8-x86_64-linux-gnu -lpthread -ldl -lutil -lrt -lm -lpython3.8 -Xlinker -export-dynamic")
+set(numpy_include /home/praharsh/anaconda3/envs/cb3/lib/python3.8/site-packages/numpy/core/include)
+set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/envs/cb3/include/python3.8 /home/praharsh/anaconda3/envs/cb3/include/python3.8)
+set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/envs/cb3/lib/python3.8/config-3.8-x86_64-linux-gnu -lpthread -ldl -lutil -lrt -lm -lpython3.8 -Xlinker -export-dynamic")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #find_package(PythonLibs)
 #message("PYTHON_LIBRARIES ${PYTHON_LIBRARIES}")
@@ -63,7 +63,7 @@ cmake_minimum_required(VERSION 2.8)
 
 
 enable_language(CXX)
-SET(CMAKE_CXX_FLAGS "-std=c++1z -Wall -Wextra -pedantic -O3 -fPIC -march=native -flto -fopenmp")
+SET(CMAKE_CXX_FLAGS "-std=c++1z -O3 -fPIC -march=native -flto -fopenmp")
 
 #cmake_policy(SET CMP0015 NEW)
 

@@ -20,7 +20,7 @@ cdef extern from "pele/mxopt.h" namespace "pele":
     cdef cppclass cppMixedOptimizer "pele::MixedOptimizer":
         cppMixedOptimizer(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, int,
                           double, double, double,
-                          double, double) except +
+                          double, double, cbool) except +
         double get_nhev() except +
         int get_n_phase_1_steps() except +
         int get_n_phase_2_steps() except +
@@ -31,7 +31,7 @@ cdef class _Cdef_MixedOptimizer_CPP(_pele_opt.GradientOptimizer):
     cdef _pele.BasePotential pot
     def __cinit__(self, potential, x0,  double tol=1e-5,
                   int T=1, double step=1, double conv_tol = 1e-2,
-                  double conv_factor=2, double rtol=1e-3, double atol=1e-3, int nsteps=10000):
+                  double conv_factor=2, double rtol=1e-3, double atol=1e-3, int nsteps=10000, cbool iterative=False):
         potential = as_cpp_potential(potential, verbose=True)
 
         self.pot = potential
@@ -39,7 +39,7 @@ cdef class _Cdef_MixedOptimizer_CPP(_pele_opt.GradientOptimizer):
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppMixedOptimizer(self.pot.thisptr,
                              _pele.Array[double](<double*> x0c.data, x0c.size),
-                                tol, T, step, conv_tol, conv_factor, rtol, atol))
+                                tol, T, step, conv_tol, conv_factor, rtol, atol, iterative))
         cdef cppMixedOptimizer* mxopt_ptr = <cppMixedOptimizer*> self.thisptr.get()
     
     def get_result(self):

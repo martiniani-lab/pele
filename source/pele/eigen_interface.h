@@ -5,6 +5,10 @@
 /**
  * @brief      Interface from pele array to Eigen
  */
+// #define EIGEN_USE_MKL_ALL
+#define EIGEN_USE_BLAS
+#define EIGEN_USE_LAPACKE
+
 #include "array.h"
 #include <Eigen/Dense>
 
@@ -25,7 +29,14 @@ inline void pele_eq_eig(Array<double> x, Eigen::VectorXd &mat) {
     }
 }
 
-
+inline void eig_mat_eq_pele(Eigen::MatrixXd &mat, Array<double> &x) {
+    int n = mat.rows();
+    for (size_t i = 0; i < mat.rows(); ++i) {
+        for (size_t j = 0; j < mat.cols(); ++j) {
+            mat(i, j) = x[n*i + j];
+        }
+    }
+}
 
 } // end namespace pele
 

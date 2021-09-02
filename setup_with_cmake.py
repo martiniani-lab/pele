@@ -50,6 +50,7 @@ else:
 
 #extra compiler args
 cmake_compiler_extra_args = ["-std=c++1z","-Wall", "-Wextra", "-pedantic", "-O3", "-fPIC"]
+cmake_compiler_extra_args = ["-std=c++1z", "-O3", "-fPIC"]
 if idcompiler.lower() == 'unix':
     cmake_compiler_extra_args += ['-march=native', '-flto', '-fopenmp']
 else:
@@ -57,6 +58,14 @@ else:
     if jargs.opt_report:
         cmake_compiler_extra_args += ['-qopt-report=5']
 
+
+intel_args = ["  -L${MKLROOT}/lib/intel64 ", " -Wl,--no-as-needed ", " -lmkl_intel_ilp64 ", " -lmkl_gnu_thread ", "-lmkl_core ", " -lgomp ", " -lpthread ", " -lm ", "-ldl",  "-m64",  "-I${MKLROOT}/include"]
+# comment out for intel setup
+intel_args = []
+
+
+
+cmake_compiler_extra_args += intel_args
 
 #
 # Make the git revision visible.  Most of this is copied from scipy
@@ -340,7 +349,8 @@ def run_cmake(compiler_id="unix"):
     print("\nrunning cmake in directory", cmake_build_dir)
     cwd = os.path.abspath(os.path.dirname(__file__))
     env, cmake_compiler_args = set_compiler_env(compiler_id)
-
+    print(env, "-------")
+    p = subprocess.call(["sh", "./opt/intel/oneapi/setvars.sh"], env=env)
     p = subprocess.call(["cmake"] + cmake_compiler_args + [cwd], cwd=cmake_build_dir, env=env)
     if p != 0:
         raise Exception("running cmake failed")

@@ -5,6 +5,7 @@
 #include "array.h"
 #include "debug.h"
 
+// #define EIGEN_USE_MKL_ALL
 
 #include <cstddef>
 #include <iostream>
@@ -15,11 +16,16 @@
 #include "cvode/cvode_proj.h"
 #include "debug.h"
 
+#define EIGEN_USE_BLAS
+#define EIGEN_USE_LAPACKE
+// #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
-#include "eigen_interface.h"                    
+#include "eigen_interface.h"
+
+
 
 
 // line search methods 
@@ -37,13 +43,11 @@
 #include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
 #include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
 #include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */    
+#include <sunlinsol/sunlinsol_spgmr.h>  /* access to SPGMR SUNLinearSolver */
 
 extern "C" {
 #include "xsum.h"
 }
-
-
-
 
 namespace pele {
 
@@ -86,7 +90,7 @@ public:
                       const pele::Array<double> x0,
                       double tol=1e-5,
                       double rtol=1e-4,
-                      double atol=1e-4);
+                      double atol=1e-4, bool iterative = false);
     inline int get_nhev() const { return udata.nhev;}
 
 protected:

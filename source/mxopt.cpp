@@ -1,11 +1,11 @@
 #include "pele/mxopt.h"
-#include "Eigen/src/Core/Matrix.h"
 #include "cvode/cvode.h"
 #include "pele/array.h"
 #include "pele/base_potential.h"
 #include "pele/debug.h"
 #include "pele/eigen_interface.h"
 #include "pele/lsparameters.h"
+#include "pele/ngt.hpp"
 #include "pele/optimizer.h"
 #include <algorithm>
 #include <complex>
@@ -13,57 +13,65 @@
 #include <limits>
 #include <memory>
 #include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
+#include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h>
+
+using namespace Spectra;
 
 namespace pele {
 
 MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                                const pele::Array<double> x0, double tol, int T,
                                double step, double conv_tol, double conv_factor,
-                               double rtol, double atol)
-    : GradientOptimizer(potential, x0, tol),
-      cvode_mem(CVodeCreate(CV_BDF)), 
+                               double rtol, double atol, bool iterative)
+    : GradientOptimizer(potential, x0, tol), cvode_mem(CVodeCreate(CV_BDF)),
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
-      xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T),
-      usephase1(true), conv_tol_(conv_tol), conv_factor_(conv_factor),
-      n_phase_1_steps(0), n_phase_2_steps(0),
-      line_search_method(this, step) {
-    // set precision of printing
-    std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
-    // dummy t0
-    double t0 = 0;
-    std::cout << x0 << "\n";
-    Array<double> x0copy = x0.copy();
-    x0_N = N_Vector_eq_pele(x0copy);
-    // initialization of everything CVODE needs
-    int ret = CVodeInit(cvode_mem, f, t0, x0_N);
-    // initialize userdata
-    udata.rtol = rtol;
-    udata.atol = atol;
-    udata.nfev = 0;
-    udata.nhev = 0;
-    udata.pot_ = potential_;
-    udata.stored_grad = Array<double>(x0.size(), 0);
-    // set tolerances
-    CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
-    ret = CVodeSetUserData(cvode_mem, &udata);
-    // initialize hessian
+      xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T), usephase1(true),
+      conv_tol_(conv_tol), conv_factor_(conv_factor), n_phase_1_steps(0),
+      n_phase_2_steps(0), line_search_method(this, step) {
+  // set precision of printing
+  std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
+  // dummy t0
+  double t0 = 0;
+  std::cout << x0 << "\n";
+  Array<double> x0copy = x0.copy();
+  x0_N = N_Vector_eq_pele(x0copy);
+  // initialization of everything CVODE needs
+  int ret = CVodeInit(cvode_mem, f, t0, x0_N);
+  // initialize userdata
+  udata.rtol = rtol;
+  udata.atol = atol;
+  udata.nfev = 0;
+  udata.nhev = 0;
+  udata.pot_ = potential_;
+  udata.stored_grad = Array<double>(x0.size(), 0);
+  // set tolerances
+  CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
+  ret = CVodeSetUserData(cvode_mem, &udata);
+
+  // initialize hessian
+  if (iterative) {
+    LS = SUNLinSol_SPGMR(x0_N, PREC_NONE, 0);
+    CVodeSetLinearSolver(cvode_mem, LS, NULL);
+  } else {
     A = SUNDenseMatrix(N_size, N_size);
     LS = SUNLinSol_Dense(x0_N, A);
     CVodeSetLinearSolver(cvode_mem, LS, A);
     CVodeSetJacFn(cvode_mem, Jac);
-    // pass hessian information
-    g_ = udata.stored_grad;
-    // initialize CVODE steps and stop time
-    CVodeSetMaxNumSteps(cvode_mem, 100000);
-    CVodeSetStopTime(cvode_mem, tN);
-    inv_sqrt_size = 1 / sqrt(x_.size());
-    // optmizeer debug level
-    std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
+  }
+
+  // pass hessian information
+  g_ = udata.stored_grad;
+  // initialize CVODE steps and stop time
+  CVodeSetMaxNumSteps(cvode_mem, 100000);
+  CVodeSetStopTime(cvode_mem, tN);
+  inv_sqrt_size = 1 / sqrt(x_.size());
+  // optmizeer debug level
+  std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
 
 #if OPTIMIZER_DEBUG_LEVEL >= 1
-    std::cout << "Mixed optimizer constructed"
-              << "T=" << T_ << "\n";
+  std::cout << "Mixed optimizer constructed"
+            << "T=" << T_ << "\n";
 #endif
 }
 /**
@@ -84,7 +92,7 @@ void MixedOptimizer::one_iteration() {
   bool switchtophase2 = false;
   // does a convexity check every T iterations
   // but always starts off in differential equation solver mode
-  if (iter_number_ % T_ == 0 and iter_number_>0) {
+  if (iter_number_ % T_ == 0 and iter_number_ > 0) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
     std::cout << "checking convexity"
               << "\n";
@@ -108,7 +116,7 @@ void MixedOptimizer::one_iteration() {
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
     double stepnorm = line_search_method.line_search(x_, step);
-    switchtophase2 = true;
+    // switchtophase2 = true;
   }
 
   // should think of using line search method within the phase steps
@@ -126,10 +134,7 @@ void MixedOptimizer::one_iteration() {
    */
 
   iter_number_ += 1;
-
 }
-
-
 
 /**
  * resets the minimizer for usage again
@@ -158,14 +163,50 @@ out the result.
 bool MixedOptimizer::convexity_check() {
 
   hessian = get_hessian();
-  hessian_calculated = true; // pass on the fact that the hessian has been calculated
-  Eigen::VectorXd eigvals = hessian.eigenvalues().real();
-  minimum = eigvals.minCoeff();
-  double maximum = eigvals.maxCoeff();
-  if (maximum == 0) {
-    maximum = 1e-8;
-  }
-  double convexity_estimate = std::abs(minimum / maximum);
+  hessian_calculated =
+      true; // pass on the fact that the hessian has been calculated
+
+
+  // ///// change this
+  // // Define operator vector product
+  // Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eg;
+  // eg.compute(hessian, Eigen::EigenvaluesOnly);
+  // // Initialize and compute
+  // // int nconv = eigs.compute(Spectra::SortRule::SmallestAlge);
+  // Eigen::VectorXd evals = eg.eigenvalues();
+  // // Eigen::VectorXd eigvals = hessian.eigenvalues().real();
+  // minimum = evals.minCoeff();
+ 
+    // Construct matrix operation object using the wrapper class DenseSymMatProd
+    DenseSymMatProd<double> op(hessian);
+ 
+    // Construct eigen solver object, requesting the largest three eigenvalues
+    SymEigsSolver<DenseSymMatProd<double>> eigs(op, 1, 7);
+ 
+    // Initialize and compute
+    eigs.init();
+    int nconv = eigs.compute(SortRule::SmallestAlge);
+    
+    // Retrieve results
+    Eigen::VectorXd evalues;
+    if (eigs.info() == CompInfo::Successful)
+        evalues = eigs.eigenvalues();
+    if (evalues.size() > 0) {
+        minimum = evalues.minCoeff();        
+    }
+    else {
+        minimum = -1;
+    }
+
+    std::cout << minimum << "minimum \n";
+    std::cout << evalues << "evalues \n";
+
+
+  // minimum = evals.minCoeff();
+  // if (maximum == 0) {
+  //   maximum = 1e-8;
+  // }
+  double convexity_estimate = std::abs(minimum);
 
   if (minimum < 0 and convexity_estimate >= conv_tol_) {
     // note minimum is negative
@@ -204,7 +245,6 @@ bool MixedOptimizer::convexity_check() {
 Eigen::MatrixXd MixedOptimizer::get_hessian() {
   Array<double> hess(xold.size() * xold.size());
   Array<double> grad(xold.size());
-  
 
   double e = potential_->get_energy_gradient_hessian(
       x_, grad, hess); // preferably switch this to sparse Eigen
@@ -245,7 +285,7 @@ void MixedOptimizer::compute_phase_1_step(Array<double> step) {
   rms_ = (norm(g_) / sqrt(x_.size()));
   f_ = udata.stored_energy;
   step = xold - x_;
-  n_phase_1_steps +=1;
+  n_phase_1_steps += 1;
 }
 
 /**
@@ -263,8 +303,7 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
   // std::cout << hessian.eigenvalues() << "hessian eigenvalues before \n";
 
   if (minimum_less_than_zero) {
-    hessian -= conv_factor_ * minimum *
-               Eigen::MatrixXd::Identity(x_.size(), x_.size());
+    hessian.diagonal().array() -= conv_factor_ * minimum;
   }
 
   Eigen::VectorXd r(step.size());
@@ -273,8 +312,8 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
   eig_eq_pele(r, step);
   // negative sign to switch direction
   // TODO change this to banded
-  q = -scale * hessian.colPivHouseholderQr().solve(r);
+  q = -scale * hessian.householderQr().solve(r);
   pele_eq_eig(step, q);
-  n_phase_2_steps+=1;
+  n_phase_2_steps += 1;
 }
 } // namespace pele
