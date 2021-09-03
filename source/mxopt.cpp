@@ -1,4 +1,5 @@
 #include "pele/mxopt.h"
+#include "Eigen/src/Core/util/Constants.h"
 #include "cvode/cvode.h"
 #include "pele/array.h"
 #include "pele/base_potential.h"
@@ -14,6 +15,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <ostream>
 #include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
 #include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h>
@@ -30,18 +32,23 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T), usephase1(true),
       conv_tol_(conv_tol), conv_factor_(conv_factor), n_phase_1_steps(0),
-      n_phase_2_steps(0), line_search_method(this, step){
+      n_phase_2_steps(0),hessian(x_.size(), x_.size()), hessian_shifted(x_.size(), x_.size()),  line_search_method(this, step) {
 
-  
   // set precision of printing
   std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
   // dummy t0
   double t0 = 0;
-
-  lowest_eig_pot_ = std::shared_ptr<pele::LowestEigPotential> (new pele::LowestEigPotential(potential, x0, potential->get_ndim()));
-  lbfgs_lowest_eigval = std::shared_ptr<pele::LBFGS> (new pele::LBFGS(lowest_eig_pot_, x0, 1e-6, 10));
+  sparse_le_solver_type_ = 1;
 
 
+  if (sparse_le_solver_type_ == 0) {
+    lowest_eig_pot_ = std::shared_ptr<pele::LowestEigPotential>(
+        new pele::LowestEigPotential(potential, x0, potential->get_ndim()));
+    lbfgs_lowest_eigval = std::shared_ptr<pele::LBFGS>(
+        new pele::LBFGS(lowest_eig_pot_, x0, 1e-6, 10));
+  } else if (sparse_le_solver_type_ == 1) {
+    // Sparse eigen constructor
+  }
 
   std::cout << x0 << "\n";
   Array<double> x0copy = x0.copy();
@@ -58,6 +65,7 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
   // set tolerances
   CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
   ret = CVodeSetUserData(cvode_mem, &udata);
+
 
   // initialize hessian
   if (iterative) {
@@ -99,7 +107,6 @@ void MixedOptimizer::one_iteration() {
   gold.assign(g_);
   // copy the gradient into step
   step.assign(g_);
-  bool switchtophase2 = false;
   // does a convexity check every T iterations
   // but always starts off in differential equation solver mode
   if (iter_number_ % T_ == 0 and iter_number_ > 0) {
@@ -109,7 +116,7 @@ void MixedOptimizer::one_iteration() {
 #endif
     usephase1 = convexity_check();
   }
-  if (usephase1 and not switchtophase2) {
+  if (usephase1) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
     std::cout << " computing phase 1 step"
               << "\n";
@@ -172,53 +179,32 @@ out the result.
 
 bool MixedOptimizer::convexity_check() {
 
-    hessian = get_hessian();
-  hessian_calculated =
-      true; // pass on the fact that the hessian has been calculated
-    
-  
-  
-  // get lowest eigenvalue of hessian
 
-  lbfgs_lowest_eigval->reset(x_);
-  lowest_eig_pot_->reset_coords(lbfgs_lowest_eigval->get_x());
-  lowest_eig_pot_->set_x_opt(lbfgs_lowest_eigval->get_x());
-  
-  lbfgs_lowest_eigval->run(300);
-  
 
-  minimum = lbfgs_lowest_eigval->get_f();
+  get_hess(hessian);
+
+  hessian_shifted = hessian;
+  // shift diagonal by conv tol
+
+  hessian_shifted.diagonal().array() -= conv_tol_;
+
+  cout << "hessian_shifted" << hessian_shifted.eigenvalues() << std::endl;
+
+  // check if the hessian is positive definite by doing a cholesky decomposition
+  // and checking if it is successful
+  std::cout << "checking if hessian is positive definite" << "\n";
+
+  Eigen::ComputationInfo info = hessian_shifted.llt().info();
+  std::cout << info << " success info of cholesky decomposition \n";
 
   
-  double convexity_estimate = std::abs(minimum);
-
-  if (minimum < 0 and convexity_estimate >= conv_tol_) {
-    // note minimum is negative
-#if OPTIMIZER_DEBUG_LEVEL >= 1
-    std::cout << "minimum less than 0"
-              << " convexity tolerance condition not satisfied \n";
-#endif
-    minimum_less_than_zero = true;
+  if (info == Eigen::Success) {
+    // if it is positive definite, we can use the newton method to solve the
+    // problem
     return true;
-  } else if (convexity_estimate < conv_tol_ and minimum < 0) {
-
-#if OPTIMIZER_DEBUG_LEVEL >= 1
-    std::cout << "minimum less than 0"
-              << " convexity tolerance condition satisfied \n";
-#endif
-    scale = 1.;
-    minimum_less_than_zero = true;
-    return false;
   }
-
   else {
-    scale = 1;
-#if OPTIMIZER_DEBUG_LEVEL >= 1
-    std::cout << "minimum greater than 0"
-              << " convexity tolerance condition satisfied \n";
-#endif
-    minimum_less_than_zero = false;
-    return false;
+  return false;
   }
 }
 
@@ -226,22 +212,13 @@ bool MixedOptimizer::convexity_check() {
  * Gets the hessian. involves a dense hessian for now. #TODO replace with a
  * sparse hessian. TODO: Allocate memory once
  */
-Eigen::MatrixXd MixedOptimizer::get_hessian() {
-  Array<double> hess(xold.size() * xold.size());
-  Array<double> grad(xold.size());
-
-  double e = potential_->get_energy_gradient_hessian(
-      x_, grad, hess); // preferably switch this to sparse Eigen
-  Eigen::MatrixXd hess_dense(xold.size(), xold.size());
+void MixedOptimizer::get_hess(Eigen::MatrixXd & hessian) {
+  Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
+  potential_->get_hessian(
+      x_, hessian_pele); // preferably switch this to sparse Eigen
   udata.nhev += 1;
-  hess_dense.setZero();
-  for (size_t i = 0; i < xold.size(); ++i) {
-    for (size_t j = 0; j < xold.size(); ++j) {
-      hess_dense(i, j) = hess[i + grad.size() * j];
-    }
-  }
-  return hess_dense;
 }
+
 
 // /**
 //  * Phase 1 The problem does not look convex, Try solving using with an
@@ -275,19 +252,20 @@ void MixedOptimizer::compute_phase_1_step(Array<double> step) {
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
 void MixedOptimizer::compute_phase_2_step(Array<double> step) {
+
+
   if (hessian_calculated == false) {
     // we can afford to perform convexity checks at every steps
     // assuming the rate limiting cost is the hessian which is calculated
     // in the convexity check anyway
     convexity_check();
   }
-  // this can mess up accuracy if we aren't close to a minimum preferably switch
-  // sparse
   // std::cout << hessian.eigenvalues() << "hessian eigenvalues before \n";
+  hessian.diagonal().array() += conv_factor_ * conv_tol_ *10;
 
-  if (minimum_less_than_zero) {
-    hessian.diagonal().array() -= conv_factor_ * minimum;
-  }
+  // print conv factor added
+  std::cout << "conv factor " << conv_factor_ << " conv tol " << conv_tol_ << std::endl;
+  std::cout << "conv factor added: " << conv_factor_ * conv_tol_ *10 << "\n";
 
   Eigen::VectorXd r(step.size());
   Eigen::VectorXd q(step.size());
@@ -295,8 +273,14 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
   eig_eq_pele(r, step);
   // negative sign to switch direction
   // TODO change this to banded
+  std::cout << "r " << r << "\n";
+  std::cout << "hessian " << hessian << "\n";
+  std::cout << "hessian eigenvalues before \n";
+  std::cout << hessian.eigenvalues() << "\n";
   q = -scale * hessian.householderQr().solve(r);
   pele_eq_eig(step, q);
+
+  std::cout << "step norm " << q.norm() << "\n";
   n_phase_2_steps += 1;
 }
 } // namespace pele

@@ -97,16 +97,22 @@ private:
   Eigen::VectorXd
   update_solver(Eigen::VectorXd r); // updates the solver with the new hessian
 
-  // for calculating lowest eigenvalue
+// flag for what solver to use
+  int sparse_le_solver_type_;
+
+  // for calculating lowest eigenvalue using pele::LowestEigPotential
   std::shared_ptr<pele::LowestEigPotential> lowest_eig_pot_;
   std::shared_ptr<pele::LBFGS> lbfgs_lowest_eigval;
 
-  // for calculating the hessian
+  // Sparse Eigen for lowest eigenvalue 
+  Eigen::SparseMatrix<double> hess_sparse;
+
   
 
 
   // Calculates hess + delta I where delta makes the new eigenvalue positive
   Eigen::MatrixXd hessian;
+  Eigen::MatrixXd hessian_shifted;
   bool usephase1;
   /**
    * number of phase 1 steps
@@ -135,7 +141,7 @@ public:
    */
   MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                  const pele::Array<double> x0, double tol = 1e-4, int T = 1,
-                 double step = 1, double conv_tol = 1e-2,
+                 double step = 1, double conv_tol = 1e-8,
                  double conv_factor = 2, double rtol = 1e-3, double atol = 1e-3,
                  bool iterative = true);
   /**
@@ -166,7 +172,7 @@ private:
   void compute_phase_2_step(Array<double> step);
   bool convexity_check();
   bool minimum_less_than_zero;
-  Eigen::MatrixXd get_hessian();
+  void get_hess(Eigen::MatrixXd &hess);
 
   void update_H0_(Array<double> x_old, Array<double> &g_old,
                   Array<double> x_new, Array<double> &g_new);

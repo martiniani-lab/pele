@@ -126,7 +126,7 @@ void setup() {
 
     std::cout << hess_eig.eigenvalues().real().minCoeff() << "eigenvalues h \n"; 
 
-    std::cout << lowesteigenvalue << "lowest eigenvalue from pele\n";
+    std::cout << lowesteigenvalue << "lowest eigenvalue from pele \n";
     
 }
 
