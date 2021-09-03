@@ -4,6 +4,7 @@
 #include "array.h"
 #include "base_potential.h"
 #include "debug.h"
+#include "pele/lowest_eig_potential.h"
 #include <cstddef>
 #include <memory>
 #include <vector>
@@ -18,6 +19,8 @@
 #include <Eigen/SparseCholesky>
 #include <Eigen/SparseCore>
 #include <Spectra/SymEigsSolver.h>
+#include "pele/lbfgs.h"
+
 
 // line search methods
 #include "backtracking.h"
@@ -93,6 +96,15 @@ private:
   // solver for H x = b
   Eigen::VectorXd
   update_solver(Eigen::VectorXd r); // updates the solver with the new hessian
+
+  // for calculating lowest eigenvalue
+  std::shared_ptr<pele::LowestEigPotential> lowest_eig_pot_;
+  std::shared_ptr<pele::LBFGS> lbfgs_lowest_eigval;
+
+  // for calculating the hessian
+  
+
+
   // Calculates hess + delta I where delta makes the new eigenvalue positive
   Eigen::MatrixXd hessian;
   bool usephase1;

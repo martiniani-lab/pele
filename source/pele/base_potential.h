@@ -2,6 +2,7 @@
 #define PYGMIN_POTENTIAL_H
 
 #include <assert.h>
+#include <cstddef>
 #include <vector>
 #include <stdexcept>
 #include <iostream>
@@ -28,6 +29,10 @@ public:
     virtual double get_energy(Array<double> const & x)
     {
         throw std::runtime_error("BasePotential::get_energy must be overloaded");
+    }
+
+    virtual size_t get_ndim () const {
+        throw std::runtime_error("BasePotential::get_ndim must be overloaded");
     }
 
     /**

@@ -147,7 +147,7 @@ public:
         _orthog.orthogonalize(_coords, x_opt);  //takes care of orthogonalizing and normalizing x_opt
 
         for (size_t i = 0; i < x_opt.size(); i++) {
-            _coordsd[i] = _coords[i] + _d * x_opt[i];
+            _coordsd[i] = _coords[i] + _d * x_opt[i];   
         }
 
         _potential->get_energy_gradient(_coordsd, _gd);

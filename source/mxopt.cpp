@@ -4,6 +4,8 @@
 #include "pele/base_potential.h"
 #include "pele/debug.h"
 #include "pele/eigen_interface.h"
+#include "pele/lbfgs.h"
+#include "pele/lowest_eig_potential.h"
 #include "pele/lsparameters.h"
 #include "pele/ngt.hpp"
 #include "pele/optimizer.h"
@@ -28,11 +30,19 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T), usephase1(true),
       conv_tol_(conv_tol), conv_factor_(conv_factor), n_phase_1_steps(0),
-      n_phase_2_steps(0), line_search_method(this, step) {
+      n_phase_2_steps(0), line_search_method(this, step){
+
+  
   // set precision of printing
   std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
   // dummy t0
   double t0 = 0;
+
+  lowest_eig_pot_ = std::shared_ptr<pele::LowestEigPotential> (new pele::LowestEigPotential(potential, x0, potential->get_ndim()));
+  lbfgs_lowest_eigval = std::shared_ptr<pele::LBFGS> (new pele::LBFGS(lowest_eig_pot_, x0, 1e-6, 10));
+
+
+
   std::cout << x0 << "\n";
   Array<double> x0copy = x0.copy();
   x0_N = N_Vector_eq_pele(x0copy);
@@ -162,50 +172,24 @@ out the result.
 
 bool MixedOptimizer::convexity_check() {
 
-  hessian = get_hessian();
+    hessian = get_hessian();
   hessian_calculated =
       true; // pass on the fact that the hessian has been calculated
-
-
-  // ///// change this
-  // // Define operator vector product
-  // Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eg;
-  // eg.compute(hessian, Eigen::EigenvaluesOnly);
-  // // Initialize and compute
-  // // int nconv = eigs.compute(Spectra::SortRule::SmallestAlge);
-  // Eigen::VectorXd evals = eg.eigenvalues();
-  // // Eigen::VectorXd eigvals = hessian.eigenvalues().real();
-  // minimum = evals.minCoeff();
- 
-    // Construct matrix operation object using the wrapper class DenseSymMatProd
-    DenseSymMatProd<double> op(hessian);
- 
-    // Construct eigen solver object, requesting the largest three eigenvalues
-    SymEigsSolver<DenseSymMatProd<double>> eigs(op, 1, 7);
- 
-    // Initialize and compute
-    eigs.init();
-    int nconv = eigs.compute(SortRule::SmallestAlge);
     
-    // Retrieve results
-    Eigen::VectorXd evalues;
-    if (eigs.info() == CompInfo::Successful)
-        evalues = eigs.eigenvalues();
-    if (evalues.size() > 0) {
-        minimum = evalues.minCoeff();        
-    }
-    else {
-        minimum = -1;
-    }
+  
+  
+  // get lowest eigenvalue of hessian
 
-    std::cout << minimum << "minimum \n";
-    std::cout << evalues << "evalues \n";
+  lbfgs_lowest_eigval->reset(x_);
+  lowest_eig_pot_->reset_coords(lbfgs_lowest_eigval->get_x());
+  lowest_eig_pot_->set_x_opt(lbfgs_lowest_eigval->get_x());
+  
+  lbfgs_lowest_eigval->run(300);
+  
 
+  minimum = lbfgs_lowest_eigval->get_f();
 
-  // minimum = evals.minCoeff();
-  // if (maximum == 0) {
-  //   maximum = 1e-8;
-  // }
+  
   double convexity_estimate = std::abs(minimum);
 
   if (minimum < 0 and convexity_estimate >= conv_tol_) {
@@ -248,7 +232,6 @@ Eigen::MatrixXd MixedOptimizer::get_hessian() {
 
   double e = potential_->get_energy_gradient_hessian(
       x_, grad, hess); // preferably switch this to sparse Eigen
-
   Eigen::MatrixXd hess_dense(xold.size(), xold.size());
   udata.nhev += 1;
   hess_dense.setZero();
