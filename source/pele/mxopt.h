@@ -9,18 +9,21 @@
 #include <memory>
 #include <vector>
 
-
 #define EIGEN_USE_BLAS
 #define EIGEN_USE_LAPACKE
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
 #include "eigen_interface.h"
+#include "pele/lbfgs.h"
 #include <Eigen/Dense>
 #include <Eigen/SparseCholesky>
 #include <Eigen/SparseCore>
 #include <Spectra/SymEigsSolver.h>
-#include "pele/lbfgs.h"
 
+// Lapack for cholesky
+extern "C" {
+  #include <lapacke.h>
+}
 
 // line search methods
 #include "backtracking.h"
@@ -97,22 +100,25 @@ private:
   Eigen::VectorXd
   update_solver(Eigen::VectorXd r); // updates the solver with the new hessian
 
-// flag for what solver to use
+  // flag for what solver to use
   int sparse_le_solver_type_;
 
   // for calculating lowest eigenvalue using pele::LowestEigPotential
   std::shared_ptr<pele::LowestEigPotential> lowest_eig_pot_;
   std::shared_ptr<pele::LBFGS> lbfgs_lowest_eigval;
 
-  // Sparse Eigen for lowest eigenvalue 
+  // Sparse Eigen for lowest eigenvalue
   Eigen::SparseMatrix<double> hess_sparse;
 
-  
 
+  char uplo; /* We ask LAPACK for the lower diagonal matrix L */
+  int info;    /* "Info" return value, used for error-checking */
 
   // Calculates hess + delta I where delta makes the new eigenvalue positive
   Eigen::MatrixXd hessian;
   Eigen::MatrixXd hessian_shifted;
+
+  double * hess_shifted_data;
   bool usephase1;
   /**
    * number of phase 1 steps

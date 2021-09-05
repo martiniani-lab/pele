@@ -1,3 +1,4 @@
+
 #include "pele/mxopt.h"
 #include "Eigen/src/Core/util/Constants.h"
 #include "cvode/cvode.h"
@@ -39,6 +40,7 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
   // dummy t0
   double t0 = 0;
   sparse_le_solver_type_ = 1;
+  uplo = 'U';
 
 
   if (sparse_le_solver_type_ == 0) {
@@ -176,7 +178,6 @@ with help convexity flag false ->
  * convex function, We think we're near a minimum, use a newton method to figure
 out the result.
  */
-
 bool MixedOptimizer::convexity_check() {
 
 
@@ -194,11 +195,16 @@ bool MixedOptimizer::convexity_check() {
   // and checking if it is successful
   std::cout << "checking if hessian is positive definite" << "\n";
 
-  Eigen::ComputationInfo info = hessian_shifted.llt().info();
-  std::cout << info << " success info of cholesky decomposition \n";
+  // Eigen::ComputationInfo info = hessian_shifted.llt().info();
+  // std::cout << info << " success info of cholesky decomposition \n";
 
+  hess_shifted_data = hessian_shifted.data();
+
+  int N_int = x_.size();
+  dpotrf_(&uplo, &N_int, hess_shifted_data, &N_int, &info);
   
-  if (info == Eigen::Success) {
+  std::cout << "info " << info << std::endl;
+  if (info == 0) {
     // if it is positive definite, we can use the newton method to solve the
     // problem
     return true;
