@@ -16,7 +16,6 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <ostream>
 #include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
 #include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h>

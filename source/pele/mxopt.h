@@ -5,9 +5,6 @@
 #include "base_potential.h"
 #include "debug.h"
 #include "pele/lowest_eig_potential.h"
-#include <cstddef>
-#include <memory>
-#include <vector>
 
 #define EIGEN_USE_BLAS
 #define EIGEN_USE_LAPACKE

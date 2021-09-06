@@ -18,7 +18,12 @@ if (OPENMP_FOUND)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-#cmake_policy(SET CMP0015 NEW)
+# include LAPACK AND BLAS
+set(BLA_VENDOR Intel10_64lp)
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+
+
 
 
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
@@ -78,6 +83,8 @@ FILE(GLOB sources *.c*)
 add_executable(test_main ${sources})
 target_link_libraries(test_main pele_lib gtest gtest_main pthread)
 target_link_libraries(test_main ${SUNDIALS_LIBRARIES})
+target_link_libraries(test_main ${BLAS_LIBRARIES})
+target_link_libraries(test_main ${LAPACK_LIBRARIES})
 
 add_subdirectory(benchmarks)
 

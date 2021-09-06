@@ -41,6 +41,7 @@ static color_type color_white = 0;
 static color_type color_grey = 1;
 static color_type color_black = 4;
 
+
 /**
  * basic class for an edge (arc) in the graph
  */
