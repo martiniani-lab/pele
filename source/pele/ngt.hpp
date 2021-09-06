@@ -26,7 +26,7 @@ using std::cout;
 namespace pele
 {
 
-bool compare_degree(node_ptr u, node_ptr v){
+inline bool compare_degree(node_ptr u, node_ptr v){
     return u->in_out_degree() < v->in_out_degree();
 }
 

@@ -37,9 +37,9 @@ typedef size_t node_id;
 typedef Node * node_ptr;
 typedef Edge * edge_ptr;
 typedef int color_type;
-color_type color_white = 0;
-color_type color_grey = 1;
-color_type color_black = 4;
+static color_type color_white = 0;
+static color_type color_grey = 1;
+static color_type color_black = 4;
 
 /**
  * basic class for an edge (arc) in the graph
@@ -103,7 +103,7 @@ public:
     size_t out_degree() const { return out_edge_list_.size(); }
     size_t in_degree() const { return in_edge_list_.size(); }
     size_t in_out_degree() const { return out_degree() + in_degree(); }
-    std::set<node_ptr> in_out_neighbors();
+    inline std::set<node_ptr> in_out_neighbors();
 
     /*
      * return the edge u->v
@@ -118,7 +118,7 @@ public:
     }
 };
 
-std::set<node_ptr> Node::in_out_neighbors() {
+inline std::set<node_ptr> Node::in_out_neighbors() {
     std::set<node_ptr> neibs;
     Node::edge_iterator eiter;
     for (eiter = out_edge_begin(); eiter != out_edge_end(); eiter++){
