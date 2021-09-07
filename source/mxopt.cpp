@@ -66,8 +66,6 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
   // set tolerances
   CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
   ret = CVodeSetUserData(cvode_mem, &udata);
-
-  iterative = false;
   // initialize hessian
   if (iterative) {
     LS = SUNLinSol_SPGMR(x0_N, PREC_NONE, 0);
@@ -266,7 +264,7 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
 
   Eigen::VectorXd r(step.size());
   Eigen::VectorXd q(step.size());
-  
+
   q.setZero();
   eig_eq_pele(r, step);
 

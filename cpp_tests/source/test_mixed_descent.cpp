@@ -39,7 +39,7 @@ TEST(MXD, TEST_256_RUN) {
   eps = 1.0;
   power = 2.5;
 
-  n_particles = 8;
+  n_particles = 256;
   n_dof = n_particles * _ndim;
   phi = 0.9;
 
