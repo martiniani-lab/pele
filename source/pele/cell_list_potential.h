@@ -16,99 +16,92 @@
 #include "cell_lists.h"
 #include "vecn.h"
 
-extern "C" {
-#include "xsum.h"
-}
-
-
-
 namespace pele{
 
-  /**
-   * class which accumulates the energy one pair interaction at a time
-   */
-  template <typename pairwise_interaction, typename distance_policy>
-  class EnergyAccumulator {
+/**
+ * class which accumulates the energy one pair interaction at a time
+ */
+template <typename pairwise_interaction, typename distance_policy>
+class EnergyAccumulator {
     const static size_t m_ndim = distance_policy::_ndim;
     std::shared_ptr<pairwise_interaction> m_interaction;
     std::shared_ptr<distance_policy> m_dist;
     const pele::Array<double> * m_coords;
     const pele::Array<double> m_radii;
-    std::vector<xsum_large_accumulator> m_energies;
+    std::vector<double*> m_energies;
 
-  public:
+public:
     ~EnergyAccumulator()
-    {      
-      // for(auto & energy : m_energies) {
-      //   delete energy;
-      // }
+    {
+        for(auto & energy : m_energies) {
+            delete energy;
+        }
     }
 
     EnergyAccumulator(std::shared_ptr<pairwise_interaction> & interaction,
-                      std::shared_ptr<distance_policy> & dist,
-                      pele::Array<double> const & radii=pele::Array<double>(0))
-      : m_interaction(interaction),
-        m_dist(dist),
-        m_radii(radii)
+            std::shared_ptr<distance_policy> & dist,
+            pele::Array<double> const & radii=pele::Array<double>(0))
+        : m_interaction(interaction),
+          m_dist(dist),
+          m_radii(radii)
     {
-#ifdef _OPENMP
-      m_energies = std::vector<xsum_large_accumulator>(omp_get_max_threads());
-#pragma omp parallel
-      {
-          xsum_large_init(&(m_energies[omp_get_thread_num()]));
-      }
-#else
-      m_energies = std::vector<xsum_large_accumulator>(1);
-      xsum_large_init(&(m_energies[0]));
-#endif
+        #ifdef _OPENMP
+        m_energies = std::vector<double*>(omp_get_max_threads());
+        #pragma omp parallel
+        {
+            m_energies[omp_get_thread_num()] = new double();
+        }
+        #else
+        m_energies = std::vector<double*>(1);
+        m_energies[0] = new double();
+        #endif
     }
 
     void reset_data(const pele::Array<double> * coords) {
-      m_coords = coords;
-#ifdef _OPENMP
-#pragma omp parallel
-      {
-          xsum_large_init(&(m_energies[omp_get_thread_num()]));
-      }
-#else
-      xsum_large_init(&(m_energies[0]));
-#endif
+        m_coords = coords;
+        #ifdef _OPENMP
+        #pragma omp parallel
+        {
+            *m_energies[omp_get_thread_num()] = 0;
+        }
+        #else
+        *m_energies[0] = 0;
+        #endif
     }
 
     void insert_atom_pair(const size_t atom_i, const size_t atom_j, const size_t isubdom)
     {
-      const size_t xi_off = m_ndim * atom_i;
-      const size_t xj_off = m_ndim * atom_j;
-      pele::VecN<m_ndim, double> dr;
-      m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
-      double r2 = 0;
-      for (size_t k = 0; k < m_ndim; ++k) {
-        r2 += dr[k] * dr[k];
-      }
-      double radius_sum = 0;
-      if(m_radii.size() > 0) {
-        radius_sum = m_radii[atom_i] + m_radii[atom_j];
-      }
-#ifdef _OPENMP
-      xsum_large_add1(&(m_energies[isubdom]), m_interaction->energy(r2, radius_sum));
-#else
-      xsum_large_add1(&(m_energies[0]), m_interaction->energy(r2, radius_sum));
-#endif
+        const size_t xi_off = m_ndim * atom_i;
+        const size_t xj_off = m_ndim * atom_j;
+        pele::VecN<m_ndim, double> dr;
+        m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
+        double r2 = 0;
+        for (size_t k = 0; k < m_ndim; ++k) {
+            r2 += dr[k] * dr[k];
+        }
+        double radius_sum = 0;
+        if(m_radii.size() > 0) {
+            radius_sum = m_radii[atom_i] + m_radii[atom_j];
+        }
+        #ifdef _OPENMP
+        *m_energies[isubdom] += m_interaction->energy(r2, radius_sum);
+        #else
+        *m_energies[0] += m_interaction->energy(r2, radius_sum);
+        #endif
     }
 
     double get_energy() {
-      // I didn't accumulate here considering that the number of energies is small
-      double energy = 0;
-      for(size_t i = 0; i < m_energies.size(); ++i) {
-          energy += xsum_large_round(&(m_energies[i]));
-      }
-      return energy;
+        double energy = 0;
+        for(size_t i = 0; i < m_energies.size(); ++i) {
+            energy += *m_energies[i];
+        }
+        return energy;
     }
-  };
+};
 
-  /**
-   * class which accumulates the energy and gradient one pair interaction at a time
-   */
+/**
+ * class which accumulates the energy and gradient one pair interaction at a time
+ */
 template <typename pairwise_interaction, typename distance_policy>
 class EnergyGradientAccumulator {
     const static size_t m_ndim = distance_policy::_ndim;
@@ -116,92 +109,92 @@ class EnergyGradientAccumulator {
     std::shared_ptr<distance_policy> m_dist;
     const pele::Array<double> * m_coords;
     const pele::Array<double> m_radii;
-    std::vector<xsum_large_accumulator> m_energies;
-public:
-  std::shared_ptr<std::vector<xsum_small_accumulator>> m_gradient;
-  ~EnergyGradientAccumulator()
-  {
-    // for(auto & energy : m_energies) {
-    //   delete energy;
-    // }
-  }
+    std::vector<double*> m_energies;
 
-  EnergyGradientAccumulator(std::shared_ptr<pairwise_interaction> & interaction,
-                            std::shared_ptr<distance_policy> & dist,
-                            pele::Array<double> const & radii=pele::Array<double>(0))
-      : m_interaction(interaction),
-        m_dist(dist),
-        m_radii(radii)
+public:
+    pele::Array<double> * m_gradient;
+
+    ~EnergyGradientAccumulator()
     {
-#ifdef _OPENMP
-      m_energies = std::vector<xsum_large_accumulator>(omp_get_max_threads());
-#pragma omp parallel
-      {
-          xsum_large_init(&(m_energies[omp_get_thread_num()]));
-      }
-#else
-      m_energies = std::vector<xsum_large_accumulator>(1);
-      xsum_large_init(&(m_energies[0]))
-#endif
+        for(auto & energy : m_energies) {
+            delete energy;
+        }
     }
 
-  void reset_data(const pele::Array<double> * coords, std::shared_ptr<std::vector<xsum_small_accumulator>> & gradient) {
-    m_coords = coords;
-#ifdef _OPENMP
-#pragma omp parallel
-      {
-          xsum_large_init(&(m_energies[omp_get_thread_num()]));
-      }
-#else
-      xsum_large_init(&(m_energies[0]));
-#endif
-      m_gradient = gradient;
+    EnergyGradientAccumulator(std::shared_ptr<pairwise_interaction> & interaction,
+            std::shared_ptr<distance_policy> & dist,
+            pele::Array<double> const & radii=pele::Array<double>(0))
+        : m_interaction(interaction),
+          m_dist(dist),
+          m_radii(radii)
+    {
+        #ifdef _OPENMP
+        m_energies = std::vector<double*>(omp_get_max_threads());
+        #pragma omp parallel
+        {
+            m_energies[omp_get_thread_num()] = new double();
+        }
+        #else
+        m_energies = std::vector<double*>(1);
+        m_energies[0] = new double();
+        #endif
+    }
+
+    void reset_data(const pele::Array<double> * coords, pele::Array<double> * gradient) {
+        m_coords = coords;
+        #ifdef _OPENMP
+        #pragma omp parallel
+        {
+            *m_energies[omp_get_thread_num()] = 0;
+        }
+        #else
+        *m_energies[0] = 0;
+        #endif
+        m_gradient = gradient;
     }
 
     void insert_atom_pair(const size_t atom_i, const size_t atom_j, const size_t isubdom)
     {
-      pele::VecN<m_ndim, double> dr;
-      const size_t xi_off = m_ndim * atom_i;
-      const size_t xj_off = m_ndim * atom_j;
-      m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
-      double r2 = 0;
-      for (size_t k = 0; k < m_ndim; ++k) {
-        r2 += dr[k] * dr[k];
-      }
-      double gij;
-      double radius_sum = 0;
-      if(m_radii.size() > 0) {
-        radius_sum = m_radii[atom_i] + m_radii[atom_j];
-      }
-#ifdef _OPENMP
-      xsum_large_add1(&(m_energies[isubdom]), m_interaction->energy_gradient(r2, &gij, radius_sum));
-#else
-      xsum_large_add1(&(m_energies[0]), m_interaction->energy_gradient(r2, &gij, radius_sum));
-#endif
-      if (gij != 0) {
-          for (size_t k = 0; k < m_ndim; ++k) {
-              dr[k] *= gij;
-              // (*m_gradient)[xi_off+k].AddNumber(-dr[k]);
-              // (*m_gradient)[xj_off+k].AddNumber(dr[k]);
-              xsum_small_add1(&((*m_gradient)[xi_off+k]), -dr[k]);
-              xsum_small_add1(&((*m_gradient)[xj_off+k]), dr[k]);
-          }
-      }
+        pele::VecN<m_ndim, double> dr;
+        const size_t xi_off = m_ndim * atom_i;
+        const size_t xj_off = m_ndim * atom_j;
+        m_dist->get_rij(dr.data(), m_coords->data() + xi_off, m_coords->data() + xj_off);
+        double r2 = 0;
+        for (size_t k = 0; k < m_ndim; ++k) {
+            r2 += dr[k] * dr[k];
+        }
+        double gij;
+        double radius_sum = 0;
+        if(m_radii.size() > 0) {
+            radius_sum = m_radii[atom_i] + m_radii[atom_j];
+        }
+        #ifdef _OPENMP
+        *m_energies[isubdom] += m_interaction->energy_gradient(r2, &gij, radius_sum);
+        #else
+        *m_energies[0] += m_interaction->energy_gradient(r2, &gij, radius_sum);
+        #endif
+        if (gij != 0) {
+            for (size_t k = 0; k < m_ndim; ++k) {
+                dr[k] *= gij;
+                (*m_gradient)[xi_off + k] -= dr[k];
+                (*m_gradient)[xj_off + k] += dr[k];
+            }
+        }
     }
 
     double get_energy() {
-      double energy = 0;
-      for(size_t i = 0; i < m_energies.size(); ++i) {
-          energy += xsum_large_round(&(m_energies[i]));
-      }
-      return energy;
+        double energy = 0;
+        for(size_t i = 0; i < m_energies.size(); ++i) {
+            energy += *m_energies[i];
+        }
+        return energy;
     }
-  };
+};
 
-  /**
-   * class which accumulates the energy, gradient, and Hessian one pair interaction at a time
-   */
-  template <typename pairwise_interaction, typename distance_policy>
+/**
+ * class which accumulates the energy, gradient, and Hessian one pair interaction at a time
+ */
+template <typename pairwise_interaction, typename distance_policy>
 class EnergyGradientHessianAccumulator {
     const static size_t m_ndim = distance_policy::_ndim;
     std::shared_ptr<pairwise_interaction> m_interaction;
@@ -390,7 +383,6 @@ class OverlapAccumulator {
     const pele::Array<double> m_coords;
     const pele::Array<double> m_radii;
 
-
 public:
     std::vector<size_t> m_overlap_inds;
 
@@ -440,9 +432,6 @@ protected:
     std::shared_ptr<pairwise_interaction> m_interaction;
     std::shared_ptr<distance_policy> m_dist;
     const double m_radii_sca;
-    std::shared_ptr<std::vector<xsum_small_accumulator>> exact_gradient;
-    bool exact_gradient_initialized;
-    
 
     EnergyAccumulator<pairwise_interaction, distance_policy> m_eAcc;
     EnergyGradientAccumulator<pairwise_interaction, distance_policy> m_egAcc;
@@ -464,8 +453,7 @@ public:
           m_radii_sca(radii_sca),
           m_eAcc(interaction, dist, m_radii),
           m_egAcc(interaction, dist, m_radii),
-          m_eghAcc(interaction, dist, m_radii),
-          exact_gradient_initialized(false)
+          m_eghAcc(interaction, dist, m_radii)
     {}
 
     CellListPotential(
@@ -480,176 +468,156 @@ public:
           m_radii_sca(0.0),
           m_eAcc(interaction, dist),
           m_egAcc(interaction, dist),
-          m_eghAcc(interaction, dist),
-          exact_gradient_initialized(false)
-  {}
+          m_eghAcc(interaction, dist)
+    {}
 
-  virtual size_t get_ndim(){return m_ndim;}
+    virtual size_t get_ndim(){return m_ndim;}
 
-  virtual double get_energy(Array<double> const & coords)
-  {
-    const size_t natoms = coords.size() / m_ndim;
-    if (m_ndim * natoms != coords.size()) {
-      throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
+    virtual double get_energy(Array<double> const & coords)
+    {
+        const size_t natoms = coords.size() / m_ndim;
+        if (m_ndim * natoms != coords.size()) {
+            throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
+        }
+
+        if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
+            return NAN;
+        }
+
+        update_iterator(coords);
+        m_eAcc.reset_data(&coords);
+        auto looper = m_cell_lists.get_atom_pair_looper(m_eAcc);
+
+        looper.loop_through_atom_pairs();
+
+        return m_eAcc.get_energy();
     }
 
-    if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
-      return NAN;
-    }
-    update_iterator(coords);
-    m_eAcc.reset_data(&coords);
-    auto looper = m_cell_lists.get_atom_pair_looper(m_eAcc);
+    virtual double get_energy_gradient(Array<double> const & coords, Array<double> & grad)
+    {
+        const size_t natoms = coords.size() / m_ndim;
+        if (m_ndim * natoms != coords.size()) {
+            throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
+        }
+        if (coords.size() != grad.size()) {
+            throw std::invalid_argument("the gradient has the wrong size");
+        }
 
-    looper.loop_through_atom_pairs();
+        if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
+            grad.assign(NAN);
+            return NAN;
+        }
 
-    return m_eAcc.get_energy();
-  }
+        update_iterator(coords);
+        grad.assign(0.);
+        m_egAcc.reset_data(&coords, &grad);
+        auto looper = m_cell_lists.get_atom_pair_looper(m_egAcc);
 
-  virtual double get_energy_gradient(Array<double> const & coords, Array<double> & grad)
-  {
-    const size_t natoms = coords.size() / m_ndim;
-    if (m_ndim * natoms != coords.size()) {
-      throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
-    }
-    if (coords.size() != grad.size()) {
-      throw std::invalid_argument("the gradient has the wrong size");
-    }
+        looper.loop_through_atom_pairs();
 
-    if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
-      grad.assign(NAN);
-      return NAN;
+        return m_egAcc.get_energy();
     }
 
-    update_iterator(coords);
-    grad.assign(0.);
-    if (!exact_gradient_initialized) {
-        exact_gradient = std::make_shared<std::vector<xsum_small_accumulator>>(grad.size());
-        exact_gradient_initialized=true;
-    }
-    else {
-      for (size_t i=0; i < grad.size(); ++i) {
-        xsum_small_init(&((*exact_gradient)[i]));
-      } }
+    virtual double get_energy_gradient_hessian(Array<double> const & coords,
+            Array<double> & grad, Array<double> & hess)
+    {
+        const size_t natoms = coords.size() / m_ndim;
+        if (m_ndim * natoms != coords.size()) {
+            throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
+        }
+        if (coords.size() != grad.size()) {
+            throw std::invalid_argument("the gradient has the wrong size");
+        }
+        if (hess.size() != coords.size() * coords.size()) {
+            throw std::invalid_argument("the Hessian has the wrong size");
+        }
 
-    m_egAcc.reset_data(&coords, exact_gradient);
-    auto looper = m_cell_lists.get_atom_pair_looper(m_egAcc);
-    
-    looper.loop_through_atom_pairs();
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static)
-    for (size_t i=0; i < grad.size(); ++i) {
-        grad[i] = xsum_small_round(&((*exact_gradient)[i]));
-    }
-#else
-    for (size_t i=0; i < grad.size(); ++i) {
-        grad[i] = xsum_small_round(&((*exact_gradient)[i]));
-    }
-#endif
+        if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
+            grad.assign(NAN);
+            hess.assign(NAN);
+            return NAN;
+        }
 
+        update_iterator(coords);
+        grad.assign(0.);
+        hess.assign(0.);
+        m_eghAcc.reset_data(&coords, &grad, &hess);
+        auto looper = m_cell_lists.get_atom_pair_looper(m_eghAcc);
 
-    return m_egAcc.get_energy();
-  }
+        looper.loop_through_atom_pairs();
 
-  virtual double get_energy_gradient_hessian(Array<double> const & coords,
-                                             Array<double> & grad, Array<double> & hess)
-  {
-    const size_t natoms = coords.size() / m_ndim;
-    if (m_ndim * natoms != coords.size()) {
-      throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
-    }
-    if (coords.size() != grad.size()) {
-      throw std::invalid_argument("the gradient has the wrong size");
-    }
-    if (hess.size() != coords.size() * coords.size()) {
-      throw std::invalid_argument("the Hessian has the wrong size");
+        return m_eghAcc.get_energy();
     }
 
-    if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
-      grad.assign(NAN);
-      hess.assign(NAN);
-      return NAN;
+    virtual void get_neighbors(pele::Array<double> const & coords,
+                                pele::Array<std::vector<size_t>> & neighbor_indss,
+                                pele::Array<std::vector<std::vector<double>>> & neighbor_distss,
+                                const double cutoff_factor = 1.0)
+    {
+        const size_t natoms = coords.size() / m_ndim;
+        pele::Array<short> include_atoms(natoms, 1);
+        get_neighbors_picky(coords, neighbor_indss, neighbor_distss, include_atoms, cutoff_factor);
     }
 
-    update_iterator(coords);
-    grad.assign(0.);
-    hess.assign(0.);
-    m_eghAcc.reset_data(&coords, &grad, &hess);
-    auto looper = m_cell_lists.get_atom_pair_looper(m_eghAcc);
+    virtual void get_neighbors_picky(pele::Array<double> const & coords,
+                                      pele::Array<std::vector<size_t>> & neighbor_indss,
+                                      pele::Array<std::vector<std::vector<double>>> & neighbor_distss,
+                                      pele::Array<short> const & include_atoms,
+                                      const double cutoff_factor = 1.0)
+    {
+        const size_t natoms = coords.size() / m_ndim;
+        if (m_ndim * natoms != coords.size()) {
+            throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
+        }
+        if (natoms != include_atoms.size()) {
+            throw std::runtime_error("include_atoms.size() is not equal to the number of atoms");
+        }
+        if (m_radii.size() == 0) {
+            throw std::runtime_error("Can't calculate neighbors, because the "
+                                     "used interaction doesn't use radii. ");
+        }
 
-    looper.loop_through_atom_pairs();
+        if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
+            return;
+        }
 
-    return m_eghAcc.get_energy();
-  }
+        update_iterator(coords);
+        NeighborAccumulator<pairwise_interaction, distance_policy> accumulator(
+            m_interaction, m_dist, coords, m_radii, (1 + m_radii_sca) * cutoff_factor, include_atoms);
+        auto looper = m_cell_lists.get_atom_pair_looper(accumulator);
 
-  virtual void get_neighbors(pele::Array<double> const & coords,
-                             pele::Array<std::vector<size_t>> & neighbor_indss,
-                             pele::Array<std::vector<std::vector<double>>> & neighbor_distss,
-                             const double cutoff_factor = 1.0)
-  {
-    const size_t natoms = coords.size() / m_ndim;
-    pele::Array<short> include_atoms(natoms, 1);
-    get_neighbors_picky(coords, neighbor_indss, neighbor_distss, include_atoms, cutoff_factor);
-  }
+        looper.loop_through_atom_pairs();
 
-  virtual void get_neighbors_picky(pele::Array<double> const & coords,
-                                   pele::Array<std::vector<size_t>> & neighbor_indss,
-                                   pele::Array<std::vector<std::vector<double>>> & neighbor_distss,
-                                   pele::Array<short> const & include_atoms,
-                                   const double cutoff_factor = 1.0)
-  {
-    const size_t natoms = coords.size() / m_ndim;
-    if (m_ndim * natoms != coords.size()) {
-      throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
-    }
-    if (natoms != include_atoms.size()) {
-      throw std::runtime_error("include_atoms.size() is not equal to the number of atoms");
-    }
-    if (m_radii.size() == 0) {
-      throw std::runtime_error("Can't calculate neighbors, because the "
-                               "used interaction doesn't use radii. ");
+        neighbor_indss = accumulator.m_neighbor_indss;
+        neighbor_distss = accumulator.m_neighbor_distss;
     }
 
-    if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
-      return;
+    virtual std::vector<size_t> get_overlaps(Array<double> const & coords)
+    {
+        const size_t natoms = coords.size() / m_ndim;
+        if (m_ndim * natoms != coords.size()) {
+            throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
+        }
+        if (m_radii.size() == 0) {
+            throw std::runtime_error("Can't calculate neighbors, because the "
+                                     "used interaction doesn't use radii. ");
+        }
+
+        if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
+            return std::vector<size_t>(2, 0);
+        }
+
+        update_iterator(coords);
+        OverlapAccumulator<pairwise_interaction, distance_policy> accumulator(
+            m_interaction, m_dist, coords, m_radii);
+        auto looper = m_cell_lists.get_atom_pair_looper(accumulator);
+
+        looper.loop_through_atom_pairs();
+
+        return accumulator.m_overlap_inds;
     }
 
-    update_iterator(coords);
-    NeighborAccumulator<pairwise_interaction, distance_policy> accumulator(
-                                                                           m_interaction, m_dist, coords, m_radii, (1 + m_radii_sca) * cutoff_factor, include_atoms);
-    auto looper = m_cell_lists.get_atom_pair_looper(accumulator);
-
-    looper.loop_through_atom_pairs();
-
-    neighbor_indss = accumulator.m_neighbor_indss;
-    neighbor_distss = accumulator.m_neighbor_distss;
-  }
-
-  virtual std::vector<size_t> get_overlaps(Array<double> const & coords)
-  {
-    const size_t natoms = coords.size() / m_ndim;
-    if (m_ndim * natoms != coords.size()) {
-      throw std::runtime_error("coords.size() is not divisible by the number of dimensions");
-    }
-    if (m_radii.size() == 0) {
-      throw std::runtime_error("Can't calculate neighbors, because the "
-                               "used interaction doesn't use radii. ");
-    }
-
-    if (!std::isfinite(coords[0]) || !std::isfinite(coords[coords.size() - 1])) {
-      return std::vector<size_t>(2, 0);
-    }
-
-    update_iterator(coords);
-    OverlapAccumulator<pairwise_interaction, distance_policy> accumulator(
-                                                                          m_interaction, m_dist, coords, m_radii);
-    auto looper = m_cell_lists.get_atom_pair_looper(accumulator);
-
-    looper.loop_through_atom_pairs();
-
-    return accumulator.m_overlap_inds;
-  }
-
-  virtual pele::Array<size_t> get_atom_order(Array<double> & coords)
+    virtual pele::Array<size_t> get_atom_order(Array<double> & coords)
     {
         const size_t natoms = coords.size() / m_ndim;
         if (m_ndim * natoms != coords.size()) {
@@ -672,9 +640,9 @@ public:
     }
 
     virtual inline double get_interaction_energy_gradient(double r2, double *gij, size_t atom_i, size_t atom_j) const
-  {
-    double energy = m_interaction->energy_gradient(r2, gij, sum_radii(atom_i, atom_j));
-    *gij *= sqrt(r2);
+    {
+        double energy = m_interaction->energy_gradient(r2, gij, sum_radii(atom_i, atom_j));
+        *gij *= sqrt(r2);
         return energy;
     }
 
@@ -708,7 +676,6 @@ protected:
     }
 };
 
-};
-//namespace pele
+} //namespace pele
 
-#endif
+#endif //#ifndef _PELE_CELL_LIST_POTENTIAL_H
