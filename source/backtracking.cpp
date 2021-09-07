@@ -14,7 +14,6 @@ double BacktrackingLineSearch::line_search(Array<double> &x, Array<double> step)
 
     eig_eq_pele(xoldvec, xold_);
     eig_eq_pele(gradvec, gold_);
-    // if the step is too large (greater than 1/20 the box size, force scale it down)
     Scalar stpsize = initial_stpsize;
     // absolute original stepnorm
     double absolute_step_norm = norm(step);

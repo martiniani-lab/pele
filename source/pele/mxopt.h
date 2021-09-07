@@ -19,7 +19,7 @@
 
 // Lapack for cholesky
 extern "C" {
-  #include <lapacke.h>
+#include <lapacke.h>
 }
 
 // line search methods
@@ -31,8 +31,8 @@ extern "C" {
 #include "nwpele.h"
 #include "optimizer.h"
 
-#include <cvode/cvode.h>               /* access to CVODE                 */
-#include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
+#include <cvode/cvode.h> /* access to CVODE                 */
+#include <nvector/nvector_serial.h> /* access to serial N_Vector       */
 #include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
 #include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
 
@@ -107,16 +107,17 @@ private:
   // Sparse Eigen for lowest eigenvalue
   Eigen::SparseMatrix<double> hess_sparse;
 
-
   char uplo; /* We ask LAPACK for the lower diagonal matrix L */
-  int info;    /* "Info" return value, used for error-checking */
+  int info;  /* "Info" return value, used for error-checking */
 
   // Calculates hess + delta I where delta makes the new eigenvalue positive
   Eigen::MatrixXd hessian;
   Eigen::MatrixXd hessian_shifted;
 
-  double * hess_shifted_data;
+  double *hess_shifted_data;
   bool usephase1;
+  // what phase was used in previous step
+  bool prev_phase_is_phase1;
   /**
    * number of phase 1 steps
    */
@@ -145,7 +146,7 @@ public:
   MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                  const pele::Array<double> x0, double tol = 1e-4, int T = 1,
                  double step = 1, double conv_tol = 1e-8,
-                 double conv_factor = 2, double rtol = 1e-3, double atol = 1e-3,
+                 double conv_factor = 2, double rtol = 1e-5, double atol = 1e-5,
                  bool iterative = true);
   /**
    * Destructor
@@ -183,8 +184,6 @@ private:
   double hessnorm;
   double minimum;
   double pf;
-  // scale of the final vector
-  double scale;
 };
 
 } // namespace pele

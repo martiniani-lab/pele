@@ -1,6 +1,5 @@
 
 #include "pele/mxopt.h"
-#include "Eigen/src/Core/util/Constants.h"
 #include "cvode/cvode.h"
 #include "pele/array.h"
 #include "pele/base_potential.h"
@@ -32,15 +31,17 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T), usephase1(true),
       conv_tol_(conv_tol), conv_factor_(conv_factor), n_phase_1_steps(0),
-      n_phase_2_steps(0),hessian(x_.size(), x_.size()), hessian_shifted(x_.size(), x_.size()),  line_search_method(this, step) {
+      n_phase_2_steps(0), hessian(x_.size(), x_.size()),
+      hessian_shifted(x_.size(), x_.size()), line_search_method(this, step) {
+
+  // assume previous phase is phase 1
+  prev_phase_is_phase1 = true;
 
   // set precision of printing
-  std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
   // dummy t0
   double t0 = 0;
   sparse_le_solver_type_ = 1;
   uplo = 'U';
-
 
   if (sparse_le_solver_type_ == 0) {
     lowest_eig_pot_ = std::shared_ptr<pele::LowestEigPotential>(
@@ -51,7 +52,6 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
     // Sparse eigen constructor
   }
 
-  std::cout << x0 << "\n";
   Array<double> x0copy = x0.copy();
   x0_N = N_Vector_eq_pele(x0copy);
   // initialization of everything CVODE needs
@@ -67,7 +67,7 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
   CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
   ret = CVodeSetUserData(cvode_mem, &udata);
 
-
+  iterative = false;
   // initialize hessian
   if (iterative) {
     LS = SUNLinSol_SPGMR(x0_N, PREC_NONE, 0);
@@ -107,15 +107,17 @@ void MixedOptimizer::one_iteration() {
   xold.assign(x_);
   gold.assign(g_);
   // copy the gradient into step
-  step.assign(g_);
+
   // does a convexity check every T iterations
   // but always starts off in differential equation solver mode
-  if (iter_number_ % T_ == 0 and iter_number_ > 0) {
+  if ((iter_number_ % T_ == 0 and iter_number_ > 0) or !usephase1) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
     std::cout << "checking convexity"
               << "\n";
 #endif
-    usephase1 = convexity_check();
+    // check if landscape is convex
+    usephase1 = !convexity_check();
+    hessian_calculated = true;
   }
   if (usephase1) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
@@ -130,6 +132,7 @@ void MixedOptimizer::one_iteration() {
     std::cout << " computing phase 2 step"
               << "\n";
 #endif
+    step.assign(g_);
     compute_phase_2_step(step);
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
@@ -143,7 +146,7 @@ void MixedOptimizer::one_iteration() {
 
 #if OPTIMIZER_DEBUG_LEVEL >= 3
   std::cout << "mixed optimizer: " << iter_number_ << " E " << f_ << " rms "
-            << rms_ << " nfev " << nfev_ << std::endl;
+            << rms_ << " nfev " << nfev_ << " nhev " << udata.nhev << std::endl;
 #endif
   /**
    * Checks whether the stop criterion is satisfied: if stop criterion is
@@ -179,20 +182,15 @@ out the result.
  */
 bool MixedOptimizer::convexity_check() {
 
-
-
   get_hess(hessian);
 
   hessian_shifted = hessian;
   // shift diagonal by conv tol
 
-  hessian_shifted.diagonal().array() -= conv_tol_;
-
-  cout << "hessian_shifted" << hessian_shifted.eigenvalues() << std::endl;
+  hessian_shifted.diagonal().array() += conv_tol_;
 
   // check if the hessian is positive definite by doing a cholesky decomposition
   // and checking if it is successful
-  std::cout << "checking if hessian is positive definite" << "\n";
 
   // Eigen::ComputationInfo info = hessian_shifted.llt().info();
   // std::cout << info << " success info of cholesky decomposition \n";
@@ -201,15 +199,12 @@ bool MixedOptimizer::convexity_check() {
 
   int N_int = x_.size();
   dpotrf_(&uplo, &N_int, hess_shifted_data, &N_int, &info);
-  
-  std::cout << "info " << info << std::endl;
   if (info == 0) {
     // if it is positive definite, we can use the newton method to solve the
     // problem
     return true;
-  }
-  else {
-  return false;
+  } else {
+    return false;
   }
 }
 
@@ -217,13 +212,12 @@ bool MixedOptimizer::convexity_check() {
  * Gets the hessian. involves a dense hessian for now. #TODO replace with a
  * sparse hessian. TODO: Allocate memory once
  */
-void MixedOptimizer::get_hess(Eigen::MatrixXd & hessian) {
+void MixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
   potential_->get_hessian(
       x_, hessian_pele); // preferably switch this to sparse Eigen
   udata.nhev += 1;
 }
-
 
 // /**
 //  * Phase 1 The problem does not look convex, Try solving using with an
@@ -246,11 +240,14 @@ void MixedOptimizer::compute_phase_1_step(Array<double> step) {
   udatadiff = udata.nfev - udatadiff;
   nfev_ += udatadiff;
   x_ = pele_eq_N_Vector(x0_N);
-  g_ = udata.stored_grad;
+  // here we have to translate from ODE solver language to optimizer language.
+  // this is because CVODE calculates the negative of the gradient.
+  g_ = -udata.stored_grad;
   rms_ = (norm(g_) / sqrt(x_.size()));
   f_ = udata.stored_energy;
   step = xold - x_;
   n_phase_1_steps += 1;
+  prev_phase_is_phase1 = true;
 }
 
 /**
@@ -258,34 +255,26 @@ void MixedOptimizer::compute_phase_1_step(Array<double> step) {
  */
 void MixedOptimizer::compute_phase_2_step(Array<double> step) {
 
-
   if (hessian_calculated == false) {
     // we can afford to perform convexity checks at every steps
     // assuming the rate limiting cost is the hessian which is calculated
     // in the convexity check anyway
     convexity_check();
   }
-  // std::cout << hessian.eigenvalues() << "hessian eigenvalues before \n";
-  hessian.diagonal().array() += conv_factor_ * conv_tol_ *10;
 
-  // print conv factor added
-  std::cout << "conv factor " << conv_factor_ << " conv tol " << conv_tol_ << std::endl;
-  std::cout << "conv factor added: " << conv_factor_ * conv_tol_ *10 << "\n";
+  hessian.diagonal().array() += conv_factor_ * conv_tol_ * 10;
 
   Eigen::VectorXd r(step.size());
   Eigen::VectorXd q(step.size());
+  
   q.setZero();
   eig_eq_pele(r, step);
+
   // negative sign to switch direction
   // TODO change this to banded
-  std::cout << "r " << r << "\n";
-  std::cout << "hessian " << hessian << "\n";
-  std::cout << "hessian eigenvalues before \n";
-  std::cout << hessian.eigenvalues() << "\n";
-  q = -scale * hessian.householderQr().solve(r);
+  q = -hessian.householderQr().solve(r);
   pele_eq_eig(step, q);
-
-  std::cout << "step norm " << q.norm() << "\n";
   n_phase_2_steps += 1;
+  prev_phase_is_phase1 = false;
 }
 } // namespace pele
