@@ -3,10 +3,10 @@
 #include <fstream>
 #include <string>
 
-#include "pele/lj.h"
-#include "pele/lbfgs.h"
-#include "pele/matrix.h"
-#include "pele/array.h"
+#include "pele/lj.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/matrix.hpp"
+#include "pele/array.hpp"
 
 #include "bench_utils.hpp"
 

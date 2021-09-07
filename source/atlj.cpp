@@ -1,5 +1,5 @@
 
-#include "pele/atlj.h"
+#include "pele/atlj.hpp"
 #include <memory>
 #include <iostream>
 #include <limits>

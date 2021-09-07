@@ -1,7 +1,7 @@
-#include "pele/backtracking.h"
-#include "pele/array.h"
-#include "pele/base_potential.h"
-#include "pele/lsparameters.h"
+#include "pele/backtracking.hpp"
+#include "pele/array.hpp"
+#include "pele/base_potential.hpp"
+#include "pele/lsparameters.hpp"
 #include <cmath>
 #include <complex>
 

@@ -18,7 +18,7 @@ from cpython cimport bool as cbool
 
 
 # import the externally defined gradient descent implementation
-cdef extern from "pele/gradient_descent.h" namespace "pele":
+cdef extern from "pele/gradient_descent.hpp" namespace "pele":
     cdef cppclass cppGradientDescent "pele::GradientDescent":
         cppGradientDescent(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, double) except +
 

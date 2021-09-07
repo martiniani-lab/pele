@@ -1,5 +1,5 @@
-#include "pele/array.h"
-#include "pele/morse.h"
+#include "pele/array.hpp"
+#include "pele/morse.hpp"
 #include "test_utils.hpp"
 #include <iostream>
 #include <stdexcept>

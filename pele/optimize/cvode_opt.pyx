@@ -19,7 +19,7 @@ from cpython cimport bool as cbool
 
 from libcpp cimport bool
 
-cdef extern from "pele/cvode.h" namespace "pele":
+cdef extern from "pele/cvode.hpp" namespace "pele":
     cdef cppclass cppCVODEBDFOptimizer "pele::CVODEBDFOptimizer":
         cppCVODEBDFOptimizer(shared_ptr[_pele.cBasePotential], _pele.Array[double],
                              double, double, double, bool) except +

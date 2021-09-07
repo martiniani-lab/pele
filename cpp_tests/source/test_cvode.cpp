@@ -1,14 +1,15 @@
-#include "pele/array.h"
-#include "pele/cell_lists.h"
-#include "pele/lbfgs.h"
-#include "pele/cvode.h"
-#include "pele/mxopt.h"
+#include "pele/array.hpp"
+#include "pele/cell_lists.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/cvode.hpp"
+#include "pele/mxopt.hpp"
 #include "pele/utils.hpp"
-#include "pele/inversepower.h"
+#include "pele/inversepower.hpp"
+#include "pele/gradient_descent.hpp"
+
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-#include "pele/gradient_descent.h"
 #include <gtest/gtest.h>
 #include <cmath>
 #include <memory>

@@ -9,7 +9,7 @@ cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport shared_ptr
 
 # use external c++ class
-cdef extern from "pele/morse.h" namespace "pele":
+cdef extern from "pele/morse.hpp" namespace "pele":
     cdef cppclass  cMorse "pele::Morse":
         cMorse(double rho, double r0, double A) except +
 

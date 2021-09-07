@@ -2,8 +2,8 @@
 
 #include <gtest/gtest.h>
 
-#include "pele/inversepower.h"
-#include "pele/pressure_tensor.h"
+#include "pele/inversepower.hpp"
+#include "pele/pressure_tensor.hpp"
 
 TEST(Pressure, BasicComponents_Work)
 {

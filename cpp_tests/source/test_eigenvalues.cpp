@@ -8,11 +8,11 @@
 #include <Eigen/SparseCholesky>
 #include <Eigen/SparseCore>
 #include <Spectra/SymEigsSolver.h>
-#include "pele/array.h"
-#include "pele/eigen_interface.h"
-#include "pele/inversepower.h"
-#include "pele/lowest_eig_potential.h"
-#include "pele/lbfgs.h"
+#include "pele/array.hpp"
+#include "pele/eigen_interface.hpp"
+#include "pele/inversepower.hpp"
+#include "pele/lowest_eig_potential.hpp"
+#include "pele/lbfgs.hpp"
 
 using namespace Eigen;
 using namespace Spectra;

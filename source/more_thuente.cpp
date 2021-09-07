@@ -1,4 +1,4 @@
-#include "pele/more_thuente.h"
+#include "pele/more_thuente.hpp"
 
 
 

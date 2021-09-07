@@ -1,6 +1,6 @@
-#include "pele/array.h"
-#include "pele/frozen_atoms.h"
-#include "pele/lj.h"
+#include "pele/array.hpp"
+#include "pele/frozen_atoms.hpp"
+#include "pele/lj.hpp"
 
 #include <iostream>
 #include <stdexcept>

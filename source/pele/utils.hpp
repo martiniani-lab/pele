@@ -3,7 +3,7 @@
  */
 
 
-#include "pele/array.h"
+#include "pele/array.hpp"
 #include <cmath>
 #include <math.h>
 #include <random>

@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <limits>
 
-#include "pele/aatopology.h"
-#include "pele/lj.h"
-#include "pele/vecn.h"
+#include "pele/aatopology.hpp"
+#include "pele/lj.hpp"
+#include "pele/vecn.hpp"
 
 using pele::Array;
 using pele::VecN;

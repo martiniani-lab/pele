@@ -16,7 +16,7 @@ from pele.optimize._pele_opt cimport shared_ptr
 cimport cython
 from cpython cimport bool as cbool
 
-cdef extern from "pele/mxopt.h" namespace "pele":
+cdef extern from "pele/mxopt.hpp" namespace "pele":
     cdef cppclass cppMixedOptimizer "pele::MixedOptimizer":
         cppMixedOptimizer(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, int,
                           double, double, double,

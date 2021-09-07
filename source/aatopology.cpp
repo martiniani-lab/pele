@@ -1,6 +1,6 @@
-#include "pele/rotations.h"
-#include "pele/aatopology.h"
-#include "pele/vecn.h"
+#include "pele/rotations.hpp"
+#include "pele/aatopology.hpp"
+#include "pele/vecn.hpp"
 
 namespace pele{
 

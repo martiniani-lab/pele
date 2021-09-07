@@ -2,11 +2,11 @@
 #include <limits>
 
 #include <memory>
-#include "pele/aatopology.h"
-#include "pele/lj.h"
-#include "pele/vecn.h"
-#include "pele/matrix.h"
-#include "pele/distance.h"
+#include "pele/aatopology.hpp"
+#include "pele/lj.hpp"
+#include "pele/vecn.hpp"
+#include "pele/matrix.hpp"
+#include "pele/distance.hpp"
 using pele::Array;
 using pele::VecN;
 using pele::MatrixNM;

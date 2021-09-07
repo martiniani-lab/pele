@@ -1,10 +1,12 @@
-#include "pele/vecn.h"
+#include "pele/vecn.hpp"
+#include "pele/aatopology.hpp"
+#include "pele/matrix.hpp"
+
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 #include <gtest/gtest.h>
-#include "pele/aatopology.h"
-#include "pele/matrix.h"
+
 
 using pele::VecN;
 using pele::MatrixNM;

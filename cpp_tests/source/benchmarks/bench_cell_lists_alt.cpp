@@ -3,9 +3,9 @@
 #include <string>
 #include <iomanip>
 
-#include "pele/cell_lists.h"
-#include "pele/lj_cut.h"
-#include "pele/matrix.h"
+#include "pele/cell_lists.hpp"
+#include "pele/lj_cut.hpp"
+#include "pele/matrix.hpp"
 
 #include "bench_utils.hpp"
 

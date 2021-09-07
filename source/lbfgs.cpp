@@ -1,6 +1,6 @@
-#include "pele/lbfgs.h"
-#include "pele/array.h"
-#include "pele/optimizer.h"
+#include "pele/lbfgs.hpp"
+#include "pele/array.hpp"
+#include "pele/optimizer.hpp"
 #include <memory>
 #include <iostream>
 #include <limits>

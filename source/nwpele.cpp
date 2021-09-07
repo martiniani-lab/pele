@@ -1,4 +1,4 @@
-#include "pele/nwpele.h"
+#include "pele/nwpele.hpp"
 
 
 

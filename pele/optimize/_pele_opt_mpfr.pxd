@@ -2,7 +2,7 @@ from pele.potentials cimport _pele
 from pele.potentials._pele cimport shared_ptr
 from libcpp cimport bool as cbool
 
-cdef extern from "pele/optimizermpfr.h" namespace "pele":
+cdef extern from "pele/optimizermpfr.hpp" namespace "pele":
     cdef cppclass  cGradientOptimizerMPFR "pele::GradientOptimizerMPFR":
         cGradientOptimizer(_pele.cBasePotential *, _pele.Array[double], double, int) except +
         void one_iteration() except+

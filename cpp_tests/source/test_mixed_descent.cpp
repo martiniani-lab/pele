@@ -1,15 +1,15 @@
 // base imports
-#include "pele/array.h"
-#include "pele/cell_lists.h"
+#include "pele/array.hpp"
+#include "pele/cell_lists.hpp"
 #include "pele/utils.hpp"
 // optimizer imports
-#include "pele/mxopt.h"
+#include "pele/mxopt.hpp"
 
 // potential imports
-#include "pele/inversepower.h"
-#include "pele/rosenbrock.h"
+#include "pele/inversepower.hpp"
+#include "pele/rosenbrock.hpp"
 
-#include "pele/gradient_descent.h"
+#include "pele/gradient_descent.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
 #include <iostream>

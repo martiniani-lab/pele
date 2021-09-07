@@ -5,7 +5,7 @@ from pele.potentials cimport _pele
 from pele.potentials._pele cimport shared_ptr
 
 # import the externally defined modified_fire implementation
-cdef extern from "pele/modified_fire.h" namespace "pele":
+cdef extern from "pele/modified_fire.hpp" namespace "pele":
     cdef cppclass cppMODIFIED_FIRE "pele::MODIFIED_FIRE":
         cppMODIFIED_FIRE(shared_ptr[_pele.cBasePotential] , _pele.Array[double], 
                          double, double, double, size_t , double, double, 

@@ -1,4 +1,4 @@
-#include "pele/bracketing.h"
+#include "pele/bracketing.hpp"
 
 namespace pele {
 

@@ -24,7 +24,7 @@ cdef extern from *:
     ctypedef int INT6 "6"    # a fake type
 
 # use external c++ class
-cdef extern from "pele/hs_wca.h" namespace "pele":
+cdef extern from "pele/hs_wca.hpp" namespace "pele":
     cdef cppclass  cHS_WCA "pele::HS_WCA"[ndim, exp]:
         cHS_WCA(double eps, double sca, _pele.Array[double] radii) except +
     cdef cppclass  cHS_WCACellLists "pele::HS_WCACellLists"[ndim, exp]:
@@ -49,7 +49,7 @@ cdef extern from "pele/hs_wca.h" namespace "pele":
         cHS_WCANeighborList(_pele.Array[size_t] & ilist, double eps, double sca,
                             _pele.Array[double] radii) except +
 
-cdef extern from "pele/frozen_atoms.h" namespace "pele":
+cdef extern from "pele/frozen_atoms.hpp" namespace "pele":
     cdef cppclass  cppFrozenPotentialWrapper "pele::FrozenPotentialWrapper":
         cppFrozenPotentialWrapper(shared_ptr[_pele.cBasePotential] potential,
             _pele.Array[double] reference_coords,

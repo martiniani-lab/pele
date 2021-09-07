@@ -1,5 +1,5 @@
-#include "pele/rotations.h"
-#include "pele/vecn.h"
+#include "pele/rotations.hpp"
+#include "pele/vecn.hpp"
 
 namespace pele{
 

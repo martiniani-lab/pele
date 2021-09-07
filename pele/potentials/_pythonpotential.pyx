@@ -19,7 +19,7 @@ from pele.potentials._pele cimport shared_ptr
 # question: should I define PY_ARRAY_UNIQUE_SYMBOL?  And how can I?
 cnp.import_array()
 
-cdef extern from "pele/python_potential_wrapper.h" namespace "pele":
+cdef extern from "pele/python_potential_wrapper.hpp" namespace "pele":
     cdef cppclass  cPythonPotential "pele::PythonPotential":
         cPythonPotential(PyObject *potential) except +
 

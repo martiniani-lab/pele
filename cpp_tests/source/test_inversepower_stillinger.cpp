@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "pele/inversepower_stillinger.h"
+#include "pele/inversepower_stillinger.hpp"
 
 #include "test_utils.hpp"
 

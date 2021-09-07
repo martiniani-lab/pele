@@ -1,15 +1,12 @@
 
-#include "pele/mxopt.h"
-#include "cvode/cvode.h"
-#include "pele/array.h"
-#include "pele/base_potential.h"
-#include "pele/debug.h"
-#include "pele/eigen_interface.h"
-#include "pele/lbfgs.h"
-#include "pele/lowest_eig_potential.h"
-#include "pele/lsparameters.h"
-#include "pele/ngt.hpp"
-#include "pele/optimizer.h"
+#include "pele/mxopt.hpp"
+#include "pele/array.hpp"
+#include "pele/base_potential.hpp"
+#include "pele/debug.hpp"
+#include "pele/eigen_interface.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/lsparameters.hpp"
+#include "pele/optimizer.hpp"
 #include <algorithm>
 #include <complex>
 #include <iostream>
@@ -40,17 +37,7 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
   // set precision of printing
   // dummy t0
   double t0 = 0;
-  sparse_le_solver_type_ = 1;
   uplo = 'U';
-
-  if (sparse_le_solver_type_ == 0) {
-    lowest_eig_pot_ = std::shared_ptr<pele::LowestEigPotential>(
-        new pele::LowestEigPotential(potential, x0, potential->get_ndim()));
-    lbfgs_lowest_eigval = std::shared_ptr<pele::LBFGS>(
-        new pele::LBFGS(lowest_eig_pot_, x0, 1e-6, 10));
-  } else if (sparse_le_solver_type_ == 1) {
-    // Sparse eigen constructor
-  }
 
   Array<double> x0copy = x0.copy();
   x0_N = N_Vector_eq_pele(x0copy);

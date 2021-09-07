@@ -2,8 +2,8 @@
 #include <stdexcept>
 #include <gtest/gtest.h>
 
-#include "pele/array.h"
-#include "pele/inversepower.h"
+#include "pele/array.hpp"
+#include "pele/inversepower.hpp"
 
 using pele::Array;
 using pele::InversePower;

@@ -9,9 +9,9 @@
 
 #include <gtest/gtest.h>
 #include <vector>
-#include "pele/hs_wca.h"
-#include "pele/lbfgs.h"
-#include "pele/modified_fire.h"
+#include "pele/hs_wca.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/modified_fire.hpp"
 
 
 

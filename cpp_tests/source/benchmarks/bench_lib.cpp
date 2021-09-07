@@ -3,10 +3,10 @@
 #include <fstream>
 #include <string>
 
-#include "pele/neighbor_iterator.h"
-#include "pele/lj_cut.h"
-#include "pele/lbfgs.h"
-#include "pele/matrix.h"
+#include "pele/neighbor_iterator.hpp"
+#include "pele/lj_cut.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/matrix.hpp"
 
 
 typedef pele::LJCutPeriodicCellLists<3> LJCutPeriodicCellLists3;

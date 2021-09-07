@@ -9,7 +9,7 @@ cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport array_wrap_np, pele_array_to_np
 from pele.potentials._pele cimport shared_ptr
 
-cdef extern from "pele/pressure_tensor.h" namespace "pele":
+cdef extern from "pele/pressure_tensor.hpp" namespace "pele":
     double c_pressure_tensor "pele::pressure_tensor"(
            shared_ptr[_pele.cBasePotential] pot,
            _pele.Array[double] x,

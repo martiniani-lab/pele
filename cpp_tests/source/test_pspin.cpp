@@ -1,7 +1,7 @@
-#include "pele/array.h"
-#include "pele/combination.h"
-#include "pele/pspin_spherical.h"
-#include "pele/meta_pow.h"
+#include "pele/array.hpp"
+#include "pele/combination.hpp"
+#include "pele/pspin_spherical.hpp"
+#include "pele/meta_pow.hpp"
 #include "test_utils.hpp"
 
 #include <iostream>

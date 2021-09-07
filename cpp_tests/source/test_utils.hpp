@@ -1,8 +1,8 @@
 #ifndef __PELE_TEST_UTILS_HPP__
 #define __PELE_TEST_UTILS_HPP__
 
-#include "pele/array.h"
-#include "pele/base_potential.h"
+#include "pele/array.hpp"
+#include "pele/base_potential.hpp"
 
 #include <iostream>
 #include <stdexcept>

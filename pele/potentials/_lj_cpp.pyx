@@ -15,7 +15,7 @@ from pele.potentials._pele cimport array_wrap_np, array_wrap_np_size_t
 
 
 # use external c++ class
-cdef extern from "pele/lj.h" namespace "pele":
+cdef extern from "pele/lj.hpp" namespace "pele":
     cdef cppclass  cLJ "pele::LJ":
         cLJ(double C6, double C12) except +
     cdef cppclass  cLJPeriodic "pele::LJPeriodic":
@@ -23,7 +23,7 @@ cdef extern from "pele/lj.h" namespace "pele":
     cdef cppclass  cLJNeighborList "pele::LJNeighborList":
         cLJNeighborList(_pele.Array[size_t] & ilist, double C6, double C12) except +
 
-cdef extern from "pele/lj_cut.h" namespace "pele":
+cdef extern from "pele/lj_cut.hpp" namespace "pele":
     cdef cppclass  cLJCut "pele::LJCut":
         cLJCut(double C6, double C12, double rcut) except +
     cdef cppclass  cLJCutPeriodic "pele::LJCutPeriodic":

@@ -18,7 +18,7 @@ cdef extern from *:
     ctypedef int INT3 "3"    # a fake type
 
 # use external c++ classes
-cdef extern from "pele/distance.h" namespace "pele":
+cdef extern from "pele/distance.hpp" namespace "pele":
     cdef cppclass cppCartesianDistance "pele::cartesian_distance"[ndim]:
         cppCartesianDistance() except +
         void get_rij(double *, double *, double *)
