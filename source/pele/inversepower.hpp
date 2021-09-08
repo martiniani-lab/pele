@@ -231,11 +231,12 @@ struct InverseHalfIntPower_interaction : BaseInteraction {
 template <size_t ndim>
 class InversePower : public SimplePairwisePotential< InversePower_interaction, cartesian_distance<ndim> > {
 public:
-    InversePower(double pow, double eps, pele::Array<double> const radii)
+    InversePower(double pow, double eps, pele::Array<double> const radii, bool exact_sum = false)
         : SimplePairwisePotential< InversePower_interaction, cartesian_distance<ndim> >(
                 std::make_shared<InversePower_interaction>(pow, eps),
                 radii,
-                std::make_shared<cartesian_distance<ndim> >()
+                std::make_shared<cartesian_distance<ndim> >(),
+                exact_sum
           )
     {}
 };
@@ -243,11 +244,12 @@ public:
 template <size_t ndim>
 class InversePowerPeriodic : public SimplePairwisePotential< InversePower_interaction, periodic_distance<ndim> > {
 public:
-    InversePowerPeriodic(double pow, double eps, pele::Array<double> const radii, pele::Array<double> const boxvec)
+    InversePowerPeriodic(double pow, double eps, pele::Array<double> const radii, pele::Array<double> const boxvec, bool exact_sum = false)
         : SimplePairwisePotential< InversePower_interaction, periodic_distance<ndim> >(
                 std::make_shared<InversePower_interaction>(pow, eps),
                 radii,
-                std::make_shared<periodic_distance<ndim> >(boxvec)
+                std::make_shared<periodic_distance<ndim> >(boxvec),
+                exact_sum
           )
     {}
 };
@@ -259,11 +261,12 @@ public:
 template <size_t ndim, int POW>
 class InverseIntPower : public SimplePairwisePotential< InverseIntPower_interaction<POW>, cartesian_distance<ndim> > {
 public:
-    InverseIntPower(double eps, pele::Array<double> const radii)
+    InverseIntPower(double eps, pele::Array<double> const radii, bool exact_sum = false)
         : SimplePairwisePotential< InverseIntPower_interaction<POW>, cartesian_distance<ndim> >(
                 std::make_shared<InverseIntPower_interaction<POW> >(eps),
                 radii,
-                std::make_shared<cartesian_distance<ndim> >()
+                std::make_shared<cartesian_distance<ndim> >(),
+                exact_sum
           )
     {}
 };
@@ -271,11 +274,12 @@ public:
 template <size_t ndim, int POW>
 class InverseIntPowerPeriodic : public SimplePairwisePotential< InverseIntPower_interaction<POW>, periodic_distance<ndim> > {
 public:
-    InverseIntPowerPeriodic(double eps, pele::Array<double> const radii, pele::Array<double> const boxvec)
+    InverseIntPowerPeriodic(double eps, pele::Array<double> const radii, pele::Array<double> const boxvec, bool exact_sum = false)
         : SimplePairwisePotential< InverseIntPower_interaction<POW>, periodic_distance<ndim> >(
                 std::make_shared<InverseIntPower_interaction<POW> >(eps),
                 radii,
-                std::make_shared<periodic_distance<ndim> >(boxvec)
+                std::make_shared<periodic_distance<ndim> >(boxvec),
+                exact_sum
           )
     {}
 };
@@ -287,11 +291,12 @@ public:
 template <size_t ndim, int POW2>
 class InverseHalfIntPower : public SimplePairwisePotential< InverseHalfIntPower_interaction<POW2>, cartesian_distance<ndim> > {
 public:
-    InverseHalfIntPower(double eps, pele::Array<double> const radii)
+    InverseHalfIntPower(double eps, pele::Array<double> const radii, bool exact_sum = false)
         : SimplePairwisePotential< InverseHalfIntPower_interaction<POW2>, cartesian_distance<ndim> >(
                 std::make_shared<InverseHalfIntPower_interaction<POW2> >(eps),
                 radii,
-                std::make_shared<cartesian_distance<ndim> >()
+                std::make_shared<cartesian_distance<ndim> >(),
+                exact_sum
           )
     {}
 };
@@ -299,11 +304,12 @@ public:
 template <size_t ndim, int POW2>
 class InverseHalfIntPowerPeriodic : public SimplePairwisePotential< InverseHalfIntPower_interaction<POW2>, periodic_distance<ndim> > {
 public:
-    InverseHalfIntPowerPeriodic(double eps, pele::Array<double> const radii, pele::Array<double> const boxvec)
+    InverseHalfIntPowerPeriodic(double eps, pele::Array<double> const radii, pele::Array<double> const boxvec, bool exact_sum = false)
         : SimplePairwisePotential< InverseHalfIntPower_interaction<POW2>, periodic_distance<ndim> >(
                 std::make_shared<InverseHalfIntPower_interaction<POW2> >(eps),
                 radii,
-                std::make_shared<periodic_distance<ndim> >(boxvec)
+                std::make_shared<periodic_distance<ndim> >(boxvec),
+                exact_sum
           )
     {}
 };
@@ -330,13 +336,13 @@ class InversePowerPeriodicCellLists : public CellListPotential< InversePower_int
 public:
     InversePowerPeriodicCellLists(double pow, double eps,
             pele::Array<double> const radii, pele::Array<double> const boxvec,
-            const double ncellx_scale=1.0)
+            const double ncellx_scale=1.0, bool exact_sum = false)
         : CellListPotential< InversePower_interaction, periodic_distance<ndim> >(
                 std::make_shared<InversePower_interaction>(pow, eps),
                 std::make_shared<periodic_distance<ndim> >(boxvec),
                 boxvec,
 				2.0* (*std::max_element(radii.begin(), radii.end())), // rcut,
-				ncellx_scale, radii)
+				ncellx_scale, radii, true, exact_sum)
     {}
 };
 
@@ -344,13 +350,13 @@ template <size_t ndim, int POW>
 class InverseIntPowerPeriodicCellLists : public CellListPotential< InverseIntPower_interaction<POW>, periodic_distance<ndim> > {
 public:
     InverseIntPowerPeriodicCellLists(double eps, pele::Array<double> const radii,
-            pele::Array<double> const boxvec, const double ncellx_scale=1.0)
+            pele::Array<double> const boxvec, const double ncellx_scale=1.0, bool exact_sum = false)
         : CellListPotential< InverseIntPower_interaction<POW>, periodic_distance<ndim> >(
                 std::make_shared<InverseIntPower_interaction<POW>>(eps),
                 std::make_shared<periodic_distance<ndim> >(boxvec),
                 boxvec,
 				2.0* (*std::max_element(radii.begin(), radii.end())), // rcut,
-				ncellx_scale, radii)
+				ncellx_scale, radii, true, exact_sum)
     {}
 };
 
@@ -358,13 +364,13 @@ template <size_t ndim, int POW2>
 class InverseHalfIntPowerPeriodicCellLists : public CellListPotential< InverseHalfIntPower_interaction<POW2>, periodic_distance<ndim> > {
 public:
     InverseHalfIntPowerPeriodicCellLists(double eps, pele::Array<double> const radii,
-            pele::Array<double> const boxvec, const double ncellx_scale=1.0)
+            pele::Array<double> const boxvec, const double ncellx_scale=1.0, bool exact_sum = false)
         : CellListPotential< InverseHalfIntPower_interaction<POW2>, periodic_distance<ndim> >(
                 std::make_shared<InverseHalfIntPower_interaction<POW2>>(eps),
                 std::make_shared<periodic_distance<ndim> >(boxvec),
                 boxvec,
 				2.0* (*std::max_element(radii.begin(), radii.end())), // rcut,
-				ncellx_scale, radii)
+				ncellx_scale, radii, true, exact_sum)
     {}
 };
 
