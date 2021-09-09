@@ -15,7 +15,6 @@ extern "C" {
 }
 
 namespace pele {
-
 /**
  * Define a base class for potentials with simple pairwise interactions that
  * depend only on magnitude of the atom separation
@@ -96,7 +95,7 @@ public:
   virtual double add_energy_gradient_hessian(Array<double> const &x,
                                              Array<double> &grad,
                                              Array<double> &hess);
-  virtual double add_hessian(Array<double> const &x, Array<double> &hess);
+  virtual void add_hessian(Array<double> const &x, Array<double> &hess);
   virtual void
   get_neighbors(pele::Array<double> const &coords,
                 pele::Array<std::vector<size_t>> &neighbor_indss,
@@ -154,7 +153,6 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
   if (grad.size() != x.size()) {
     throw std::runtime_error("grad must have the same size as x");
   }
-
   double gij;
   double dr[m_ndim];
   // std::vector<double> grad_test (grad.size(), 0);
@@ -383,7 +381,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 }
 
 template <typename pairwise_interaction, typename distance_policy>
-inline double
+inline void
 SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian(
     Array<double> const &x, Array<double> &hess) {
   double hij;
@@ -397,9 +395,8 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian(
   if (hess.size() != x.size() * x.size()) {
     throw std::invalid_argument("the Hessian has the wrong size");
   }
-
   double e = 0.;
-  double gij;
+  double gij =0;
   for (size_t atom_i = 0; atom_i < natoms; ++atom_i) {
     size_t i1 = m_ndim * atom_i;
     for (size_t atom_j = 0; atom_j < atom_i; ++atom_j) {

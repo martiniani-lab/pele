@@ -2,6 +2,8 @@ set(CMAKE_CXX_COMPILER "g++-11")
 set(CMAKE_C_COMPILER "gcc-11")
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 project(pele_tests)
 
 # if not specified by user, the standard build type is release
