@@ -35,8 +35,6 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
   udata.stored_grad = Array<double>(x0.size(), 0);
   CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
   ret = CVodeSetUserData(cvode_mem, &udata);
-
-  iterative = true;
   if (iterative) {
     LS = SUNLinSol_SPGMR(x0_N, PREC_NONE, 0);
     CVodeSetLinearSolver(cvode_mem, LS, NULL);

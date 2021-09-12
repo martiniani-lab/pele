@@ -38,7 +38,6 @@ cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
 
         self.pot = potential
         cdef np.ndarray[double, ndim=1] x0c = np.array(x0, dtype=float)
-        print(iterative, "iterative")
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppCVODEBDFOptimizer(self.pot.thisptr,
                              _pele.Array[double](<double*> x0c.data, x0c.size),

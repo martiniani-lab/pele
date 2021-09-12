@@ -396,7 +396,7 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian(
     throw std::invalid_argument("the Hessian has the wrong size");
   }
   double e = 0.;
-  double gij =0;
+  double gij = 0;
   for (size_t atom_i = 0; atom_i < natoms; ++atom_i) {
     size_t i1 = m_ndim * atom_i;
     for (size_t atom_j = 0; atom_j < atom_i; ++atom_j) {
