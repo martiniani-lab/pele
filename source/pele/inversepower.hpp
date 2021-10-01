@@ -348,7 +348,7 @@ public:
                 std::make_shared<periodic_distance<ndim> >(boxvec),
                 boxvec,
 				2.0* (*std::max_element(radii.begin(), radii.end())), // rcut,
-				ncellx_scale, radii, true, exact_sum)
+				ncellx_scale, radii, 0.0, true, exact_sum)
     {}
 };
 
@@ -362,7 +362,7 @@ public:
                 std::make_shared<periodic_distance<ndim> >(boxvec),
                 boxvec,
 				2.0* (*std::max_element(radii.begin(), radii.end())), // rcut,
-				ncellx_scale, radii, true, exact_sum)
+				ncellx_scale, radii, 0.0,  true, exact_sum)
     {}
 };
 
@@ -376,7 +376,7 @@ public:
                 std::make_shared<periodic_distance<ndim> >(boxvec),
                 boxvec,
 				2.0* (*std::max_element(radii.begin(), radii.end())), // rcut,
-				ncellx_scale, radii, true, exact_sum)
+				ncellx_scale, radii, 0.0, true, exact_sum)
     {}
 };
 
