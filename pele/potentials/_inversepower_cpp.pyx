@@ -10,6 +10,8 @@ from cpython cimport bool
 cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport shared_ptr
 
+from libcpp cimport bool
+
 # cython has no support for integer template argument.  This is a hack to get around it
 # https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs
 # Basically you fool cython into thinking INT2 is the type integer,
@@ -54,7 +56,7 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
     cdef bool use_cell_lists
     cdef float ncellx_scale
     def __cinit__(self, pow, eps, radii, ndim=3, boxvec=None, boxl=None,
-                  use_cell_lists=False, ncellx_scale=1.0, exact_sum=False):
+                  bool use_cell_lists=False, ncellx_scale=1.0, bool exact_sum=False):
         
         # stored for pickling
         self.pow = pow
@@ -62,7 +64,7 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
         self.radii = radii
         self.ndim = ndim
 
-        self.use_cell_lists = bool(use_cell_lists)
+        self.use_cell_lists = use_cell_lists
         self.ncellx_scale = ncellx_scale
 
         assert(ndim == 2 or ndim == 3)

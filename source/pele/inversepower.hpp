@@ -236,6 +236,7 @@ public:
                 std::make_shared<InversePower_interaction>(pow, eps),
                 radii,
                 std::make_shared<cartesian_distance<ndim> >(),
+                0.0, 
                 exact_sum
           )
     {}
@@ -249,6 +250,7 @@ public:
                 std::make_shared<InversePower_interaction>(pow, eps),
                 radii,
                 std::make_shared<periodic_distance<ndim> >(boxvec),
+                0.0,
                 exact_sum
           )
     {}
@@ -266,6 +268,7 @@ public:
                 std::make_shared<InverseIntPower_interaction<POW> >(eps),
                 radii,
                 std::make_shared<cartesian_distance<ndim> >(),
+                0.0,
                 exact_sum
           )
     {}
@@ -279,6 +282,7 @@ public:
                 std::make_shared<InverseIntPower_interaction<POW> >(eps),
                 radii,
                 std::make_shared<periodic_distance<ndim> >(boxvec),
+                0.0,
                 exact_sum
           )
     {}
@@ -296,6 +300,7 @@ public:
                 std::make_shared<InverseHalfIntPower_interaction<POW2> >(eps),
                 radii,
                 std::make_shared<cartesian_distance<ndim> >(),
+                0.0,
                 exact_sum
           )
     {}
@@ -309,6 +314,7 @@ public:
                 std::make_shared<InverseHalfIntPower_interaction<POW2> >(eps),
                 radii,
                 std::make_shared<periodic_distance<ndim> >(boxvec),
+                0.0,
                 exact_sum
           )
     {}
