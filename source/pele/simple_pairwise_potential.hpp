@@ -578,12 +578,11 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::get_overlaps(
       if (r2 <= r_H2) {
         overlap_inds.push_back(atom_i);
         overlap_inds.push_back(atom_j);
-      }
+      } 
     }
   }
   return overlap_inds;
 }
-
 } // namespace pele
 
 #endif // #ifndef PYGMIN_SIMPLE_PAIRWISE_POTENTIAL_H
