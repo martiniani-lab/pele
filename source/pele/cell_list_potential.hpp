@@ -728,7 +728,7 @@ public:
       : PairwisePotentialInterface(radii),
         m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
         m_interaction(interaction), m_dist(dist), m_radii_sca(radii_sca),
-        exact_sum(exact_sum) {
+        exact_gradient_initialized(false), exact_sum(exact_sum) {
     if (exact_sum) {
       m_eAccExact =
           new EnergyAccumulatorExact<pairwise_interaction, distance_policy>(
@@ -759,7 +759,7 @@ public:
                     const bool exact_sum = false)
       : m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
         m_interaction(interaction), m_dist(dist), m_radii_sca(0.0),
-        exact_sum(exact_sum) {
+        exact_gradient_initialized(false), exact_sum(exact_sum) {
     if (exact_sum) {
       m_eAccExact =
           new EnergyAccumulatorExact<pairwise_interaction, distance_policy>(
@@ -777,7 +777,7 @@ public:
               interaction, dist);
       m_eghAcc = new EnergyGradientHessianAccumulator<pairwise_interaction,
                                                       distance_policy>(
-          interaction, dist);
+          interaction, dist);      
     }
   }
 
@@ -840,7 +840,6 @@ public:
         }
       }
       m_egAccExact->reset_data(&coords, exact_gradient);
-
       auto looper = m_cell_lists.get_atom_pair_looper(*m_egAccExact);
       looper.loop_through_atom_pairs();
 
