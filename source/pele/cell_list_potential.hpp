@@ -718,7 +718,17 @@ protected:
       *m_eghAccExact;
 
 public:
-  ~CellListPotential() {}
+  ~CellListPotential() {
+    if (exact_sum) {
+      delete m_eAccExact;
+      delete m_egAccExact;
+      delete m_eghAccExact;
+    } else {
+      delete m_eAcc;
+      delete m_egAcc;
+      delete m_eghAcc;
+    }
+  }
   CellListPotential(std::shared_ptr<pairwise_interaction> interaction,
                     std::shared_ptr<distance_policy> dist,
                     pele::Array<double> const &boxvec, double rcut,

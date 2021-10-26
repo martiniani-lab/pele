@@ -95,10 +95,12 @@ class TestSameMinimaInversePower(unittest.TestCase):
         boxv = [boxl, boxl, boxl]
         coords = np.random.rand(nparticles*3)*boxl
         ncellx_scale = get_ncellsx_scale(np.ones(nparticles), boxv)
-        pot_cellists =  Frenkel(boxvec=boxv, celllists=True, ncellx_scale=ncellx_scale)
-        pot_no_cellists = Frenkel(boxvec=boxv, celllists=False, ncellx_scale=ncellx_scale)
+        pot_cellists = Frenkel(boxvec=boxv, celllists=True,
+                               ncellx_scale=ncellx_scale)
+        pot_no_cellists = Frenkel(
+            boxvec=boxv, celllists=False, ncellx_scale=ncellx_scale)
         nsteps = 1000
-        tol = 1e-5        
+        tol = 1e-5
         res_cell_lists = lbfgs_cpp(coords, pot_cellists, nsteps=nsteps, tol=tol)
         res_no_cell_lists = lbfgs_cpp(coords, pot_no_cellists, nsteps=nsteps, tol=tol)
 

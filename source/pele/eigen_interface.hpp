@@ -6,8 +6,7 @@
  * @brief      Interface from pele array to Eigen
  */
 // #define EIGEN_USE_MKL_ALL
-#define EIGEN_USE_BLAS
-#define EIGEN_USE_LAPACKE
+
 
 #include "array.hpp"
 #include <Eigen/Dense>
