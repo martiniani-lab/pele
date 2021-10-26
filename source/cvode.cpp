@@ -2,6 +2,8 @@
 #include "cvode/cvode.h"
 #include "cvode/cvode_ls.h"
 #include "nvector/nvector_serial.h"
+#include "pele/array.hpp"
+#include "pele/base_potential.hpp"
 #include "pele/debug.hpp"
 #include "pele/optimizer.hpp"
 #include "sundials/sundials_linearsolver.h"
@@ -18,7 +20,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     bool iterative)
     : GradientOptimizer(potential, x0, tol),
       cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
-      N_size(x0.size()), t0(0), tN(10000000.0) {
+      N_size(x0.size()), hessian(x0.size(), x0.size()),  t0(0), tN(10000000.0) {
   // dummy t0
   double t0 = 0;
   std::cout << x0 << "\n";
@@ -39,7 +41,6 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     LS = SUNLinSol_SPGMR(x0_N, PREC_NONE, 0);
     CVodeSetLinearSolver(cvode_mem, LS, NULL);
 
-
   } else {
 
     A = SUNDenseMatrix(N_size, N_size);
@@ -53,9 +54,17 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
   CVodeSetStopTime(cvode_mem, tN);
 };
 
+CVODEBDFOptimizer::~CVODEBDFOptimizer() {
+  CVodeFree(&cvode_mem);
+  SUNLinSolFree(LS);
+  SUNMatDestroy(A);
+  N_VDestroy(x0_N);
+}
+
 void CVODEBDFOptimizer::one_iteration() {
   /* advance solver just one internal step */
   Array<double> xold = x_;
+
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
   iter_number_ += 1;
   x_ = pele_eq_N_Vector(x0_N);
@@ -99,6 +108,29 @@ void CVODEBDFOptimizer::one_iteration() {
   // // TODO: This is terrible C++ code but write it better
 };
 
+bool CVODEBDFOptimizer::stop_criterion_satisfied()
+{
+    if (! func_initialized_) {
+        // For some reason clang throws an error here, but gcc compiles properly
+        initialize_func_gradient();
+    }
+    if (rms_ < tol_) {
+      // Check with a more stringent hessian condition
+      Array <double> pele_hessian = Array<double>(hessian.data(), hessian.size());
+
+
+      
+      
+      Eigen::Map<Eigen::VectorXd,0,Eigen::InnerStride<1> > g_eigen (g_.data(),int(g_.size()));
+      potential_->get_hessian(x_, pele_hessian);
+      Eigen::VectorXd newton_step(g_.size());
+      newton_step.setZero();
+      newton_step = hessian.completeOrthogonalDecomposition().solve(g_eigen);
+      return newton_step.norm() < tol_;
+      // Wrap into a matrix
+    }
+}
+
 int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
 
   UserData udata = (UserData)user_data;
@@ -126,14 +158,15 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
 
   pele::Array<double> yw = pele_eq_N_Vector(y);
   Array<double> g = Array<double>(yw.size());
+  // TODO: don't keep allocating memory for every jaocobian calculation
   Array<double> h = Array<double>(yw.size() * yw.size());
   udata->pot_->get_energy_gradient_hessian(pele_eq_N_Vector(y), g, h);
   udata->nhev += 1;
   double *hessdata = SUNDenseMatrix_Data(J);
-  for (size_t i = 0; i < h.size(); ++i) {
-    hessdata[i] = -h[i];
-  }
   return 0;
 };
+
+
+
 
 } // namespace pele
