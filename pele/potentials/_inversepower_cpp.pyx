@@ -5,7 +5,6 @@ import numpy as np
 from numpy.core.fromnumeric import _compress_dispatcher, ndim
 
 cimport numpy as np
-from cpython cimport bool
 
 cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport shared_ptr
@@ -26,23 +25,23 @@ cdef extern from *:
 # use external c++ class
 cdef extern from "pele/inversepower.hpp" namespace "pele":
     cdef cppclass  cInversePower "pele::InversePower"[ndim]:
-        cInversePower(double pow, double eps, _pele.Array[double] radii, exact_sum) except +
+        cInversePower(double pow, double eps, _pele.Array[double] radii, bool exact_sum) except +
     cdef cppclass  cInversePowerPeriodic "pele::InversePowerPeriodic"[ndim]:
-        cInversePowerPeriodic(double pow, double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, exact_sum) except +
+        cInversePowerPeriodic(double pow, double eps, _pele.Array[double] radii, _pele.Array[double] boxvec,bool exact_sum) except +
     cdef cppclass cInverseIntPower "pele::InverseIntPower"[ndim, pow]:
-        cInverseIntPower(double eps, _pele.Array[double] radii, exact_sum) except +
+        cInverseIntPower(double eps, _pele.Array[double] radii,bool exact_sum) except +
     cdef cppclass cInverseIntPowerPeriodic "pele::InverseIntPowerPeriodic"[ndim, pow]:
-        cInverseIntPowerPeriodic(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, exact_sum) except +
+        cInverseIntPowerPeriodic(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec,bool exact_sum) except +
     cdef cppclass cInverseHalfIntPower "pele::InverseHalfIntPower"[ndim, pow2]:
-        cInverseHalfIntPower(double eps, _pele.Array[double] radii, exact_sum) except +
+        cInverseHalfIntPower(double eps, _pele.Array[double] radii,bool exact_sum) except +
     cdef cppclass cInverseHalfIntPowerPeriodic "pele::InverseHalfIntPowerPeriodic"[ndim, pow2]:
-        cInverseHalfIntPowerPeriodic(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, exact_sum) except +
+        cInverseHalfIntPowerPeriodic(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec,bool exact_sum) except +
     cdef cppclass  cInversePowerPeriodicCellLists "pele::InversePowerPeriodicCellLists"[ndim]:
-        cInversePowerPeriodicCellLists(double pow, double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale, exact_sum) except +
+        cInversePowerPeriodicCellLists(double pow, double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale,bool exact_sum) except +
     cdef cppclass  cInverseIntPowerPeriodicCellLists "pele::InverseIntPowerPeriodicCellLists"[ndim, pow]:
-        cInverseIntPowerPeriodicCellLists(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale, exact_sum) except +
+        cInverseIntPowerPeriodicCellLists(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale,bool exact_sum) except +
     cdef cppclass  cInverseHalfIntPowerPeriodicCellLists "pele::InverseHalfIntPowerPeriodicCellLists"[ndim, pow2]:
-        cInverseHalfIntPowerPeriodicCellLists(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale, exact_sum) except +
+        cInverseHalfIntPowerPeriodicCellLists(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale, bool exact_sum) except +
 
 cdef class InversePower(_pele.PairwisePotentialInterface):
     """define the python interface to the c++ InversePower implementation
@@ -76,7 +75,6 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
 
         self.radii = radiic
         self.boxvec = np.array(boxvec)
-
 
 
         if use_cell_lists:
@@ -195,6 +193,7 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
                                                                                                  _pele.Array[double](<double*> bv.data, bv.size), exact_sum) )
                     elif self.close_enough(pow, 2.5):
                         # periodic, 3D, Hertz
+                        print(exact_sum)
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
                                                                      cInverseHalfIntPowerPeriodic[INT3, INT5](eps, _pele.Array[double](<double*> radiic.data, radiic.size),
                                                                                                  _pele.Array[double](<double*> bv.data, bv.size), exact_sum) )
