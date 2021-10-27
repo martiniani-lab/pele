@@ -16,8 +16,8 @@
 #include "cvode/cvode_proj.h"
 #include "debug.hpp"
 
-#define EIGEN_USE_BLAS
-#define EIGEN_USE_LAPACKE
+
+
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
 #include <Eigen/Dense>
@@ -38,6 +38,7 @@
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_matrix.h"
 #include "sundials/sundials_nvector.h"
+#include "eigen_interface.hpp"
     
 #include <cvode/cvode.h>               /* access to CVODE                 */
 #include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
@@ -60,7 +61,7 @@ typedef struct UserData_
     double rtol; /* integration tolerances */
     double atol;
     size_t nfev;                // number of gradient(function) evaluations
-    size_t nhev;                // number of hessian (jacobian) evaluations
+    size_t nhev;                // number of st (jacobian) evaluations
     double stored_energy = 0;       // stored energy
     Array<double>    stored_grad;      // stored gradient. need to pass this on to
     std::shared_ptr<pele::BasePotential> pot_;
@@ -81,7 +82,11 @@ private:
     double tN;
     N_Vector x0_N;
     Array<double> xold;
+    bool stop_criterion_satisfied();
+    bool use_newton_stop_criterion_;
+    Eigen::MatrixXd hessian;
 public:
+    
     void one_iteration();
     // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
     // static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
@@ -90,7 +95,10 @@ public:
                       const pele::Array<double> x0,
                       double tol=1e-5,
                       double rtol=1e-4,
-                      double atol=1e-4, bool iterative = false);
+                      double atol=1e-4, bool iterative = false, bool use_newton_stop_criterion = false);
+
+    ~CVODEBDFOptimizer();
+
     inline int get_nhev() const { return udata.nhev;}
 
 protected:

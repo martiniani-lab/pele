@@ -17,10 +17,10 @@ namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0, double tol, double rtol, double atol,
-    bool iterative)
+    bool iterative, bool use_newton_stop_criterion)
     : GradientOptimizer(potential, x0, tol),
       cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
-      N_size(x0.size()), hessian(x0.size(), x0.size()),  t0(0), tN(10000000.0) {
+      N_size(x0.size()), hessian(x0.size(), x0.size()),  t0(0), tN(10000000.0), use_newton_stop_criterion_(use_newton_stop_criterion) {
   // dummy t0
   double t0 = 0;
   std::cout << x0 << "\n";
@@ -115,6 +115,8 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied()
         initialize_func_gradient();
     }
     if (rms_ < tol_) {
+      if (use_newton_stop_criterion_)
+      {
       // Check with a more stringent hessian condition
       Array <double> pele_hessian = Array<double>(hessian.data(), hessian.size());
 
@@ -127,7 +129,18 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied()
       newton_step.setZero();
       newton_step = hessian.completeOrthogonalDecomposition().solve(g_eigen);
       return newton_step.norm() < tol_;
+      }
+      else
+      {
+        std::cout << "converged in " << iter_number_ << " iterations\n";
+        std::cout << "rms = " << rms_ << "\n";
+        std::cout << "tol = " << tol_ << "\n"; 
+        return true;
+      }
       // Wrap into a matrix
+    }
+    else {
+    return false;
     }
 }
 
