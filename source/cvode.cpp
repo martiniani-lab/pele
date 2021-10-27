@@ -20,7 +20,8 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     bool iterative, bool use_newton_stop_criterion)
     : GradientOptimizer(potential, x0, tol),
       cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
-      N_size(x0.size()), hessian(x0.size(), x0.size()),  t0(0), tN(10000000.0), use_newton_stop_criterion_(use_newton_stop_criterion) {
+      N_size(x0.size()), hessian(x0.size(), x0.size()), t0(0), tN(10000000.0),
+      use_newton_stop_criterion_(use_newton_stop_criterion) {
   // dummy t0
   double t0 = 0;
   std::cout << x0 << "\n";
@@ -108,40 +109,42 @@ void CVODEBDFOptimizer::one_iteration() {
   // // TODO: This is terrible C++ code but write it better
 };
 
-bool CVODEBDFOptimizer::stop_criterion_satisfied()
-{
-    if (! func_initialized_) {
-        // For some reason clang throws an error here, but gcc compiles properly
-        initialize_func_gradient();
-    }
-    if (rms_ < tol_) {
-      if (use_newton_stop_criterion_)
-      {
+bool CVODEBDFOptimizer::stop_criterion_satisfied() {
+  if (!func_initialized_) {
+    // For some reason clang throws an error here, but gcc compiles properly
+    initialize_func_gradient();
+  }
+  if (rms_ < tol_) {
+    if (use_newton_stop_criterion_) {
       // Check with a more stringent hessian condition
-      Array <double> pele_hessian = Array<double>(hessian.data(), hessian.size());
+      Array<double> pele_hessian =
+          Array<double>(hessian.data(), hessian.size());
 
-
-      
-      
-      Eigen::Map<Eigen::VectorXd,0,Eigen::InnerStride<1> > g_eigen (g_.data(),int(g_.size()));
+      Eigen::Map<Eigen::VectorXd, 0, Eigen::InnerStride<1>> g_eigen(
+          g_.data(), int(g_.size()));
       potential_->get_hessian(x_, pele_hessian);
       Eigen::VectorXd newton_step(g_.size());
       newton_step.setZero();
       newton_step = hessian.completeOrthogonalDecomposition().solve(g_eigen);
-      return newton_step.norm() < tol_;
-      }
-      else
-      {
+      if (newton_step.norm() < tol_) {
         std::cout << "converged in " << iter_number_ << " iterations\n";
         std::cout << "rms = " << rms_ << "\n";
-        std::cout << "tol = " << tol_ << "\n"; 
+        std::cout << "tol = " << tol_ << "\n";
         return true;
+      } else {
+        return false;
       }
-      // Wrap into a matrix
+    } else {
+      std::cout << "converged in " << iter_number_ << " iterations\n";
+      std::cout << "rms = " << rms_ << "\n";
+      std::cout << "tol = " << tol_ << "\n";
+      return true;
     }
-    else {
+
+    // Wrap into a matrix
+  } else {
     return false;
-    }
+  }
 }
 
 int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
@@ -178,8 +181,5 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
   double *hessdata = SUNDenseMatrix_Data(J);
   return 0;
 };
-
-
-
 
 } // namespace pele
