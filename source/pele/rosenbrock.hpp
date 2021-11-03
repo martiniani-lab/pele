@@ -87,7 +87,7 @@ public:
 /**
  * Flat Harmonic Potential. Flat in one dimension so that the hessian is
  * singular. Useful for testing optimizers where the singularity is handled.
- * The Potential is flat in the x+y direction.
+ * The Potential is flat in the x+y direction. and the origin is at 0, 0.
  */
 
 class FlatHarmonic : public BasePotential {

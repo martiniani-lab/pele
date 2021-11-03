@@ -35,9 +35,9 @@ void Newton::one_iteration() {
   _nhev += 1;
 
   // calculate the newton step
-  _x = _hessian.completeOrthogonalDecomposition().solve(_gradient);
+  _step = -_hessian.completeOrthogonalDecomposition().solve(_gradient);
 
-  _step = _x - _x_old;
+  _x = _x_old + _step;
 
   // use line search to find the step size
   Array<double> gradient_old_pele(_gradient_old.data(), _gradient_old.size());
@@ -54,6 +54,7 @@ void Newton::one_iteration() {
   // this if this if it becomes a speed constraint/causes maintainability issues
   x_ = x_pele;
   g_ = gradient_pele;
+  iter_number_ += 1;
 }
 
 } // namespace pele
