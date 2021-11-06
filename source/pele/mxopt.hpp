@@ -5,8 +5,7 @@
 #include "base_potential.hpp"
 #include "debug.hpp"
 
-#define EIGEN_USE_BLAS
-#define EIGEN_USE_LAPACKE
+
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
 #include "eigen_interface.hpp"

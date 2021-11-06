@@ -10,6 +10,7 @@
 #include "pele/backtracking.hpp"
 #include "pele/optimizer.hpp"
 #include <Eigen/Dense>
+#include <cstddef>
 
 namespace pele {
 
@@ -60,6 +61,9 @@ public:
   // TODO: implement
   // void reset(pele::Array<double> x0);
   inline int get_nhev() const { return _nhev; }
+  inline Eigen::VectorXd get_step() const { 
+    return _step;}
+  void set_x(Array<double> x);
 };
 
 } // namespace pele

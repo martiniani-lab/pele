@@ -10,11 +10,19 @@ Newton::Newton(std::shared_ptr<BasePotential> potential,
                const pele::Array<double> &x0, double tol, double threshold)
     : GradientOptimizer(potential, x0, tol), _threshold(threshold),
       _tolerance(tol), _hessian(x0.size(), x0.size()), _gradient(x0.size()),
-      _x(x0.size()), _line_search(this, 1.0) // use step size of 1.0 for newton
+      _x(x0.size()), _line_search(this, 1.0), _nhev(0) // use step size of 1.0 for newton
 {
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x0.size(); ++i) {
     _x(i) = x0[i];
+  }
+}
+
+void Newton::set_x(pele::Array<double> x)
+{
+  // write pele array data into the Eigen array
+  for (size_t i = 0; i < x.size(); ++i) {
+    _x(i) = x[i];
   }
 }
 
@@ -34,8 +42,17 @@ void Newton::one_iteration() {
                                                     hessian_pele);
   _nhev += 1;
 
+
+  Eigen::VectorXd eigenvalues = Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(
+      _hessian).eigenvalues();
+
+  std::cout << "eigenvalues: " << eigenvalues << std::endl;
+
+  Eigen::CompleteOrthogonalDecomposition<Eigen::MatrixXd> cod(_hessian);
+
+  cod.setThreshold(1e-8);
   // calculate the newton step
-  _step = -_hessian.completeOrthogonalDecomposition().solve(_gradient);
+  _step = -cod.solve(_gradient);
 
   _x = _x_old + _step;
 
