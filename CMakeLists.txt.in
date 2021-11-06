@@ -1,6 +1,12 @@
+# set(CMAKE_C_COMPILER "gcc-11")
+# set(CMAKE_CXX_COMPILER "g++-11")
+
 # this file is meant to be parsed by python before being a proper CMakeLists.txt file
 # in particular, the following strings will be set to their proper values by python when
 # making CMakeLists.txt
+project(pele)
+message("${CMAKE_C_COMPILER}")
+message("${CMAKE_CXX_COMPILER}")
 set(numpy_include __NUMPY_INCLUDE__)
 set(PYTHON_INCLUDE_DIRS __PYTHON_INCLUDE__)
 set(PYTHON_LDFLAGS "__PYTHON_LDFLAGS__")
@@ -15,17 +21,19 @@ IF(APPLE)
 ENDIF(APPLE)
 
 
+
 ##################################### sundials #######################################
 # TODO: figure out how to remove the extra setup for sundials
 
+
+# /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
 set(SUNDIALS_INCLUDE_DIR
-  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
+  "${SUNDIALS_INCLUDE_DIR}"
   CACHE PATH "Location of SUNDIALS header files")
 set(SUNDIALS_LIBRARY_DIR
-  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
+  ${}
   CACHE PATH "Location of SUNDIALS libraries")
-
 
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB

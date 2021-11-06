@@ -6,7 +6,6 @@
  */
 // #define EIGEN_USE_MKL_ALL
 
-#include "Eigen/src/Core/Matrix.h"
 #include "array.hpp"
 #include <Eigen/Dense>
 
