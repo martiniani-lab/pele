@@ -5,11 +5,16 @@
 
 #include "pele/array.hpp"
 #include <cmath>
+#include <cstddef>
 #include <math.h>
 #include <random>
+#include <vector>
 
 // Float definition of pi
 #define PI 3.14159265358979323846
+
+
+typedef std::vector<std::vector<double>> matrix;
 
 
 
@@ -99,4 +104,55 @@ inline Array<double> generate_random_coordinates(double box_length, int n_partic
     }
     return coords;
 }
+
+inline bool origin_in_hull_2d(matrix disp_list) {
+
+}
+
+inline std::vector<double> cross_2d(matrix x,  matrix y) {
+
+    std::vector<double> cross_product(x.size());
+    for (size_t i = 0; i < x.size(); i++) {
+        cross_product[i] = x[i][1] * y[i][2] - x[i][2] - y[i][1];
+    }
+    return cross_product;
+}
+
+
+inline std::vector<size_t> sort_circle(matrix vertices) {
+    // Split the vertices based on whether the x coordinate is to the right or left of the origin
+    std::vector<size_t> left_indices_list;
+    std::vector<size_t> right_indices_list;
+    for (size_t i = 0; i < vertices.size(); i++) {
+        if (vertices[i][0] < 0) {
+            left_indices_list.push_back(i);
+        }
+        else {
+            right_indices_list.push_back(i);
+        }
+    }
+    // get the 
+    std::vector<double> left_tan_list;
+    std::vector<double> right_tan_list;
+
+    for (size_t i = 0; i < left_indices_list.size(); i++) {
+        left_tan_list.push_back(vertices[left_indices_list[i]][1] / vertices[left_indices_list[i]][0]);
+    }
+    for (size_t i = 0; i < right_indices_list.size(); i++) {
+        right_tan_list.push_back(vertices[right_indices_list[i]][1] / vertices[right_indices_list[i]][0]);
+    }
+
+    // Sort both lists by tangent
+    std::sort(left_tan_list.begin(), left_tan_list.end());
+    std::sort(right_tan_list.begin(), right_tan_list.end());
+
+    // concanetate the two lists and return
+    std::vector<size_t> sorted_indices_list;
+    sorted_indices_list.insert(sorted_indices_list.end(), left_indices_list.begin(), left_indices_list.end());
+    return sorted_indices_list;
+}
+
+
+
+
 }
