@@ -105,15 +105,13 @@ inline Array<double> generate_random_coordinates(double box_length, int n_partic
     return coords;
 }
 
-inline bool origin_in_hull_2d(matrix disp_list) {
 
-}
 
-inline std::vector<double> cross_2d(matrix x,  matrix y) {
+inline std::vector<double> cross_shifted(matrix x,  std::vector<size_t> shift) {
 
     std::vector<double> cross_product(x.size());
     for (size_t i = 0; i < x.size(); i++) {
-        cross_product[i] = x[i][1] * y[i][2] - x[i][2] - y[i][1];
+        cross_product[i] = x[i][1] * x[shift[i]][2] - x[i][2] * x[shift[i]][1];
     }
     return cross_product;
 }
@@ -153,6 +151,29 @@ inline std::vector<size_t> sort_circle(matrix vertices) {
     return sorted_indices_list;
 }
 
+inline bool origin_in_hull_2d(matrix vertices) {
+
+    std::vector<size_t> sort_indices;
+    sort_indices = sort_circle(vertices);
+
+    // shift the vertices so the first vertex is pushed last
+    std::vector<size_t> shifted_indices;
+    shifted_indices.insert(shifted_indices.end(), sort_indices.begin()+1, sort_indices.end());
+    // push the first vertex to the end
+    shifted_indices.push_back(sort_indices[0]);
+
+    // get the cross product of shifted vertices and the normal vertices
+    // Doing it this way considering there's no easy way to translate julia's masks to c++
+    std::vector<double> cross_product = cross_shifted(vertices, shifted_indices);
+
+
+    for (size_t i = 0; i < cross_product.size(); i++) {
+        if (cross_product[i] < 0) {
+            return false;
+        }
+    }
+    return true;
+}
 
 
 
