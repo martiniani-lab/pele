@@ -149,6 +149,7 @@ inline std::vector<size_t> sort_circle(matrix vertices) {
     // concanetate the two lists and return
     std::vector<size_t> sorted_indices_list;
     sorted_indices_list.insert(sorted_indices_list.end(), left_indices_list.begin(), left_indices_list.end());
+    sorted_indices_list.insert(sorted_indices_list.end(), right_indices_list.begin(), right_indices_list.end());
     return sorted_indices_list;
 }
 
