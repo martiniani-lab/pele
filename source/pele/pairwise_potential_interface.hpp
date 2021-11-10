@@ -16,8 +16,6 @@ protected:
   const Array<double> m_radii;
 
   // Data members for finding rattlers close to minima
-  Array<bool> m_not_rattlers; // true if the atom is a rattler
-  bool m_jammed;              // true if the system is jammed
 
   double sum_radii(const size_t atom_i, const size_t atom_j) const {
     if (m_radii.size() == 0) {
@@ -33,8 +31,7 @@ public:
     // set
   }
   PairwisePotentialInterface(pele::Array<double> const &radii)
-      : m_radii(radii.copy()), m_not_rattlers(radii.size(), false),
-        m_jammed(false) {
+      : m_radii(radii.copy()) {
     if (radii.size() == 0) {
       throw std::runtime_error(
           "PairwisePotentialInterface: illegal input: radii");
@@ -132,29 +129,30 @@ public:
     return pele::Array<size_t>(0);
   }
 
-  pele::Array<bool> get_rattlers() const { return m_not_rattlers.copy(); }
-
   /**
    * @brief Finds the rattlers in the Found minimum and saves them
    * @param coords The coordinates of the found minimum. important: Needs to be
-   * at the minimum
+   *               at the minimum
+   * @param not_rattlers whether a particle is a rattler or not
+   * @param jammed whether a particle is jammed or not
    * To look at a readable implementation, see the julia code in
    * check_same_structure.jl in the basinerrror library. (It's also probably
    * faster since this isn't vectorized)
    */
-  void find_rattlers(pele::Array<double> const &minimum_coords) {
+  bool find_rattlers(pele::Array<double> const &minimum_coords,
+                     Array<bool> not_rattlers, bool &jammed) {
 
-    m_not_rattlers.assign(true);
+    not_rattlers.assign(true);
     size_t dim = get_ndim();
 
     // Not implemented for higher dimensions
     assert(dim == 2) size_t n_particles = minimum_coords.size() / dim;
 
-    size_t zmin = dim + 1
+    size_t zmin = dim + 1;
 
-                  // check if the radii /coordinate array sizes are consistent
-                  // with the dimensionality
-                  assert(n_particles == m_radii.size());
+    // check if the radii /coordinate array sizes are consistent
+    // with the dimensionality
+    assert(n_particles == m_radii.size());
 
     // get neighbors of atoms
     pele::Array<std::vector<size_t>> neighbor_indss;
@@ -186,7 +184,7 @@ public:
           found_rattler = origin_in_hull_2d(neighbor_distss[atomi]);
         }
         if (found_rattler) {
-          m_not_rattlers[atomi] = false;
+          not_rattlers[atomi] = false;
           n_rattlers++;
 
           // remove atom from the list of atoms to check if present in the check
@@ -228,9 +226,9 @@ public:
 
     if ((total_contacts < minimum_jammed_contacts) ||
         (n_stable_particles < dim)) {
-      m_jammed = false;
+      jammed = false;
     }
-    m_jammed = true;
+    jammed = true;
   }
 };
 
