@@ -35,6 +35,10 @@ public:
         throw std::runtime_error("BasePotential::get_ndim must be overloaded");
     }
 
+    virtual bool find_rattlers(pele::Array<double> const &minimum_coords,
+                     Array<bool> not_rattlers, bool &jammed) {
+        throw std::runtime_error("BasePotential::find_rattlers must be overloaded");
+    }
     /**
      * compute the energy and gradient, but don't initialize the gradient to zero
      */
