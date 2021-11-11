@@ -1,6 +1,7 @@
 #ifndef PYGMIN_SIMPLE_PAIRWISE_POTENTIAL_H
 #define PYGMIN_SIMPLE_PAIRWISE_POTENTIAL_H
 
+#include <array>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -69,6 +70,13 @@ public:
     return add_energy_gradient(x, grad);
   }
 
+  virtual double get_energy_gradient(Array<double> const &x,
+                                     Array<double> &grad,
+                                     Array<bool> not_rattlers) {
+    grad.assign(0);
+    return add_energy_gradient(x, grad, not_rattlers);
+  }
+
   virtual double
   get_energy_gradient(Array<double> const &x,
                       std::vector<xsum_small_accumulator> &exact_grad) {
@@ -77,6 +85,7 @@ public:
     };
     return add_energy_gradient(x, exact_grad);
   }
+
   virtual double get_energy_gradient_hessian(Array<double> const &x,
                                              Array<double> &grad,
                                              Array<double> &hess) {
@@ -84,18 +93,35 @@ public:
     hess.assign(0);
     return add_energy_gradient_hessian(x, grad, hess);
   }
+  virtual double get_energy_gradient_hessian(Array<double> const &x,
+                                             Array<double> &grad,
+                                             Array<double> &hess,
+                                             Array<bool> not_rattlers) {
+    grad.assign(0);
+    hess.assign(0);
+    return add_energy_gradient_hessian(x, grad, hess, not_rattlers);
+  }
   virtual void get_hessian(Array<double> const &x, Array<double> &hess) {
     hess.assign(0);
     add_hessian(x, hess);
   }
   virtual double add_energy_gradient(Array<double> const &x,
                                      Array<double> &grad);
+
+  virtual double add_energy_gradient(Array<double> const &x,
+                                     Array<double> &grad,
+                                     Array<bool> not_rattlers);
+
   virtual double
   add_energy_gradient(Array<double> const &x,
                       std::vector<xsum_small_accumulator> &exact_grad);
   virtual double add_energy_gradient_hessian(Array<double> const &x,
                                              Array<double> &grad,
                                              Array<double> &hess);
+  virtual double add_energy_gradient_hessian(Array<double> const &x,
+                                             Array<double> &grad,
+                                             Array<double> &hess,
+                                             Array<bool> not_rattlers);
   virtual void add_hessian(Array<double> const &x, Array<double> &hess);
   virtual void
   get_neighbors(pele::Array<double> const &coords,
@@ -237,6 +263,106 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
   }
 }
 
+template <typename pairwise_interaction, typename distance_policy>
+inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
+    add_energy_gradient(Array<double> const &x, Array<double> &grad, Array<bool> mask) {
+  const size_t natoms = x.size() / m_ndim;
+  if (m_ndim * natoms != x.size()) {
+    throw std::runtime_error(
+        "x.size() is not divisible by the number of dimensions");
+  }
+  if (grad.size() != x.size()) {
+    throw std::runtime_error("grad must have the same size as x");
+  }
+  double gij;
+  double dr[m_ndim];
+  // std::vector<double> grad_test (grad.size(), 0);
+
+  if (exact_sum) {
+
+    xsum_large_accumulator esum;
+    xsum_large_init(&esum);
+    if (!exact_gradient_initialized) {
+      exact_gradient =
+          std::make_shared<std::vector<xsum_small_accumulator>>(grad.size());
+      exact_gradient_initialized = true;
+    }
+
+    for (size_t i = 0; i < grad.size(); ++i) {
+      xsum_small_init(&((*exact_gradient)[i]));
+    }
+    for (size_t atom_i = 0; atom_i < natoms; ++atom_i) {
+      const size_t i1 = m_ndim * atom_i;
+      for (size_t atom_j = 0; atom_j < atom_i; ++atom_j) {
+        const size_t j1 = m_ndim * atom_j;
+
+        _dist->get_rij(dr, &x[i1], &x[j1]);
+        double r2 = 0;
+#pragma unroll
+        for (size_t k = 0; k < m_ndim; ++k) {
+          r2 += dr[k] * dr[k];
+        }
+        if (mask[i1] && mask[j1]) {
+          xsum_large_add1(&esum, _interaction->energy_gradient(
+                                     r2, &gij, sum_radii(atom_i, atom_j)));
+        } else {
+          gij = 0;
+        }
+        if (gij != 0) {
+#pragma unroll
+          for (size_t k = 0; k < m_ndim; ++k) {
+            dr[k] *= gij;
+            xsum_small_add1(&((*exact_gradient)[i1 + k]), -dr[k]);
+            xsum_small_add1(&((*exact_gradient)[j1 + k]), dr[k]);
+          }
+        }
+      }
+    }
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+    for (size_t i = 0; i < grad.size(); ++i) {
+      grad[i] += xsum_small_round(&((*exact_gradient)[i]));
+    }
+#else
+    for (size_t i = 0; i < grad.size(); ++i) {
+      grad[i] += xsum_small_round(&((*exact_gradient)[i]));
+    }
+#endif
+    return xsum_large_round(&esum);
+  } else {
+    double e = 0.;
+    double gij;
+    double dr[m_ndim];
+
+    for (size_t atom_i = 0; atom_i < natoms; ++atom_i) {
+      const size_t i1 = m_ndim * atom_i;
+      for (size_t atom_j = 0; atom_j < atom_i; ++atom_j) {
+        const size_t j1 = m_ndim * atom_j;
+
+        _dist->get_rij(dr, &x[i1], &x[j1]);
+        double r2 = 0;
+#pragma unroll
+        for (size_t k = 0; k < m_ndim; ++k) {
+          r2 += dr[k] * dr[k];
+        }
+        if (mask[i1] && mask[j1]) {
+          e += _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j));
+        } else {
+          gij = 0;
+        }
+        if (gij != 0) {
+#pragma unroll
+          for (size_t k = 0; k < m_ndim; ++k) {
+            dr[k] *= gij;
+            grad[i1 + k] -= dr[k];
+            grad[j1 + k] += dr[k];
+          }
+        }
+      }
+    }
+    return e;
+  }
+}
 template <typename pairwise_interaction, typename distance_policy>
 inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
     add_energy_gradient(Array<double> const &x,
@@ -381,6 +507,85 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
   return e;
 }
 
+
+template <typename pairwise_interaction, typename distance_policy>
+inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
+    add_energy_gradient_hessian(Array<double> const &x, Array<double> &grad,
+                                Array<double> &hess, Array<bool> mask) {
+  double hij, gij;
+  double dr[m_ndim];
+  const size_t N = x.size();
+  const size_t natoms = x.size() / m_ndim;
+  if (m_ndim * natoms != x.size()) {
+    throw std::runtime_error(
+        "x.size() is not divisible by the number of dimensions");
+  }
+  if (x.size() != grad.size()) {
+    throw std::invalid_argument("the gradient has the wrong size");
+  }
+  if (hess.size() != x.size() * x.size()) {
+    throw std::invalid_argument("the Hessian has the wrong size");
+  }
+
+  double e = 0.;
+  for (size_t atom_i = 0; atom_i < natoms; ++atom_i) {
+    size_t i1 = m_ndim * atom_i;
+    for (size_t atom_j = 0; atom_j < atom_i; ++atom_j) {
+      size_t j1 = m_ndim * atom_j;
+
+      _dist->get_rij(dr, &x[i1], &x[j1]);
+      double r2 = 0;
+#pragma unroll
+      for (size_t k = 0; k < m_ndim; ++k) {
+        r2 += dr[k] * dr[k];
+      }
+      if (mask[i1] && mask[j1]) {
+        e += _interaction->energy_gradient_hessian(r2, &gij, &hij,
+                                                   sum_radii(atom_i, atom_j));
+      } else {
+        gij = 0;
+        hij = 0;
+      }
+      if (gij != 0) {
+#pragma unroll
+        for (size_t k = 0; k < m_ndim; ++k) {
+          grad[i1 + k] -= gij * dr[k];
+          grad[j1 + k] += gij * dr[k];
+        }
+      }
+
+      if (hij != 0) {
+#pragma unroll
+        for (size_t k = 0; k < m_ndim; ++k) {
+          // diagonal block - diagonal terms
+          double Hii_diag = (hij + gij) * dr[k] * dr[k] / r2 - gij;
+          hess[N * (i1 + k) + i1 + k] += Hii_diag;
+          hess[N * (j1 + k) + j1 + k] += Hii_diag;
+          // off diagonal block - diagonal terms
+          double Hij_diag = -Hii_diag;
+          hess[N * (i1 + k) + j1 + k] = Hij_diag;
+          hess[N * (j1 + k) + i1 + k] = Hij_diag;
+#pragma unroll
+          for (size_t l = k + 1; l < m_ndim; ++l) {
+            // diagonal block - off diagonal terms
+            double Hii_off = (hij + gij) * dr[k] * dr[l] / r2;
+            hess[N * (i1 + k) + i1 + l] += Hii_off;
+            hess[N * (i1 + l) + i1 + k] += Hii_off;
+            hess[N * (j1 + k) + j1 + l] += Hii_off;
+            hess[N * (j1 + l) + j1 + k] += Hii_off;
+            // off diagonal block - off diagonal terms
+            double Hij_off = -Hii_off;
+            hess[N * (i1 + k) + j1 + l] = Hij_off;
+            hess[N * (i1 + l) + j1 + k] = Hij_off;
+            hess[N * (j1 + k) + i1 + l] = Hij_off;
+            hess[N * (j1 + l) + i1 + k] = Hij_off;
+          }
+        }
+      }
+    }
+  }
+  return e;
+}
 template <typename pairwise_interaction, typename distance_policy>
 inline void
 SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian(
