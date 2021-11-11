@@ -268,7 +268,7 @@ public:
     /**
      * functions for LineSearch
      */
-    void compute_func_gradient(Array<double> x, double & func,
+    virtual void compute_func_gradient(Array<double> x, double & func,
                                Array<double> gradient)
     {
         nfev_ += 1;

@@ -26,7 +26,7 @@ MixedDescentEndOnly::MixedDescentEndOnly(
       _cvode_optimizer(potential, x0, tol, rtol, atol,
                         iterative, false), // initialize the CVODE optimizer
       _newton_optimizer(potential, x0, tol,
-                        threshold), // initialize the Newton optimizer
+                        threshold, true), // initialize the Newton optimizer with the rattler mask option passed as true
       _tol(tol), _newton_step_tol(newton_step_tol), use_newton_step(false),
       particle_disp(potential->get_ndim()) {}
 
@@ -54,6 +54,15 @@ void MixedDescentEndOnly::one_iteration() {
 bool MixedDescentEndOnly::stop_criterion_satisfied() {
   // stop criterion can only be satisfied in the Newton regime
   //std::cout << _newton_optimizer.get_niter() << "niter" << std::endl;
+  bool jammed;
+  Array<bool> not_rattlers;
+
+  _newton_optimizer.get_rattler_details(not_rattlers, jammed);
+
+  // TODO: Pass these on to the python interface since we don't want to keep do this twice
+  if (!jammed) {
+    return true; // assuming that the find rattlers function in julia will take care of this
+  }
   if (use_newton_step && _newton_optimizer.get_niter() > 0) {
     //std::cout << "are we actually here" << std::endl;
     double _ndim = potential_->get_ndim();

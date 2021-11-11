@@ -134,7 +134,7 @@ public:
    * @param coords The coordinates of the found minimum. important: Needs to be
    *               at the minimum
    * @param not_rattlers whether a particle is a rattler or not
-   * @param jammed whether a particle is jammed or not
+   * @param jammed whether the system is jammed or not
    * To look at a readable implementation, see the julia code in
    * check_same_structure.jl in the basinerrror library. (It's also probably
    * faster since this isn't vectorized)

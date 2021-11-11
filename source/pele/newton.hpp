@@ -1,5 +1,5 @@
 // Newton method that ignores singular while calculating the inverse
-// of a matrix.
+// of a matrix. Modified to remove rattlers.
 
 #ifndef _PELE_NEWTON_H_
 #define _PELE_NEWTON_H_
@@ -10,6 +10,7 @@
 #include "pele/backtracking.hpp"
 #include "pele/optimizer.hpp"
 #include <Eigen/Dense>
+#include <array>
 #include <cstddef>
 
 namespace pele {
@@ -27,6 +28,9 @@ private:
   double _tolerance;
   double _threshold;
   int _nhev;
+  bool _use_rattler_mask;
+  Array<bool> _not_rattlers;
+  bool _jammed;
 
 public:
   /**
@@ -42,7 +46,8 @@ public:
    */
   Newton(std::shared_ptr<BasePotential> potential,
          const pele::Array<double> &x0, double tol = 1e-6,
-         double threshold = std::numeric_limits<double>::epsilon());
+         double threshold = std::numeric_limits<double>::epsilon(),
+         bool use_rattler_mask = false);
 
   /**
    * Destructor
@@ -61,9 +66,18 @@ public:
   // TODO: implement
   // void reset(pele::Array<double> x0);
   inline int get_nhev() const { return _nhev; }
-  inline Eigen::VectorXd get_step() const { 
-    return _step;}
+  inline Eigen::VectorXd get_step() const { return _step; }
   void set_x(Array<double> x);
+  void get_rattler_details(Array<bool> &not_rattlers, bool &jammed) {
+    if (!_use_rattler_mask) {
+      throw std::runtime_error(" Rattler based method not called");
+    }
+    not_rattlers = not_rattlers;
+    jammed = _jammed;
+  }
+
+  void compute_func_gradient(Array<double> x, double &func,
+                             Array<double> gradient);
 };
 
 } // namespace pele
