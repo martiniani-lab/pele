@@ -18,6 +18,7 @@
 #include "pele/cvode.hpp"
 #include "pele/newton.hpp"
 #include <complex>
+#include <cstdint>
 #include <iostream>
 
 
@@ -33,6 +34,7 @@ namespace pele {
             bool use_newton_step;
             Array<double> particle_disp; // Stores displacement for a single particle
             double _max_dist; // Maximum distance a single particle has moved
+            Array<uint8_t> _not_rattlers; // TODO: only because we need to save this
 
             CVODEBDFOptimizer _cvode_optimizer;
             Newton _newton_optimizer;

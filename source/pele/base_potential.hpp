@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 #include <stdexcept>
 #include <iostream>
@@ -36,7 +37,7 @@ public:
     }
 
     virtual bool find_rattlers(pele::Array<double> const &minimum_coords,
-                     Array<bool> not_rattlers, bool &jammed) {
+                     Array<uint8_t> not_rattlers, bool &jammed) {
         throw std::runtime_error("BasePotential::find_rattlers must be overloaded");
     }
     /**
@@ -89,6 +90,16 @@ public:
         return energy;
     }
 
+    virtual double get_energy_gradient_hessian(Array<double> const & x, Array<double> & grad,
+            Array<double> & hess, Array<uint8_t> not_rattlers)
+    {
+        throw std::runtime_error("BasePotential::get_energy_gradient_hessian with rattlers must be overloaded");
+    }
+    virtual double get_energy_gradient(Array<double> const & x, Array<double> & grad,
+            Array<uint8_t> not_rattlers)
+    {
+        throw std::runtime_error("BasePotential::get_energy_gradient with rattlers must be overloaded");
+    }
     /**
      * compute the numerical gradient
      */

@@ -7,6 +7,7 @@
 #include <bits/stdc++.h>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <set>
 
 namespace pele {
@@ -130,7 +131,8 @@ public:
   }
 
   /**
-   * @brief Finds the rattlers in the Found minimum and saves them
+   * @brief Finds the rattlers in the found minimum and saves them.
+    *       
    * @param coords The coordinates of the found minimum. important: Needs to be
    *               at the minimum
    * @param not_rattlers whether a particle is a rattler or not
@@ -140,13 +142,13 @@ public:
    * faster since this isn't vectorized)
    */
   bool find_rattlers(pele::Array<double> const &minimum_coords,
-                     Array<bool> not_rattlers, bool &jammed) {
-
-    not_rattlers.assign(true);
+                     Array<uint8_t> not_rattlers, bool &jammed) {
+    not_rattlers.assign(1);
     size_t dim = get_ndim();
 
     // Not implemented for higher dimensions
-    assert(dim == 2) size_t n_particles = minimum_coords.size() / dim;
+    assert(dim == 2);
+    size_t n_particles = minimum_coords.size() / dim;
 
     size_t zmin = dim + 1;
 
@@ -184,7 +186,7 @@ public:
           found_rattler = origin_in_hull_2d(neighbor_distss[atomi]);
         }
         if (found_rattler) {
-          not_rattlers[atomi] = false;
+          not_rattlers[atomi] = 0;
           n_rattlers++;
 
           // remove atom from the list of atoms to check if present in the check

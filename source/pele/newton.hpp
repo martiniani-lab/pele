@@ -12,6 +12,7 @@
 #include <Eigen/Dense>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 
 namespace pele {
 
@@ -29,7 +30,7 @@ private:
   double _threshold;
   int _nhev;
   bool _use_rattler_mask;
-  Array<bool> _not_rattlers;
+  Array<uint8_t> _not_rattlers;
   bool _jammed;
 
 public:
@@ -68,13 +69,14 @@ public:
   inline int get_nhev() const { return _nhev; }
   inline Eigen::VectorXd get_step() const { return _step; }
   void set_x(Array<double> x);
-  void get_rattler_details(Array<bool> &not_rattlers, bool &jammed) {
+  void get_rattler_details(Array<uint8_t> &not_rattlers, bool &jammed) {
     if (!_use_rattler_mask) {
       throw std::runtime_error(" Rattler based method not called");
     }
     not_rattlers = not_rattlers;
     jammed = _jammed;
   }
+  bool is_jammed() { return _jammed; }
 
   void compute_func_gradient(Array<double> x, double &func,
                              Array<double> gradient);

@@ -15,6 +15,7 @@
 #include "pele/optimizer.hpp"
 #include <Eigen/Dense>
 #include <iostream>
+#include <memory>
 
 namespace pele {
 
@@ -28,6 +29,7 @@ MixedDescentEndOnly::MixedDescentEndOnly(
       _newton_optimizer(potential, x0, tol,
                         threshold, true), // initialize the Newton optimizer with the rattler mask option passed as true
       _tol(tol), _newton_step_tol(newton_step_tol), use_newton_step(false),
+    
       particle_disp(potential->get_ndim()) {}
 
 void MixedDescentEndOnly::one_iteration() {
@@ -55,9 +57,8 @@ bool MixedDescentEndOnly::stop_criterion_satisfied() {
   // stop criterion can only be satisfied in the Newton regime
   //std::cout << _newton_optimizer.get_niter() << "niter" << std::endl;
   bool jammed;
-  Array<bool> not_rattlers;
 
-  _newton_optimizer.get_rattler_details(not_rattlers, jammed);
+  jammed = _newton_optimizer.is_jammed();
 
   // TODO: Pass these on to the python interface since we don't want to keep do this twice
   if (!jammed) {

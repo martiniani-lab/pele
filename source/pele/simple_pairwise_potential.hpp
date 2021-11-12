@@ -2,8 +2,10 @@
 #define PYGMIN_SIMPLE_PAIRWISE_POTENTIAL_H
 
 #include <array>
+#include <cstdint>
 #include <iostream>
 #include <memory>
+#include <sys/types.h>
 #include <vector>
 
 #include "array.hpp"
@@ -72,7 +74,7 @@ public:
 
   virtual double get_energy_gradient(Array<double> const &x,
                                      Array<double> &grad,
-                                     Array<bool> not_rattlers) {
+                                     Array<uint8_t> not_rattlers) {
     grad.assign(0);
     return add_energy_gradient(x, grad, not_rattlers);
   }
@@ -96,7 +98,7 @@ public:
   virtual double get_energy_gradient_hessian(Array<double> const &x,
                                              Array<double> &grad,
                                              Array<double> &hess,
-                                             Array<bool> not_rattlers) {
+                                             Array<uint8_t> not_rattlers) {
     grad.assign(0);
     hess.assign(0);
     return add_energy_gradient_hessian(x, grad, hess, not_rattlers);
@@ -110,7 +112,7 @@ public:
 
   virtual double add_energy_gradient(Array<double> const &x,
                                      Array<double> &grad,
-                                     Array<bool> not_rattlers);
+                                     Array<uint8_t> not_rattlers);
 
   virtual double
   add_energy_gradient(Array<double> const &x,
@@ -121,7 +123,7 @@ public:
   virtual double add_energy_gradient_hessian(Array<double> const &x,
                                              Array<double> &grad,
                                              Array<double> &hess,
-                                             Array<bool> not_rattlers);
+                                             Array<uint8_t> not_rattlers);
   virtual void add_hessian(Array<double> const &x, Array<double> &hess);
   virtual void
   get_neighbors(pele::Array<double> const &coords,
@@ -265,7 +267,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 
 template <typename pairwise_interaction, typename distance_policy>
 inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
-    add_energy_gradient(Array<double> const &x, Array<double> &grad, Array<bool> mask) {
+    add_energy_gradient(Array<double> const &x, Array<double> &grad, Array<uint8_t> mask) {
   const size_t natoms = x.size() / m_ndim;
   if (m_ndim * natoms != x.size()) {
     throw std::runtime_error(
@@ -511,7 +513,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 template <typename pairwise_interaction, typename distance_policy>
 inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
     add_energy_gradient_hessian(Array<double> const &x, Array<double> &grad,
-                                Array<double> &hess, Array<bool> mask) {
+                                Array<double> &hess, Array<uint8_t> mask) {
   double hij, gij;
   double dr[m_ndim];
   const size_t N = x.size();

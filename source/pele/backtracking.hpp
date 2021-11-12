@@ -91,7 +91,7 @@ private:
     Vector gradvec;
     Scalar initial_stpsize;
     Vector step_direction;
-    Vector xoldvec;
+    Vector xoldvec;    
 };
 }  // pele
 
