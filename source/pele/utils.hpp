@@ -7,6 +7,7 @@
 #include "pele/array.hpp"
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <math.h>
 #include <random>
 #include <vector>
@@ -15,7 +16,7 @@
 #define PI 3.14159265358979323846
 
 typedef std::vector<std::vector<double>> matrix;
-
+using namespace std;
 namespace pele {
 /*
  * @brief      Generate a radii for a bidisperse mixture of particles
@@ -51,6 +52,40 @@ inline Array<double> generate_radii(int n_1, int n_2, double r_1, double r_2,
   return radii;
 }
 
+template <typename T> vector<size_t> sort_indexes(const vector<T> &v) {
+
+  // initialize original index locations
+  vector<size_t> idx(v.size());
+  iota(idx.begin(), idx.end(), 0);
+
+  // sort indexes based on comparing values in v
+  // using std::stable_sort instead of std::sort
+  // to avoid unnecessary index re-orderings
+  // when v contains elements of equal values
+  stable_sort(idx.begin(), idx.end(),
+              [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
+
+  return idx;
+}
+
+/* @brief Utility function for printing a matrix
+ */
+
+inline void print_matrix(matrix m) {
+  for (size_t i = 0; i < m.size(); i++) {
+    for (size_t j = 0; j < m[i].size(); j++) {
+      std::cout << m[i][j] << " ";
+    }
+    std::cout << std::endl;
+  }
+}
+
+template <class T> inline void print_vector(std::vector<T> v) {
+  for (size_t i = 0; i < v.size(); i++) {
+    std::cout << v[i] << " ";
+  }
+  std::cout << std::endl;
+}
 /**
  * @brief      Gets box length
  *
@@ -101,52 +136,69 @@ inline Array<double> generate_random_coordinates(double box_length,
   return coords;
 }
 
-inline std::vector<double> cross_shifted(matrix x, std::vector<size_t> shift) {
+inline std::vector<double> cross_shifted(matrix x, std::vector<size_t> shift_x,
+                                         std::vector<size_t> shift_y) {
 
   std::vector<double> cross_product(x.size());
   for (size_t i = 0; i < x.size(); i++) {
-    cross_product[i] = x[i][1] * x[shift[i]][2] - x[i][2] * x[shift[i]][1];
+    cross_product[i] = x[shift_x[i]][0] * x[shift_y[i]][1] -
+                       x[shift_x[i]][1] * x[shift_y[i]][0];
   }
   return cross_product;
 }
 
+// terribly inefficient by memory allocation, but it works
 inline std::vector<size_t> sort_circle(matrix vertices) {
   // Split the vertices based on whether the x coordinate is to the right or
   // left of the origin
-  std::vector<size_t> left_indices_list;
-  std::vector<size_t> right_indices_list;
+  std::vector<size_t> left_global_indices;
+  std::vector<size_t> right_global_indices;
   for (size_t i = 0; i < vertices.size(); i++) {
     if (vertices[i][0] < 0) {
-      left_indices_list.push_back(i);
+      left_global_indices.push_back(i);
     } else {
-      right_indices_list.push_back(i);
+      right_global_indices.push_back(i);
     }
   }
   // get the
   std::vector<double> left_tan_list;
   std::vector<double> right_tan_list;
 
-  for (size_t i = 0; i < left_indices_list.size(); i++) {
-    left_tan_list.push_back(vertices[left_indices_list[i]][1] /
-                            vertices[left_indices_list[i]][0]);
+  for (size_t i = 0; i < left_global_indices.size(); i++) {
+    left_tan_list.push_back(vertices[left_global_indices[i]][1] /
+                            vertices[left_global_indices[i]][0]);
   }
-  for (size_t i = 0; i < right_indices_list.size(); i++) {
-    right_tan_list.push_back(vertices[right_indices_list[i]][1] /
-                             vertices[right_indices_list[i]][0]);
+  for (size_t i = 0; i < right_global_indices.size(); i++) {
+    right_tan_list.push_back(vertices[right_global_indices[i]][1] /
+                             vertices[right_global_indices[i]][0]);
   }
+  print_vector<double>(left_tan_list);
+  print_vector<double>(right_tan_list);
 
-  // Sort both lists by tangent
-  std::sort(left_tan_list.begin(), left_tan_list.end());
-  std::sort(right_tan_list.begin(), right_tan_list.end());
+  // indices in only left and right ar
+  std::vector<size_t> left_local_indices = sort_indexes(left_tan_list);
+  std::vector<size_t> right_local_indices = sort_indexes(right_tan_list);
+
+  // rearrange global indices by their respective local indices
+  std::vector<size_t> left_global_indices_sorted;
+  std::vector<size_t> right_global_indices_sorted;
+  for (size_t i = 0; i < left_local_indices.size(); i++) {
+    left_global_indices_sorted.push_back(
+        left_global_indices[left_local_indices[i]]);
+  }
+  for (size_t i = 0; i < right_local_indices.size(); i++) {
+    right_global_indices_sorted.push_back(
+        right_global_indices[right_local_indices[i]]);
+  }
 
   // concanetate the two lists and return
   std::vector<size_t> sorted_indices_list;
   sorted_indices_list.insert(sorted_indices_list.end(),
-                             left_indices_list.begin(),
-                             left_indices_list.end());
+                             left_global_indices_sorted.begin(),
+                             left_global_indices_sorted.end());
   sorted_indices_list.insert(sorted_indices_list.end(),
-                             right_indices_list.begin(),
-                             right_indices_list.end());
+                             right_global_indices_sorted.begin(),
+                             right_global_indices_sorted.end());
   return sorted_indices_list;
 }
 
@@ -164,13 +216,15 @@ inline bool origin_in_hull_2d(matrix vertices) {
   // get the cross product of shifted vertices and the normal vertices
   // Doing it this way considering there's no easy way to translate julia's
   // masks to c++
-  std::vector<double> cross_product = cross_shifted(vertices, shifted_indices);
+  std::vector<double> cross_product =
+      cross_shifted(vertices, sort_indices, shifted_indices);
   for (size_t i = 0; i < cross_product.size(); i++) {
     if (cross_product[i] < 0) {
-      return false;
+      return true;
     }
   }
-  return true;
+  return false;
 }
+
 } // namespace pele
 #endif // !1
