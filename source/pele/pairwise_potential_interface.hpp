@@ -173,17 +173,22 @@ public:
     // allocation for the index of atom i in the neighbors of atom j
     size_t i_in_j;
     std::vector<size_t> neighbors_of_atom;
-
+    size_t i = 0;
     while (rattler_check_list.size() > 0) {
+      i++;
+      std::cout << i << std::endl;
       current_check_list = rattler_check_list;
       rattler_check_list.clear();
-      for (size_t atomi : rattler_check_list) {
+
+
+      for (size_t atomi : current_check_list) {
         found_rattler = false;
         no_of_neighbors = neighbor_indss[atomi].size();
         if (no_of_neighbors < zmin) {
           found_rattler = true;
         } else {
           found_rattler = origin_in_hull_2d(neighbor_distss[atomi]);
+          std::cout << found_rattler << std::endl;
         }
         if (found_rattler) {
           not_rattlers[atomi] = 0;
