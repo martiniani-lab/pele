@@ -203,7 +203,7 @@ public:
 
             // find index of atom i in the neighbors of atom j
             i_in_j = 0;
-            for (size_t k = 0; k < neighbors_of_atom.size(); ++k) {
+            for (size_t k = 0; k < neighbor_indss[atom_j].size(); ++k) {
               if (neighbor_indss[atom_j][k] == atom_i) {
                 i_in_j = k;
                 break;
