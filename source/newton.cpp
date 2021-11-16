@@ -10,20 +10,23 @@ Newton::Newton(std::shared_ptr<BasePotential> potential,
                const pele::Array<double> &x0, double tol, double threshold, bool use_rattler_mask)
     : GradientOptimizer(potential, x0, tol), _threshold(threshold),
       _tolerance(tol), _hessian(x0.size(), x0.size()), _gradient(x0.size()),
-      _x(x0.size()),_use_rattler_mask(use_rattler_mask), _not_rattlers(x0.size(), true), _line_search(this, 1.0), _nhev(0) // use step size of 1.0 for newton
+      _x(x0.size()), _rattlers_found(false), _use_rattler_mask(use_rattler_mask), _not_rattlers(x0.size(), true), _line_search(this, 1.0), _nhev(0) // use step size of 1.0 for newton
 {
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x0.size(); ++i) {
     _x(i) = x0[i];
   }
-  // find rattlers in x0
-  if (_use_rattler_mask) {
-    potential->find_rattlers(x0, _not_rattlers, _jammed);
-  }
+  // // Find rattlers is not necessary here in the way we're using it.
+  // if (_use_rattler_mask) {
+  //   potential->find_rattlers(x0, _not_rattlers, _jammed);
+  // }
 }
 
-void Newton::set_x(pele::Array<double> x)
+void Newton::set_x_and_find_rattlers(pele::Array<double> x)
 {
+
+  potential_->find_rattlers(x, _not_rattlers, _jammed);
+  _rattlers_found = true;
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x.size(); ++i) {
     _x(i) = x[i];
@@ -42,7 +45,9 @@ void Newton::one_iteration() {
   Array<double> x_pele(_x.data(), _x.size());
 
   if (_use_rattler_mask) {
-    _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele, hessian_pele, _not_rattlers);
+    _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele, hessian_pele);
+    
+    _energy = potential_->get_energy_gradient_hessian_rattlers(x_pele, gradient_pele, hessian_pele, _not_rattlers);
   }
   else {
     _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele, hessian_pele);

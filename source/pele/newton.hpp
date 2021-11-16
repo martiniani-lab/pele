@@ -32,6 +32,7 @@ private:
   bool _use_rattler_mask;
   Array<uint8_t> _not_rattlers;
   bool _jammed;
+  bool _rattlers_found;
 
 public:
   /**
@@ -68,9 +69,9 @@ public:
   // void reset(pele::Array<double> x0);
   inline int get_nhev() const { return _nhev; }
   inline Eigen::VectorXd get_step() const { return _step; }
-  void set_x(Array<double> x);
+  void set_x_and_find_rattlers(Array<double> x);
   void get_rattler_details(Array<uint8_t> &not_rattlers, bool &jammed) {
-    if (!_use_rattler_mask) {
+    if (!_rattlers_found) {
       throw std::runtime_error(" Rattler based method not called");
     }
     not_rattlers = not_rattlers;
