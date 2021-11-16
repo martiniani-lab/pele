@@ -172,8 +172,6 @@ inline std::vector<size_t> sort_circle(matrix vertices) {
     right_tan_list.push_back(vertices[right_global_indices[i]][1] /
                              vertices[right_global_indices[i]][0]);
   }
-  print_vector<double>(left_tan_list);
-  print_vector<double>(right_tan_list);
 
   // indices in only left and right ar
   std::vector<size_t> left_local_indices = sort_indexes(left_tan_list);

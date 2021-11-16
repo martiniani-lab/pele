@@ -1,4 +1,6 @@
 #include "pele/newton.hpp"
+#include "Eigen/src/Core/Matrix.h"
+#include "Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h"
 #include "pele/array.hpp"
 #include "pele/optimizer.hpp"
 
@@ -7,10 +9,13 @@ using pele::Array;
 namespace pele {
 
 Newton::Newton(std::shared_ptr<BasePotential> potential,
-               const pele::Array<double> &x0, double tol, double threshold, bool use_rattler_mask)
+               const pele::Array<double> &x0, double tol, double threshold,
+               bool use_rattler_mask)
     : GradientOptimizer(potential, x0, tol), _threshold(threshold),
       _tolerance(tol), _hessian(x0.size(), x0.size()), _gradient(x0.size()),
-      _x(x0.size()), _rattlers_found(false), _use_rattler_mask(use_rattler_mask), _not_rattlers(x0.size(), true), _line_search(this, 1.0), _nhev(0) // use step size of 1.0 for newton
+      _x(x0.size()), _rattlers_found(false),
+      _use_rattler_mask(use_rattler_mask), _not_rattlers(x0.size(), true),
+      _line_search(this, 1.0), _nhev(0) // use step size of 1.0 for newton
 {
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x0.size(); ++i) {
@@ -22,8 +27,7 @@ Newton::Newton(std::shared_ptr<BasePotential> potential,
   // }
 }
 
-void Newton::set_x_and_find_rattlers(pele::Array<double> x)
-{
+void Newton::set_x_and_find_rattlers(pele::Array<double> x) {
 
   potential_->find_rattlers(x, _not_rattlers, _jammed);
   _rattlers_found = true;
@@ -45,23 +49,29 @@ void Newton::one_iteration() {
   Array<double> x_pele(_x.data(), _x.size());
 
   if (_use_rattler_mask) {
-    _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele, hessian_pele);
-    
-    _energy = potential_->get_energy_gradient_hessian_rattlers(x_pele, gradient_pele, hessian_pele, _not_rattlers);
-  }
-  else {
-    _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele, hessian_pele);
+    _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele,
+                                                      hessian_pele);
+
+    _energy = potential_->get_energy_gradient_hessian_rattlers(
+        x_pele, gradient_pele, hessian_pele, _not_rattlers);
+  } else {
+    _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele,
+                                                      hessian_pele);
   }
   // // compute gradient and hessian
   // _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele,
   //                                                   hessian_pele);
   _nhev += 1;
 
-
-  Eigen::VectorXd eigenvalues = Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(
-      _hessian).eigenvalues();
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es =
+      Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(_hessian);
+  Eigen::VectorXd eigenvalues = es.eigenvalues();
+  Eigen::MatrixXd eigenvectors = es.eigenvectors();
+  // eigenvector corresponding to smallest eigenvalue
+  Eigen::VectorXd smallest_eigenvector = eigenvectors.col(0);
 
   std::cout << "eigenvalues: " << eigenvalues << std::endl;
+  std::cout << "smallest eigenvector" << smallest_eigenvector << std::endl;
 
   Eigen::CompleteOrthogonalDecomposition<Eigen::MatrixXd> cod(_hessian);
 
@@ -90,17 +100,15 @@ void Newton::one_iteration() {
 }
 
 void Newton::compute_func_gradient(Array<double> x, double &func,
-                                     Array<double> gradient)
-{
-    nfev_ += 1;
+                                   Array<double> gradient) {
+  nfev_ += 1;
 
-    // pass the arrays to the potential
-    if (_use_rattler_mask) {
-      func = potential_->get_energy_gradient(x, gradient, _not_rattlers);
-    }
-    else {
-      func = potential_->get_energy_gradient(x, gradient);
-    }
+  // pass the arrays to the potential
+  if (_use_rattler_mask) {
+    func = potential_->get_energy_gradient(x, gradient, _not_rattlers);
+  } else {
+    func = potential_->get_energy_gradient(x, gradient);
+  }
 }
 
 } // namespace pele
