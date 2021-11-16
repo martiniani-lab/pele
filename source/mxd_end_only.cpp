@@ -61,7 +61,7 @@ bool MixedDescentEndOnly::stop_criterion_satisfied() {
   jammed = _newton_optimizer.is_jammed();
 
   // TODO: Pass these on to the python interface since we don't want to keep do this twice
-  if (!jammed) {
+  if (use_newton_step & !jammed) {
     return true; // assuming that the find rattlers function in julia will take care of this
   }
   if (use_newton_step && _newton_optimizer.get_niter() > 0) {
