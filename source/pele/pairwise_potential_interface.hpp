@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <set>
+using namespace std;
 
 namespace pele {
 
@@ -132,7 +133,7 @@ public:
 
   /**
    * @brief Finds the rattlers in the found minimum and saves them.
-    *       
+   *
    * @param coords The coordinates of the found minimum. important: Needs to be
    *               at the minimum
    * @param not_rattlers whether a particle is a rattler or not
@@ -176,52 +177,51 @@ public:
     size_t i = 0;
     while (rattler_check_list.size() > 0) {
       i++;
-      std::cout << i << std::endl;
       current_check_list = rattler_check_list;
       rattler_check_list.clear();
 
-
-      for (size_t atomi : current_check_list) {
+      for (size_t atom_i : current_check_list) {
         found_rattler = false;
-        no_of_neighbors = neighbor_indss[atomi].size();
+        no_of_neighbors = neighbor_indss[atom_i].size();
         if (no_of_neighbors < zmin) {
           found_rattler = true;
         } else {
-          found_rattler = origin_in_hull_2d(neighbor_distss[atomi]);
-          std::cout << found_rattler << std::endl;
+          found_rattler = origin_in_hull_2d(neighbor_distss[atom_i]);
         }
         if (found_rattler) {
-          not_rattlers[atomi] = 0;
+          not_rattlers[atom_i] = 0;
           n_rattlers++;
 
           // remove atom from the list of atoms to check if present in the check
           // list
-          if (current_check_list.find(atomi) != current_check_list.end()) {
-            current_check_list.erase(atomi);
+          if (rattler_check_list.find(atom_i) != rattler_check_list.end()) {
+            rattler_check_list.erase(atom_i);
           }
 
-          for (size_t neighbor_index : neighbor_indss[atomi]) {
-            rattler_check_list.insert(neighbor_index);
-            neighbors_of_atom = neighbor_indss[neighbor_index];
-            for (size_t j = 0; j < neighbors_of_atom.size(); ++j) {
-              i_in_j = neighbors_of_atom[j];
-              if (current_check_list.find(i_in_j) != current_check_list.end()) {
-                current_check_list.erase(i_in_j);
-              }
-              // remove the displacements of the rattlers from neigbhor_distss
-              for (size_t k = 0; k < neighbor_distss[i_in_j].size(); ++k) {
-                if (neighbor_distss[i_in_j][k][0] == atomi) {
-                  neighbor_distss[i_in_j].erase(
-                      neighbor_distss[i_in_j].begin() + k);
-                  break;
-                }
+          for (size_t atom_j : neighbor_indss[atom_i]) {
+            rattler_check_list.insert(atom_j);
+
+            // find index of atom i in the neighbors of atom j
+            i_in_j = 0;
+            for (size_t k = 0; k < neighbors_of_atom.size(); ++k) {
+              if (neighbor_indss[atom_j][k] == atom_i) {
+                i_in_j = k;
+                break;
               }
             }
+
+            // remove atom i from the list of neighbors of atom j
+            neighbor_indss[atom_j].erase(neighbor_indss[atom_j].begin() +
+                                         i_in_j);
+
+            // remove displacements of atom i from the list of displacements of
+            // neighbors of atom j
+            neighbor_distss[atom_j].erase(neighbor_distss[atom_j].begin() +
+                                          i_in_j);
           }
         }
       }
     } // end while
-
     size_t n_stable_particles = n_particles - n_rattlers;
 
     size_t total_contacts = 0;
