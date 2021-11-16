@@ -99,6 +99,26 @@ public:
   }
 
   /**
+   * Prints neighbor lists and displacements.
+   */
+  inline void print_neighbor_index_and_displacements(
+      pele::Array<std::vector<size_t>> &neighbor_indss,
+      pele::Array<std::vector<std::vector<double>>> &neighbor_distss) {
+    for (size_t i = 0; i < neighbor_indss.size(); i++) {
+      cout << "neighbor list for atom " << i << ": ";
+      for (size_t j = 0; j < neighbor_indss[i].size(); j++) {
+        cout << "neighbor " << neighbor_indss[i][j] << ": ";        
+        cout << endl;
+        cout << "displacement: ";
+        for (size_t k = 0; k < neighbor_distss[i][j].size(); k++) {
+          cout << neighbor_distss[i][j][k] << " ";
+        }
+        cout << endl;
+      }
+    }
+  }
+
+  /**
    * Return lists of neighbors.
    */
   virtual void
