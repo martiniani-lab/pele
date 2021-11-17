@@ -2,6 +2,7 @@
 #include "Eigen/src/Core/Matrix.h"
 #include "Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h"
 #include "pele/array.hpp"
+#include "pele/eigen_interface.hpp"
 #include "pele/optimizer.hpp"
 // Lapack for cholesky
 extern "C" {
@@ -20,7 +21,8 @@ Newton::Newton(std::shared_ptr<BasePotential> potential,
       _tolerance(tol), _hessian(x0.size(), x0.size()), _gradient(x0.size()),
       _x(x0.size()), _rattlers_found(false),
       _use_rattler_mask(use_rattler_mask), _not_rattlers(x0.size(), true),
-      _line_search(this, 1.0), _nhev(0), _x_old(x0.size()),_gradient_old(x0.size()) // use step size of 1.0 for newton
+      _line_search(this, 1.0), _nhev(0), _x_old(x0.size()),
+      _gradient_old(x0.size()) // use step size of 1.0 for newton
 {
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x0.size(); ++i) {
@@ -37,7 +39,7 @@ void Newton::set_x_and_find_rattlers(pele::Array<double> x) {
     potential_->find_rattlers(x, _not_rattlers, _jammed);
     _rattlers_found = true;
   }
-  
+
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x.size(); ++i) {
     _x(i) = x[i];
@@ -96,14 +98,9 @@ void Newton::one_iteration() {
   }
 
   // find the largest eigenvalue
-  _step = -eigenvectors*((eigenvectors.transpose() * _gradient).cwiseProduct(inv_eigenvalues)).matrix();
-  std::cout << "step size" << _step.norm() << std::endl;
-
-  cout << "inv min" <<  inv_eigenvalues.minCoeff() << endl;
-  cout << "inve max" << inv_eigenvalues.maxCoeff() << endl;
-  cout << "eigenvalue min" << eigenvalues.minCoeff() << endl;
-  cout << "eigenvalue max" << eigenvalues.maxCoeff() << endl;
-
+  _step = -eigenvectors *
+          ((eigenvectors.transpose() * _gradient).cwiseProduct(inv_eigenvalues))
+              .matrix();
 
   // _step = smallest_eigenvector;
   // calculate the newton step
@@ -117,9 +114,7 @@ void Newton::one_iteration() {
 
   _line_search.set_xold_gold_(x_old_pele, gradient_old_pele);
   _line_search.set_g_f_ptr(gradient_pele);
-
   Array<double> step_pele(_step.data(), _step.size());
-
   double stepnorm = _line_search.line_search(x_pele, step_pele);
 
   // Hacky since we're not wrapping the original pele arrays. but we can change
