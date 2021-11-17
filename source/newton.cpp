@@ -3,8 +3,13 @@
 #include "Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h"
 #include "pele/array.hpp"
 #include "pele/optimizer.hpp"
+// Lapack for cholesky
+extern "C" {
+#include <lapacke.h>
+}
 
 using pele::Array;
+using namespace std;
 
 namespace pele {
 
@@ -28,9 +33,11 @@ Newton::Newton(std::shared_ptr<BasePotential> potential,
 }
 
 void Newton::set_x_and_find_rattlers(pele::Array<double> x) {
-
-  potential_->find_rattlers(x, _not_rattlers, _jammed);
-  _rattlers_found = true;
+  if (_use_rattler_mask) {
+    potential_->find_rattlers(x, _not_rattlers, _jammed);
+    _rattlers_found = true;
+  }
+  
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x.size(); ++i) {
     _x(i) = x[i];
@@ -58,9 +65,6 @@ void Newton::one_iteration() {
     _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele,
                                                       hessian_pele);
   }
-  // // compute gradient and hessian
-  // _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele,
-  //                                                   hessian_pele);
   _nhev += 1;
 
   Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es =
@@ -70,14 +74,40 @@ void Newton::one_iteration() {
   // eigenvector corresponding to smallest eigenvalue
   Eigen::VectorXd smallest_eigenvector = eigenvectors.col(0);
 
-  std::cout << "eigenvalues: " << eigenvalues << std::endl;
-  std::cout << "smallest eigenvector" << smallest_eigenvector << std::endl;
-
   Eigen::CompleteOrthogonalDecomposition<Eigen::MatrixXd> cod(_hessian);
 
-  cod.setThreshold(1e-8);
+  // replace eigenvalues with their absolute values
+  for (size_t i = 0; i < eigenvalues.size(); ++i) {
+    eigenvalues(i) = std::abs(eigenvalues(i));
+  }
+
+  // postprocess inverse Eigenvalues
+  Eigen::VectorXd inv_eigenvalues(eigenvalues.size());
+  for (size_t i = 0; i < eigenvalues.size(); ++i) {
+    if (abs(eigenvalues(i)) < _threshold) {
+      inv_eigenvalues(i) = 0.0;
+    } else {
+      if (eigenvalues(i) < 0.0) {
+        inv_eigenvalues(i) = -1.0 / eigenvalues(i);
+      } else {
+        inv_eigenvalues(i) = 1.0 / eigenvalues(i);
+      }
+    }
+  }
+
+  // find the largest eigenvalue
+  _step = -eigenvectors*((eigenvectors.transpose() * _gradient).cwiseProduct(inv_eigenvalues)).matrix();
+  std::cout << "step size" << _step.norm() << std::endl;
+
+  cout << "inv min" <<  inv_eigenvalues.minCoeff() << endl;
+  cout << "inve max" << inv_eigenvalues.maxCoeff() << endl;
+  cout << "eigenvalue min" << eigenvalues.minCoeff() << endl;
+  cout << "eigenvalue max" << eigenvalues.maxCoeff() << endl;
+
+
+  // _step = smallest_eigenvector;
   // calculate the newton step
-  _step = -cod.solve(_gradient);
+  // _step = -cod.solve(_gradient);
 
   _x = _x_old + _step;
 
@@ -96,6 +126,7 @@ void Newton::one_iteration() {
   // this if this if it becomes a speed constraint/causes maintainability issues
   x_ = x_pele;
   g_ = gradient_pele;
+
   iter_number_ += 1;
 }
 

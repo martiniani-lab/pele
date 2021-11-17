@@ -87,6 +87,30 @@ TEST(Newton, harmonic_singular) {
 
 }
 
+TEST(Newton, rosenbrock) {
+    cout << "Testing Newton's Method for the Rosenbrock function" << std::endl;
+    auto rosenbrock = std::make_shared<pele::RosenBrock> ();
+    Array<double> x0(2, 0);
+
+    pele::Newton newton(rosenbrock, x0);
+
+    newton.run();
+    Array<double> x = newton.get_x();
+    double nfev = newton.get_nfev();
+    double niter = newton.get_niter();
+    double f_final = newton.get_f();
+
+    cout << "x :" << x << "\n";
+    cout << "nfev :" << nfev << "\n";
+    cout << "niter :" << niter << "\n";
+    cout << "f_final :" << f_final << "\n";
+
+    ASSERT_NEAR(x[0], 1, 1e-10);
+    ASSERT_NEAR(x[1], 1, 1e-10);
+}
+
+
+
 
 
 
