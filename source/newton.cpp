@@ -102,6 +102,7 @@ void Newton::one_iteration() {
           ((eigenvectors.transpose() * _gradient).cwiseProduct(inv_eigenvalues))
               .matrix();
 
+  double starting_norm = _step.norm();
   // _step = smallest_eigenvector;
   // calculate the newton step
   // _step = -cod.solve(_gradient);
@@ -117,6 +118,9 @@ void Newton::one_iteration() {
   Array<double> step_pele(_step.data(), _step.size());
   double stepnorm = _line_search.line_search(x_pele, step_pele);
 
+  if (starting_norm/stepnorm < 0.001) {
+    throw std::runtime_error("rescaled step decreased by too much. Newton might be in the wrong direction");
+  }
   // Hacky since we're not wrapping the original pele arrays. but we can change
   // this if this if it becomes a speed constraint/causes maintainability issues
   x_ = x_pele;
