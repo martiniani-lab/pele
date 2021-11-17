@@ -69,7 +69,7 @@ public:
   // void reset(pele::Array<double> x0);
   inline int get_nhev() const { return _nhev; }
   inline Eigen::VectorXd get_step() const { return _step; }
-  void set_x_and_find_rattlers(Array<double> x);
+  void reset(Array<double> x);
   void get_rattler_details(Array<uint8_t> &not_rattlers, bool &jammed) {
     if (!_rattlers_found) {
       throw std::runtime_error(" Rattler based method not called");

@@ -39,7 +39,7 @@ namespace pele {
             CVODEBDFOptimizer _cvode_optimizer;
             Newton _newton_optimizer;
         public:
-        MixedDescentEndOnly(std::shared_ptr<BasePotential> potential, const pele::Array<double> x0, double tol=1e-6, double newton_step_tol=1e-6, double rtol=1e-6, double atol=1e-6,double threshold=1e-16, bool iterative=false);
+        MixedDescentEndOnly(std::shared_ptr<BasePotential> potential, const pele::Array<double> x0, double tol=1e-6, double newton_step_tol=1e-6, double rtol=1e-6, double atol=1e-6,double threshold=1e-10, bool iterative=false);
         ~MixedDescentEndOnly() {};
 
         void one_iteration();

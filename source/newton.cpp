@@ -45,7 +45,10 @@ void Newton::set_x_and_find_rattlers(pele::Array<double> x) {
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x.size(); ++i) {
     _x(i) = x[i];
+    // TODO: Hacky, find a way to remove pele arrays in the base class
+    x_[i] = x[i];
   }
+  initialize_func_gradient();
 }
 
 void Newton::one_iteration() {

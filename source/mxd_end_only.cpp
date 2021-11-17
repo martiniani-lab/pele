@@ -44,7 +44,7 @@ void MixedDescentEndOnly::one_iteration() {
     std::cout << "rms: " << rms_ << std::endl;
     if (rms_ < _tol) {
       use_newton_step = true;
-      _newton_optimizer.set_x_and_find_rattlers(_cvode_optimizer.get_x());
+      _newton_optimizer.reset(_cvode_optimizer.get_x());
     }
   }
   iter_number_++;
