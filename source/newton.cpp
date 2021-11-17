@@ -45,9 +45,9 @@ void Newton::set_x_and_find_rattlers(pele::Array<double> x) {
 }
 
 void Newton::one_iteration() {
-  // copy old gradient and hessian
-  _x_old = _x;
-  _gradient_old = _gradient;
+  // copy in from pele to make sure initialization is taken care of
+  eig_eq_pele(_x_old, x_);
+  eig_eq_pele(_gradient_old, g_);
 
   // Wrap pele array data into the Eigen array
   Array<double> hessian_pele(_hessian.data(),
