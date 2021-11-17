@@ -12,6 +12,8 @@ extern "C" {
 using pele::Array;
 using namespace std;
 
+// value at which we assume the value is zero 
+#define NUMERICAL_ZERO 1e-15
 namespace pele {
 
 Newton::Newton(std::shared_ptr<BasePotential> potential,
@@ -86,14 +88,16 @@ void Newton::one_iteration() {
   // postprocess inverse Eigenvalues
   Eigen::VectorXd inv_eigenvalues(eigenvalues.size());
   for (size_t i = 0; i < eigenvalues.size(); ++i) {
-    if (abs(eigenvalues(i)) < _threshold) {
+    double mod_eig = abs(eigenvalues(i));
+    if (mod_eig < NUMERICAL_ZERO) {
+      // case for translational symmetries
       inv_eigenvalues(i) = 0.0;
+    } else if (mod_eig < _threshold) {
+      // case for really small eigenvalues
+      inv_eigenvalues(i) = 1.0 / _threshold;
     } else {
-      if (eigenvalues(i) < 0.0) {
-        inv_eigenvalues(i) = -1.0 / eigenvalues(i);
-      } else {
-        inv_eigenvalues(i) = 1.0 / eigenvalues(i);
-      }
+      // case for normal eigenvalues
+      inv_eigenvalues(i) = 1.0/mod_eig;
     }
   }
 
