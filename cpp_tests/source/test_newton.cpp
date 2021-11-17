@@ -105,8 +105,9 @@ TEST(Newton, rosenbrock) {
     cout << "niter :" << niter << "\n";
     cout << "f_final :" << f_final << "\n";
 
-    ASSERT_NEAR(x[0], 1, 1e-10);
-    ASSERT_NEAR(x[1], 1, 1e-10);
+    // error tolerance can be reduced if optimizer convergence tolerance is decreased
+    ASSERT_NEAR(x[0], 1, 1e-5);
+    ASSERT_NEAR(x[1], 1, 1e-5);
 }
 
 
