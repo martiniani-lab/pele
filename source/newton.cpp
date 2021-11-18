@@ -36,7 +36,7 @@ Newton::Newton(std::shared_ptr<BasePotential> potential,
   // }
 }
 
-void Newton::set_x_and_find_rattlers(pele::Array<double> x) {
+void Newton::reset(pele::Array<double> x) {
   if (_use_rattler_mask) {
     potential_->find_rattlers(x, _not_rattlers, _jammed);
     _rattlers_found = true;
