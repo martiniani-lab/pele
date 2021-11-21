@@ -48,6 +48,9 @@ cdef class _Cdef_MXDOptimizer_CPP(_pele_opt.GradientOptimizer):
         cdef cppMXDOptimizer* mxopt_ptr = <cppMXDOptimizer*> self.thisptr.get()
         res = super(_Cdef_MXDOptimizer_CPP, self).get_result()
         res["nhev"] = float(mxopt_ptr.get_nhev())
+        cdef _pele.Array[double] stepi = self.thisptr.get().get_step()
+        step = pele_array_to_np_array(stepi)
+        res["step"]=step
         return res
 
 class MXDOptimizer_CPP(_Cdef_MXDOptimizer_CPP):

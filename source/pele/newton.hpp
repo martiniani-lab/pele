@@ -80,6 +80,12 @@ public:
   // Warning: does not pass info about whether we're near a minimum or not.
   bool is_jammed() {if(_rattlers_found) { return _jammed;} else {return false;}}
 
+  inline Array<double> get_step() {
+    return Array<double>(_step.data(), _step.size());
+  }
+
+  
+
   void compute_func_gradient(Array<double> x, double &func,
                              Array<double> gradient);
 };

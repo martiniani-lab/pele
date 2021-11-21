@@ -52,7 +52,7 @@ namespace pele {
         inline double get_nfev() { return _cvode_optimizer.get_nfev() + _newton_optimizer.get_nfev(); }
         bool stop_criterion_satisfied();
 
-
+        inline Array<double> get_step() { return _newton_optimizer.get_step(); }
 };
 }
 
