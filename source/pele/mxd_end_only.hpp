@@ -51,9 +51,15 @@ namespace pele {
         inline int get_niter() { return iter_number_;}
         inline double get_nfev() { return _cvode_optimizer.get_nfev() + _newton_optimizer.get_nfev(); }
         bool stop_criterion_satisfied();
-
-        inline Array<double> get_step() { return _newton_optimizer.get_step(); }
-};
+        /**
+         * @brief Get the step object in pele Array form
+         * 
+         * @return Array<double> 
+         */
+        inline Array<double> get_step_vec() { 
+            Eigen::VectorXd step = _newton_optimizer.get_step();
+            return Array<double>(step.data(), step.size());}
+  };
 }
 
 

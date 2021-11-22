@@ -19,11 +19,24 @@ from cpython cimport bool as cbool
 
 from libcpp cimport bool
 
+
+@cython.boundscheck(False)
+cdef pele_array_to_np_array(_pele.Array[double] v):
+    """copy a pele Array into a new numpy array"""
+    cdef np.ndarray[double, ndim=1] vnew = np.zeros(v.size(), dtype=float)
+    cdef int i
+    cdef int N = vnew.size
+    for i in xrange(N):
+        vnew[i] = v[i]
+    
+    return vnew
+
 cdef extern from "pele/mxd_end_only.hpp" namespace "pele":
     cdef cppclass cppMXDOptimizer "pele::MixedDescentEndOnly":
         cppMXDOptimizer(shared_ptr[_pele.cBasePotential], _pele.Array[double],
                              double, double, double, double, double, bool) except +
         double get_nhev() except +
+        _pele.Array[double] get_step_vec() except +
 
 
 cdef class _Cdef_MXDOptimizer_CPP(_pele_opt.GradientOptimizer):
@@ -47,8 +60,8 @@ cdef class _Cdef_MXDOptimizer_CPP(_pele_opt.GradientOptimizer):
     def get_result(self):
         cdef cppMXDOptimizer* mxopt_ptr = <cppMXDOptimizer*> self.thisptr.get()
         res = super(_Cdef_MXDOptimizer_CPP, self).get_result()
-        res["nhev"] = float(mxopt_ptr.get_nhev())
-        cdef _pele.Array[double] stepi = self.thisptr.get().get_step()
+        res["nhev"] = int(mxopt_ptr.get_nhev())
+        cdef _pele.Array[double] stepi = mxopt_ptr.get_step_vec()
         step = pele_array_to_np_array(stepi)
         res["step"]=step
         return res
