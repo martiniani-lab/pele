@@ -12,6 +12,7 @@
 #include <array>
 #include <limits>
 
+
 #include "base_potential.hpp"
 #include "array.hpp"
 #include "distance.hpp"
@@ -350,12 +351,18 @@ public:
     cell_vec_t position_to_cell_vec(const double * const x) const
     {
         double x_in_box[ndim];
+        // std::cout << "x:" << std::endl;
+        // for (size_t idim = 0; idim < ndim; ++idim) {
+        //     std::cout << x[idim] << " ";
+        // }
+        // std::cout << std::endl;
         m_dist->put_atom_in_box(x_in_box, x);
-
+        // std::cout << "x_in_box: " << x_in_box[0] << " " << x_in_box[1] << " " << std::endl;
         cell_vec_t cell_vec;
         for(size_t idim = 0; idim < ndim; ++idim) {
             cell_vec[idim] = m_ncells_vec[idim] * (x_in_box[idim] * m_inv_boxvec[idim] + 0.5
                                                    - std::numeric_limits<double>::epsilon());
+
             assert(cell_vec[idim] < m_ncells_vec[idim]); // Cell index is inside bounds (if not, the coordinates might be defective/too large)
         }
         return cell_vec;
@@ -368,6 +375,7 @@ public:
     {
         // note: the speed of this function is important because it is called
         // once per atom each time update_container is called.
+
         cell_vec_t cell_vec = position_to_cell_vec(x);
         isubdom = get_subdomain(cell_vec);
         icell = cell_vec_to_local_ind(cell_vec, isubdom);
@@ -936,6 +944,7 @@ void CellLists<distance_policy>::reset_container(pele::Array<double> const & coo
 {
     m_container.reset();
     const size_t natoms = coords.size() / m_ndim;
+    // std::cout << "CellLists: resetting container with " << natoms << " atoms\n";
     for(long iatom = 0; iatom < natoms; ++iatom) {
         const double * const x = coords.data() + m_ndim * iatom;
         size_t icell, isubdom;

@@ -1,9 +1,15 @@
+# set(CMAKE_C_COMPILER "gcc-11")
+# set(CMAKE_CXX_COMPILER "g++-11")
+
 # this file is meant to be parsed by python before being a proper CMakeLists.txt file
 # in particular, the following strings will be set to their proper values by python when
 # making CMakeLists.txt
-set(numpy_include /home/praharsh/anaconda3/envs/cb3/lib/python3.8/site-packages/numpy/core/include)
-set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/envs/cb3/include/python3.8 /home/praharsh/anaconda3/envs/cb3/include/python3.8)
-set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/envs/cb3/lib/python3.8/config-3.8-x86_64-linux-gnu -lpthread -ldl -lutil -lrt -lm -lpython3.8 -Xlinker -export-dynamic")
+project(pele)
+message("${CMAKE_C_COMPILER}")
+message("${CMAKE_CXX_COMPILER}")
+set(numpy_include /home/praharsh/anaconda3/envs/cb3-3.9/lib/python3.9/site-packages/numpy/core/include)
+set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/envs/cb3-3.9/include/python3.9 /home/praharsh/anaconda3/envs/cb3-3.9/include/python3.9)
+set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/envs/cb3-3.9/lib/python3.9/config-3.9-x86_64-linux-gnu -lcrypt -lpthread -ldl -lutil -lrt -lm -lm -lpython3.9 -Xlinker -export-dynamic")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #find_package(PythonLibs)
 #message("PYTHON_LIBRARIES ${PYTHON_LIBRARIES}")
@@ -15,9 +21,12 @@ IF(APPLE)
 ENDIF(APPLE)
 
 
+
 ##################################### sundials #######################################
 # TODO: figure out how to remove the extra setup for sundials
 
+
+# /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
 set(SUNDIALS_INCLUDE_DIR
   /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
@@ -25,7 +34,6 @@ set(SUNDIALS_INCLUDE_DIR
 set(SUNDIALS_LIBRARY_DIR
   /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
   CACHE PATH "Location of SUNDIALS libraries")
-
 
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
@@ -109,6 +117,7 @@ make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/_gradient_descent_cpp.
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/_lbfgs_cpp.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/_modified_fire_cpp.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/_mxopt.cxx)
+make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/_mxd_end_only.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/cvode_opt.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/potentials/_pythonpotential.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/angleaxis/_cpp_aa.cxx)

@@ -119,7 +119,6 @@ TEST(LbfgsRosenbrock, Rosebrock_works){
     cout << lbfgs.get_rms() << " get_rms() \n";
     std::cout << x0 << "\n" << " \n";
     std::cout << x << "\n";
-    std::cout << "this is okay" << "\n";
 }
 
 

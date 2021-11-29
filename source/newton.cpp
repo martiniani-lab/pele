@@ -74,6 +74,8 @@ void Newton::one_iteration() {
   }
   _nhev += 1;
 
+  cout << "gradient pele" << gradient_pele << endl;
+
   Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es =
       Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(_hessian);
   Eigen::VectorXd eigenvalues = es.eigenvalues();
@@ -88,6 +90,7 @@ void Newton::one_iteration() {
     eigenvalues(i) = std::abs(eigenvalues(i));
   }
 
+  // cout << "eigenvalues" << eigenvalues << endl;
   // postprocess inverse Eigenvalues
   Eigen::VectorXd inv_eigenvalues(eigenvalues.size());
   for (size_t i = 0; i < eigenvalues.size(); ++i) {
@@ -109,7 +112,12 @@ void Newton::one_iteration() {
           ((eigenvectors.transpose() * _gradient).cwiseProduct(inv_eigenvalues))
               .matrix();
 
+  // cout << "gradient \n" << _gradient << endl;
+
+  // cout << "step size: " << _step.norm() << endl;
   double starting_norm = _step.norm();
+
+
   // _step = smallest_eigenvector;
   // calculate the newton step
   // _step = -cod.solve(_gradient);
@@ -125,9 +133,19 @@ void Newton::one_iteration() {
   Array<double> step_pele(_step.data(), _step.size());
   double stepnorm = _line_search.line_search(x_pele, step_pele);
 
-  if (starting_norm/stepnorm < 0.001) {
+  // cout << "step \n" << _step << endl;
+  // cout << "gradient \n" << _gradient << endl;
+  // cout << "hessian \n" << _hessian << endl;
+  // cout << "eigenvectors \n" << eigenvectors << endl;
+  // cout << "eigenvalues \n" << eigenvalues << endl;
+
+  // cout << "starting norm" << starting_norm << endl;
+  // cout << "step norm" << stepnorm << endl;
+  if (stepnorm/starting_norm < 1e-10) {
     throw std::runtime_error("rescaled step decreased by too much. Newton might be in the wrong direction");
   }
+  cout << "starting step size" << starting_norm << endl;
+  cout << "step size rescaled" << stepnorm << endl;
   // Hacky since we're not wrapping the original pele arrays. but we can change
   // this if this if it becomes a speed constraint/causes maintainability issues
   x_ = x_pele;

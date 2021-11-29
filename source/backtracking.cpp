@@ -5,6 +5,7 @@
 #include <cmath>
 #include <complex>
 
+using namespace std;
 namespace pele {
 
 double BacktrackingLineSearch::line_search(Array<double> &x,
@@ -75,6 +76,7 @@ void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
   Vector gradinit = grad;
   Vector y_vec;
   const Scalar dg_init = grad.dot(drt);
+  cout << dg_init << endl;
 #if OPTIMIZER_DEBUG_LEVEL >= 3
   std::cout << dg_init << " dginit must be less than 0 \n";
 #endif

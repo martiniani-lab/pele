@@ -12,9 +12,6 @@
 #include <pele/newton.hpp>
 #include <pele/rosenbrock.hpp>
 
-
-
-
 using pele::Array;
 using std::cout;
 

@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cstdio>
 #include <iostream>
 #include <memory>
 #include <sys/types.h>
@@ -95,12 +96,17 @@ public:
     hess.assign(0);
     return add_energy_gradient_hessian(x, grad, hess);
   }
-  virtual double get_energy_gradient_hessian(Array<double> const &x,
-                                             Array<double> &grad,
-                                             Array<double> &hess,
-                                             Array<uint8_t> not_rattlers) {
+  virtual double
+  get_energy_gradient_hessian_rattlers(Array<double> const &x,
+                                       Array<double> &grad, Array<double> &hess,
+                                       Array<uint8_t> not_rattlers) {
     grad.assign(0);
     hess.assign(0);
+    std::cout << "rattlers" << std::endl;
+    for (size_t i = 0; i < not_rattlers.size(); ++i) {
+      std::cout << int(not_rattlers[i]) << ",";
+    }
+    std::cout << std::endl;
     return add_energy_gradient_hessian(x, grad, hess, not_rattlers);
   }
   virtual void get_hessian(Array<double> const &x, Array<double> &hess) {
@@ -267,7 +273,8 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 
 template <typename pairwise_interaction, typename distance_policy>
 inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
-    add_energy_gradient(Array<double> const &x, Array<double> &grad, Array<uint8_t> mask) {
+    add_energy_gradient(Array<double> const &x, Array<double> &grad,
+                        Array<uint8_t> mask) {
   const size_t natoms = x.size() / m_ndim;
   if (m_ndim * natoms != x.size()) {
     throw std::runtime_error(
@@ -348,7 +355,8 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
           r2 += dr[k] * dr[k];
         }
         if (mask[i1] && mask[j1]) {
-          e += _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j));
+          e += _interaction->energy_gradient(r2, &gij,
+                                             sum_radii(atom_i, atom_j));
         } else {
           gij = 0;
         }
@@ -508,7 +516,6 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
   }
   return e;
 }
-
 
 template <typename pairwise_interaction, typename distance_policy>
 inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::

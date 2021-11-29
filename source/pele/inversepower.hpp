@@ -1,6 +1,7 @@
 #ifndef _PELE_INVERSEPOWER_H
 #define _PELE_INVERSEPOWER_H
 
+#include <iostream>
 #include <memory>
 
 #include "atomlist_potential.hpp"
@@ -296,6 +297,7 @@ public:
                                 periodic_distance<ndim>>(
             std::make_shared<InverseHalfIntPower_interaction<POW2>>(eps), radii,
             std::make_shared<periodic_distance<ndim>>(boxvec), 0.0, exact_sum) {
+              std::cout << "exact_sum:" << exact_sum << std::endl;
   }
 };
 
@@ -328,7 +330,7 @@ public:
       : CellListPotential<InversePower_interaction, periodic_distance<ndim>>(
             std::make_shared<InversePower_interaction>(pow, eps),
             std::make_shared<periodic_distance<ndim>>(boxvec), boxvec,
-            2.0 * (*std::max_element(radii.begin(), radii.end())), // rcut,
+            2.0 * (*std::max_element(radii.begin(), radii.end())), // rcut
             ncellx_scale, radii, 0.0, true, exact_sum) {}
 };
 

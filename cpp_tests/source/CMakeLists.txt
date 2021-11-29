@@ -12,8 +12,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 enable_language(CXX)
-ADD_DEFINITIONS(-std=c++20 -O0 -march=native -ggdb3)
-ADD_DEFINITIONS(-Wall)
+ADD_DEFINITIONS(-std=c++20 -O0 -ggdb3)
+
 
 
 
@@ -27,7 +27,7 @@ if (OPENMP_FOUND)
 endif()
 
 # include LAPACK AND BLAS
-set(BLA_VENDOR Intel10_64lp)
+
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 

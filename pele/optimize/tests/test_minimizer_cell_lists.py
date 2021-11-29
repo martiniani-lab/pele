@@ -12,11 +12,6 @@ from pele.distance import Distance
 np.random.seed(0)
 
 
-
-
-
-
-
 class TestSameMinimaInversePower(unittest.TestCase):
     """ Tests whether energy minimization results in the same minima, (done with OMP_Threads=1)
 
@@ -36,20 +31,23 @@ class TestSameMinimaInversePower(unittest.TestCase):
         coords = np.random.rand(nparticles*3)*boxl
         ncellx_scale = get_ncellsx_scale(np.ones(nparticles), boxv)
         bdim = 3
-        pot_cellists = InversePower(2.5, 1, hs_radii, ndim=3, boxvec=boxv, use_cell_lists=True, ncellx_scale=ncellx_scale)
-        pot_no_cellists = InversePower(2.5, 1, hs_radii, ndim=3, boxvec=boxv, use_cell_lists=False, ncellx_scale=ncellx_scale)
+        pot_cellists = InversePower(
+            2.5, 1, hs_radii, ndim=3, boxvec=boxv, use_cell_lists=True, ncellx_scale=ncellx_scale)
+        pot_no_cellists = InversePower(
+            2.5, 1, hs_radii, ndim=3, boxvec=boxv, use_cell_lists=False, ncellx_scale=ncellx_scale)
 
         nsteps = 1000
         tol = 1e-5
-        
-        res_cell_lists = lbfgs_cpp(coords, pot_cellists, nsteps=nsteps, tol=tol)
-        res_no_cell_lists = lbfgs_cpp(coords, pot_no_cellists, nsteps=nsteps, tol=tol)
-        
+
+        res_cell_lists = lbfgs_cpp(
+            coords, pot_cellists, nsteps=nsteps, tol=tol)
+        res_no_cell_lists = lbfgs_cpp(
+            coords, pot_no_cellists, nsteps=nsteps, tol=tol)
+
         fcoords_cell_lists = res_cell_lists.coords
         fcoords_no_cell_lists = res_no_cell_lists.coords
         # self.assertEqual(fcoords_no_cell_lists,fcoords_cell_lists)
-        self.assertTrue(np.all(fcoords_no_cell_lists==fcoords_cell_lists))
-
+        self.assertTrue(np.all(fcoords_no_cell_lists == fcoords_cell_lists))
 
     def test_same_minima_HS_WCA(self):
         nparticles = 32
@@ -66,25 +64,26 @@ class TestSameMinimaInversePower(unittest.TestCase):
         bdim = 3
         distance_method = Distance.PERIODIC
         pot_cellists = HS_WCA(use_cell_lists=True, eps=eps,
-                             sca=pot_sca, radii=hs_radii * radius_sca,
-                             boxvec=boxv, ndim=bdim,
-                             ncellx_scale=ncellx_scale,
-                             distance_method=distance_method)
+                              sca=pot_sca, radii=hs_radii * radius_sca,
+                              boxvec=boxv, ndim=bdim,
+                              ncellx_scale=ncellx_scale,
+                              distance_method=distance_method)
         pot_no_cellists = HS_WCA(use_cell_lists=False, eps=eps,
-                             sca=pot_sca, radii=hs_radii * radius_sca,
-                             boxvec=boxv, ndim=bdim,
-                             ncellx_scale=ncellx_scale,
-                             distance_method=distance_method)
+                                 sca=pot_sca, radii=hs_radii * radius_sca,
+                                 boxvec=boxv, ndim=bdim,
+                                 ncellx_scale=ncellx_scale,
+                                 distance_method=distance_method)
         nsteps = 1000
-        tol = 1e-5        
-        res_cell_lists = lbfgs_cpp(coords, pot_cellists, nsteps=nsteps, tol=tol)
-        res_no_cell_lists = lbfgs_cpp(coords, pot_no_cellists, nsteps=nsteps, tol=tol)
+        tol = 1e-5
+        res_cell_lists = lbfgs_cpp(
+            coords, pot_cellists, nsteps=nsteps, tol=tol)
+        res_no_cell_lists = lbfgs_cpp(
+            coords, pot_no_cellists, nsteps=nsteps, tol=tol)
 
         fcoords_cell_lists = res_cell_lists.coords
         fcoords_no_cell_lists = res_no_cell_lists.coords
         # self.assertEqual(fcoords_no_cell_lists,fcoords_cell_lists)
-        self.assertTrue(np.all(fcoords_no_cell_lists==fcoords_cell_lists))
-
+        self.assertTrue(np.all(fcoords_no_cell_lists == fcoords_cell_lists))
 
     def test_same_minima_Frenkel(self):
         nparticles = 32
@@ -101,8 +100,10 @@ class TestSameMinimaInversePower(unittest.TestCase):
             boxvec=boxv, celllists=False, ncellx_scale=ncellx_scale)
         nsteps = 1000
         tol = 1e-5
-        res_cell_lists = lbfgs_cpp(coords, pot_cellists, nsteps=nsteps, tol=tol)
-        res_no_cell_lists = lbfgs_cpp(coords, pot_no_cellists, nsteps=nsteps, tol=tol)
+        res_cell_lists = lbfgs_cpp(
+            coords, pot_cellists, nsteps=nsteps, tol=tol)
+        res_no_cell_lists = lbfgs_cpp(
+            coords, pot_no_cellists, nsteps=nsteps, tol=tol)
 
         fcoords_cell_lists = res_cell_lists.coords
         fcoords_no_cell_lists = res_no_cell_lists.coords
@@ -110,5 +111,5 @@ class TestSameMinimaInversePower(unittest.TestCase):
         self.assertTrue(np.all(fcoords_no_cell_lists==fcoords_cell_lists))
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     unittest.main()

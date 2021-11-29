@@ -28,12 +28,9 @@ TEST(CVODE, TEST_256_RUN){
     static const size_t _ndim = 2;
     size_t n_particles;
     size_t n_dof;
-
     double power;
     double eps;
-
     double phi;
-
     pele::Array<double> x;
     pele::Array<double> radii;
     pele::Array<double> xfinal;
@@ -156,7 +153,8 @@ TEST(MXD_END_ONLY, TEST_256_RUN){
                                             1);
     // std::shared_ptr<pele::InversePowerPeriodicCellLists<_ndim> > potcell = std::make_shared<pele::InversePowerPeriodicCellLists<_ndim>>(power, eps, radii, boxvec, ncellsx_scale);
     // std::shared_ptr<pele::InversePowerPeriodic<_ndim> > pot = std::make_shared<pele::InversePowerPeriodic<_ndim> >(power, eps, radii, boxvec);
-    std::shared_ptr<pele::InverseHalfIntPowerPeriodicCellLists<_ndim, pow2>> potcell = std::make_shared<pele::InverseHalfIntPowerPeriodicCellLists<_ndim, pow2>>(eps, radii, boxvec, ncellsx_scale, exact_sum);
+    // std::shared_ptr<pele::InverseHalfIntPowerPeriodicCellLists<_ndim, pow2>> potcell = std::make_shared<pele::InverseHalfIntPowerPeriodicCellLists<_ndim, pow2>>(eps, radii, boxvec, ncellsx_scale, exact_sum);
+    std::shared_ptr<pele::InverseHalfIntPowerPeriodic<_ndim, pow2>> potcell = std::make_shared<pele::InverseHalfIntPowerPeriodic<_ndim, pow2>>(eps, radii, boxvec, exact_sum);
     
     potcell->get_energy(x);
     

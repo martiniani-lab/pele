@@ -10,7 +10,7 @@ import numpy as np
 
 from pele.potentials import _inversepower_cpp
 from pele.optimize._quench import lbfgs_cpp
-from . import _base_test
+import _base_test
 
 
 def read_xyzdr(fname, bdim=3):

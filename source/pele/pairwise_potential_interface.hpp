@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <set>
+#include <vector>
 using namespace std;
 
 namespace pele {
@@ -161,9 +162,11 @@ public:
    * To look at a readable implementation, see the julia code in
    * check_same_structure.jl in the basinerrror library. (It's also probably
    * faster since this isn't vectorized)
+   * @WARNING: This function segfaults at destructors when called from python.
    */
   bool find_rattlers(pele::Array<double> const &minimum_coords,
                      Array<uint8_t> not_rattlers, bool &jammed) {
+    cout << "find rattlers started " << endl;
     not_rattlers.assign(1);
     size_t dim = get_ndim();
 
@@ -193,10 +196,10 @@ public:
     size_t no_of_neighbors = 0;
     // allocation for the index of atom i in the neighbors of atom j
     size_t i_in_j;
-    std::vector<size_t> neighbors_of_atom;
     size_t i = 0;
     while (rattler_check_list.size() > 0) {
       i++;
+      print_neighbor_index_and_displacements(neighbor_indss, neighbor_distss);
       current_check_list = rattler_check_list;
       rattler_check_list.clear();
 
@@ -206,9 +209,13 @@ public:
         if (no_of_neighbors < zmin) {
           found_rattler = true;
         } else {
+          cout << "atom " << atom_i << " has " << no_of_neighbors << " neighbors"
+               << endl;
+          cout << "atom_i" << atom_i << " neighbor distsss size" << neighbor_distss[atom_i].size() << endl;
           found_rattler = origin_in_hull_2d(neighbor_distss[atom_i]);
         }
         if (found_rattler) {
+          // atom i is a rattler
           not_rattlers[atom_i] = 0;
           n_rattlers++;
 
@@ -233,11 +240,6 @@ public:
             // remove atom i from the list of neighbors of atom j
             neighbor_indss[atom_j].erase(neighbor_indss[atom_j].begin() +
                                          i_in_j);
-
-            // remove displacements of atom i from the list of displacements of
-            // neighbors of atom j
-            neighbor_distss[atom_j].erase(neighbor_distss[atom_j].begin() +
-                                          i_in_j);
           }
         }
       }
@@ -248,6 +250,13 @@ public:
     for (size_t i = 0; i < n_particles; ++i) {
       total_contacts += neighbor_indss[i].size();
     }
+    // print out not_rattlers
+    cout << "not_rattlers: ";
+    for (size_t i = 0; i < n_particles; ++i) {
+      cout << int(not_rattlers[i]) << " ";
+    }
+    cout << endl;
+
 
     int minimum_jammed_contacts = 2 * ((n_stable_particles - 1) * dim + 1);
 
@@ -256,6 +265,7 @@ public:
       jammed = false;
     }
     jammed = true;
+    cout << "find rattlers finished " << endl;
   }
 };
 

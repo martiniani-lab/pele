@@ -1,4 +1,4 @@
-// base imports
+ // base imports
 #include "pele/array.hpp"
 #include "pele/cell_lists.hpp"
 #include "pele/utils.hpp"
@@ -69,14 +69,14 @@ TEST(MXD, TEST_256_RUN) {
 #endif
 
   double ncellsx_scale = get_ncellx_scale(radii, boxvec, 1);
-  std::shared_ptr<pele::InversePowerPeriodicCellLists<_ndim>> potcell =
-      std::make_shared<pele::InversePowerPeriodicCellLists<_ndim>>(
-          power, eps, radii, boxvec, ncellsx_scale);
-  // std::shared_ptr<pele::InversePowerPeriodic<_ndim> > pot =
-  // std::make_shared<pele::InversePowerPeriodic<_ndim> >(power, eps, radii,
-  // boxvec);
+  // std::shared_ptr<pele::InversePowerPeriodicCellLists<_ndim>> potcell =
+  //     std::make_shared<pele::InversePowerPeriodicCellLists<_ndim>>(
+  //         power, eps, radii, boxvec, ncellsx_scale);
+        
+  std::shared_ptr<pele::InversePowerPeriodic<_ndim> > pot =
+  std::make_shared<pele::InversePowerPeriodic<_ndim> >(power, eps, radii, boxvec);
 
-  pele::MixedOptimizer optimizer(potcell, x, 1e-4, 10);
+  pele::MixedOptimizer optimizer(pot, x, 1e-4, 10);
   optimizer.run(500);
   std::cout << optimizer.get_nfev() << "nfev \n";
   std::cout << optimizer.get_nhev() << "nhev \n";

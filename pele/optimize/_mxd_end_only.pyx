@@ -21,14 +21,13 @@ from libcpp cimport bool
 
 
 @cython.boundscheck(False)
-cdef pele_array_to_np_array(_pele.Array[double] v):
+cdef pele_array_to_np_array(_pele.Array[double] v): 
     """copy a pele Array into a new numpy array"""
     cdef np.ndarray[double, ndim=1] vnew = np.zeros(v.size(), dtype=float)
     cdef int i
     cdef int N = vnew.size
     for i in xrange(N):
         vnew[i] = v[i]
-    
     return vnew
 
 cdef extern from "pele/mxd_end_only.hpp" namespace "pele":
