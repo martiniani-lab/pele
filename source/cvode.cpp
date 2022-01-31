@@ -13,6 +13,11 @@
 #include <iostream>
 #include <memory>
 
+using namespace std;
+
+#define NUMERICAL_ZERO 1e-15
+#define THRESHOLD 1e-9
+#define NEWTON_TOL 1e-5
 namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
@@ -116,21 +121,57 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
   }
   if (rms_ < tol_) {
     if (use_newton_stop_criterion_) {
-      // Check with a more stringent hessian condition
-      Array<double> pele_hessian =
-          Array<double>(hessian.data(), hessian.size());
+      if (iter_number_ % 100 == 0) {
+        // Check with a more stringent hessian condition
+        Array<double> pele_hessian =
+            Array<double>(hessian.data(), hessian.size());
 
-      Eigen::Map<Eigen::VectorXd, 0, Eigen::InnerStride<1>> g_eigen(
-          g_.data(), int(g_.size()));
-      potential_->get_hessian(x_, pele_hessian);
-      Eigen::VectorXd newton_step(g_.size());
-      newton_step.setZero();
-      newton_step = hessian.completeOrthogonalDecomposition().solve(g_eigen);
-      if (newton_step.norm() < tol_) {
-        std::cout << "converged in " << iter_number_ << " iterations\n";
-        std::cout << "rms = " << rms_ << "\n";
-        std::cout << "tol = " << tol_ << "\n";
-        return true;
+        Eigen::Map<Eigen::VectorXd, 0, Eigen::InnerStride<1>> g_eigen(
+            g_.data(), int(g_.size()));
+        potential_->get_hessian(x_, pele_hessian);
+
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es =
+            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(hessian);
+        Eigen::VectorXd eigenvalues = es.eigenvalues();
+        Eigen::MatrixXd eigenvectors = es.eigenvectors();
+
+        // replace eigenvalues with their absolute values
+        for (size_t i = 0; i < eigenvalues.size(); ++i) {
+          eigenvalues(i) = std::abs(eigenvalues(i));
+        }
+
+        // cout << "eigenvalues" << eigenvalues << endl;
+        // postprocess inverse Eigenvalues
+        Eigen::VectorXd inv_eigenvalues(eigenvalues.size());
+        for (size_t i = 0; i < eigenvalues.size(); ++i) {
+          double mod_eig = abs(eigenvalues(i));
+          if (mod_eig < NUMERICAL_ZERO) {
+            // case for translational symmetries
+            inv_eigenvalues(i) = 0.0;
+          } else if (mod_eig < THRESHOLD) {
+            // case for really small eigenvalues
+            inv_eigenvalues(i) = 1.0 / THRESHOLD;
+          } else {
+            // case for normal eigenvalues
+            inv_eigenvalues(i) = 1.0 / mod_eig;
+          }
+        }
+        Eigen::VectorXd newton_step(g_.size());
+        newton_step.setZero();
+
+        // find the largest eigenvalue
+        newton_step =
+            -eigenvectors *
+            ((eigenvectors.transpose() * g_eigen).cwiseProduct(inv_eigenvalues))
+                .matrix();
+        if (newton_step.norm() < NEWTON_TOL) {
+          std::cout << "converged in " << iter_number_ << " iterations\n";
+          std::cout << "rms = " << rms_ << "\n";
+          std::cout << "tol = " << tol_ << "\n";
+          return true;
+        } else {
+          return false;
+        }
       } else {
         return false;
       }

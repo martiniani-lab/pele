@@ -311,8 +311,7 @@ class NEB(object):
         gleft : np.array
             gradient to left image (x_0 - x_left)
         gright : np.array
-            gradient to right image (x_0 - x_right) 
-        
+            gradient to right image (x_0 - x_right)
         """
 
         vmax = max(abs(central - left), abs(central - right))

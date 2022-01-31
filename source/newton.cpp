@@ -91,7 +91,7 @@ void Newton::one_iteration() {
   }
 
   // cout << "eigenvalues" << eigenvalues << endl;
-  // postprocess inverse Eigenvalues
+  // postprocess inverse Eigen
   Eigen::VectorXd inv_eigenvalues(eigenvalues.size());
   for (size_t i = 0; i < eigenvalues.size(); ++i) {
     double mod_eig = abs(eigenvalues(i));
