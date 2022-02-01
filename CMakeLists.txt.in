@@ -37,11 +37,11 @@ set(SUNDIALS_LIBRARY_DIR
 
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
-  sundials_cvode ${SUNDIALS_LIBRARY_DIR}
+  sundials_cvode PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
   DOC "CVODE library")
 
 find_library(SUNDIALS_NVEC_LIB
-  sundials_nvecserial ${SUNDIALS_LIBRARY_DIR}
+  sundials_nvecserial PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
   DOC "NVECTOR_SERIAL library")
 
 find_library(SUNDIALS_MANYVEC_LIB
@@ -69,7 +69,20 @@ set(CMAKE_SHARED_LINKER_FLAGS ${PYTHON_LDFLAGS} CACHE type string)
 
 cmake_minimum_required(VERSION 2.8)
 
+# BLAS and LAPACK
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+# message(${BLAS_LIBRARIES})
+message("LAPACK include dir " ${LAPACKE_INCLUDE_DIR})
 
+set(LAPACKE_INCLUDE_DIR
+  /usr/include
+  CACHE PATH "Location of lapacke include")
+
+  
+set(LAPACKE_INCLUDE_DIR
+  /usr/include
+  CACHE PATH "Location of lapacke include")
 enable_language(CXX)
 SET(CMAKE_CXX_FLAGS __COMPILER_EXTRA_ARGS__)
 
@@ -82,10 +95,13 @@ message("pele include directory: ${pele_include}")
 # build the pele library
 # NOTE: GLOBBING MIGHT BE A BAD IDEA WHEN ADDING FILES https://stackoverflow.com/questions/1027247/is-it-better-to-specify-source-files-with-glob-or-each-file-individually-in-cmake
 # This is a likely source of undefined symbol errors
-include_directories(${pele_include})
-include_directories(${SUNDIALS_INCLUDE_DIR})
+include_directories(BEFORE SYSTEM ${SUNDIALS_INCLUDE_DIR})
+include_directories(BEFORE SYSTEM ${pele_include})
+include_directories(${LAPACKE_INCLUDE_DIR})
 FILE(GLOB pele_sources ${pele_include}/*.c*)
 add_library(pele_lib SHARED ${pele_sources})
+
+message("SUNDIALS LIBRARIES " ${SUNDIALS_LIBRARIES})
 
 function(make_cython_lib cython_cxx_source)
   get_filename_component(library_name ${cython_cxx_source} NAME)
@@ -93,6 +109,7 @@ function(make_cython_lib cython_cxx_source)
   add_library(${library_name} SHARED ${cython_cxx_source})
   target_link_libraries(${library_name} pele_lib)
   target_link_libraries(${library_name} ${SUNDIALS_LIBRARIES})
+  target_link_libraries(${library_name} ${LAPACK_LIBRARIES})
   set_target_properties(${library_name} PROPERTIES PREFIX "")
   message("making library ${library_name} from source ${cython_cxx_source}")
 endfunction(make_cython_lib)
