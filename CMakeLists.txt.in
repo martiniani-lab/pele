@@ -10,6 +10,7 @@ message("${CMAKE_CXX_COMPILER}")
 set(numpy_include __NUMPY_INCLUDE__)
 set(PYTHON_INCLUDE_DIRS __PYTHON_INCLUDE__)
 set(PYTHON_LDFLAGS "__PYTHON_LDFLAGS__")
+message(PYTHON_LDFLAGS)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #find_package(PythonLibs)
 #message("PYTHON_LIBRARIES ${PYTHON_LIBRARIES}")
@@ -29,11 +30,15 @@ ENDIF(APPLE)
 # /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
 set(SUNDIALS_INCLUDE_DIR
-  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
+  /home/ps4586/sunnnew/sundials/SN_EXT/include
   CACHE PATH "Location of SUNDIALS header files")
+
+
 set(SUNDIALS_LIBRARY_DIR
-  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
+  /home/ps4586/sunnnew/sundials/SN_EXT/lib64
   CACHE PATH "Location of SUNDIALS libraries")
+
+
 
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
@@ -44,9 +49,9 @@ find_library(SUNDIALS_NVEC_LIB
   sundials_nvecserial PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
   DOC "NVECTOR_SERIAL library")
 
-find_library(SUNDIALS_MANYVEC_LIB
-  sundials_nvecmanyvector ${SUNDIALS_LIBRARY_DIR}
-  DOC "NVECTOR_MANYVECTOR library")
+# find_library(SUNDIALS_MANYVEC_LIB
+#   sundials_nvecmanyvector ${SUNDIALS_LIBRARY_DIR}
+#   DOC "NVECTOR_MANYVECTOR library")
 
 set(SUNDIALS_LIBRARIES
   -L${SUNDIALS_LIBRARY_DIR}
@@ -75,14 +80,11 @@ find_package(LAPACK REQUIRED)
 # message(${BLAS_LIBRARIES})
 message("LAPACK include dir " ${LAPACKE_INCLUDE_DIR})
 
+# lapacke.h comes with Eigen
 set(LAPACKE_INCLUDE_DIR
-  /usr/include
+  /home/ps4586/bv_lib/pele/source/Eigen/src/misc
   CACHE PATH "Location of lapacke include")
 
-  
-set(LAPACKE_INCLUDE_DIR
-  /usr/include
-  CACHE PATH "Location of lapacke include")
 enable_language(CXX)
 SET(CMAKE_CXX_FLAGS __COMPILER_EXTRA_ARGS__)
 
