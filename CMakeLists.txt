@@ -9,7 +9,8 @@ message("${CMAKE_C_COMPILER}")
 message("${CMAKE_CXX_COMPILER}")
 set(numpy_include /home/praharsh/anaconda3/envs/cb3-3.9/lib/python3.9/site-packages/numpy/core/include)
 set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/envs/cb3-3.9/include/python3.9 /home/praharsh/anaconda3/envs/cb3-3.9/include/python3.9)
-set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/envs/cb3-3.9/lib/python3.9/config-3.9-x86_64-linux-gnu -lcrypt -lpthread -ldl -lutil -lrt -lm -lm -lpython3.9 -Xlinker -export-dynamic")
+set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/envs/cb3-3.9/lib -lcrypt -lpthread -ldl -lutil -lm -lm -lpython3.9 -Xlinker -export-dynamic")
+message(PYTHON_LDFLAGS)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #find_package(PythonLibs)
 #message("PYTHON_LIBRARIES ${PYTHON_LIBRARIES}")
@@ -19,7 +20,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 IF(APPLE)
   SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 ENDIF(APPLE)
-
+ADD_DEFINITIONS(-std=c++20 -O0 -ggdb3)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 
 
 ##################################### sundials #######################################
@@ -27,7 +29,16 @@ ENDIF(APPLE)
 
 
 # /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
-# set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+# # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+# set(SUNDIALS_INCLUDE_DIR
+#   /home/ps4586/sunnnew/sundials/SN_EXT/include
+#   CACHE PATH "Location of SUNDIALS header files")
+
+
+# set(SUNDIALS_LIBRARY_DIR
+#   /home/ps4586/sunnnew/sundials/SN_EXT/lib64
+#   CACHE PATH "Location of SUNDIALS libraries")
+
 set(SUNDIALS_INCLUDE_DIR
   /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
   CACHE PATH "Location of SUNDIALS header files")
@@ -35,18 +46,20 @@ set(SUNDIALS_LIBRARY_DIR
   /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
   CACHE PATH "Location of SUNDIALS libraries")
 
+
+
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
-  sundials_cvode ${SUNDIALS_LIBRARY_DIR}
+  sundials_cvode PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
   DOC "CVODE library")
 
 find_library(SUNDIALS_NVEC_LIB
-  sundials_nvecserial ${SUNDIALS_LIBRARY_DIR}
+  sundials_nvecserial PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
   DOC "NVECTOR_SERIAL library")
 
-find_library(SUNDIALS_MANYVEC_LIB
-  sundials_nvecmanyvector ${SUNDIALS_LIBRARY_DIR}
-  DOC "NVECTOR_MANYVECTOR library")
+# find_library(SUNDIALS_MANYVEC_LIB
+#   sundials_nvecmanyvector ${SUNDIALS_LIBRARY_DIR}
+#   DOC "NVECTOR_MANYVECTOR library")
 
 set(SUNDIALS_LIBRARIES
   -L${SUNDIALS_LIBRARY_DIR}
@@ -69,9 +82,21 @@ set(CMAKE_SHARED_LINKER_FLAGS ${PYTHON_LDFLAGS} CACHE type string)
 
 cmake_minimum_required(VERSION 2.8)
 
+# BLAS and LAPACK
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+find_package(HOOMD REQUIRED)
+ADD_DEFINITIONS(-std=c++20 -O0 -ggdb3)
+# message(${BLAS_LIBRARIES})
+message("LAPACK include dir " ${LAPACKE_INCLUDE_DIR})
+
+# lapacke.h comes with Eigen
+set(LAPACKE_INCLUDE_DIR
+  /home/ps4586/bv_lib/pele/source/Eigen/src/misc
+  CACHE PATH "Location of lapacke include")
 
 enable_language(CXX)
-SET(CMAKE_CXX_FLAGS "-std=c++1z -O3 -fPIC -march=native -flto -fopenmp")
+SET(CMAKE_CXX_FLAGS "-std=c++20 -O3 -fPIC -march=native -flto -fopenmp")
 
 #cmake_policy(SET CMP0015 NEW)
 
@@ -82,10 +107,13 @@ message("pele include directory: ${pele_include}")
 # build the pele library
 # NOTE: GLOBBING MIGHT BE A BAD IDEA WHEN ADDING FILES https://stackoverflow.com/questions/1027247/is-it-better-to-specify-source-files-with-glob-or-each-file-individually-in-cmake
 # This is a likely source of undefined symbol errors
-include_directories(${pele_include})
-include_directories(${SUNDIALS_INCLUDE_DIR})
+include_directories(BEFORE SYSTEM ${SUNDIALS_INCLUDE_DIR})
+include_directories(BEFORE SYSTEM ${pele_include})
+include_directories(${LAPACKE_INCLUDE_DIR})
 FILE(GLOB pele_sources ${pele_include}/*.c*)
 add_library(pele_lib SHARED ${pele_sources})
+
+message("SUNDIALS LIBRARIES " ${SUNDIALS_LIBRARIES})
 
 function(make_cython_lib cython_cxx_source)
   get_filename_component(library_name ${cython_cxx_source} NAME)
@@ -93,6 +121,7 @@ function(make_cython_lib cython_cxx_source)
   add_library(${library_name} SHARED ${cython_cxx_source})
   target_link_libraries(${library_name} pele_lib)
   target_link_libraries(${library_name} ${SUNDIALS_LIBRARIES})
+  target_link_libraries(${library_name} ${LAPACK_LIBRARIES})
   set_target_properties(${library_name} PROPERTIES PREFIX "")
   message("making library ${library_name} from source ${cython_cxx_source}")
 endfunction(make_cython_lib)

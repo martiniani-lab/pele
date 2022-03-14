@@ -48,7 +48,6 @@ htmlcov
 /.idea/
 /.vscode/
 /Makefile
-/cmake/
 /compile_commands.json
 /cpp_tests/source/.cache/
 /cpp_tests/source/CMakeCache.txt
