@@ -1,7 +1,7 @@
 
 import numpy as np
 import itertools
-from pele.potentials import BasePotential
+from .potential import BasePotential
 
 
 
