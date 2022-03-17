@@ -77,6 +77,7 @@ cmake_minimum_required(VERSION 2.8)
 # BLAS and LAPACK
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
+find_package(HOOMD REQUIRED)
 # message(${BLAS_LIBRARIES})
 message("LAPACK include dir " ${LAPACKE_INCLUDE_DIR})
 
