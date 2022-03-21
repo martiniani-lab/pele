@@ -102,9 +102,23 @@ message("pele include directory: ${pele_include}")
 # build the pele library
 # NOTE: GLOBBING MIGHT BE A BAD IDEA WHEN ADDING FILES https://stackoverflow.com/questions/1027247/is-it-better-to-specify-source-files-with-glob-or-each-file-individually-in-cmake
 # This is a likely source of undefined symbol errors
+FILE(GLOB pele_sources ${pele_include}/*.c*)
+
+
 include_directories(BEFORE SYSTEM ${SUNDIALS_INCLUDE_DIR})
 include_directories(BEFORE SYSTEM ${pele_include})
-FILE(GLOB pele_sources ${pele_include}/*.c*)
+
+# HOOMD includes
+get_property(HOOMD_INCLUDE_DIRS TARGET HOOMD::_hoomd PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+get_property(PYBIND11_INCLUDE_DIRS TARGET pybind11::pybind11_headers PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+
+include_directories(${HOOMD_INCLUDE_DIRS})
+include_directories(${PYBIND11_INCLUDE_DIRS})
+
+
+
+message(PYBIND11_INCLUDE_DIRS ${PYBIND11_INCLUDE_DIRS})
+
 add_library(pele_lib SHARED ${pele_sources})
 
 message("SUNDIALS LIBRARIES " ${SUNDIALS_LIBRARIES})
@@ -113,10 +127,10 @@ function(make_cython_lib cython_cxx_source)
   get_filename_component(library_name ${cython_cxx_source} NAME)
   string(REGEX REPLACE ".cxx$" "" library_name ${library_name})
   add_library(${library_name} SHARED ${cython_cxx_source})
+  target_include_directories(${library_name} PUBLIC HOOMD::_hoomd)
   target_link_libraries(${library_name} PUBLIC pele_lib)
   target_link_libraries(${library_name} PUBLIC ${SUNDIALS_LIBRARIES})
-  target_include_directories(${library_name} PUBLIC HOOMD::_hoomd)
-  target_link_libraries(${library_name} INTERFACE HOOMD::_hoomd)
+  target_link_libraries(${library_name} PUBLIC HOOMD::_hoomd)
   target_link_libraries(${library_name} PUBLIC ${LAPACK_LIBRARIES})
   set_target_properties(${library_name} PROPERTIES PREFIX "")
   message("making library ${library_name} from source ${cython_cxx_source}")
