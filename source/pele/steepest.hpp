@@ -16,8 +16,6 @@
 
 // Eigen linear algebra library
 #include <Eigen/Dense>
-#include <Eigen/SparseCore>
-#include <Eigen/SparseCholesky>
 #include "eigen_interface.hpp"
 
 

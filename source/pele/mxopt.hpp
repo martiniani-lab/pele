@@ -11,8 +11,6 @@
 #include "eigen_interface.hpp"
 #include "pele/lbfgs.hpp"
 #include <Eigen/Dense>
-#include <Eigen/SparseCholesky>
-#include <Eigen/SparseCore>
 #include <Spectra/SymEigsSolver.h>
 
 // Lapack for cholesky
@@ -94,9 +92,6 @@ private:
   // solver for H x = b
   Eigen::VectorXd
   update_solver(Eigen::VectorXd r); // updates the solver with the new hessian
-
-  // Sparse Eigen for lowest eigenvalue
-  Eigen::SparseMatrix<double> hess_sparse;
 
   char uplo; /* We ask LAPACK for the lower diagonal matrix L */
   int info;  /* "Info" return value, used for error-checking */

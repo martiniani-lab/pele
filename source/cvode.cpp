@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <hoomd/HOOMDMath.h>
 
 using namespace std;
 
