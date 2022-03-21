@@ -1,5 +1,5 @@
-# set(CMAKE_C_COMPILER "gcc-11")
-# set(CMAKE_CXX_COMPILER "g++-11")
+set(CMAKE_C_COMPILER "gcc-11")
+set(CMAKE_CXX_COMPILER "g++-11")
 
 # this file is meant to be parsed by python before being a proper CMakeLists.txt file
 # in particular, the following strings will be set to their proper values by python when
@@ -20,22 +20,26 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 IF(APPLE)
   SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 ENDIF(APPLE)
-
+#ADD_DEFINITIONS(-std=c++20 -O3)
+# set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 
 
 ##################################### sundials #######################################
 # TODO: figure out how to remove the extra setup for sundials
-
-
 # /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
-# set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+# # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+# set(SUNDIALS_INCLUDE_DIR
+#   /home/ps4586/sunnnew/sundials/SN_EXT/include
+#   CACHE PATH "Location of SUNDIALS header files")
+# set(SUNDIALS_LIBRARY_DIR
+#   /home/ps4586/sunnnew/sundials/SN_EXT/lib64
+#   CACHE PATH "Location of SUNDIALS libraries")
+
 set(SUNDIALS_INCLUDE_DIR
-  /home/ps4586/sunnnew/sundials/SN_EXT/include
+  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
   CACHE PATH "Location of SUNDIALS header files")
-
-
 set(SUNDIALS_LIBRARY_DIR
-  /home/ps4586/sunnnew/sundials/SN_EXT/lib64
+  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
   CACHE PATH "Location of SUNDIALS libraries")
 
 
@@ -101,6 +105,7 @@ message("pele include directory: ${pele_include}")
 include_directories(BEFORE SYSTEM ${SUNDIALS_INCLUDE_DIR})
 include_directories(BEFORE SYSTEM ${pele_include})
 include_directories(${LAPACKE_INCLUDE_DIR})
+include_directories(${HOOMD_INCLUDE_DIR})
 FILE(GLOB pele_sources ${pele_include}/*.c*)
 add_library(pele_lib SHARED ${pele_sources})
 
@@ -112,6 +117,7 @@ function(make_cython_lib cython_cxx_source)
   add_library(${library_name} SHARED ${cython_cxx_source})
   target_link_libraries(${library_name} pele_lib)
   target_link_libraries(${library_name} ${SUNDIALS_LIBRARIES})
+  target_link_libraries(${library_name} ${HOOMD_LIBRARIES})
   target_link_libraries(${library_name} ${LAPACK_LIBRARIES})
   set_target_properties(${library_name} PROPERTIES PREFIX "")
   message("making library ${library_name} from source ${cython_cxx_source}")
