@@ -57,31 +57,48 @@ TEST(COMBINED_POTENTIAL, ENERGYGRADIENTHESSIAN) {
 
   x = pele::generate_random_coordinates(box_length, n_particles, dim);
 
-  std::shared_ptr<pele::InverseHalfIntPowerPeriodicCellLists<dim, pow2>>
-      potcell_a = std::make_shared<
-          pele::InverseHalfIntPowerPeriodicCellLists<dim, pow2>>(
-          eps_a, radii_a, boxvec, ncellsx_scale_a, exact_sum);
-  std::shared_ptr<pele::InverseHalfIntPowerPeriodicCellLists<dim, pow2>>
-      potcell_b = std::make_shared<
-          pele::InverseHalfIntPowerPeriodicCellLists<dim, pow2>>(
-          eps_b, radii_b, boxvec, ncellsx_scale_b, exact_sum);
+  std::shared_ptr<pele::InverseHalfIntPowerPeriodic<dim, pow2>> pot_a =
+      std::make_shared<pele::InverseHalfIntPowerPeriodic<dim, pow2>>(
+          eps_a, radii_a, boxvec, exact_sum);
+  std::shared_ptr<pele::InverseHalfIntPowerPeriodic<dim, pow2>> pot_b =
+      std::make_shared<pele::InverseHalfIntPowerPeriodic<dim, pow2>>(
+          eps_b, radii_b, boxvec, exact_sum);
 
   std::shared_ptr<pele::CombinedPotential> pot =
       std::make_shared<pele::CombinedPotential>();
 
-  pot->add_potential(potcell_a);
-  pot->add_potential(potcell_b);
+  pot->add_potential(pot_a);
+  pot->add_potential(pot_b);
 
   double energy = pot->get_energy(x);
 
-  double energy_a = potcell_a->get_energy(x);
-  double energy_b = potcell_b->get_energy(x);
+  double energy_a = pot_a->get_energy(x);
+  double energy_b = pot_b->get_energy(x);
 
   ASSERT_EQ(energy, energy_a + energy_b);
 
   pele::Array<double> grad(n_dof);
   pele::Array<double> hess(n_dof * n_dof);
 
+  pele::Array<double> grad_a(n_dof);
+  pele::Array<double> hess_a(n_dof * n_dof);
+
+  pele::Array<double> grad_b(n_dof);
+  pele::Array<double> hess_b(n_dof * n_dof);
+
   pot->get_energy_gradient(x, grad);
+  pot_a->get_energy_gradient(x, grad_a);
+  pot_b->get_energy_gradient(x, grad_b);
+
+  for (size_t i = 0; i < n_dof; i++) {
+    ASSERT_NEAR(grad[i], grad_a[i] + grad_b[i], 1e-9);
+  }
+
   pot->get_energy_gradient_hessian(x, grad, hess);
+  pot_a->get_energy_gradient_hessian(x, grad_a, hess_a);
+  pot_b->get_energy_gradient_hessian(x, grad_b, hess_b);
+
+  for (size_t i = 0; i < n_dof * n_dof; i++) {
+    ASSERT_NEAR(hess[i], hess_a[i] + hess_b[i], 1e-9);
+  }
 }
