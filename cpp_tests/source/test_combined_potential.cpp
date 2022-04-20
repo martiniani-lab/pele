@@ -12,7 +12,7 @@
 using pele::Array;
 using pele::InversePower;
 
-TEST(COMBINED_POTENTIAL, ENERGYGRADIENTHESSIAN) {
+TEST(CombinedPotential, TestEnergyGradientHessianWithoutCellLists) {
   static const size_t dim = 2;
   size_t n_particles;
   size_t n_dof;
@@ -32,7 +32,7 @@ TEST(COMBINED_POTENTIAL, ENERGYGRADIENTHESSIAN) {
   power = 2.5;
   const int pow2 = 5;
 
-  n_particles = 256;
+  n_particles = 16;
   n_dof = n_particles * dim;
   phi = 0.9;
 
