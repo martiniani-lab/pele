@@ -493,8 +493,8 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
           hess[N * (j1 + k) + j1 + k] += Hii_diag;
           // off diagonal block - diagonal terms
           double Hij_diag = -Hii_diag;
-          hess[N * (i1 + k) + j1 + k] = Hij_diag;
-          hess[N * (j1 + k) + i1 + k] = Hij_diag;
+          hess[N * (i1 + k) + j1 + k] += Hij_diag;
+          hess[N * (j1 + k) + i1 + k] += Hij_diag;
 #pragma unroll
           for (size_t l = k + 1; l < m_ndim; ++l) {
             // diagonal block - off diagonal terms
@@ -505,10 +505,10 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
             hess[N * (j1 + l) + j1 + k] += Hii_off;
             // off diagonal block - off diagonal terms
             double Hij_off = -Hii_off;
-            hess[N * (i1 + k) + j1 + l] = Hij_off;
-            hess[N * (i1 + l) + j1 + k] = Hij_off;
-            hess[N * (j1 + k) + i1 + l] = Hij_off;
-            hess[N * (j1 + l) + i1 + k] = Hij_off;
+            hess[N * (i1 + k) + j1 + l] += Hij_off;
+            hess[N * (i1 + l) + j1 + k] += Hij_off;
+            hess[N * (j1 + k) + i1 + l] += Hij_off;
+            hess[N * (j1 + l) + i1 + k] += Hij_off;
           }
         }
       }
