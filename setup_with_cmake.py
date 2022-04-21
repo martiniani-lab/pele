@@ -252,6 +252,7 @@ setup(name='pele',
 
 cmake_build_dir = "build/cmake"
 
+# TODO Sort in alphabetical order to easily identify missing files
 cxx_files = ["pele/potentials/_lj_cpp.cxx",
              "pele/potentials/_morse_cpp.cxx",
              "pele/potentials/_frozen_dof.cxx",
@@ -264,6 +265,7 @@ cxx_files = ["pele/potentials/_lj_cpp.cxx",
              "pele/potentials/_inversepower_stillinger_cpp.cxx",
              "pele/potentials/_inversepower_stillinger_cut_cpp.cxx",
              "pele/potentials/_sumgaussianpot_cpp.cxx",
+             "pele/potentials/combine_potentials.cxx",
              "pele/potentials/_pele.cxx",
              "pele/potentials/_pspin_spherical_cpp.cxx",
              "pele/optimize/_pele_opt.cxx",
