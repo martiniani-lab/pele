@@ -80,11 +80,11 @@ set(gtest_libs gtest gtest_main)
 message("gtest_libs ${gtest_libs}")
 
 # HOOMD includes
-get_property(HOOMD_INCLUDE_DIRS TARGET HOOMD::_hoomd PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+get_property(HOOMD_INCLUDE_DIRECTORY TARGET HOOMD::_hoomd PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 get_property(PYBIND11_INCLUDE_DIRS TARGET pybind11::pybind11_headers PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 
 include_directories(${PYTHON_INCLUDE_DIR})
-include_directories(${HOOMD_INCLUDE_DIRS})
+include_directories(${HOOMD_INCLUDE_DIRECTORY})
 include_directories(${PYBIND11_INCLUDE_DIRS})
 
 
