@@ -75,3 +75,4 @@ htmlcov
 /source/header.zip
 /source/main.py
 /source/pele/Eigen/
+cpp_tests/source/test_main
