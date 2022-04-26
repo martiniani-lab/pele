@@ -23,6 +23,9 @@ build
 pele/*/*cxx
 cpp_tests/build
 cpp_tests/gtest
+source/autodiff/*
+source/Eigen/*
+source/Spectra/*
 
 cythonize.dat
 examples/new_potential/cpp_potential/mypotential.cpp
