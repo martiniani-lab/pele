@@ -20,11 +20,7 @@
 
 
 
-// Eigen Linear Algebra library
 
-// #include <Eigen/Dense>
-// #include <Eigen/SparseCore>
-// #include <Eigen/SparseCholesky>
 
 
 

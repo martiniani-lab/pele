@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <hoomd/HOOMDMath.h>
 
 using namespace std;
 
@@ -29,7 +30,6 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
       use_newton_stop_criterion_(use_newton_stop_criterion) {
   // dummy t0
   double t0 = 0;
-  std::cout << x0 << "\n";
   Array<double> x0copy = x0.copy();
   x0_N = N_Vector_eq_pele(x0copy);
   // initialization of everything CVODE needs

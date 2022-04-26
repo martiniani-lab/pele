@@ -5,8 +5,6 @@
 #include <cmath>
 #include <memory>
 #include <Eigen/Dense>
-#include <Eigen/SparseCholesky>
-#include <Eigen/SparseCore>
 #include <Spectra/SymEigsSolver.h>
 #include "pele/array.hpp"
 #include "pele/eigen_interface.hpp"

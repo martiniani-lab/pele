@@ -501,12 +501,11 @@ public:
 template<class dtype>
 inline std::ostream &operator<<(std::ostream &out, const Array<dtype> &a)
 {
-    out << "[ ";
     for(size_t i = 0; i < a.size(); ++i) {
         if(i>0) out << ", ";
         out << a[i];
     }
-    out << " ]";
+    out << std::endl;
     return out;
 }
 

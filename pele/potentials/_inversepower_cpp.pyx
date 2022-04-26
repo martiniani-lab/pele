@@ -60,8 +60,8 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
         # stored for pickling
         self.pow = pow
         self.eps = eps
-        self.radii = radii
         self.ndim = ndim
+        max_radii = radii.max()
 
         self.use_cell_lists = use_cell_lists
         self.ncellx_scale = ncellx_scale
@@ -70,11 +70,19 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
         assert not (boxvec is not None and boxl is not None)
         if boxl is not None:
             boxvec = [boxl] * ndim
+        boxvec = np.array(boxvec)
+        min_box_vec = boxvec.min()
         cdef np.ndarray[double, ndim=1] bv
         cdef np.ndarray[double, ndim=1] radiic = np.array(radii, dtype=float)
 
         self.radii = radiic
         self.boxvec = np.array(boxvec)
+        
+        if (min_box_vec < 4 * max_radii):
+            raise Exception("boxvec is too small for radii")
+            
+        
+        
 
 
         if use_cell_lists:

@@ -15,6 +15,10 @@ enable_language(CXX)
 ADD_DEFINITIONS(-std=c++20 -O0 -ggdb3)
 
 
+#find conda path for python header
+set(PYTHON_INCLUDE_DIR $ENV{CONDA_PREFIX}/include/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR})
+message("PYTHON INCLUDE DIR" ${PYTHON_INCLUDE_DIR})
+
 
 
 #set OpenMP
@@ -30,6 +34,7 @@ endif()
 
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
+find_package(HOOMD REQUIRED)
 
 
 
@@ -73,6 +78,14 @@ message("gtest include directory ${gtest_include}")
 add_subdirectory(../gtest ${gtest_binary_dir})
 set(gtest_libs gtest gtest_main)
 message("gtest_libs ${gtest_libs}")
+
+# HOOMD includes
+get_property(HOOMD_INCLUDE_DIRECTORY TARGET HOOMD::_hoomd PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+get_property(PYBIND11_INCLUDE_DIRS TARGET pybind11::pybind11_headers PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+
+include_directories(${PYTHON_INCLUDE_DIR})
+include_directories(${HOOMD_INCLUDE_DIRECTORY})
+include_directories(${PYBIND11_INCLUDE_DIRS})
 
 
 # set the pele include directory

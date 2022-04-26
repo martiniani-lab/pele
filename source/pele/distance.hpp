@@ -230,6 +230,15 @@ namespace pele {
         meta_periodic_distance<ndim>::f(r_ij, r1, r2, m_box, m_ibox);
     }
 
+    inline double * get_box() const
+    {
+        return m_box;
+    }
+
+    inline double get_ndim() const
+    {
+        return ndim;
+    }
     inline void put_atom_in_box(double * const xnew, const double* x) const
     {
         meta_image<ndim>::f(xnew, x, m_ibox, m_box);
