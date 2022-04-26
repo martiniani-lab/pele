@@ -51,7 +51,7 @@ else:
 #extra compiler args
 cmake_compiler_extra_args = ["-std=c++1z","-Wall", "-Wextra", "-pedantic", "-O3", "-fPIC"]
 cmake_compiler_extra_args = ["-std=c++1z", "-O3", "-fPIC"]
-if idcompiler.lower() == 'unix':
+if idcompiler == 'unix':
     cmake_compiler_extra_args += ['-march=native', '-flto', '-fopenmp']
 else:
     cmake_compiler_extra_args += ['-axCORE-AVX2', '-ipo', '-qopenmp', '-ip', '-unroll']

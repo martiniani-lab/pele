@@ -27,6 +27,8 @@ source/autodiff/*
 source/Eigen/*
 source/Spectra/*
 
+CMakelists.txt
+
 cythonize.dat
 examples/new_potential/cpp_potential/mypotential.cpp
 examples/new_potential/cython_potential/mypotential.c
