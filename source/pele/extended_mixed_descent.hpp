@@ -28,8 +28,8 @@ extern "C" {
 #include "nwpele.hpp"
 #include "optimizer.hpp"
 
-#include <cvode/cvode.h> /* access to CVODE                 */
-#include <nvector/nvector_serial.h> /* access to serial N_Vector       */
+#include <cvode/cvode.h>               /* access to CVODE                 */
+#include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
 #include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
 #include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
 
@@ -101,6 +101,9 @@ private:
   Eigen::MatrixXd hessian;
   Eigen::MatrixXd hessian_shifted;
 
+  // Calculates hessian for the potential pot + pot extended
+  Eigen::MatrixXd extended_potential_hessian;
+
   double *hess_shifted_data;
   bool usephase1;
   // what phase was used in previous step
@@ -113,6 +116,11 @@ private:
    * number of phase 2 steps
    */
   size_t n_phase_2_steps;
+
+/**
+ * number of extended potential hessian evaluations
+ */
+  size_t nhev_extended;
   /**
    * tolerance for convexity. the smaller, the more convex the problem
    * needs to be before switching to newton
@@ -130,7 +138,8 @@ public:
   /**
    * Constructor
    */
-  MixedOptimizer(std::shared_ptr<pele::BasePotential> potential, std::shared_ptr<pele::BasePotential> potential_extension,
+  MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
+                 std::shared_ptr<pele::BasePotential> potential_extension,
                  const pele::Array<double> x0, double tol = 1e-4, int T = 1,
                  double step = 1, double conv_tol = 1e-8,
                  double conv_factor = 2, double rtol = 1e-5, double atol = 1e-5,
@@ -140,9 +149,8 @@ public:
    */
   virtual ~MixedOptimizer() {}
 
-
   /**
-   * extension of the original potential that ensures the hessian is positive in the 
+   * extension of the original potential that ensures the hessian is positive definite
    */
   std::shared_ptr<pele::BasePotential> extended_potential;
   /**
