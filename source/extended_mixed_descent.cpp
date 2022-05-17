@@ -1,5 +1,5 @@
 
-#include "pele/mxopt.hpp"
+#include "pele/extended_mixed_descent.hpp"
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
 #include "pele/debug.hpp"
@@ -20,11 +20,14 @@ using namespace Spectra;
 
 namespace pele {
 
-MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
-                               const pele::Array<double> x0, double tol, int T,
-                               double step, double conv_tol, double conv_factor,
-                               double rtol, double atol, bool iterative)
-    : GradientOptimizer(potential, x0, tol), cvode_mem(CVodeCreate(CV_BDF)),
+MixedOptimizer::MixedOptimizer(
+    std::shared_ptr<pele::BasePotential> potential,
+    std::shared_ptr<pele::BasePotential> extended_potential,
+    const pele::Array<double> x0, double tol, int T, double step,
+    double conv_tol, double conv_factor, double rtol, double atol,
+    bool iterative)
+    : GradientOptimizer(potential, x0, tol),
+      extended_potential(extended_potential), cvode_mem(CVodeCreate(CV_BDF)),
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T), usephase1(true),
       conv_tol_(conv_tol), conv_factor_(conv_factor), n_phase_1_steps(0),
@@ -195,7 +198,7 @@ bool MixedOptimizer::convexity_check() {
 
 /**
  * Gets the hessian. involves a dense hessian for now. #TODO replace with a
- * sparse hessian. TODO: Allocate memory once
+ * sparse hessian.
  */
 void MixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
   // Does not allocate memory for hessian just wraps around the data
@@ -254,12 +257,10 @@ void MixedOptimizer::compute_phase_1_step(Array<double> step) {
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
 void MixedOptimizer::compute_phase_2_step(Array<double> step) {
-
-  if (hessian_calculated == false) {
-    // we can afford to perform convexity checks at every steps
-    // assuming the rate limiting cost is the hessian which is calculated
-    // in the convexity check anyway
-    convexity_check();
+    // use a newton step
+  if (prev_phase_is_phase1 == true || hessian_calculated == false) {
+      // get extended hessian
+    get_hess_extended(hessian);
   }
 
   hessian.diagonal().array() += conv_factor_ * conv_tol_ * 10;
