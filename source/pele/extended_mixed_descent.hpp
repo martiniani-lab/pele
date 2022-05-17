@@ -1,10 +1,9 @@
-#ifndef _PELE_MIXED_OPT_H__
-#define _PELE_MIXED_OPT_H__
+#ifndef _PELE_EXTENDED_MIXED_DESCENT_H__
+#define _PELE_EXTENDED_MIXED_DESCENT_H__
 
 #include "array.hpp"
 #include "base_potential.hpp"
 #include "debug.hpp"
-
 
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
@@ -150,7 +149,8 @@ public:
   virtual ~MixedOptimizer() {}
 
   /**
-   * extension of the original potential that ensures the hessian is positive definite
+   * extension of the original potential that ensures the hessian is positive
+   * definite
    */
   std::shared_ptr<pele::BasePotential> extended_potential;
   /**
@@ -165,6 +165,7 @@ public:
    */
   virtual void reset(pele::Array<double> &x0);
   inline int get_nhev() const { return udata.nhev; }
+  inline int get_nhev_extended() const { return nhev_extended; }
   inline int get_n_phase_1_steps() { return n_phase_1_steps; }
   inline int get_n_phase_2_steps() { return n_phase_2_steps; }
 
@@ -178,6 +179,9 @@ private:
   bool minimum_less_than_zero;
   void get_hess(Eigen::MatrixXd &hess);
 
+  // Gets extended potential hessian
+  void get_hess_extended(Eigen::MatrixXd &hess);
+
   void update_H0_(Array<double> x_old, Array<double> &g_old,
                   Array<double> x_new, Array<double> &g_new);
   // Does normal LBFGS without preconditioning
@@ -188,4 +192,4 @@ private:
 
 } // namespace pele
 
-#endif
+#endif // _PELE_EXTENDED_MIXED_DESCENT_H__
