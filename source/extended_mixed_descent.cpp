@@ -198,10 +198,25 @@ bool MixedOptimizer::convexity_check() {
  * sparse hessian. TODO: Allocate memory once
  */
 void MixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
+  // Does not allocate memory for hessian just wraps around the data
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
   potential_->get_hessian(
       x_, hessian_pele); // preferably switch this to sparse Eigen
   udata.nhev += 1;
+}
+
+void MixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
+  // Does not allocate memory for hessian just wraps around the data
+  Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
+
+  hessian_pele.assign(0);
+
+  potential_->add_hessian(
+      x_, hessian_pele); // preferably switch this to sparse Eigen
+  udata.nhev += 1;
+
+  extended_potential->add_hessian(x_, hessian_pele);
+  nhev_extended += 1;
 }
 
 // /**
