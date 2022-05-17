@@ -20,7 +20,7 @@ using namespace Spectra;
 
 namespace pele {
 
-MixedOptimizer::MixedOptimizer(
+ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     std::shared_ptr<pele::BasePotential> extended_potential,
     const pele::Array<double> x0, double tol, int T, double step,
@@ -84,7 +84,7 @@ MixedOptimizer::MixedOptimizer(
 /**
  * Does one iteration of the optimization algorithm
  */
-void MixedOptimizer::one_iteration() {
+void ExtendedMixedOptimizer::one_iteration() {
   if (!func_initialized_) {
     initialize_func_gradient();
   }
@@ -148,7 +148,7 @@ void MixedOptimizer::one_iteration() {
 /**
  * resets the minimizer for usage again
  */
-void MixedOptimizer::reset(pele::Array<double> &x0) {
+void ExtendedMixedOptimizer::reset(pele::Array<double> &x0) {
   if (x0.size() != x_.size()) {
     throw std::invalid_argument("The number of degrees of freedom (x0.size()) "
                                 "cannot change when calling reset()");
@@ -168,7 +168,7 @@ with help convexity flag false ->
  * convex function, We think we're near a minimum, use a newton method to figure
 out the result.
  */
-bool MixedOptimizer::convexity_check() {
+bool ExtendedMixedOptimizer::convexity_check() {
 
   get_hess(hessian);
 
@@ -200,7 +200,7 @@ bool MixedOptimizer::convexity_check() {
  * Gets the hessian. involves a dense hessian for now. #TODO replace with a
  * sparse hessian.
  */
-void MixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
+void ExtendedMixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
   // Does not allocate memory for hessian just wraps around the data
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
   potential_->get_hessian(
@@ -208,7 +208,7 @@ void MixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
   udata.nhev += 1;
 }
 
-void MixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
+void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
   // Does not allocate memory for hessian just wraps around the data
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
 
@@ -222,19 +222,11 @@ void MixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
   nhev_extended += 1;
 }
 
-// /**
-//  * Phase 1 The problem does not look convex, Try solving using with an
-//  adaptive differential equationish approach
-//  */
-// void MixedOptimizer::compute_phase_1_step(Array<double> step) {
-//     // use a a scaled steepest descent step
-//     step *= -std::abs(H0_);
-// }
 
 /**
  * Phase 1 The problem does not look convex, Try solving using with sundials
  */
-void MixedOptimizer::compute_phase_1_step(Array<double> step) {
+void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
   /* advance solver just one internal step */
   Array<double> xold = x_;
   // use this variable to compute differences and add to nhev later
@@ -256,7 +248,7 @@ void MixedOptimizer::compute_phase_1_step(Array<double> step) {
 /**
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
-void MixedOptimizer::compute_phase_2_step(Array<double> step) {
+void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
     // use a newton step
   if (prev_phase_is_phase1 == true || hessian_calculated == false) {
       // get extended hessian

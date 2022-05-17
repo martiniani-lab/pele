@@ -57,7 +57,7 @@ namespace pele {
  * Mixed optimization scheme that uses different methods of solving far and away
  * from the minimum/ somewhat close to the minimum and near the minimum
  */
-class MixedOptimizer : public GradientOptimizer {
+class ExtendedMixedOptimizer : public GradientOptimizer {
 private:
   /**
    * H0 is the initial estimate for the inverse hessian. This is as small as
@@ -116,9 +116,9 @@ private:
    */
   size_t n_phase_2_steps;
 
-/**
- * number of extended potential hessian evaluations
- */
+  /**
+   * number of extended potential hessian evaluations
+   */
   size_t nhev_extended;
   /**
    * tolerance for convexity. the smaller, the more convex the problem
@@ -137,7 +137,7 @@ public:
   /**
    * Constructor
    */
-  MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
+  ExtendedMixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                  std::shared_ptr<pele::BasePotential> potential_extension,
                  const pele::Array<double> x0, double tol = 1e-4, int T = 1,
                  double step = 1, double conv_tol = 1e-8,
@@ -146,7 +146,7 @@ public:
   /**
    * Destructor
    */
-  virtual ~MixedOptimizer() {}
+  virtual ~ExtendedMixedOptimizer() {}
 
   /**
    * extension of the original potential that ensures the hessian is positive
@@ -161,7 +161,7 @@ public:
   // functions for accessing the results
 
   /**
-   * reset the optiimzer to start a new minimization from x0
+   * reset the optimizer to start a new minimization from x0
    */
   virtual void reset(pele::Array<double> &x0);
   inline int get_nhev() const { return udata.nhev; }
