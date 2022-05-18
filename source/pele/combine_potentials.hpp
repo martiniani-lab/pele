@@ -87,14 +87,14 @@ public:
 class ExtendedPotential : public CombinedPotential {
 
 private:
-    bool use_extended_potential_;
-
+  bool use_extended_potential_;
 
 public:
   /**
    * @brief Construct a new Extended Potential object
    *
    * @param base_potential The potential to extend
+   * @param extended_potential The potential to add to the base potential
    */
   ExtendedPotential(std::shared_ptr<BasePotential> main_potential,
                     std::shared_ptr<BasePotential> extension_potential)
@@ -104,8 +104,51 @@ public:
     use_extended_potential_ = false;
   };
 
+  /**
+   * @brief switch on/off the use of the extended potential
+   */
+  void switch_extended_potential() {
+    use_extended_potential_ = !use_extended_potential_;
+  }
 
+  /**
+   * @brief get the energy of the extended potential
+   * @details If the extended potential is switched on, the energy of the
+   * extended potential is returned.
+   * @param x The coordinates
+   * @return double The energy
+   */
+  double get_energy(Array<double> const &x) {
+    if (use_extended_potential_) {
+      return _potentials.back()->get_energy(x);
+    } else {
+      return CombinedPotential::get_energy(x);
+    }
+  }
 
+  double get_energy_gradient(Array<double> const &x, Array<double> &grad) {
+    if (use_extended_potential_) {
+      return _potentials.back()->get_energy_gradient(x, grad);
+    } else {
+      return CombinedPotential::get_energy_gradient(x, grad);
+    }
+  }
+
+  double get_energy_gradient_hessian(Array<double> const &x,
+                                     Array<double> &grad, Array<double> &hess) {
+    if (use_extended_potential_) {
+      return _potentials.back()->get_energy_gradient_hessian(x, grad, hess);
+    } else {
+      return CombinedPotential::get_energy_gradient_hessian(x, grad, hess);
+    }
+    void get_hessian(Array<double> const &x, Array<double> &hess) {
+      if (use_extended_potential_) {
+        return _potentials.back()->get_hessian(x, hess);
+      } else {
+        return CombinedPotential::get_hessian(x, hess);
+      }
+    }
+  }
 }; // ExtendedPotential
 
 } // namespace pele
