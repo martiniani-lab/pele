@@ -73,6 +73,17 @@ public:
     }
     return energy;
   }
+  virtual void get_hessian(
+        Array<double> const &x,
+        Array<double> &hessian) {
+        if (hessian.size() != x.size() * x.size()) {
+        throw std::invalid_argument("the Hessian has the wrong size");
+        }
+        hessian.assign(0.);
+        for (auto &pot_ptr : _potentials) {
+        pot_ptr->add_hessian(x, hessian);
+        }
+    }
 };
 
 /**
