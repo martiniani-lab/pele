@@ -243,7 +243,7 @@ protected :
     //     func = potential_->get_energy_gradient(x, gradient);
     // }
 
-    void compute_func_gradient(Array<double> x, double & func,
+    virtual void compute_func_gradient(Array<double> x, double & func,
                                std::vector<xsum_small_accumulator> & gradient)
     {
         nfev_ += 1;
