@@ -141,14 +141,16 @@ public:
     } else {
       return CombinedPotential::get_energy_gradient_hessian(x, grad, hess);
     }
-    void get_hessian(Array<double> const &x, Array<double> &hess) {
-      if (use_extended_potential_) {
-        return _potentials.front()->get_hessian(x, hess);
-      } else {
-        return CombinedPotential::get_hessian(x, hess);
-      }
+  }
+
+  void get_hessian(Array<double> const &x, Array<double> &hess) {
+    if (use_extended_potential_) {
+      return _potentials.front()->get_hessian(x, hess);
+    } else {
+      return CombinedPotential::get_hessian(x, hess);
     }
   }
+
 }; // ExtendedPotential
 
 } // namespace pele
