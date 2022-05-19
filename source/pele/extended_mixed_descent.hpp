@@ -8,6 +8,7 @@
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
 #include "eigen_interface.hpp"
+#include "pele/combine_potentials.hpp"
 #include "pele/lbfgs.hpp"
 #include <Eigen/Dense>
 #include <Spectra/SymEigsSolver.h>
@@ -79,6 +80,11 @@ private:
   N_Vector x0_N;
   double rtol;
   double atol;
+  /**
+   * extension of the original potential that ensures the hessian is positive
+   * definite. This has a switch to switch on/off the extension.
+   */
+  std::shared_ptr<pele::ExtendedPotential> extended_potential;
 
   Array<double> xold; //!< Coordinates before taking a step
   Array<double> gold; //!< Gradient before taking a step
@@ -100,8 +106,7 @@ private:
   Eigen::MatrixXd hessian;
   Eigen::MatrixXd hessian_shifted;
 
-  // Calculates hessian for the potential pot + pot extended
-  Eigen::MatrixXd extended_potential_hessian;
+
 
   double *hess_shifted_data;
   bool usephase1;
@@ -116,10 +121,7 @@ private:
    */
   size_t n_phase_2_steps;
 
-  /**
-   * number of extended potential hessian evaluations
-   */
-  size_t nhev_extended;
+
   /**
    * tolerance for convexity. the smaller, the more convex the problem
    * needs to be before switching to newton
@@ -149,11 +151,6 @@ public:
   virtual ~ExtendedMixedOptimizer() {}
 
   /**
-   * extension of the original potential that ensures the hessian is positive
-   * definite
-   */
-  std::shared_ptr<pele::BasePotential> extended_potential;
-  /**
    * Do one iteration iteration of the optimization algorithm
    */
   void one_iteration();
@@ -178,9 +175,6 @@ private:
   bool convexity_check();
   bool minimum_less_than_zero;
   void get_hess(Eigen::MatrixXd &hess);
-
-  // Gets extended potential hessian
-  void get_hess_extended(Eigen::MatrixXd &hess);
 
   void update_H0_(Array<double> x_old, Array<double> &g_old,
                   Array<double> x_new, Array<double> &g_new);

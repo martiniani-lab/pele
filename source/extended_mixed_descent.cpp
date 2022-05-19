@@ -7,6 +7,7 @@
 #include "pele/lbfgs.hpp"
 #include "pele/lsparameters.hpp"
 #include "pele/optimizer.hpp"
+#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <complex>
 #include <iostream>
@@ -15,6 +16,7 @@
 #include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
 #include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h>
+#include <unistd.h>
 
 using namespace Spectra;
 
@@ -22,12 +24,13 @@ namespace pele {
 
 ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
-    std::shared_ptr<pele::BasePotential> extended_potential,
+    std::shared_ptr<pele::BasePotential> potential_extension,
     const pele::Array<double> x0, double tol, int T, double step,
     double conv_tol, double conv_factor, double rtol, double atol,
     bool iterative)
     : GradientOptimizer(potential, x0, tol),
-      extended_potential(extended_potential), cvode_mem(CVodeCreate(CV_BDF)),
+      extended_potential(std::make_shared<ExtendedPotential>(potential, potential_extension)),
+      cvode_mem(CVodeCreate(CV_BDF)),
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T), usephase1(true),
       conv_tol_(conv_tol), conv_factor_(conv_factor), n_phase_1_steps(0),
@@ -35,8 +38,9 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       hessian_shifted(x_.size(), x_.size()), line_search_method(this, step) {
 
   // assume previous phase is phase 1
-  prev_phase_is_phase1 = true;
-
+  prev_phase_is_phase1 = true;  
+  set_potential(extended_potential); // because we can only create the extended potential
+  // after we instantiate the extended potential
   // set precision of printing
   // dummy t0
   double t0 = 0;
@@ -112,7 +116,7 @@ void ExtendedMixedOptimizer::one_iteration() {
     std::cout << " computing phase 1 step"
               << "\n";
 #endif
-
+    extended_potential->switch_on_extended_potential();
     compute_phase_1_step(step);
   } else {
 
@@ -125,7 +129,6 @@ void ExtendedMixedOptimizer::one_iteration() {
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
     double stepnorm = line_search_method.line_search(x_, step);
-    // switchtophase2 = true;
   }
 
   // should think of using line search method within the phase steps
@@ -208,19 +211,6 @@ void ExtendedMixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
   udata.nhev += 1;
 }
 
-void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
-  // Does not allocate memory for hessian just wraps around the data
-  Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
-
-  hessian_pele.assign(0);
-
-  potential_->add_hessian(
-      x_, hessian_pele); // preferably switch this to sparse Eigen
-  udata.nhev += 1;
-
-  extended_potential->add_hessian(x_, hessian_pele);
-  nhev_extended += 1;
-}
 
 
 /**
@@ -249,13 +239,14 @@ void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
 void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
-    // use a newton step
-  if (prev_phase_is_phase1 == true || hessian_calculated == false) {
-      // get extended hessian
-    get_hess_extended(hessian);
-  }
+  // use a newton step
+  // if (prev_phase_is_phase1 == true || hessian_calculated == false) {
+  //     // get extended hessian
+  //   get_hess_extended(hessian);
+  // }
+  get_hess(hessian);
 
-  hessian.diagonal().array() += conv_factor_ * conv_tol_ * 10;
+  // hessian.diagonal().array() += conv_factor_ * conv_tol_ * 10;
 
   Eigen::VectorXd r(step.size());
   Eigen::VectorXd q(step.size());
