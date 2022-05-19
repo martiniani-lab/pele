@@ -29,17 +29,18 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     double conv_tol, double conv_factor, double rtol, double atol,
     bool iterative)
     : GradientOptimizer(potential, x0, tol),
-      extended_potential(std::make_shared<ExtendedPotential>(potential, potential_extension)),
-      cvode_mem(CVodeCreate(CV_BDF)),
-      N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
-      xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T), usephase1(true),
-      conv_tol_(conv_tol), conv_factor_(conv_factor), n_phase_1_steps(0),
-      n_phase_2_steps(0), hessian(x_.size(), x_.size()),
+      extended_potential(
+          std::make_shared<ExtendedPotential>(potential, potential_extension)),
+      cvode_mem(CVodeCreate(CV_BDF)), N_size(x_.size()), t0(0), tN(100.0),
+      rtol(rtol), atol(atol), xold(x_.size()), gold(x_.size()), step(x_.size()),
+      T_(T), usephase1(true), conv_tol_(conv_tol), conv_factor_(conv_factor),
+      n_phase_1_steps(0), n_phase_2_steps(0), hessian(x_.size(), x_.size()),
       hessian_shifted(x_.size(), x_.size()), line_search_method(this, step) {
 
   // assume previous phase is phase 1
-  prev_phase_is_phase1 = true;  
-  set_potential(extended_potential); // because we can only create the extended potential
+  prev_phase_is_phase1 = true;
+  set_potential(
+      extended_potential); // because we can only create the extended potential
   // after we instantiate the extended potential
   // set precision of printing
   // dummy t0
@@ -116,10 +117,10 @@ void ExtendedMixedOptimizer::one_iteration() {
     std::cout << " computing phase 1 step"
               << "\n";
 #endif
-    extended_potential->switch_on_extended_potential();
     compute_phase_1_step(step);
   } else {
-
+    extended_potential->switch_on_extended_potential();
+    std::cout << "switched on extended potential" << std::endl;
 #if OPTIMIZER_DEBUG_LEVEL >= 3
     std::cout << " computing phase 2 step"
               << "\n";
@@ -210,8 +211,6 @@ void ExtendedMixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
       x_, hessian_pele); // preferably switch this to sparse Eigen
   udata.nhev += 1;
 }
-
-
 
 /**
  * Phase 1 The problem does not look convex, Try solving using with sundials

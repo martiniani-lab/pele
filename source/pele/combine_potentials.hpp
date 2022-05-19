@@ -74,17 +74,15 @@ public:
     }
     return energy;
   }
-  virtual void get_hessian(
-        Array<double> const &x,
-        Array<double> &hessian) {
-        if (hessian.size() != x.size() * x.size()) {
-        throw std::invalid_argument("the Hessian has the wrong size");
-        }
-        hessian.assign(0.);
-        for (auto &pot_ptr : _potentials) {
-        pot_ptr->add_hessian(x, hessian);
-        }
+  virtual void get_hessian(Array<double> const &x, Array<double> &hessian) {
+    if (hessian.size() != x.size() * x.size()) {
+      throw std::invalid_argument("the Hessian has the wrong size");
     }
+    hessian.assign(0.);
+    for (auto &pot_ptr : _potentials) {
+      pot_ptr->add_hessian(x, hessian);
+    }
+  }
 };
 
 /**
@@ -119,14 +117,9 @@ public:
     use_extended_potential_ = false;
   };
 
+  void switch_on_extended_potential() { use_extended_potential_ = true; }
 
-  void switch_on_extended_potential() {
-    use_extended_potential_ = true;
-  }
-
-  void switch_off_extended_potential() {
-    use_extended_potential_ = false;
-  }
+  void switch_off_extended_potential() { use_extended_potential_ = false; }
 
   /**
    * @brief get whether the extended potential is being used
@@ -144,8 +137,8 @@ public:
     if (!use_extended_potential_) {
       return _potentials.front()->get_energy(x);
     } else {
-      return CombinedPotential::get_energy(x);
       neev_extension += 1;
+      return CombinedPotential::get_energy(x);
     }
   }
 
@@ -153,8 +146,8 @@ public:
     if (!use_extended_potential_) {
       return _potentials.front()->get_energy_gradient(x, grad);
     } else {
-      return CombinedPotential::get_energy_gradient(x, grad);
       nfev_extension += 1;
+      return CombinedPotential::get_energy_gradient(x, grad);
     }
   }
 
@@ -163,8 +156,8 @@ public:
     if (!use_extended_potential_) {
       return _potentials.front()->get_energy_gradient_hessian(x, grad, hess);
     } else {
-      return CombinedPotential::get_energy_gradient_hessian(x, grad, hess);
       nhev_extension += 1;
+      return CombinedPotential::get_energy_gradient_hessian(x, grad, hess);
     }
   }
 
@@ -172,8 +165,8 @@ public:
     if (!use_extended_potential_) {
       return _potentials.front()->get_hessian(x, hess);
     } else {
+      nhev_extension += 1;
       return CombinedPotential::get_hessian(x, hess);
-      nhev_extension +=1; 
     }
   }
 
