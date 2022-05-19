@@ -123,6 +123,11 @@ public:
   }
 
   /**
+   * @brief get whether the extended potential is being used
+   */
+  bool get_use_extended_potential() { return use_extended_potential_; }
+
+  /**
    * @brief get the energy of the extended potential
    * @details If the extended potential is switched on, the energy of the
    * extended potential is returned.
