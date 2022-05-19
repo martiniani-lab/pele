@@ -226,7 +226,8 @@ void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
  */
 void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
   /* advance solver just one internal step */
-  Array<double> xold = x_;
+  xold = x_;
+  
   // use this variable to compute differences and add to nhev later
   double udatadiff = udata.nfev;
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);

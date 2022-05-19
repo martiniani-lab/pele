@@ -26,7 +26,11 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
   Scalar f = opt_->get_f();
   // start with the initial stepsize
 
+  step_moving_to_min_ = false;
   LSFunc(f, xvec, gradvec, stpsize, step_direction, xoldvec, params);
+  if (!step_moving_to_min_) {
+    return 0; // Line search will not work
+  }
   pele_eq_eig(x, xvec);
   pele_eq_eig(g_, gradvec);
   pele_eq_eig(step, step_direction);
