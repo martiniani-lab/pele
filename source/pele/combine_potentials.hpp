@@ -115,11 +115,13 @@ public:
     use_extended_potential_ = false;
   };
 
-  /**
-   * @brief switch on/off the use of the extended potential
-   */
-  void switch_extended_potential() {
-    use_extended_potential_ = !use_extended_potential_;
+
+  void switch_on_extended_potential() {
+    use_extended_potential_ = true;
+  }
+
+  void switch_off_extended_potential() {
+    use_extended_potential_ = false;
   }
 
   /**
