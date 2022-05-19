@@ -78,12 +78,12 @@ void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
   const Scalar dg_init = grad.dot(drt);
   cout << dg_init << endl;
 #if OPTIMIZER_DEBUG_LEVEL >= 3
-  std::cout << dg_init << " dginit must be less than 0 \n";
+  std::cout << dg_init << "dginit must be less than 0 \n";
 #endif
   // Make sure d points to a descent direction
   if (dg_init > 0) {
-    throw std::logic_error(
-        "the moving direction increases the objective function value");
+    step_moving_to_min_ = false; // step points away from minimum
+    return;
   }
   const Scalar test_decr = param.ftol * dg_init;
   Scalar width;
@@ -107,7 +107,7 @@ void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
       width = dec;
     } else {
       // Armijo condition is met
-
+      step_moving_to_min_ = true;
       break;
     }
 

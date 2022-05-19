@@ -106,9 +106,7 @@ private:
   Eigen::MatrixXd hessian;
   Eigen::MatrixXd hessian_shifted;
 
-
-
-  double *hess_shifted_data;
+  double *hess_data;
   bool usephase1;
   // what phase was used in previous step
   bool prev_phase_is_phase1;
@@ -120,7 +118,6 @@ private:
    * number of phase 2 steps
    */
   size_t n_phase_2_steps;
-
 
   /**
    * tolerance for convexity. the smaller, the more convex the problem
@@ -139,12 +136,12 @@ public:
   /**
    * Constructor
    */
-  ExtendedMixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
-                 std::shared_ptr<pele::BasePotential> potential_extension,
-                 const pele::Array<double> x0, double tol = 1e-4, int T = 1,
-                 double step = 1, double conv_tol = 1e-8,
-                 double conv_factor = 2, double rtol = 1e-5, double atol = 1e-5,
-                 bool iterative = false);
+  ExtendedMixedOptimizer(
+      std::shared_ptr<pele::BasePotential> potential,
+      std::shared_ptr<pele::BasePotential> potential_extension,
+      const pele::Array<double> x0, double tol = 1e-4, int T = 10,
+      double step = 1, double conv_tol = 1e-8, double conv_factor = 2,
+      double rtol = 1e-5, double atol = 1e-5, bool iterative = false);
   /**
    * Destructor
    */
@@ -162,7 +159,9 @@ public:
    */
   virtual void reset(pele::Array<double> &x0);
   inline int get_nhev() const { return udata.nhev; }
-  inline int get_nhev_extended() const { return extended_potential->get_nhev_extension(); }
+  inline int get_nhev_extended() const {
+    return extended_potential->get_nhev_extension();
+  }
   inline int get_n_phase_1_steps() { return n_phase_1_steps; }
   inline int get_n_phase_2_steps() { return n_phase_2_steps; }
 
@@ -175,6 +174,7 @@ private:
   bool convexity_check();
   bool minimum_less_than_zero;
   void get_hess(Eigen::MatrixXd &hess);
+  void get_hess_extended(Eigen::MatrixXd &hess);
 
   void update_H0_(Array<double> x_old, Array<double> &g_old,
                   Array<double> x_new, Array<double> &g_new);

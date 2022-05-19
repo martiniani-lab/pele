@@ -212,6 +212,15 @@ void ExtendedMixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
   udata.nhev += 1;
 }
 
+void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
+  // Does not allocate memory for hessian just wraps around the data
+  Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
+  extended_potential->get_hessian_extended(
+      x_, hessian_pele); // preferably switch this to sparse Eigen
+  udata.nhev += 1;
+}
+
+
 /**
  * Phase 1 The problem does not look convex, Try solving using with sundials
  */
