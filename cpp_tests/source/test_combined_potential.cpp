@@ -165,7 +165,7 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
   ASSERT_EQ(energy, energy_a);
 
   // check with potential extension switched on
-  pot->switch_extended_potential();
+  pot->switch_on_extended_potential();
   energy = pot->get_energy(x);
   double energy_b = pot_b->get_energy(x);
   ASSERT_EQ(energy, energy_a + energy_b);
@@ -180,7 +180,7 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
   pele::Array<double> hess_b(n_dof * n_dof);
 
   // switch off extended potential
-  pot->switch_extended_potential();
+  pot->switch_off_extended_potential();
   pot->get_energy_gradient(x, grad);
 
 
@@ -190,7 +190,8 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
     ASSERT_NEAR(grad[i], grad_a[i], 1e-9);
   }
 
-  pot->switch_extended_potential();
+  pot->switch_on_extended_potential();
+  pot->get_energy_gradient(x, grad);
   pot_b->get_energy_gradient(x, grad_b);
 
   for (size_t i = 0; i < n_dof; i++) {
@@ -198,7 +199,7 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
   }
 
   // switch off extended potential
-  pot->switch_extended_potential();
+  pot->switch_off_extended_potential();
   pot->get_energy_gradient_hessian(x, grad, hess);
 
   pot_a->get_energy_gradient_hessian(x, grad_a, hess_a);
@@ -208,7 +209,7 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
   }
 
   // switch off extended potential
-  pot->switch_extended_potential();
+  pot->switch_on_extended_potential();
   pot->get_energy_gradient_hessian(x, grad, hess);
   
   pot_b->get_energy_gradient_hessian(x, grad_b, hess_b);
@@ -218,7 +219,7 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
   }
 
   // switch on extended potential
-  pot->switch_extended_potential();
+  pot->switch_off_extended_potential();
   pot->get_hessian(x, hess);
 
   pot_a->get_hessian(x, hess_a);
@@ -227,7 +228,7 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
     ASSERT_NEAR(hess[i], hess_a[i], 1e-9);
   }
 
-  pot->switch_extended_potential();
+  pot->switch_on_extended_potential();
   pot->get_hessian(x, hess);
   pot_b->get_hessian(x, hess_b);
 
