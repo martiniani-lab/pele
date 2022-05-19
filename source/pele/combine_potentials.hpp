@@ -1,6 +1,7 @@
 #ifndef _PELE_COMBINE_POTENTIALS_H_
 #define _PELE_COMBINE_POTENTIALS_H_
 #include "base_potential.hpp"
+#include <cstddef>
 #include <list>
 #include <memory>
 
@@ -99,6 +100,9 @@ class ExtendedPotential : public CombinedPotential {
 
 private:
   bool use_extended_potential_;
+  size_t nhev_extension;
+  size_t nfev_extension;
+  size_t neev_extension;
 
 public:
   /**
@@ -141,6 +145,7 @@ public:
       return _potentials.front()->get_energy(x);
     } else {
       return CombinedPotential::get_energy(x);
+      neev_extension += 1;
     }
   }
 
@@ -149,6 +154,7 @@ public:
       return _potentials.front()->get_energy_gradient(x, grad);
     } else {
       return CombinedPotential::get_energy_gradient(x, grad);
+      nfev_extension += 1;
     }
   }
 
@@ -158,6 +164,7 @@ public:
       return _potentials.front()->get_energy_gradient_hessian(x, grad, hess);
     } else {
       return CombinedPotential::get_energy_gradient_hessian(x, grad, hess);
+      nhev_extension += 1;
     }
   }
 
@@ -166,9 +173,13 @@ public:
       return _potentials.front()->get_hessian(x, hess);
     } else {
       return CombinedPotential::get_hessian(x, hess);
+      nhev_extension +=1; 
     }
   }
 
+  size_t get_nfev_extension() { return nfev_extension; }
+  size_t get_neev_extension() { return neev_extension; }
+  size_t get_nhev_extension() { return nhev_extension; }
 }; // ExtendedPotential
 
 } // namespace pele

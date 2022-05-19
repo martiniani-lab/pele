@@ -162,7 +162,7 @@ public:
    */
   virtual void reset(pele::Array<double> &x0);
   inline int get_nhev() const { return udata.nhev; }
-  inline int get_nhev_extended() const { return nhev_extended; }
+  inline int get_nhev_extended() const { return extended_potential->get_nhev_extension(); }
   inline int get_n_phase_1_steps() { return n_phase_1_steps; }
   inline int get_n_phase_2_steps() { return n_phase_2_steps; }
 
