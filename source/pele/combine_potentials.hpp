@@ -130,7 +130,7 @@ public:
    * @return double The energy
    */
   double get_energy(Array<double> const &x) {
-    if (use_extended_potential_) {
+    if (!use_extended_potential_) {
       return _potentials.front()->get_energy(x);
     } else {
       return CombinedPotential::get_energy(x);
@@ -138,7 +138,7 @@ public:
   }
 
   double get_energy_gradient(Array<double> const &x, Array<double> &grad) {
-    if (use_extended_potential_) {
+    if (!use_extended_potential_) {
       return _potentials.front()->get_energy_gradient(x, grad);
     } else {
       return CombinedPotential::get_energy_gradient(x, grad);
@@ -147,7 +147,7 @@ public:
 
   double get_energy_gradient_hessian(Array<double> const &x,
                                      Array<double> &grad, Array<double> &hess) {
-    if (use_extended_potential_) {
+    if (!use_extended_potential_) {
       return _potentials.front()->get_energy_gradient_hessian(x, grad, hess);
     } else {
       return CombinedPotential::get_energy_gradient_hessian(x, grad, hess);
@@ -155,7 +155,7 @@ public:
   }
 
   void get_hessian(Array<double> const &x, Array<double> &hess) {
-    if (use_extended_potential_) {
+    if (!use_extended_potential_) {
       return _potentials.front()->get_hessian(x, hess);
     } else {
       return CombinedPotential::get_hessian(x, hess);
