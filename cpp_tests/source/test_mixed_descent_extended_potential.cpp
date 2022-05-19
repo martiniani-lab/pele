@@ -3,7 +3,7 @@
 #include "pele/cell_lists.hpp"
 #include "pele/utils.hpp"
 // optimizer imports
-#include "pele/mxopt.hpp"
+#include "pele/extended_mixed_descent.hpp"
 
 // potential imports
 #include "pele/inversepower.hpp"
@@ -21,7 +21,7 @@ using pele::Array;
 using std::cout;
 
 // Test for whether the switch works for mixed descent
-TEST(MXD, TEST_256_RUN) {
+TEST(EXTENDED_MXD, TEST_256_RUN) {
   static const size_t _ndim = 2;
   size_t n_particles;
   size_t n_dof;
@@ -39,7 +39,7 @@ TEST(MXD, TEST_256_RUN) {
   eps = 1.0;
   power = 2.5;
 
-  n_particles = 256;
+  n_particles = 8;
   n_dof = n_particles * _ndim;
   phi = 0.9;
 
@@ -76,10 +76,17 @@ TEST(MXD, TEST_256_RUN) {
   std::shared_ptr<pele::InversePowerPeriodic<_ndim> > pot =
   std::make_shared<pele::InversePowerPeriodic<_ndim> >(power, eps, radii, boxvec);
 
-  pele::MixedOptimizer optimizer(pot, x, 1e-4, 10);
+  std::shared_ptr<pele::InversePowerPeriodic<_ndim>> extension_potential =
+      std::make_shared<pele::InversePowerPeriodic<_ndim>>(power, eps*1e-6, radii*2, boxvec);
+
+  // std::shared_ptr<pele::InversePowerPeriodic<_ndim>> extension_potential
+
+  pele::ExtendedMixedOptimizer optimizer(pot, extension_potential, x, 1e-9, 10);
   optimizer.run(500);
   std::cout << optimizer.get_nfev() << "nfev \n";
   std::cout << optimizer.get_nhev() << "nhev \n";
+  std::cout << optimizer.get_nhev_extended() << "nhev_extended \n";
+  std::cout << optimizer.get_n_phase_2_steps() << "phase 2 steps" << "\n";
   std::cout << optimizer.get_rms() << "rms \n";
   std::cout << optimizer.get_niter() << "rms \n";
 }
