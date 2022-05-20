@@ -108,6 +108,8 @@ private:
 
   double *hess_data;
   bool usephase1;
+  bool phase_2_failed_; // if true, we've failed in phase 2 and need to revert
+                       // back to where we were in phase 1
   // what phase was used in previous step
   bool prev_phase_is_phase1;
   /**

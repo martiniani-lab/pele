@@ -33,9 +33,10 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
           std::make_shared<ExtendedPotential>(potential, potential_extension)),
       cvode_mem(CVodeCreate(CV_BDF)), N_size(x_.size()), t0(0), tN(100.0),
       rtol(rtol), atol(atol), xold(x_.size()), gold(x_.size()), step(x_.size()),
-      T_(T), usephase1(true), conv_tol_(conv_tol), conv_factor_(conv_factor),
-      n_phase_1_steps(0), n_phase_2_steps(0), hessian(x_.size(), x_.size()),
-      hessian_shifted(x_.size(), x_.size()), line_search_method(this, step) {
+      x_phase_1(x_.size()), T_(T), usephase1(true), conv_tol_(conv_tol),
+      conv_factor_(conv_factor), n_phase_1_steps(0), n_phase_2_steps(0),
+      hessian(x_.size(), x_.size()), hessian_shifted(x_.size(), x_.size()),
+      line_search_method(this, step) {
 
   // assume previous phase is phase 1
   prev_phase_is_phase1 = true;

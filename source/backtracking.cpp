@@ -26,9 +26,9 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
   Scalar f = opt_->get_f();
   // start with the initial stepsize
 
-  step_moving_to_min_ = false;
+  step_moving_to_away_from_min = false; // only true when step is opposite to gradient
   LSFunc(f, xvec, gradvec, stpsize, step_direction, xoldvec, params);
-  if (!step_moving_to_min_) {
+  if (step_moving_to_away_from_min) {
     return 0; // Line search will not work
   }
   pele_eq_eig(x, xvec);
@@ -86,7 +86,7 @@ void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
 #endif
   // Make sure d points to a descent direction
   if (dg_init > 0) {
-    step_moving_to_min_ = false; // step points away from minimum
+    step_moving_to_away_from_min = true; // step points away from minimum
     return;
   }
   const Scalar test_decr = param.ftol * dg_init;
@@ -110,8 +110,6 @@ void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
     if (fx > fx_init + step * test_decr) {
       width = dec;
     } else {
-      // Armijo condition is met
-      step_moving_to_min_ = true;
       break;
     }
 
