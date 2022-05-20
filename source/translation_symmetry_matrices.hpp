@@ -82,5 +82,28 @@ void generate_3d_symmetries(size_t n_particles, Eigen::MatrixXd &projector_x,
   }
 }
 
+std::vector<Eigen::MatrixXd> get_symmetries(size_t n_particles, size_t n_d) {
+  std::vector<Eigen::MatrixXd> symmetries;
+  if (n_d == 2) {
+    Eigen::MatrixXd projector_x, projector_y;
+    projector_x = Eigen::MatrixXd::Zero(2 * n_particles, 2 * n_particles);
+    projector_y = Eigen::MatrixXd::Zero(2 * n_particles, 2 * n_particles);
+    generate_2d_symmetries(n_particles, projector_x, projector_y);
+    symmetries.push_back(projector_x);
+    symmetries.push_back(projector_y);
+  } else if (n_d == 3) {
+    Eigen::MatrixXd projector_x, projector_y, projector_z;
+    projector_x = Eigen::MatrixXd::Zero(2 * n_particles, 2 * n_particles);
+    projector_y = Eigen::MatrixXd::Zero(2 * n_particles, 2 * n_particles);
+    generate_3d_symmetries(n_particles, projector_x, projector_y, projector_z);
+    symmetries.push_back(projector_x);
+    symmetries.push_back(projector_y);
+    symmetries.push_back(projector_z);
+  } else {
+    throw std::logic_error("n_d must be 2 or 3");
+  }
+  return symmetries;
+}
+
 }
 #endif // TRANSLATION_SYMMETRY_MATRICES_HPP
