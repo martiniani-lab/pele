@@ -297,13 +297,20 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
  * @param  offset the offset to be added
  */
 void ExtendedMixedOptimizer::add_translation_offset_2d(Eigen::MatrixXd & hessian, double offset) {
+
+  // factor so that the added translation operators are unitary
+  double factor = 2.0 /hessian.rows() ;
+  offset  = offset * factor;
+
   for (size_t i = 0; i < hessian.rows(); ++i) {
-    for (size_t j = i; j < hessian.cols(); ++j) {
+    for (size_t j = i+1; j < hessian.cols(); ++j) {
       if ((i %2 == 0  && j % 2 == 0) || (i % 2 == 1 && j % 2 == 1)) {
         hessian(i, j) += offset;
+        hessian(j, i) += offset;
       }
     }
   }
+  hessian.diagonal().array() += offset;
 }
 
 } // namespace pele
