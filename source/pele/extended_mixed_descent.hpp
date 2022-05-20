@@ -89,6 +89,12 @@ private:
   Array<double> xold; //!< Coordinates before taking a step
   Array<double> gold; //!< Gradient before taking a step
   Array<double> step; //!< Step size and direction
+
+  /**
+  * Coordinate for phase 1. Helps us revert back if newton fails.
+  */
+  Array<double> x_phase_1; //!< Coordinates for phase 1
+
   double
       inv_sqrt_size; //!< The inverse square root the the number of components
   // Preconditioning

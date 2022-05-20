@@ -13,6 +13,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
 #include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h>
@@ -104,7 +105,8 @@ void ExtendedMixedOptimizer::one_iteration() {
 
   // does a convexity check every T iterations
   // but always starts off in differential equation solver mode
-  if ((iter_number_ % T_ == 0 and iter_number_ > 0) or !usephase1) {
+  // also
+  if ((iter_number_ % T_ == 0 and iter_number_ > 0) and usephase1) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
     std::cout << "checking convexity"
               << "\n";
@@ -131,6 +133,17 @@ void ExtendedMixedOptimizer::one_iteration() {
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
     double stepnorm = line_search_method.line_search(x_, step);
+    // if step is going uphill, phase two has failed.
+    phase_2_failed_ = line_search_method.get_step_moving_away_from_min();
+    std::cout << "phase 2 failed " << phase_2_failed_ << std::endl;
+    if (phase_2_failed_) {
+      usephase1 = true;
+      x0_N = N_Vector_eq_pele(x_phase_1);
+      xold.assign(x_phase_1);
+#if OPTIMIZER_DEBUG_LEVEL >= 3
+      std::cout << "phase 2 failed, switching to phase 1" << std::endl;
+#endif // O
+    }
   }
 
   // should think of using line search method within the phase steps
@@ -175,12 +188,7 @@ out the result.
  */
 bool ExtendedMixedOptimizer::convexity_check() {
 
-  get_hess(hessian);
-
-  hessian_shifted = hessian;
-  // shift diagonal by conv tol
-
-  hessian_shifted.diagonal().array() += conv_tol_;
+  get_hess_extended(hessian);
 
   // check if the hessian is positive definite by doing a cholesky decomposition
   // and checking if it is successful
@@ -188,10 +196,16 @@ bool ExtendedMixedOptimizer::convexity_check() {
   // Eigen::ComputationInfo info = hessian_shifted.llt().info();
   // std::cout << info << " success info of cholesky decomposition \n";
 
-  hess_shifted_data = hessian_shifted.data();
+  hess_data = hessian.data();
+
+  std::cout << "hessian eigenvalues before dpotrf \n";
+
+  std::cout << hessian.eigenvalues() << "\n";
 
   int N_int = x_.size();
-  dpotrf_(&uplo, &N_int, hess_shifted_data, &N_int, &info);
+  dpotrf_(&uplo, &N_int, hess_data, &N_int, &info);
+
+  std::cout << "info of dpotrf " << info << "\n";
   if (info == 0) {
     // if it is positive definite, we can use the newton method to solve the
     // problem
