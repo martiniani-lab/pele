@@ -12,6 +12,7 @@
 #include "pele/lbfgs.hpp"
 #include <Eigen/Dense>
 #include <Spectra/SymEigsSolver.h>
+#include <array>
 #include <memory>
 
 // Lapack for cholesky
@@ -183,9 +184,12 @@ private:
   bool minimum_less_than_zero;
   void get_hess(Eigen::MatrixXd &hess);
   void get_hess_extended(Eigen::MatrixXd &hess);
+  double offset;
 
   void update_H0_(Array<double> x_old, Array<double> &g_old,
                   Array<double> x_new, Array<double> &g_new);
+
+  void add_translation_offset_2d(Eigen::MatrixXd & hessian, double offset);
   // Does normal LBFGS without preconditioning
   double hessnorm;
   double minimum;

@@ -10,6 +10,7 @@
 #include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <complex>
+#include <cstddef>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -48,7 +49,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   // dummy t0
   double t0 = 0;
   uplo = 'U';
-
+  // set the initial step size
   Array<double> x0copy = x0.copy();
   x0_N = N_Vector_eq_pele(x0copy);
   // initialization of everything CVODE needs
@@ -215,6 +216,9 @@ bool ExtendedMixedOptimizer::convexity_check() {
   }
 }
 
+
+
+
 /**
  * Gets the hessian. involves a dense hessian for now. #TODO replace with a
  * sparse hessian.
@@ -232,9 +236,9 @@ void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
   extended_potential->get_hessian_extended(
       x_, hessian_pele); // preferably switch this to sparse Eigen
+  std::cout << hessian.eigenvalues() << " eigenvalues of extended hessian \n";
   udata.nhev += 1;
 }
-
 
 /**
  * Phase 1 The problem does not look convex, Try solving using with sundials
@@ -242,9 +246,10 @@ void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
 void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
   /* advance solver just one internal step */
   xold = x_;
-  
+
   // use this variable to compute differences and add to nhev later
   double udatadiff = udata.nfev;
+
   int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
   udatadiff = udata.nfev - udatadiff;
   nfev_ += udatadiff;
@@ -285,4 +290,20 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
   n_phase_2_steps += 1;
   prev_phase_is_phase1 = false;
 }
+
+/**
+ * @brief  adds a translation offset to the hessian. This should take care of translational symmetries
+ * @param  hessian the hessian to be modified
+ * @param  offset the offset to be added
+ */
+void ExtendedMixedOptimizer::add_translation_offset_2d(Eigen::MatrixXd & hessian, double offset) {
+  for (size_t i = 0; i < hessian.rows(); ++i) {
+    for (size_t j = i; j < hessian.cols(); ++j) {
+      if ((i %2 == 0  && j % 2 == 0) || (i % 2 == 1 && j % 2 == 1)) {
+        hessian(i, j) += offset;
+      }
+    }
+  }
+}
+
 } // namespace pele
