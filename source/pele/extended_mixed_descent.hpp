@@ -94,7 +94,7 @@ private:
   /**
   * Coordinate for phase 1. Helps us revert back if newton fails.
   */
-  Array<double> x_phase_1; //!< Coordinates for phase 1
+  Array<double> xold_old; //!< Save for backtracking if newton fails. TODO: think of better name
 
   double
       inv_sqrt_size; //!< The inverse square root the the number of components
@@ -134,7 +134,7 @@ private:
    */
   double conv_tol_;
   /**
-   * -conv_factor*\lambda_min is addeed to the hessian to make it
+   * -conv_factor*\lambda_min is added to the hessian to make it
    * covex if it is not convex
    */
   double conv_factor_;

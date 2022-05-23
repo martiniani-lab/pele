@@ -35,7 +35,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
           std::make_shared<ExtendedPotential>(potential, potential_extension)),
       cvode_mem(CVodeCreate(CV_BDF)), N_size(x_.size()), t0(0), tN(100.0),
       rtol(rtol), atol(atol), xold(x_.size()), gold(x_.size()), step(x_.size()),
-      x_phase_1(x_.size()), T_(T), usephase1(true), conv_tol_(conv_tol),
+      xold_old(x_.size()), T_(T), usephase1(true), conv_tol_(conv_tol),
       conv_factor_(conv_factor), n_phase_1_steps(0), n_phase_2_steps(0),
       hessian(x_.size(), x_.size()), hessian_shifted(x_.size(), x_.size()),
       line_search_method(this, step) {
@@ -100,6 +100,9 @@ void ExtendedMixedOptimizer::one_iteration() {
   // declare that the hessian hasn't been calculated for this iteration
   hessian_calculated = false;
   // make a copy of the position and gradient
+  if (!usephase1) {
+    xold_old.assign(xold);
+  }
   xold.assign(x_);
   gold.assign(g_);
   // copy the gradient into step
@@ -138,9 +141,11 @@ void ExtendedMixedOptimizer::one_iteration() {
     phase_2_failed_ = line_search_method.get_step_moving_away_from_min();
     std::cout << "phase 2 failed " << phase_2_failed_ << std::endl;
     if (phase_2_failed_) {
-      usephase1 = true;
-      x0_N = N_Vector_eq_pele(x_phase_1);
-      xold.assign(x_phase_1);
+      // Implement backtracking with the previous step
+      // and try again
+      xold.assign(xold_old);
+      step /= 2.;
+      x_.assign(xold_old + step);
 #if OPTIMIZER_DEBUG_LEVEL >= 3
       std::cout << "phase 2 failed, switching to phase 1" << std::endl;
 #endif // O
@@ -196,12 +201,11 @@ bool ExtendedMixedOptimizer::convexity_check() {
 
   // Eigen::ComputationInfo info = hessian_shifted.llt().info();
   // std::cout << info << " success info of cholesky decomposition \n";
-
+  // add translation to ensure that the hessian is positive definite
+  add_translation_offset_2d(hessian, 1);
   hess_data = hessian.data();
 
-  std::cout << "hessian eigenvalues before dpotrf \n";
-
-  std::cout << hessian.eigenvalues() << "\n";
+  std::cout << "hessian eigenvalues" << hessian.eigenvalues() << std::endl;
 
   int N_int = x_.size();
   dpotrf_(&uplo, &N_int, hess_data, &N_int, &info);
@@ -215,9 +219,6 @@ bool ExtendedMixedOptimizer::convexity_check() {
     return false;
   }
 }
-
-
-
 
 /**
  * Gets the hessian. involves a dense hessian for now. #TODO replace with a
@@ -268,12 +269,8 @@ void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
 void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
-  // use a newton step
-  // if (prev_phase_is_phase1 == true || hessian_calculated == false) {
-  //     // get extended hessian
-  //   get_hess_extended(hessian);
-  // }
   get_hess(hessian);
+  add_translation_offset_2d(hessian, 1);
 
   // hessian.diagonal().array() += conv_factor_ * conv_tol_ * 10;
 
@@ -292,19 +289,21 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
 }
 
 /**
- * @brief  adds a translation offset to the hessian. This should take care of translational symmetries
+ * @brief  adds a translation offset to the hessian. This should take care of
+ * translational symmetries
  * @param  hessian the hessian to be modified
  * @param  offset the offset to be added
  */
-void ExtendedMixedOptimizer::add_translation_offset_2d(Eigen::MatrixXd & hessian, double offset) {
+void ExtendedMixedOptimizer::add_translation_offset_2d(Eigen::MatrixXd &hessian,
+                                                       double offset) {
 
   // factor so that the added translation operators are unitary
-  double factor = 2.0 /hessian.rows() ;
-  offset  = offset * factor;
+  double factor = 2.0 / hessian.rows();
+  offset = offset * factor;
 
   for (size_t i = 0; i < hessian.rows(); ++i) {
-    for (size_t j = i+1; j < hessian.cols(); ++j) {
-      if ((i %2 == 0  && j % 2 == 0) || (i % 2 == 1 && j % 2 == 1)) {
+    for (size_t j = i + 1; j < hessian.cols(); ++j) {
+      if ((i % 2 == 0 && j % 2 == 0) || (i % 2 == 1 && j % 2 == 1)) {
         hessian(i, j) += offset;
         hessian(j, i) += offset;
       }
