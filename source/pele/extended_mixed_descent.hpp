@@ -11,6 +11,7 @@
 #include "pele/combine_potentials.hpp"
 #include "pele/lbfgs.hpp"
 #include <Eigen/Dense>
+#include <Eigen/src/Core/Matrix.h>
 #include <Spectra/SymEigsSolver.h>
 #include <array>
 #include <memory>
@@ -96,8 +97,7 @@ private:
   */
   Array<double> xold_old; //!< Save for backtracking if newton fails. TODO: think of better name
 
-  double
-      inv_sqrt_size; //!< The inverse square root the the number of components
+  double inv_sqrt_size; //!< The inverse square root the the number of components
   // Preconditioning
   int T_; // number of steps after which the lowest eigenvalues are recalculated
           // in the first phase
@@ -181,19 +181,13 @@ private:
 
   void compute_phase_2_step(Array<double> step);
   bool convexity_check();
-  bool minimum_less_than_zero;
   void get_hess(Eigen::MatrixXd &hess);
   void get_hess_extended(Eigen::MatrixXd &hess);
-  double offset;
 
   void update_H0_(Array<double> x_old, Array<double> &g_old,
                   Array<double> x_new, Array<double> &g_new);
 
   void add_translation_offset_2d(Eigen::MatrixXd & hessian, double offset);
-  // Does normal LBFGS without preconditioning
-  double hessnorm;
-  double minimum;
-  double pf;
 };
 
 } // namespace pele
