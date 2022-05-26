@@ -33,7 +33,7 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
   }
   pele_eq_eig(x, xvec);
   pele_eq_eig(g_, gradvec);
-  pele_eq_eig(step, step_direction);
+  step = xold_ - x;
   opt_->set_f(f);
   opt_->set_rms(norm(g_) / sqrt(x.size()));
 #if OPTIMIZER_DEBUG_LEVEL >= 1
@@ -42,7 +42,7 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
   std::cout << stpsize * opt_->compute_pot_norm(step)
             << "absolute step size \n";
 #endif
-  return stpsize * norm(step);
+  return norm(step);
 };
 
 /**
