@@ -17,9 +17,9 @@
 #include <stdexcept>
 #include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
 #include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
-#include <sunnonlinsol/sunnonlinsol_newton.h>
+#include <sunnonlinsol/sunnonlinsol_newton.h> /* access to Newton SUNNonLinearSolver */
 #include <unistd.h>
-
+// whether to print trajectory to file
 using namespace Spectra;
 
 namespace pele {
@@ -37,7 +37,8 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       rtol(rtol), atol(atol), xold(x_.size()), gold(x_.size()), step(x_.size()),
       xold_old(x_.size()), T_(T), use_phase_1(true), conv_tol_(conv_tol),
       conv_factor_(conv_factor), n_phase_1_steps(0), n_phase_2_steps(0),
-      hessian(x_.size(), x_.size()), hessian_copy_for_cholesky(x_.size(), x_.size()),
+      hessian(x_.size(), x_.size()),
+      hessian_copy_for_cholesky(x_.size(), x_.size()),
       line_search_method(this, step) {
 
   // assume previous phase is phase 1
@@ -48,6 +49,9 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   // set precision of printing
   // dummy t0
   double t0 = 0;
+#if PRINT_TO_FILE == 1
+  trajectory_file.open("trajectory.txt");
+#endif
   uplo = 'U';
   // set the initial step size
   Array<double> x0copy = x0.copy();
@@ -105,6 +109,10 @@ void ExtendedMixedOptimizer::one_iteration() {
   }
   xold.assign(x_);
   gold.assign(g_);
+#if PRINT_TO_FILE == 1
+  // save to file
+  trajectory_file << x_;
+#endif
   // copy the gradient into step
 
   // does a convexity check every T iterations
@@ -149,6 +157,7 @@ void ExtendedMixedOptimizer::one_iteration() {
   } else {
     extended_potential->switch_on_extended_potential();
     std::cout << "switched on extended potential" << std::endl;
+
 #if OPTIMIZER_DEBUG_LEVEL >= 3
     std::cout << " computing phase 2 step"
               << "\n";
@@ -181,6 +190,8 @@ void ExtendedMixedOptimizer::one_iteration() {
 
   iter_number_ += 1;
 }
+
+
 
 /**
  * resets the minimizer for usage again
@@ -253,7 +264,6 @@ void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
   extended_potential->get_hessian_extended(
       x_, hessian_pele); // preferably switch this to sparse Eigen
-  std::cout << hessian.eigenvalues() << " eigenvalues of extended hessian \n";
   udata.nhev += 1;
 }
 
@@ -285,8 +295,13 @@ void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
 void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
-  get_hess(hessian);
-  add_translation_offset_2d(hessian, 1);
+
+  if (!prev_phase_is_phase1) {
+    convexity_check();
+  }
+
+  // hessian eigenvalues
+  std::cout << "hessian eigenvalues" << hessian.eigenvalues() << std::endl;
 
   // hessian.diagonal().array() += conv_factor_ * conv_tol_ * 10;
 
@@ -300,6 +315,7 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
   // TODO change this to banded
   q = -hessian.householderQr().solve(r);
   pele_eq_eig(step, q);
+  std::cout << "step before line search " << step << std::endl;
   n_phase_2_steps += 1;
   prev_phase_is_phase1 = false;
 }

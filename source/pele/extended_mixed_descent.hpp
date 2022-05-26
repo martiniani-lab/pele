@@ -14,6 +14,7 @@
 #include <Eigen/src/Core/Matrix.h>
 #include <Spectra/SymEigsSolver.h>
 #include <array>
+#include <fstream>
 #include <memory>
 
 // Lapack for cholesky
@@ -34,6 +35,8 @@ extern "C" {
 #include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
 #include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
 #include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
+
+#define PRINT_TO_FILE 1
 
 extern "C" {
 #include "xsum.h"
@@ -81,6 +84,10 @@ private:
   N_Vector x0_N;
   double rtol;
   double atol;
+  // instatiate if you want to print to file
+#if PRINT_TO_FILE == 1
+  std::ofstream trajectory_file;
+#endif
   /**
    * extension of the original potential that ensures the hessian is positive
    * definite. This has a switch to switch on/off the extension.
@@ -92,11 +99,13 @@ private:
   Array<double> step; //!< Step size and direction
 
   /**
-  * Coordinate for phase 1. Helps us revert back if newton fails.
-  */
-  Array<double> xold_old; //!< Save for backtracking if newton fails. TODO: think of better name
+   * Coordinate for phase 1. Helps us revert back if newton fails.
+   */
+  Array<double> xold_old; //!< Save for backtracking if newton fails. TODO:
+                          //!< think of better name
 
-  double inv_sqrt_size; //!< The inverse square root the the number of components
+  double
+      inv_sqrt_size; //!< The inverse square root the the number of components
   // Preconditioning
   int T_; // number of steps after which the lowest eigenvalues are recalculated
           // in the first phase
@@ -115,7 +124,7 @@ private:
   double *hess_data;
   bool use_phase_1;
   bool phase_2_failed_; // if true, we've failed in phase 2 and need to revert
-                       // back to where we were in phase 1
+                        // back to where we were in phase 1
   // what phase was used in previous step
   bool prev_phase_is_phase1;
   /**
@@ -153,7 +162,11 @@ public:
   /**
    * Destructor
    */
-  virtual ~ExtendedMixedOptimizer() {}
+  virtual ~ExtendedMixedOptimizer() {
+#if PRINT_TO_FILE == 1
+    trajectory_file.close();
+#endif
+  }
 
   /**
    * Do one iteration iteration of the optimization algorithm
@@ -186,7 +199,7 @@ private:
   void update_H0_(Array<double> x_old, Array<double> &g_old,
                   Array<double> x_new, Array<double> &g_new);
 
-  void add_translation_offset_2d(Eigen::MatrixXd & hessian, double offset);
+  void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset);
 };
 
 } // namespace pele
