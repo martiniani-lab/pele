@@ -46,7 +46,6 @@ namespace pele {
 //  */
 // typedef struct UserData_
 // {
-
 //     double rtol; /* integration tolerances */
 //     double atol;
 //     size_t nfev;                // number of gradient(function) evaluations
@@ -114,7 +113,7 @@ private:
   Eigen::MatrixXd hessian_copy_for_cholesky;
 
   double *hess_data;
-  bool usephase1;
+  bool use_phase_1;
   bool phase_2_failed_; // if true, we've failed in phase 2 and need to revert
                        // back to where we were in phase 1
   // what phase was used in previous step

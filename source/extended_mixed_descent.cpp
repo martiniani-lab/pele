@@ -35,9 +35,9 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
           std::make_shared<ExtendedPotential>(potential, potential_extension)),
       cvode_mem(CVodeCreate(CV_BDF)), N_size(x_.size()), t0(0), tN(100.0),
       rtol(rtol), atol(atol), xold(x_.size()), gold(x_.size()), step(x_.size()),
-      xold_old(x_.size()), T_(T), usephase1(true), conv_tol_(conv_tol),
+      xold_old(x_.size()), T_(T), use_phase_1(true), conv_tol_(conv_tol),
       conv_factor_(conv_factor), n_phase_1_steps(0), n_phase_2_steps(0),
-      hessian(x_.size(), x_.size()), hessian_shifted(x_.size(), x_.size()),
+      hessian(x_.size(), x_.size()), hessian_copy_for_cholesky(x_.size(), x_.size()),
       line_search_method(this, step) {
 
   // assume previous phase is phase 1
@@ -100,7 +100,7 @@ void ExtendedMixedOptimizer::one_iteration() {
   // declare that the hessian hasn't been calculated for this iteration
   hessian_calculated = false;
   // make a copy of the position and gradient
-  if (!usephase1) {
+  if (!use_phase_1) {
     xold_old.assign(xold);
   }
   xold.assign(x_);
@@ -109,17 +109,38 @@ void ExtendedMixedOptimizer::one_iteration() {
 
   // does a convexity check every T iterations
   // but always starts off in differential equation solver mode
-  // also
-  if ((iter_number_ % T_ == 0 and iter_number_ > 0) and usephase1) {
+  // also checks whether the gradient is zero
+  if ((iter_number_ % T_ == 0 and iter_number_ > 0) or !use_phase_1) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
     std::cout << "checking convexity"
               << "\n";
 #endif
     // check if landscape is convex
-    usephase1 = !convexity_check();
+    bool landscape_is_convex = convexity_check();
+    // If lanscape is convex and we're in phase 1, switch to phase 2
+    if (use_phase_1 && landscape_is_convex) {
+      use_phase_1 = false;
+    }
+    // If we're in phase 2 and the landscape is not convex, backtrack
+    // Line search hackily implemented. Put this in the main line search
+    if (!use_phase_1 && !landscape_is_convex) {
+      // xold_old -> old step
+      // xold -> new step
+      // xold_old - xold -> old - new
+      int ls_iter = 0;
+      while (!landscape_is_convex and ls_iter < 5) {
+        step *= 0.5;
+        x_.assign(xold_old + step);
+        landscape_is_convex = convexity_check();
+        ls_iter++;
+      }
+      if (ls_iter == 5) {
+        throw std::logic_error("Could not backtrack to a convex landscape");
+      }
+    }
     hessian_calculated = true;
   }
-  if (usephase1) {
+  if (use_phase_1) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
     std::cout << " computing phase 1 step"
               << "\n";
@@ -139,16 +160,8 @@ void ExtendedMixedOptimizer::one_iteration() {
     double stepnorm = line_search_method.line_search(x_, step);
     // if step is going uphill, phase two has failed.
     phase_2_failed_ = line_search_method.get_step_moving_away_from_min();
-    std::cout << "phase 2 failed " << phase_2_failed_ << std::endl;
     if (phase_2_failed_) {
-      // Implement backtracking with the previous step
-      // and try again
-      xold.assign(xold_old);
-      step /= 2.;
-      x_.assign(xold_old + step);
-#if OPTIMIZER_DEBUG_LEVEL >= 3
-      std::cout << "phase 2 failed, switching to phase 1" << std::endl;
-#endif // O
+      throw std::logic_error("step moving away from minimum");
     }
   }
 
@@ -203,9 +216,6 @@ bool ExtendedMixedOptimizer::convexity_check() {
   // std::cout << info << " success info of cholesky decomposition \n";
   // add translation to ensure that the hessian is positive definite
   add_translation_offset_2d(hessian, 1);
-  hess_data = hessian.data();
-
-  std::cout << "hessian eigenvalues" << hessian.eigenvalues() << std::endl;
 
   int N_int = x_.size();
   dpotrf_(&uplo, &N_int, hess_data, &N_int, &info);
