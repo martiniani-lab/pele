@@ -111,7 +111,7 @@ private:
 
   // Calculates hess + delta I where delta makes the new eigenvalue positive
   Eigen::MatrixXd hessian;
-  Eigen::MatrixXd hessian_shifted;
+  Eigen::MatrixXd hessian_copy_for_cholesky;
 
   double *hess_data;
   bool usephase1;
