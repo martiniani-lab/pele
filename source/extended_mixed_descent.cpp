@@ -218,7 +218,13 @@ bool ExtendedMixedOptimizer::convexity_check() {
   add_translation_offset_2d(hessian, 1);
 
   int N_int = x_.size();
-  dpotrf_(&uplo, &N_int, hess_data, &N_int, &info);
+  
+  hessian_copy_for_cholesky = hessian;
+
+  hess_data = hessian_copy_for_cholesky.data();
+
+  // 1 is strlen for uplo for new fortran compilers
+  dpotrf_(&uplo, &N_int, hess_data, &N_int, &info, 1);
 
   std::cout << "info of dpotrf " << info << "\n";
   if (info == 0) {
