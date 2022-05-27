@@ -3,7 +3,7 @@
 
 #include "array.hpp"
 #include "base_potential.hpp"
-#include "debug.hpp"
+#include "preprocessor_directives.hpp"
 
 
 // #define EIGEN_USE_MKL_ALL

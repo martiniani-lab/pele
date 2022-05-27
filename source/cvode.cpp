@@ -4,7 +4,7 @@
 #include "nvector/nvector_serial.h"
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
-#include "pele/debug.hpp"
+#include "pele/preprocessor_directives.hpp"
 #include "pele/optimizer.hpp"
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_nvector.h"
@@ -26,7 +26,9 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     bool iterative, bool use_newton_stop_criterion)
     : GradientOptimizer(potential, x0, tol),
       cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
-      N_size(x0.size()), hessian(x0.size(), x0.size()), t0(0), tN(10000000.0),
+      N_size(x0.size()), 
+      hessian(x0.size(), x0.size()),
+      t0(0), tN(10000000.0),
       use_newton_stop_criterion_(use_newton_stop_criterion) {
   // dummy t0
   double t0 = 0;

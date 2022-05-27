@@ -41,6 +41,7 @@ void LBFGS::one_iteration()
     // make a copy of the position and gradient
     xold.assign(x_);
     gold.assign(g_);
+    
 
     // get the stepsize and direction from the LBFGS algorithm
     compute_lbfgs_step(step);

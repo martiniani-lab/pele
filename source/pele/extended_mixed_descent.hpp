@@ -3,7 +3,7 @@
 
 #include "array.hpp"
 #include "base_potential.hpp"
-#include "debug.hpp"
+#include "preprocessor_directives.hpp"
 
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
@@ -104,8 +104,14 @@ private:
   Array<double> xold_old; //!< Save for backtracking if newton fails. TODO:
                           //!< think of better name
 
-  double
-      inv_sqrt_size; //!< The inverse square root the the number of components
+  /**
+   * @brief Last CVODE position to return to if newton fails.
+   */
+  Array<double> x_last_cvode;
+
+
+  double inv_sqrt_size; //!< The inverse square root the the number of
+                        //!< components
   // Preconditioning
   int T_; // number of steps after which the lowest eigenvalues are recalculated
           // in the first phase

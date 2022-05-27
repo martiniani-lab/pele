@@ -2,7 +2,7 @@
 #include "pele/mxopt.hpp"
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
-#include "pele/debug.hpp"
+#include "pele/preprocessor_directives.hpp"
 #include "pele/eigen_interface.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/lsparameters.hpp"
