@@ -64,7 +64,9 @@ MODIFIED_FIRE::MODIFIED_FIRE(std::shared_ptr<pele::BasePotential> potential,
       _fire_iter_number(0),
       _N(x_.size()),
       _stepback(stepback)
-{}
+{
+    trajectory_file.open("trajectory_modified_fire.txt");
+}
 
 /**
  * Overload initialize_func_gradient from parent class

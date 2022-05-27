@@ -1,247 +1,233 @@
 #include "pele/lbfgs.hpp"
 #include "pele/array.hpp"
 #include "pele/optimizer.hpp"
-#include <memory>
 #include <iostream>
 #include <limits>
+#include <memory>
 
 namespace pele {
 
-LBFGS::LBFGS( std::shared_ptr<pele::BasePotential> potential, const pele::Array<double> x0,
-              double tol, int M)
-    : GradientOptimizer(potential, x0, tol),
-      M_(M),
-      max_f_rise_(1e-4),
-      use_relative_f_(false),
-      rho_(M_),
-      H0_(0.1),
-      k_(0),
-      alpha(M_),
-      xold(x_.size()),
-      gold(x_.size()),
-      step(x_.size())
-{
-    // set precision of printing
-    std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
-    inv_sqrt_size = 1 / sqrt(x_.size());
-    // allocate space for s_ and y_
-    s_ = Array<double>(x_.size() * M_);
-    y_ = Array<double>(x_.size() * M_);
+LBFGS::LBFGS(std::shared_ptr<pele::BasePotential> potential,
+             const pele::Array<double> x0, double tol, int M)
+    : GradientOptimizer(potential, x0, tol), M_(M), max_f_rise_(1e-4),
+      use_relative_f_(false), rho_(M_), H0_(0.1), k_(0), alpha(M_),
+      xold(x_.size()), gold(x_.size()), step(x_.size()) {
+
+#if PRINT_TO_FILE == 1
+  trajectory_file.open("trajectory_lbfgs.txt");
+#endif
+  std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
+  inv_sqrt_size = 1 / sqrt(x_.size());
+  // allocate space for s_ and y_
+  s_ = Array<double>(x_.size() * M_);
+  y_ = Array<double>(x_.size() * M_);
 }
 
 /**
  * Do one iteration iteration of the optimization algorithm
  */
-void LBFGS::one_iteration()
-{
-    if (!func_initialized_) {
-        initialize_func_gradient();
-    }
+void LBFGS::one_iteration() {
+  if (!func_initialized_) {
+    initialize_func_gradient();
+  }
 
-    // make a copy of the position and gradient
-    xold.assign(x_);
-    gold.assign(g_);
-    
+  // make a copy of the position and gradient
+  xold.assign(x_);
+  gold.assign(g_);
 
-    // get the stepsize and direction from the LBFGS algorithm
-    compute_lbfgs_step(step);
+  // get the stepsize and direction from the LBFGS algorithm
+  compute_lbfgs_step(step);
 
-    // reduce the stepsize if necessary
-    double stepnorm = backtracking_linesearch(step);
+  // reduce the stepsize if necessary
+  double stepnorm = backtracking_linesearch(step);
 
-    // update the LBFGS memeory
-    update_memory(xold, gold, x_, g_);
+  // update the LBFGS memeory
+  update_memory(xold, gold, x_, g_);
 
-    // print some status information
-    if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)){
-        std::cout << "lbgs: " << iter_number_
-                  << " E " << f_
-                  << " rms " << rms_
-                  << " nfev " << nfev_
-                  << " step norm " << stepnorm << std::endl;
-    }
-    iter_number_ += 1;
+  // print some status information
+  if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {
+    std::cout << "lbgs: " << iter_number_ << " E " << f_ << " rms " << rms_
+              << " nfev " << nfev_ << " step norm " << stepnorm << std::endl;
+  }
+  iter_number_ += 1;
+#if PRINT_TO_FILE == 1
+  trajectory_file << x_;
+#endif
 }
 
+void LBFGS::update_memory(Array<double> x_old, Array<double> g_old,
+                          Array<double> x_new, Array<double> g_new) {
+  // update the lbfgs memory
+  // This updates s_, y_, rho_, and H0_, and k_
+  int klocal = k_ % M_;
+  double ys = 0;
+  double yy = 0;
+#pragma simd reduction(+ : ys, yy)
+  for (size_t j2 = 0; j2 < x_.size(); ++j2) {
+    size_t ind_j2 = klocal * x_.size() + j2;
+    y_[ind_j2] = g_new[j2] - g_old[j2];
+    s_[ind_j2] = x_new[j2] - x_old[j2];
+    ys += y_[ind_j2] * s_[ind_j2];
+    yy += y_[ind_j2] * y_[ind_j2];
+  }
 
-void LBFGS::update_memory(
-                          Array<double> x_old,
-                          Array<double> g_old,
-                          Array<double> x_new,
-                          Array<double> g_new)
-{
-    // update the lbfgs memory
-    // This updates s_, y_, rho_, and H0_, and k_
-    int klocal = k_ % M_;
-    double ys = 0;
-    double yy = 0;
-#pragma simd reduction( + : ys, yy)
-    for (size_t j2 = 0; j2 < x_.size(); ++j2){
-        size_t ind_j2 = klocal * x_.size() + j2;
-        y_[ind_j2] = g_new[j2] - g_old[j2];
-        s_[ind_j2] = x_new[j2] - x_old[j2];
-        ys += y_[ind_j2] * s_[ind_j2];
-        yy += y_[ind_j2] * y_[ind_j2];
+  if (ys == 0.) {
+    if (verbosity_ > 0) {
+      std::cout << "warning: resetting YS to 1." << std::endl;
     }
+    ys = 1.;
+  }
 
-    if (ys == 0.) {
-        if (verbosity_ > 0) {
-            std::cout << "warning: resetting YS to 1." << std::endl;
-        }
-        ys = 1.;
+  rho_[klocal] = 1. / ys;
+
+  if (yy == 0.) {
+    if (verbosity_ > 0) {
+      std::cout << "warning: resetting YY to 1." << std::endl;
     }
+    yy = 1.;
+  }
+  H0_ = ys / yy;
 
-    rho_[klocal] = 1. / ys;
-
-    if (yy == 0.) {
-        if (verbosity_ > 0) {
-            std::cout << "warning: resetting YY to 1." << std::endl;
-        }
-        yy = 1.;
-    }
-    H0_ = ys / yy;
-
-    // increment k
-    k_ += 1;
+  // increment k
+  k_ += 1;
 }
 
-void LBFGS::compute_lbfgs_step(Array<double> step)
-{
-    if (k_ == 0){
-        // take a conservative first step
-        double gnorm = norm(g_);
-        if (gnorm > 1.) {
-            gnorm = 1. / gnorm;
-        }
-        double prefactor =  -gnorm * H0_;
+void LBFGS::compute_lbfgs_step(Array<double> step) {
+  if (k_ == 0) {
+    // take a conservative first step
+    double gnorm = norm(g_);
+    if (gnorm > 1.) {
+      gnorm = 1. / gnorm;
+    }
+    double prefactor = -gnorm * H0_;
 #pragma simd
-        for (size_t j2 = 0; j2 < x_.size(); ++j2){
-            step[j2] = prefactor * g_[j2];
-        }
-        return;
+    for (size_t j2 = 0; j2 < x_.size(); ++j2) {
+      step[j2] = prefactor * g_[j2];
     }
+    return;
+  }
 
-    // copy the gradient into step
-    step.assign(g_);
+  // copy the gradient into step
+  step.assign(g_);
 
-    int jmin = std::max(0, k_ - M_);
-    int jmax = k_;
-    int i;
+  int jmin = std::max(0, k_ - M_);
+  int jmax = k_;
+  int i;
 
-    alpha.assign(0.0);
-    // loop backwards through the memory
-    for (int j = jmax - 1; j >= jmin; --j) {
-        i = j % M_;
-        double alpha_tmp = 0;
+  alpha.assign(0.0);
+  // loop backwards through the memory
+  for (int j = jmax - 1; j >= jmin; --j) {
+    i = j % M_;
+    double alpha_tmp = 0;
 #pragma simd reduction(+ : alpha_tmp)
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
-        }
-#pragma simd
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            step[j2] -= alpha_tmp * y_[i * step.size() + j2];
-        }
-        alpha[i] = alpha_tmp;
+    for (size_t j2 = 0; j2 < step.size(); ++j2) {
+      alpha_tmp += rho_[i] * s_[i * step.size() + j2] * step[j2];
     }
-
-    // scale the step size by H0, invert the step to point downhill
 #pragma simd
-    for (size_t j2 = 0; j2 < step.size(); ++j2){
-        step[j2] *= -H0_;
+    for (size_t j2 = 0; j2 < step.size(); ++j2) {
+      step[j2] -= alpha_tmp * y_[i * step.size() + j2];
     }
+    alpha[i] = alpha_tmp;
+  }
 
-    // loop forwards through the memory
-    for (int j = jmin; j < jmax; ++j) {
-        i = j % M_;
-        double beta = 0;
+  // scale the step size by H0, invert the step to point downhill
+#pragma simd
+  for (size_t j2 = 0; j2 < step.size(); ++j2) {
+    step[j2] *= -H0_;
+  }
+
+  // loop forwards through the memory
+  for (int j = jmin; j < jmax; ++j) {
+    i = j % M_;
+    double beta = 0;
 #pragma simd reduction(+ : beta)
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            beta -= rho_[i] * y_[i * step.size() + j2] * step[j2];  // -= due to inverted step
-        }
-        double alpha_beta = alpha[i] - beta;
+    for (size_t j2 = 0; j2 < step.size(); ++j2) {
+      beta -= rho_[i] * y_[i * step.size() + j2] *
+              step[j2]; // -= due to inverted step
+    }
+    double alpha_beta = alpha[i] - beta;
 #pragma simd
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            step[j2] -= s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
-        }
+    for (size_t j2 = 0; j2 < step.size(); ++j2) {
+      step[j2] -=
+          s_[i * step.size() + j2] * alpha_beta; // -= due to inverted step
     }
+  }
 }
 
-double LBFGS::backtracking_linesearch(Array<double> step)
-{
-    double fnew;
+double LBFGS::backtracking_linesearch(Array<double> step) {
+  double fnew;
 
-    // if the step is pointing uphill, invert it
-    if (dot(step, g_) > 0.){
-        if (verbosity_ > 1) {
-            std::cout << "warning: step direction was uphill.  inverting" << std::endl;
-        }
+  // if the step is pointing uphill, invert it
+  if (dot(step, g_) > 0.) {
+    if (verbosity_ > 1) {
+      std::cout << "warning: step direction was uphill.  inverting"
+                << std::endl;
+    }
 #pragma simd
-        for (size_t j2 = 0; j2 < step.size(); ++j2){
-            step[j2] *= -1;
-        }
+    for (size_t j2 = 0; j2 < step.size(); ++j2) {
+      step[j2] *= -1;
     }
+  }
 
-    double factor = 1.;
-    double stepnorm = compute_pot_norm(step);
+  double factor = 1.;
+  double stepnorm = compute_pot_norm(step);
 
-    // make sure the step is no larger than maxstep_
-    if (factor * stepnorm > maxstep_) {
-        factor = maxstep_ / stepnorm;
-    }
+  // make sure the step is no larger than maxstep_
+  if (factor * stepnorm > maxstep_) {
+    factor = maxstep_ / stepnorm;
+  }
 
-    int nred;
-    int nred_max = 10;
-    for (nred = 0; nred < nred_max; ++nred){
+  int nred;
+  int nred_max = 10;
+  for (nred = 0; nred < nred_max; ++nred) {
 #pragma simd
-        for (size_t j2 = 0; j2 < x_.size(); ++j2){
-            x_[j2] = xold[j2] + factor * step[j2];
-        }
-        compute_func_gradient(x_, fnew, g_);
-
-        double df = fnew - f_;
-        if (use_relative_f_) {
-            double absf = 1e-100;
-            if (f_ != 0) {
-                absf = std::abs(f_);
-            }
-            df /= absf;
-        }
-        if (df < max_f_rise_){
-            break;
-        } else {
-            factor *= 0.5;
-            if (verbosity_ > 2) {
-                std::cout
-                    << "energy increased by " << df
-                    << " to " << fnew
-                    << " from " << f_
-                    << " reducing step norm to " << factor * stepnorm
-                    << " H0 " << H0_ << std::endl;
-            }
-        }
+    for (size_t j2 = 0; j2 < x_.size(); ++j2) {
+      x_[j2] = xold[j2] + factor * step[j2];
     }
+    compute_func_gradient(x_, fnew, g_);
 
-    if (nred >= nred_max){
-        // possibly raise an error here
-        if (verbosity_ > 0) {
-            std::cout << "warning: the line search backtracked too many times" << std::endl;
-        }
+    double df = fnew - f_;
+    if (use_relative_f_) {
+      double absf = 1e-100;
+      if (f_ != 0) {
+        absf = std::abs(f_);
+      }
+      df /= absf;
     }
+    if (df < max_f_rise_) {
+      break;
+    } else {
+      factor *= 0.5;
+      if (verbosity_ > 2) {
+        std::cout << "energy increased by " << df << " to " << fnew << " from "
+                  << f_ << " reducing step norm to " << factor * stepnorm
+                  << " H0 " << H0_ << std::endl;
+      }
+    }
+  }
 
-    f_ = fnew;
-    rms_ = norm(g_) * inv_sqrt_size;
-    return stepnorm * factor;
+  if (nred >= nred_max) {
+    // possibly raise an error here
+    if (verbosity_ > 0) {
+      std::cout << "warning: the line search backtracked too many times"
+                << std::endl;
+    }
+  }
+
+  f_ = fnew;
+  rms_ = norm(g_) * inv_sqrt_size;
+  return stepnorm * factor;
 }
 
-void LBFGS::reset(pele::Array<double> &x0)
-{
-    if (x0.size() != x_.size()){
-        throw std::invalid_argument("The number of degrees of freedom (x0.size()) cannot change when calling reset()");
-    }
-    k_ = 0;
-    iter_number_ = 0;
-    nfev_ = 0;
-    x_.assign(x0);
-    func_initialized_ = false;
+void LBFGS::reset(pele::Array<double> &x0) {
+  if (x0.size() != x_.size()) {
+    throw std::invalid_argument("The number of degrees of freedom (x0.size()) "
+                                "cannot change when calling reset()");
+  }
+  k_ = 0;
+  iter_number_ = 0;
+  nfev_ = 0;
+  x_.assign(x0);
+  func_initialized_ = false;
 }
-}
+} // namespace pele

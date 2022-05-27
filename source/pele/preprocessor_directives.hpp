@@ -15,4 +15,11 @@
 #define OPTIMIZER_DEBUG_LEVEL 4
 
 
+/**
+ * @brief Defines whether optimizer should print to file
+ * 
+ */
+#define PRINT_TO_FILE 1
+
+
 #endif PELE_FLAGS /* end debug flags */

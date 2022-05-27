@@ -3,6 +3,7 @@
 
 #include "array.hpp"
 #include "base_potential.hpp"
+#include "preprocessor_directives.hpp"
 #include "xsum.h"
 #include <algorithm>
 #include <iomanip>

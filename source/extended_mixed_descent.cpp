@@ -38,6 +38,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       xold_old(x_.size()), T_(T), use_phase_1(true), conv_tol_(conv_tol),
       conv_factor_(conv_factor), n_phase_1_steps(0), n_phase_2_steps(0),
       hessian(x_.size(), x_.size()),
+      x_last_cvode(x_.size()),
       hessian_copy_for_cholesky(x_.size(), x_.size()),
       line_search_method(this, step) {
 
@@ -140,11 +141,12 @@ void ExtendedMixedOptimizer::one_iteration() {
         step *= 0.5;
         x_.assign(xold_old + step);
         landscape_is_convex = convexity_check();
-        std::cout << "convex backtracking " << ls_iter << "\n";
+        std::cout << "convex backtracking -------" << ls_iter << "\n";
         ls_iter++;
       }
       if (ls_iter == 5) {  
         // Could not backtrack to a convex landscape, switch back to CVODE.
+        std::cout << "------------this is happening-------------------------------------" << std::endl;
         use_phase_1 = true;
         x_.assign(x_last_cvode);
       }

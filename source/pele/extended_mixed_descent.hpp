@@ -36,7 +36,6 @@ extern "C" {
 #include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
 #include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
 
-#define PRINT_TO_FILE 1
 
 extern "C" {
 #include "xsum.h"
@@ -119,7 +118,6 @@ private:
   // solver for H x = b
   Eigen::VectorXd
   update_solver(Eigen::VectorXd r); // updates the solver with the new hessian
-
   char uplo; /* We ask LAPACK for the lower diagonal matrix L */
   int info;  /* "Info" return value, used for error-checking */
 

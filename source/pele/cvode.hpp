@@ -43,6 +43,8 @@
 #include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
 #include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */    
 #include <sunlinsol/sunlinsol_spgmr.h>  /* access to SPGMR SUNLinearSolver */
+#include <iostream>
+#include <fstream>
 
 extern "C" {
 #include "xsum.h"
@@ -78,6 +80,9 @@ private:
     SUNLinearSolver LS;
     double t0;
     double tN;
+#if PRINT_TO_FILE == 1
+    std::ofstream trajectory_file;
+#endif
     N_Vector x0_N;
     Array<double> xold;
     bool stop_criterion_satisfied();
