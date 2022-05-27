@@ -2,7 +2,7 @@
 #include "pele/extended_mixed_descent.hpp"
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
-#include "pele/debug.hpp"
+#include "pele/preprocessor_directives.hpp"
 #include "pele/eigen_interface.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/lsparameters.hpp"
@@ -140,10 +140,13 @@ void ExtendedMixedOptimizer::one_iteration() {
         step *= 0.5;
         x_.assign(xold_old + step);
         landscape_is_convex = convexity_check();
+        std::cout << "convex backtracking " << ls_iter << "\n";
         ls_iter++;
       }
-      if (ls_iter == 5) {
-        throw std::logic_error("Could not backtrack to a convex landscape");
+      if (ls_iter == 5) {  
+        // Could not backtrack to a convex landscape, switch back to CVODE.
+        use_phase_1 = true;
+        x_.assign(x_last_cvode);
       }
     }
     hessian_calculated = true;

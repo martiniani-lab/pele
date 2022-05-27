@@ -14,7 +14,7 @@
 #include "base_potential.hpp"
 #include "array.hpp"
 #include "cvode/cvode_proj.h"
-#include "debug.hpp"
+
 
 
 

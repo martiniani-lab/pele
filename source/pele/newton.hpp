@@ -33,7 +33,6 @@ private:
   Array<uint8_t> _not_rattlers;
   bool _jammed;
   bool _rattlers_found;
-
 public:
   /**
    * @brief Newton method that ignores singular while calculating the inverse.
