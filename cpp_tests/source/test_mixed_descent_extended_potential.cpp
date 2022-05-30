@@ -55,6 +55,19 @@ TEST(EXTENDED_MXD, TEST_256_RUN) {
 
   double box_length = pele::get_box_length(radii, _ndim, phi);
 
+// required to plot trajectory
+#if PRINT_TO_FILE == 1
+  std::ofstream radii_file;
+  std::ofstream box_length_file;
+
+  radii_file.open("radii.txt");
+  box_length_file.open("box_length.txt");
+
+  radii_file << radii;
+  box_length_file << box_length << std::endl;
+  radii_file.close();
+  box_length_file.close();
+#endif
   boxvec = {box_length, box_length};
 
   x = pele::generate_random_coordinates(box_length, n_particles, _ndim);
