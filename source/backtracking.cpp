@@ -4,6 +4,7 @@
 #include "pele/lsparameters.hpp"
 #include <cmath>
 #include <complex>
+#include <stdexcept>
 
 using namespace std;
 namespace pele {
@@ -32,6 +33,7 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
     return 0; // Line search will not work
   }
   pele_eq_eig(x, xvec);
+  std::cout << "x = " << x << std::endl;
   pele_eq_eig(g_, gradvec);
   step = xold_ - x;
   opt_->set_f(f);

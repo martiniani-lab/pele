@@ -85,7 +85,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   CVodeSetMaxNumSteps(cvode_mem, 100000);
   CVodeSetStopTime(cvode_mem, tN);
   inv_sqrt_size = 1 / sqrt(x_.size());
-  // optmizeer debug level
+  // optmizer debug level
   std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
 
 #if OPTIMIZER_DEBUG_LEVEL >= 1
@@ -128,27 +128,7 @@ void ExtendedMixedOptimizer::one_iteration() {
     // If lanscape is convex and we're in phase 1, switch to phase 2
     if (use_phase_1 && landscape_is_convex) {
       use_phase_1 = false;
-    }
-    // If we're in phase 2 and the landscape is not convex, backtrack
-    // Line search hackily implemented. Put this in the main line search
-    if (!use_phase_1 && !landscape_is_convex) {
-      // xold_old -> old step
-      // xold -> new step
-      // xold_old - xold -> old - new
-      int ls_iter = 0;
-      while (!landscape_is_convex and ls_iter < 5) {
-        step *= 0.5;
-        x_.assign(xold_old + step);
-        landscape_is_convex = convexity_check();
-        std::cout << "convex backtracking -------" << ls_iter << "\n";
-        ls_iter++;
-      }
-      if (ls_iter == 5) {
-        // Could not backtrack to a convex landscape, switch back to CVODE.
-        std::cout << "------------this is happening---" << std::endl;
-        use_phase_1 = true;
-        x_.assign(x_last_cvode);
-      }
+      x_last_cvode.assign(x_);
     }
     hessian_calculated = true;
   }
@@ -160,8 +140,6 @@ void ExtendedMixedOptimizer::one_iteration() {
     compute_phase_1_step(step);
   } else {
     extended_potential->switch_on_extended_potential();
-    std::cout << "switched on extended potential" << std::endl;
-
 #if OPTIMIZER_DEBUG_LEVEL >= 3
     std::cout << " computing phase 2 step"
               << "\n";
@@ -183,19 +161,19 @@ void ExtendedMixedOptimizer::one_iteration() {
     if (max_step > conv_tol_) {
       use_phase_1 = true;
       x_.assign(x_last_cvode);
-    }
-    else {
-    line_search_method.set_xold_gold_(xold, gold);
-    line_search_method.set_g_f_ptr(g_);
-    double stepnorm = line_search_method.line_search(x_, step);
-    // if step is going uphill, phase two has failed.
-    phase_2_failed_ = line_search_method.get_step_moving_away_from_min();
-    if (phase_2_failed_) {
-      throw std::logic_error("step moving away from minimum");
-    }
-    }
+      extended_potential->switch_off_extended_potential();
 
+    } else {
 
+      line_search_method.set_xold_gold_(xold, gold);
+      line_search_method.set_g_f_ptr(g_);
+      double stepnorm = line_search_method.line_search(x_, step);
+      // if step is going uphill, phase two has failed.
+      phase_2_failed_ = line_search_method.get_step_moving_away_from_min();
+      if (phase_2_failed_) {
+        throw std::logic_error("step moving away from minimum");
+      }
+    }
   }
 
   // should think of using line search method within the phase steps
@@ -205,6 +183,7 @@ void ExtendedMixedOptimizer::one_iteration() {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
   std::cout << "mixed optimizer: " << iter_number_ << " E " << f_ << " rms "
             << rms_ << " nfev " << nfev_ << " nhev " << udata.nhev << std::endl;
+  std::cout << "optimizer position \n" << x_ << "\n";
 #endif
   /**
    * Checks whether the stop criterion is satisfied: if stop criterion is
@@ -240,7 +219,7 @@ out the result.
  */
 bool ExtendedMixedOptimizer::convexity_check() {
 
-  get_hess_extended(hessian);
+  get_hess(hessian);
 
   // check if the hessian is positive definite by doing a cholesky decomposition
   // and checking if it is successful
@@ -263,6 +242,7 @@ bool ExtendedMixedOptimizer::convexity_check() {
   // 1 is strlen for uplo for new fortran compilers
   dpotrf_(&uplo, &N_int, hess_data, &N_int, &info, 1);
 
+  std::cout << hessian.eigenvalues() << "\n";
   std::cout << "info of dpotrf " << info << "\n";
   if (info == 0) {
     // if it is positive definite, we can use the newton method to solve the
@@ -288,6 +268,7 @@ void ExtendedMixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
 void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
   // Does not allocate memory for hessian just wraps around the data
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
+  std::cout << " x in the hessian" << x_ << "\n";
   extended_potential->get_hessian_extended(
       x_, hessian_pele); // preferably switch this to sparse Eigen
   udata.nhev += 1;
@@ -326,9 +307,6 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
     convexity_check();
   }
 
-  // hessian eigenvalues
-  std::cout << "hessian eigenvalues" << hessian.eigenvalues() << std::endl;
-
   // hessian.diagonal().array() += conv_factor_ * conv_tol_ * 10;
 
   Eigen::VectorXd r(step.size());
@@ -336,6 +314,9 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
 
   q.setZero();
   eig_eq_pele(r, step);
+
+  q = -hessian.householderQr().solve(r);
+  pele_eq_eig(step, q);
 }
 
 /**

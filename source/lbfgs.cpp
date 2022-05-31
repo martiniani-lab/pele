@@ -86,7 +86,7 @@ void LBFGS::update_memory(Array<double> x_old, Array<double> g_old,
     }
     yy = 1.;
   }
-  H0_ = ys / yy;
+  H0_ = ys / yy; 
 
   // increment k
   k_ += 1;
@@ -156,7 +156,6 @@ void LBFGS::compute_lbfgs_step(Array<double> step) {
 
 double LBFGS::backtracking_linesearch(Array<double> step) {
   double fnew;
-
   // if the step is pointing uphill, invert it
   if (dot(step, g_) > 0.) {
     if (verbosity_ > 1) {

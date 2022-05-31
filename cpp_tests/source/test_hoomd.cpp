@@ -10,7 +10,7 @@
 #include "pele/harmonic.hpp"
 #include "pele/meta_pow.hpp"
 
-#include<hoomd/md/AllPairPotentials.h>
+// #include<hoomd/md/AllPairPotentials.h>
 #include<hoomd/Initializers.h>
 
 #include "test_utils.hpp"

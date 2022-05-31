@@ -4,15 +4,16 @@
 #include "nvector/nvector_serial.h"
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
-#include "pele/preprocessor_directives.hpp"
 #include "pele/optimizer.hpp"
+#include "pele/preprocessor_directives.hpp"
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_nvector.h"
 #include "sunmatrix/sunmatrix_dense.h"
+#include <Eigen/src/Core/Matrix.h>
 #include <cstddef>
+#include <hoomd/HOOMDMath.h>
 #include <iostream>
 #include <memory>
-#include <hoomd/HOOMDMath.h>
 
 using namespace std;
 
@@ -26,9 +27,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     bool iterative, bool use_newton_stop_criterion)
     : GradientOptimizer(potential, x0, tol),
       cvode_mem(CVodeCreate(CV_BDF)), // create cvode memory
-      N_size(x0.size()), 
-      hessian(x0.size(), x0.size()),
-      t0(0), tN(10000000.0),
+      N_size(x0.size()), hessian(x0.size(), x0.size()), t0(0), tN(10000000.0),
       use_newton_stop_criterion_(use_newton_stop_criterion) {
   // dummy t0
   double t0 = 0;
@@ -60,6 +59,17 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
   g_ = udata.stored_grad;
   CVodeSetMaxNumSteps(cvode_mem, 1000000);
   CVodeSetStopTime(cvode_mem, tN);
+#if PRINT_TO_FILE == 1
+  trajectory_file.open("trajectory_cvode.txt");
+  // Also saving hessian eigenvalues to understand what's happening
+  // along the run
+  hessian_eigvals_file.open("hessian_eigvals_cvode.txt");
+  grad_file.open("grad_cvode.txt");
+  step_file.open("step_cvode.txt");
+  newton_step_file.open("newton_step_cvode.txt");
+  lbfgs_m_1_step_file.open("lbfgs_m_1_step_cvode.txt");
+  g_old = Array<double>(x0.size(), 0);
+#endif
 };
 
 CVODEBDFOptimizer::~CVODEBDFOptimizer() {
@@ -86,22 +96,81 @@ void CVODEBDFOptimizer::one_iteration() {
   // simply print the energy and lambdamin/lambdamax as csv values and write
   // stdout to file then plot them using python
 
-  // // get hessian routine
-  // Array<double> hess(xold.size() * xold.size());
-  // Array<double> grad(xold.size());
-  // double e = potential_->get_energy_gradient_hessian(x_, grad, hess);
-  // Eigen::MatrixXd hess_dense(xold.size(), xold.size());
-  // udata.nhev += 1;
-  // hess_dense.setZero();
-  // for (size_t i = 0; i < xold.size(); ++i) {
-  //     for (size_t j = 0; j < xold.size(); ++j) {
-  //         hess_dense(i, j) = hess[i + grad.size() * j];
-  //     }
-  // }
-  // // calculate minimum and maximum eigenvalue
-  // Eigen::VectorXd eigvals = hess_dense.eigenvalues().real();
-  // double minimum = eigvals.minCoeff();
-  // double maximum = eigvals.maxCoeff();
+#if PRINT_TO_FILE == 1
+  // get hessian routine, useful for understanding conditioning near minimum
+  Array<double> hess(xold.size() * xold.size());
+  Array<double> grad(xold.size());
+  double e = potential_->get_energy_gradient_hessian(x_, grad, hess);
+  Eigen::MatrixXd hess_dense(xold.size(), xold.size());
+  udata.nhev += 1;
+  hess_dense.setZero();
+  for (size_t i = 0; i < xold.size(); ++i) {
+    for (size_t j = 0; j < xold.size(); ++j) {
+      hess_dense(i, j) = hess[i + grad.size() * j];
+    }
+  }
+  
+  // calculate minimum and maximum eigenvalue
+  Eigen::VectorXd eigvals = hess_dense.eigenvalues().real();
+  add_translation_offset_2d(hess_dense, 1.0);
+  Eigen::VectorXd r(hess_dense.rows());
+  Eigen::VectorXd q(hess_dense.rows());
+  q.setZero();
+
+  eig_eq_pele(r, g_);
+
+  q = - hess_dense.householderQr().solve(r);
+
+
+
+
+  double minimum = eigvals.minCoeff();
+  double maximum = eigvals.maxCoeff();
+
+  Array<double> eigvals_pele = Array<double>(xold.size());
+  for (size_t i = 0; i < xold.size(); ++i) {
+    eigvals_pele[i] = eigvals(i);
+  }
+
+  Array<double> q_pele = Array<double>(xold.size());
+
+  for (size_t i = 0; i < xold.size(); ++i) {
+    q_pele[i] = q(i);
+  }
+  Array<double> dg_old = Array<double>(xold.size());
+  Array<double> dx_old = Array<double>(xold.size());
+  if (iter_number_ >= 0) {
+    dg_old = g_ - g_old;
+    dx_old = x_ - xold;
+  }
+  double dg_dot_dx;
+  double dg_dot_dg;
+  for (size_t i = 0; i < xold.size(); ++i) {
+    dg_dot_dx += dg_old[i] * dx_old[i];
+    dg_dot_dg += dg_old[i] * dg_old[i];
+  }
+
+  double H0 = dg_dot_dx / dg_dot_dg;
+
+  Array<double> H0_g = Array<double>(xold.size());
+
+  H0_g = H0 * g_;
+
+  
+
+
+
+  // write to file
+  trajectory_file << x_;
+  hessian_eigvals_file << eigvals_pele;
+  grad_file << grad;
+  step_file << step;
+  newton_step_file << q_pele;
+  lbfgs_m_1_step_file << H0_g;
+  g_old.assign(g_);
+#endif
+
+  // print to file
 
   // double convexity_estimate;
 
@@ -115,6 +184,25 @@ void CVODEBDFOptimizer::one_iteration() {
   // maximum << "\n";
   // // TODO: This is terrible C++ code but write it better
 };
+
+void CVODEBDFOptimizer::add_translation_offset_2d(Eigen::MatrixXd &hessian,
+                                                       double offset) {
+
+  // factor so that the added translation operators are unitary
+  double factor = 2.0 / hessian.rows();
+  offset = offset * factor;
+
+  for (size_t i = 0; i < hessian.rows(); ++i) {
+    for (size_t j = i + 1; j < hessian.cols(); ++j) {
+      if ((i % 2 == 0 && j % 2 == 0) || (i % 2 == 1 && j % 2 == 1)) {
+        hessian(i, j) += offset;
+        hessian(j, i) += offset;
+      }
+    }
+  }
+  hessian.diagonal().array() += offset;
+}
+
 
 bool CVODEBDFOptimizer::stop_criterion_satisfied() {
   if (!func_initialized_) {
