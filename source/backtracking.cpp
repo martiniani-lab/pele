@@ -33,7 +33,6 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
     return 0; // Line search will not work
   }
   pele_eq_eig(x, xvec);
-  std::cout << "x = " << x << std::endl;
   pele_eq_eig(g_, gradvec);
   step = xold_ - x;
   opt_->set_f(f);
@@ -84,9 +83,7 @@ void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
   // Projection of gradient on the search direction
 
   Vector gradinit = grad;
-  Vector y_vec;
   const Scalar dg_init = grad.dot(drt);
-  cout << dg_init << endl;
 #if OPTIMIZER_DEBUG_LEVEL >= 3
   std::cout << dg_init << "dginit must be less than 0 \n";
 #endif
@@ -104,15 +101,6 @@ void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
 
     // Evaluate this candidate
     fx = func_grad_wrapper(x, grad);
-    y_vec = grad - gradinit;
-    // Scalar H0 = std::abs(step*drt.dot(y_vec)/y_vec.dot(y_vec));
-    // if (step*drt.norm() > 0.1*(H0)*grad.norm()) {
-    //     std::cout << step*drt.norm() << "step norm\n";
-    //     std::cout << 0.1*H0*grad.norm() << "curvature estimate \n";
-    //     step = 0.1*H0*grad.norm()/drt.norm();
-    //     x.noalias() = xp + step*drt;
-    //     fx = func_grad_wrapper(x, grad);
-    // }
     if (fx > fx_init + step * test_decr) {
       width = dec;
     } else {
