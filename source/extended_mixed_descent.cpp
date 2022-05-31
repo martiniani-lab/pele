@@ -2,11 +2,11 @@
 #include "pele/extended_mixed_descent.hpp"
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
-#include "pele/preprocessor_directives.hpp"
 #include "pele/eigen_interface.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/lsparameters.hpp"
 #include "pele/optimizer.hpp"
+#include "pele/preprocessor_directives.hpp"
 #include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <complex>
@@ -37,8 +37,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       rtol(rtol), atol(atol), xold(x_.size()), gold(x_.size()), step(x_.size()),
       xold_old(x_.size()), T_(T), use_phase_1(true), conv_tol_(conv_tol),
       conv_factor_(conv_factor), n_phase_1_steps(0), n_phase_2_steps(0),
-      hessian(x_.size(), x_.size()),
-      x_last_cvode(x_.size()),
+      hessian(x_.size(), x_.size()), x_last_cvode(x_.size()),
       hessian_copy_for_cholesky(x_.size(), x_.size()),
       line_search_method(this, step) {
 
@@ -144,9 +143,9 @@ void ExtendedMixedOptimizer::one_iteration() {
         std::cout << "convex backtracking -------" << ls_iter << "\n";
         ls_iter++;
       }
-      if (ls_iter == 5) {  
+      if (ls_iter == 5) {
         // Could not backtrack to a convex landscape, switch back to CVODE.
-        std::cout << "------------this is happening-------------------------------------" << std::endl;
+        std::cout << "------------this is happening---" << std::endl;
         use_phase_1 = true;
         x_.assign(x_last_cvode);
       }
@@ -169,6 +168,24 @@ void ExtendedMixedOptimizer::one_iteration() {
 #endif
     step.assign(g_);
     compute_phase_2_step(step);
+
+
+    n_phase_2_steps += 1;
+    prev_phase_is_phase1 = false;
+
+    // find abs max of the step
+    double max_step = 0;
+    for (int i = 0; i < step.size(); i++) {
+      if (abs(step[i]) > max_step) {
+        max_step = abs(step[i]);
+      }
+    }
+    // if max step is too big, switch bag to CVODE
+    if (max_step > conv_tol_) {
+      use_phase_1 = true;
+      x_.assign(x_last_cvode);
+    }
+    else {
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
     double stepnorm = line_search_method.line_search(x_, step);
@@ -177,6 +194,9 @@ void ExtendedMixedOptimizer::one_iteration() {
     if (phase_2_failed_) {
       throw std::logic_error("step moving away from minimum");
     }
+    }
+
+
   }
 
   // should think of using line search method within the phase steps
@@ -195,8 +215,6 @@ void ExtendedMixedOptimizer::one_iteration() {
 
   iter_number_ += 1;
 }
-
-
 
 /**
  * resets the minimizer for usage again
@@ -233,8 +251,12 @@ bool ExtendedMixedOptimizer::convexity_check() {
   // add translation to ensure that the hessian is positive definite
   add_translation_offset_2d(hessian, 1);
 
+  // add negative diagonal offset to ensure hessian is sufficiently positive
+
+  // hessian.diagonal().array() -= 1e-9;
+
   int N_int = x_.size();
-  
+
   hessian_copy_for_cholesky = hessian;
 
   hess_data = hessian_copy_for_cholesky.data();
@@ -315,14 +337,6 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
 
   q.setZero();
   eig_eq_pele(r, step);
-
-  // negative sign to switch direction
-  // TODO change this to banded
-  q = -hessian.householderQr().solve(r);
-  pele_eq_eig(step, q);
-  std::cout << "step before line search " << step << std::endl;
-  n_phase_2_steps += 1;
-  prev_phase_is_phase1 = false;
 }
 
 /**
