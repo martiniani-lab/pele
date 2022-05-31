@@ -169,7 +169,6 @@ void ExtendedMixedOptimizer::one_iteration() {
     step.assign(g_);
     compute_phase_2_step(step);
 
-
     n_phase_2_steps += 1;
     prev_phase_is_phase1 = false;
 
