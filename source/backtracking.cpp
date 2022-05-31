@@ -42,7 +42,11 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
   std::cout << stpsize * opt_->compute_pot_norm(step)
             << "absolute step size \n";
 #endif
-  return norm(step);
+  double step_norm;
+  if (step_norm == 0) {
+    throw std::runtime_error("step norm is zero");
+  }
+  return step_norm;
 };
 
 /**
