@@ -19,7 +19,7 @@
 #include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h> /* access to Newton SUNNonLinearSolver */
 #include <unistd.h>
-// whether to print trajectory to file
+
 using namespace Spectra;
 
 namespace pele {
@@ -242,8 +242,6 @@ bool ExtendedMixedOptimizer::convexity_check() {
   // 1 is strlen for uplo for new fortran compilers
   dpotrf_(&uplo, &N_int, hess_data, &N_int, &info, 1);
 
-  std::cout << hessian.eigenvalues() << "\n";
-  std::cout << "info of dpotrf " << info << "\n";
   if (info == 0) {
     // if it is positive definite, we can use the newton method to solve the
     // problem
@@ -268,7 +266,6 @@ void ExtendedMixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
 void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
   // Does not allocate memory for hessian just wraps around the data
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
-  std::cout << " x in the hessian" << x_ << "\n";
   extended_potential->get_hessian_extended(
       x_, hessian_pele); // preferably switch this to sparse Eigen
   udata.nhev += 1;
