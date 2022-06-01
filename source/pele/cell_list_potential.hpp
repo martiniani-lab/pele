@@ -377,7 +377,7 @@ public:
     *m_energies[0] +=
         m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
 #endif
-    const size_t N = m_hessian->size();
+    const size_t N = m_coords->size();
     const size_t i1 = xi_off;
     const size_t j1 = xj_off;
     for (size_t k = 0; k < m_ndim; ++k) {
