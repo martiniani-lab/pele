@@ -1030,6 +1030,17 @@ public:
     m_ehAcc->reset_data(&coords, &hess);
     auto looper = m_cell_lists.get_atom_pair_looper(*m_ehAcc);
     looper.loop_through_atom_pairs();
+    return m_ehAcc->get_energy();
+  }
+
+  void add_hessian(Array<double> const &coords, Array<double> &hess) {
+    if (!std::isfinite(coords[0]) ||
+        !std::isfinite(coords[coords.size() - 1])) {
+      hess.assign(NAN);
+    }
+    m_ehAcc->reset_data(&coords, &hess);
+    auto looper = m_cell_lists.get_atom_pair_looper(*m_ehAcc);
+    looper.loop_through_atom_pairs();
   }
 
   double get_energy_hessian(Array<double> const &coords, Array<double> &hess) {
