@@ -37,8 +37,8 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       rtol(rtol), atol(atol), xold(x_.size()), gold(x_.size()), step(x_.size()),
       xold_old(x_.size()), T_(T), use_phase_1(true), conv_tol_(conv_tol),
       conv_factor_(conv_factor), n_phase_1_steps(0), n_phase_2_steps(0),
-      hessian(x_.size(), x_.size()), x_last_cvode(x_.size()),
-      hessian_copy_for_cholesky(x_.size(), x_.size()),
+      n_failed_phase_2_steps(0), hessian(x_.size(), x_.size()),
+      x_last_cvode(x_.size()), hessian_copy_for_cholesky(x_.size(), x_.size()),
       line_search_method(this, step) {
 
   // assume previous phase is phase 1
@@ -162,7 +162,7 @@ void ExtendedMixedOptimizer::one_iteration() {
       use_phase_1 = true;
       x_.assign(x_last_cvode);
       extended_potential->switch_off_extended_potential();
-
+      n_failed_phase_2_steps += 1;
     } else {
 
       line_search_method.set_xold_gold_(xold, gold);

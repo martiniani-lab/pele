@@ -36,7 +36,6 @@ extern "C" {
 #include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
 #include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
 
-
 extern "C" {
 #include "xsum.h"
 }
@@ -108,7 +107,6 @@ private:
    */
   Array<double> x_last_cvode;
 
-
   double inv_sqrt_size; //!< The inverse square root the the number of
                         //!< components
   // Preconditioning
@@ -139,6 +137,11 @@ private:
    * number of phase 2 steps
    */
   size_t n_phase_2_steps;
+
+  /**
+   * @brief Failed phase 2 steps
+   */
+  size_t n_failed_phase_2_steps;
 
   /**
    * tolerance for convexity. the smaller, the more convex the problem
@@ -189,6 +192,7 @@ public:
   }
   inline int get_n_phase_1_steps() { return n_phase_1_steps; }
   inline int get_n_phase_2_steps() { return n_phase_2_steps; }
+  inline int get_n_failed_phase_2_steps() { return n_failed_phase_2_steps; }
 
 private:
   bool hessian_calculated; // checks whether the hessian has been calculated for
