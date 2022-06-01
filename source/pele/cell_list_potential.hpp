@@ -274,8 +274,8 @@ public:
       (*m_hessian)[N * (j1 + k) + j1 + k] += Hii_diag;
       // off diagonal block - diagonal terms
       const double Hij_diag = -Hii_diag;
-      (*m_hessian)[N * (i1 + k) + j1 + k] = Hij_diag;
-      (*m_hessian)[N * (j1 + k) + i1 + k] = Hij_diag;
+      (*m_hessian)[N * (i1 + k) + j1 + k] += Hij_diag;
+      (*m_hessian)[N * (j1 + k) + i1 + k] += Hij_diag;
       for (size_t l = k + 1; l < m_ndim; ++l) {
         // diagonal block - off diagonal terms
         const double Hii_off = (hij + gij) * dr[k] * dr[l] / r2;
@@ -387,8 +387,8 @@ public:
       (*m_hessian)[N * (j1 + k) + j1 + k] += Hii_diag;
       // off diagonal block - diagonal terms
       const double Hij_diag = -Hii_diag;
-      (*m_hessian)[N * (i1 + k) + j1 + k] = Hij_diag;
-      (*m_hessian)[N * (j1 + k) + i1 + k] = Hij_diag;
+      (*m_hessian)[N * (i1 + k) + j1 + k] += Hij_diag;
+      (*m_hessian)[N * (j1 + k) + i1 + k] += Hij_diag;
       for (size_t l = k + 1; l < m_ndim; ++l) {
         // diagonal block - off diagonal terms
         const double Hii_off = (hij + gij) * dr[k] * dr[l] / r2;
@@ -674,8 +674,8 @@ public:
       (*m_hessian)[N * (j1 + k) + j1 + k] += Hii_diag;
       // off diagonal block - diagonal terms
       const double Hij_diag = -Hii_diag;
-      (*m_hessian)[N * (i1 + k) + j1 + k] = Hij_diag;
-      (*m_hessian)[N * (j1 + k) + i1 + k] = Hij_diag;
+      (*m_hessian)[N * (i1 + k) + j1 + k] += Hij_diag;
+      (*m_hessian)[N * (j1 + k) + i1 + k] += Hij_diag;
       for (size_t l = k + 1; l < m_ndim; ++l) {
         // diagonal block - off diagonal terms
         const double Hii_off = (hij + gij) * dr[k] * dr[l] / r2;
