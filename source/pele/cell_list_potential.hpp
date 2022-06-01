@@ -2,6 +2,7 @@
 #define _PELE_CELL_LIST_POTENTIAL_H
 
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <math.h>
 #include <memory>
@@ -303,7 +304,7 @@ public:
 
 /**
  * @brief Accumulates the energy and the hessian one pair interaction at a time
- * 
+ *
  * @tparam pairwise_interaction interaction class
  * @tparam distance_policy how to calculate the distance between two atoms
  */
@@ -482,7 +483,8 @@ public:
   }
 
   double get_energy() {
-    // I didn't accumulate here considering that the number of energies is small
+    // I didn't accumulate here considering that the number of energies is
+    // small
     double energy = 0;
     for (size_t i = 0; i < m_energies.size(); ++i) {
       energy += xsum_large_round(&(m_energies[i]));
@@ -980,7 +982,7 @@ public:
 
       return m_egAccExact->get_energy();
     } else {
-      add_energy_gradient(coords, grad);
+      return add_energy_gradient(coords, grad);
     }
   }
 
@@ -1019,6 +1021,43 @@ public:
     return m_egAcc->get_energy();
   }
 
+  double add_energy_hessian(Array<double> const &coords, Array<double> &hess) {
+    if (!std::isfinite(coords[0]) ||
+        !std::isfinite(coords[coords.size() - 1])) {
+      hess.assign(NAN);
+      return NAN;
+    }
+    m_ehAcc->reset_data(&coords, &hess);
+    auto looper = m_cell_lists.get_atom_pair_looper(*m_ehAcc);
+    looper.loop_through_atom_pairs();
+  }
+
+  double get_energy_hessian(Array<double> const &coords, Array<double> &hess) {
+
+    const size_t natoms = coords.size() / m_ndim;
+    if (m_ndim * natoms != coords.size()) {
+      throw std::runtime_error(
+          "coords.size() is not divisible by the number of dimensions");
+    }
+    if (coords.size() != hess.size() * hess.size()) {
+      throw std::invalid_argument("the hessian has the wrong size");
+    }
+    if (!std::isfinite(coords[0]) ||
+        !std::isfinite(coords[coords.size() - 1])) {
+      hess.assign(NAN);
+      return NAN;
+    }
+    update_iterator(coords);
+    hess.assign(0.);
+    if (exact_sum) {
+      throw std::runtime_error(
+          "get hessian not implemented with exact summation");
+    } else {
+      return add_energy_hessian(coords, hess);
+    }
+    // assign hessian to the output array
+  }
+
   virtual double get_energy_gradient_hessian(Array<double> const &coords,
                                              Array<double> &grad,
                                              Array<double> &hess) {
@@ -1050,7 +1089,7 @@ public:
       looper.loop_through_atom_pairs();
       return m_eghAccExact->get_energy();
     } else {
-      add_energy_gradient_hessian(coords, grad, hess);
+      return add_energy_gradient_hessian(coords, grad, hess);
     }
   }
 
