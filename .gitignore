@@ -71,6 +71,7 @@ htmlcov
 /cpp_tests/source/compile_commands.json
 /cpp_tests/source/dense.out
 /cpp_tests/source/dense.vals
+/cpp_tests/source/*.txt
 /cpp_tests/source/googletest/
 /cpp_tests/source/libpele_lib.a
 /source/Eigen/
