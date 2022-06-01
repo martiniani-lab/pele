@@ -284,10 +284,10 @@ public:
         (*m_hessian)[N * (j1 + l) + j1 + k] += Hii_off;
         // off diagonal block - off diagonal terms
         const double Hij_off = -Hii_off;
-        (*m_hessian)[N * (i1 + k) + j1 + l] = Hij_off;
-        (*m_hessian)[N * (i1 + l) + j1 + k] = Hij_off;
-        (*m_hessian)[N * (j1 + k) + i1 + l] = Hij_off;
-        (*m_hessian)[N * (j1 + l) + i1 + k] = Hij_off;
+        (*m_hessian)[N * (i1 + k) + j1 + l] += Hij_off;
+        (*m_hessian)[N * (i1 + l) + j1 + k] += Hij_off;
+        (*m_hessian)[N * (j1 + k) + i1 + l] += Hij_off;
+        (*m_hessian)[N * (j1 + l) + i1 + k] += Hij_off;
       }
     }
   }
@@ -571,10 +571,10 @@ public:
         (*m_hessian)[N * (j1 + l) + j1 + k] += Hii_off;
         // off diagonal block - off diagonal terms
         const double Hij_off = -Hii_off;
-        (*m_hessian)[N * (i1 + k) + j1 + l] = Hij_off;
-        (*m_hessian)[N * (i1 + l) + j1 + k] = Hij_off;
-        (*m_hessian)[N * (j1 + k) + i1 + l] = Hij_off;
-        (*m_hessian)[N * (j1 + l) + i1 + k] = Hij_off;
+        (*m_hessian)[N * (i1 + k) + j1 + l] += Hij_off;
+        (*m_hessian)[N * (i1 + l) + j1 + k] += Hij_off;
+        (*m_hessian)[N * (j1 + k) + i1 + l] += Hij_off;
+        (*m_hessian)[N * (j1 + l) + i1 + k] += Hij_off;
       }
     }
   }
