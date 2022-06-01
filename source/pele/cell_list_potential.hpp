@@ -302,8 +302,120 @@ public:
 };
 
 /**
- * class which accumulates the energy one pair interaction at a time with exact
- * summation
+ * @brief Accumulates the energy and the hessian one pair interaction at a time
+ * 
+ * @tparam pairwise_interaction interaction class
+ * @tparam distance_policy how to calculate the distance between two atoms
+ */
+template <typename pairwise_interaction, typename distance_policy>
+class EnergyHessianAccumulator {
+  const static size_t m_ndim = distance_policy::_ndim;
+  std::shared_ptr<pairwise_interaction> m_interaction;
+  std::shared_ptr<distance_policy> m_dist;
+  const pele::Array<double> *m_coords;
+  const pele::Array<double> m_radii;
+  std::vector<double *> m_energies;
+  pele::Array<double> *m_hessian;
+  pele::Array<double> *m_gradient;
+
+public:
+  ~EnergyHessianAccumulator() {
+    for (auto &energy : m_energies) {
+      delete energy;
+    }
+  }
+
+  EnergyHessianAccumulator(
+      std::shared_ptr<pairwise_interaction> &interaction,
+      std::shared_ptr<distance_policy> &dist,
+      pele::Array<double> const &radii = pele::Array<double>(0))
+      : m_interaction(interaction), m_dist(dist), m_radii(radii) {
+#ifdef _OPENMP
+    m_energies = std::vector<double *>(omp_get_max_threads());
+#pragma omp parallel
+    { m_energies[omp_get_thread_num()] = new double(); }
+#else
+    m_energies = std::vector<double *>(1);
+    m_energies[0] = new double();
+#endif
+  }
+
+  void reset_data(const pele::Array<double> *coords,
+                  pele::Array<double> *hessian) {
+    m_coords = coords;
+#ifdef _OPENMP
+#pragma omp parallel
+    { *m_energies[omp_get_thread_num()] = 0; }
+#else
+    *m_energies[0] = 0;
+#endif
+    m_hessian = hessian;
+  }
+
+  void insert_atom_pair(const size_t atom_i, const size_t atom_j,
+                        const size_t isubdom) {
+    pele::VecN<m_ndim, double> dr;
+    const size_t xi_off = m_ndim * atom_i;
+    const size_t xj_off = m_ndim * atom_j;
+    m_dist->get_rij(dr.data(), m_coords->data() + xi_off,
+                    m_coords->data() + xj_off);
+    double r2 = 0;
+    for (size_t k = 0; k < m_ndim; ++k) {
+      r2 += dr[k] * dr[k];
+    }
+    double gij; // gij dummy
+    double hij;
+    double radius_sum = 0;
+    if (m_radii.size() > 0) {
+      radius_sum = m_radii[atom_i] + m_radii[atom_j];
+    }
+#ifdef _OPENMP
+    *m_energies[isubdom] +=
+        m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
+#else
+    *m_energies[0] +=
+        m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
+#endif
+    const size_t N = m_hessian->size();
+    const size_t i1 = xi_off;
+    const size_t j1 = xj_off;
+    for (size_t k = 0; k < m_ndim; ++k) {
+      // diagonal block - diagonal terms
+      const double Hii_diag = (hij + gij) * dr[k] * dr[k] / r2 - gij;
+      (*m_hessian)[N * (i1 + k) + i1 + k] += Hii_diag;
+      (*m_hessian)[N * (j1 + k) + j1 + k] += Hii_diag;
+      // off diagonal block - diagonal terms
+      const double Hij_diag = -Hii_diag;
+      (*m_hessian)[N * (i1 + k) + j1 + k] = Hij_diag;
+      (*m_hessian)[N * (j1 + k) + i1 + k] = Hij_diag;
+      for (size_t l = k + 1; l < m_ndim; ++l) {
+        // diagonal block - off diagonal terms
+        const double Hii_off = (hij + gij) * dr[k] * dr[l] / r2;
+        (*m_hessian)[N * (i1 + k) + i1 + l] += Hii_off;
+        (*m_hessian)[N * (i1 + l) + i1 + k] += Hii_off;
+        (*m_hessian)[N * (j1 + k) + j1 + l] += Hii_off;
+        (*m_hessian)[N * (j1 + l) + j1 + k] += Hii_off;
+        // off diagonal block - off diagonal terms
+        const double Hij_off = -Hii_off;
+        (*m_hessian)[N * (i1 + k) + j1 + l] += Hij_off;
+        (*m_hessian)[N * (i1 + l) + j1 + k] += Hij_off;
+        (*m_hessian)[N * (j1 + k) + i1 + l] += Hij_off;
+        (*m_hessian)[N * (j1 + l) + i1 + k] += Hij_off;
+      }
+    }
+  }
+
+  double get_energy() {
+    double energy = 0;
+    for (size_t i = 0; i < m_energies.size(); ++i) {
+      energy += *m_energies[i];
+    }
+    return energy;
+  }
+};
+/**
+ * class which accumulates the energy one pair interaction at a time with
+ * exact summation
  */
 template <typename pairwise_interaction, typename distance_policy>
 class EnergyAccumulatorExact {
@@ -711,6 +823,7 @@ protected:
   EnergyGradientAccumulator<pairwise_interaction, distance_policy> *m_egAcc;
   EnergyGradientHessianAccumulator<pairwise_interaction, distance_policy>
       *m_eghAcc;
+  EnergyHessianAccumulator<pairwise_interaction, distance_policy> *m_ehAcc;
   EnergyAccumulatorExact<pairwise_interaction, distance_policy> *m_eAccExact;
   EnergyGradientAccumulatorExact<pairwise_interaction, distance_policy>
       *m_egAccExact;
@@ -787,7 +900,7 @@ public:
               interaction, dist);
       m_eghAcc = new EnergyGradientHessianAccumulator<pairwise_interaction,
                                                       distance_policy>(
-          interaction, dist);      
+          interaction, dist);
     }
   }
 
@@ -867,11 +980,43 @@ public:
 
       return m_egAccExact->get_energy();
     } else {
-      m_egAcc->reset_data(&coords, &grad);
-      auto looper = m_cell_lists.get_atom_pair_looper(*m_egAcc);
-      looper.loop_through_atom_pairs();
-      return m_egAcc->get_energy();
+      add_energy_gradient(coords, grad);
     }
+  }
+
+  /**
+   * @brief Adds the gradient and hessian of the potential to the arrays
+   *
+   * @param coords
+   * @param grad
+   * @param hess
+   * @return double
+   */
+  double add_energy_gradient_hessian(Array<double> const &coords,
+                                     Array<double> &grad, Array<double> &hess) {
+    m_eghAcc->reset_data(&coords, &grad, &hess);
+    auto looper = m_cell_lists.get_atom_pair_looper(*m_eghAcc);
+    looper.loop_through_atom_pairs();
+    return m_eghAcc->get_energy();
+  }
+
+  /**
+   * @brief Adds the gradient of the potential to the array
+   *
+   * @param coords
+   * @param grad
+   * @return double
+   */
+  double add_energy_gradient(Array<double> const &coords, Array<double> &grad) {
+    if (!std::isfinite(coords[0]) ||
+        !std::isfinite(coords[coords.size() - 1])) {
+      grad.assign(NAN);
+      return NAN;
+    }
+    m_egAcc->reset_data(&coords, &grad);
+    auto looper = m_cell_lists.get_atom_pair_looper(*m_egAcc);
+    looper.loop_through_atom_pairs();
+    return m_egAcc->get_energy();
   }
 
   virtual double get_energy_gradient_hessian(Array<double> const &coords,
@@ -905,10 +1050,7 @@ public:
       looper.loop_through_atom_pairs();
       return m_eghAccExact->get_energy();
     } else {
-      m_eghAcc->reset_data(&coords, &grad, &hess);
-      auto looper = m_cell_lists.get_atom_pair_looper(*m_eghAcc);
-      looper.loop_through_atom_pairs();
-      return m_eghAcc->get_energy();
+      add_energy_gradient_hessian(coords, grad, hess);
     }
   }
 
