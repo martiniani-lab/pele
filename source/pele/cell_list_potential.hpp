@@ -865,6 +865,11 @@ public:
           new EnergyGradientHessianAccumulatorExact<pairwise_interaction,
                                                     distance_policy>(
               m_interaction, m_dist, m_radii);
+      std::cout << "Warning: exact sum not implemented for get_hessian"
+                << std::endl;
+      m_ehAcc =
+          new EnergyHessianAccumulator<pairwise_interaction, distance_policy>(
+              m_interaction, m_dist, m_radii);
     } else {
       m_eAcc = new EnergyAccumulator<pairwise_interaction, distance_policy>(
           interaction, dist, m_radii);
@@ -874,6 +879,9 @@ public:
       m_eghAcc = new EnergyGradientHessianAccumulator<pairwise_interaction,
                                                       distance_policy>(
           interaction, dist, m_radii);
+      m_ehAcc =
+          new EnergyHessianAccumulator<pairwise_interaction, distance_policy>(
+              m_interaction, m_dist, m_radii);
     }
   }
 
@@ -894,6 +902,11 @@ public:
           m_interaction, m_dist);
       m_eghAccExact = new EnergyGradientHessianAccumulatorExact<
           pairwise_interaction, distance_policy>(m_interaction, m_dist);
+      std::cout << "Warning: exact sum not implemented for get_hessian"
+                << std::endl;
+      m_ehAcc =
+          new EnergyHessianAccumulator<pairwise_interaction, distance_policy>(
+              m_interaction, m_dist, m_radii);
     } else {
       m_eAcc = new EnergyAccumulator<pairwise_interaction, distance_policy>(
           interaction, dist);
@@ -903,6 +916,9 @@ public:
       m_eghAcc = new EnergyGradientHessianAccumulator<pairwise_interaction,
                                                       distance_policy>(
           interaction, dist);
+      m_ehAcc =
+          new EnergyHessianAccumulator<pairwise_interaction, distance_policy>(
+              m_interaction, m_dist, m_radii);
     }
   }
 
