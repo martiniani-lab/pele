@@ -1,3 +1,4 @@
+
 // base imports
 #include "pele/array.hpp"
 #include "pele/cell_lists.hpp"
@@ -113,7 +114,7 @@ TEST(EXTENDED_MXD, TEST_256_RUN) {
   std::cout << x << std::endl;
   std::cout << "radii" << std::endl;
   std::cout << radii << std::endl;
-  pele::ExtendedMixedOptimizer optimizer_mxopt(pot, extension_potential, x, 1e-9, 10, 1, 1e-2);
+  pele::ExtendedMixedOptimizer optimizer_mxopt(pot, extension_potential, x, 1e-9, 60, 1, 1e-1, 2, 1e-4, 1e-4);
   pele::MODIFIED_FIRE optimizer_fire(pot, x_new, 0.1, 1, 0.5, 5, 1.1, 0.4, 0.99, 0.1, 1e-9);
   pele::LBFGS optimizer_lbfgs(pot, x_new_extension, 1e-9, 4);
   pele::CVODEBDFOptimizer optimizer_cvode(pot, x, 1e-9);
@@ -121,8 +122,8 @@ TEST(EXTENDED_MXD, TEST_256_RUN) {
 
   std::cout << "n phase 1 steps " <<  optimizer_mxopt.get_n_phase_1_steps() << std::endl;
   std::cout << "n phase 2 steps " <<  optimizer_mxopt.get_n_phase_2_steps() << std::endl;
+  std::cout << "n failed phase 2 steps" << optimizer_mxopt.get_n_failed_phase_2_steps() << std::endl;
   // optimizer_fire.run(2000);
-
   // std::cout << optimizer_fire.get_niter() << std::endl;
   // optimizer_lbfgs.run(2000);
 
