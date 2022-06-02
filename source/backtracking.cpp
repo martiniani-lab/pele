@@ -44,6 +44,7 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
             << "absolute step size \n";
 #endif
   double step_norm;
+  step_norm = norm(step);
   if (step_norm == 0) {
     throw std::runtime_error("step norm is zero");
   }
