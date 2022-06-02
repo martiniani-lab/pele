@@ -43,6 +43,13 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
 
   // assume previous phase is phase 1
   prev_phase_is_phase1 = true;
+  // Check whether potentials are Null
+  if (!potential_) {
+    throw std::runtime_error("ExtendedMixedOptimizer: potential is null");
+  }
+  if (!potential_extension) {
+    throw std::runtime_error("ExtendedMixedOptimizer: potential_extension is null");
+  }
   set_potential(
       extended_potential); // because we can only create the extended potential
   // after we instantiate the extended potential

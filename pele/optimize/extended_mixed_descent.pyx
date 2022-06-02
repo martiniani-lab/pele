@@ -41,6 +41,7 @@ cdef class _Cdef_ExtendedMixedOptimizer_CPP(_pele_opt.GradientOptimizer):
         potential = as_cpp_potential(potential, verbose=True)
         pot_ext = as_cpp_potential(potential_extension, verbose=True)
         self.pot = potential
+        self.pot_ext = pot_ext
         cdef np.ndarray[double, ndim=1] x0c = np.array(x0, dtype=float)
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppExtendedMixedOptimizer(self.pot.thisptr, self.pot_ext.thisptr,
