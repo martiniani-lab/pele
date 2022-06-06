@@ -34,7 +34,7 @@ public:
                min_step_, max_step_, ftol_, wolfe_, lstype_),
         xsize(opt->get_x().size()), xdum(opt->get_x().copy()), gdum(xsize),
         xvec(xsize), gradvec(xsize), initial_stpsize(inital_stpsize_),
-        step_direction(xsize), xoldvec(xsize), step_moving_to_away_from_min(false) {
+        step_direction(xsize), xoldvec(xsize), step_moving_away_from_min(false) {
     std::cout << inital_stpsize_ << "stpsize \n";
     std::cout << max_step_ << "max step \n";
   };
@@ -47,7 +47,7 @@ public:
   inline void set_g_f_ptr(Array<double> &g) { g_ = g; };
   double line_search(Array<double> &x, Array<double> step);
   inline double get_initial_stpsize() { return initial_stpsize; };
-  bool get_step_moving_away_from_min() { return step_moving_to_away_from_min; };
+  bool get_step_moving_away_from_min() { return step_moving_away_from_min; };
 
 private:
   LBFGSParam params;
@@ -68,7 +68,7 @@ private:
   Scalar initial_stpsize;
   Vector step_direction;
   Vector xoldvec;
-  bool step_moving_to_away_from_min; // flag to inform the optimizer whether the step is
+  bool step_moving_away_from_min; // flag to inform the optimizer whether the step is
                            // moving to the minimum or not
 };
 } // namespace pele

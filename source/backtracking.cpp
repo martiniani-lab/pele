@@ -4,6 +4,9 @@
 #include "pele/lsparameters.hpp"
 #include <cmath>
 #include <complex>
+#include <iomanip>
+#include <iostream>
+#include <pele/eigen_interface.hpp>
 #include <stdexcept>
 
 using namespace std;
@@ -27,9 +30,9 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
   Scalar f = opt_->get_f();
   // start with the initial stepsize
 
-  step_moving_to_away_from_min = false; // only true when step is opposite to gradient
+  step_moving_away_from_min = false; // only true when step is opposite to gradient
   LSFunc(f, xvec, gradvec, stpsize, step_direction, xoldvec, params);
-  if (step_moving_to_away_from_min) {
+  if (step_moving_away_from_min) {
     return 0; // Line search will not work
   }
   pele_eq_eig(x, xvec);
@@ -37,6 +40,7 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
   step = xold_ - x;
   opt_->set_f(f);
   opt_->set_rms(norm(g_) / sqrt(x.size()));
+  pele_eq_eig(step, step_direction);
 #if OPTIMIZER_DEBUG_LEVEL >= 1
   std::cout << stpsize << " stepsize final \n";
   std::cout << opt_->compute_pot_norm(step) << " step norm \n";
@@ -90,7 +94,7 @@ void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
 #endif
   // Make sure d points to a descent direction
   if (dg_init > 0) {
-    step_moving_to_away_from_min = true; // step points away from minimum
+    step_moving_away_from_min = true; // step points away from minimum
     return;
   }
   const Scalar test_decr = param.ftol * dg_init;
