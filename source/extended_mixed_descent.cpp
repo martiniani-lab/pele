@@ -14,6 +14,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
 #include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
@@ -48,7 +49,8 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     throw std::runtime_error("ExtendedMixedOptimizer: potential is null");
   }
   if (!potential_extension) {
-    throw std::runtime_error("ExtendedMixedOptimizer: potential_extension is null");
+    throw std::runtime_error(
+        "ExtendedMixedOptimizer: potential_extension is null");
   }
   set_potential(
       extended_potential); // because we can only create the extended potential
@@ -164,7 +166,7 @@ void ExtendedMixedOptimizer::one_iteration() {
         max_step = abs(step[i]);
       }
     }
-    // if max step is too big, switch bag to CVODE
+    // if max step is too big, switch back to CVODE
     if (max_step > conv_tol_) {
       use_phase_1 = true;
       x_.assign(x_last_cvode);
@@ -178,7 +180,10 @@ void ExtendedMixedOptimizer::one_iteration() {
       // if step is going uphill, phase two has failed.
       phase_2_failed_ = line_search_method.get_step_moving_away_from_min();
       if (phase_2_failed_) {
-        throw std::logic_error("step moving away from minimum");
+        use_phase_1 = true;
+        x_.assign(x_last_cvode);
+        extended_potential->switch_off_extended_potential();
+        n_failed_phase_2_steps += 1;
       }
     }
   }
@@ -188,7 +193,7 @@ void ExtendedMixedOptimizer::one_iteration() {
   // update inverse hessian estimate
 
 #if OPTIMIZER_DEBUG_LEVEL >= 3
-  std::cout << "mixed optimizer: " << iter_number_ << " E " << f_ << " rms "
+  std::cout << "mixed optimizer: " << iter_number_ << " E " << f_ << " n "
             << rms_ << " nfev " << nfev_ << " nhev " << udata.nhev << std::endl;
   std::cout << "optimizer position \n" << x_ << "\n";
 #endif
@@ -312,7 +317,6 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
   }
 
   // hessian.diagonal().array() += conv_factor_ * conv_tol_ * 10;
-
   Eigen::VectorXd r(step.size());
   Eigen::VectorXd q(step.size());
 
