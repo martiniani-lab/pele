@@ -183,6 +183,7 @@ public:
   inline void set_potential(std::shared_ptr<pele::BasePotential> potential) {
     potential_ = potential;
   }
+  inline void set_tolerance(double tol) { tol_ = tol; }
 
   // functions for accessing the status of the optimizer
   inline Array<double> get_x() const { return x_; }
