@@ -184,6 +184,7 @@ public:
     potential_ = potential;
   }
   inline void set_tolerance(double tol) { tol_ = tol; }
+  inline void set_x(pele::Array<double> x) { x_ = x; }
 
   // functions for accessing the status of the optimizer
   inline Array<double> get_x() const { return x_; }
