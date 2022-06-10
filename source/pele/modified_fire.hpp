@@ -167,6 +167,10 @@ inline void MODIFIED_FIRE::_ForwardEuler_integration() {
 }
 
 inline void MODIFIED_FIRE::one_iteration() {
+
+  if (!func_initialized_) {
+    initialize_func_gradient();
+  }
   nfev_ += 1;
   iter_number_ += 1;
   _fire_iter_number +=
