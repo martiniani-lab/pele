@@ -17,6 +17,7 @@
 
 #include "pele/gradient_descent.hpp"
 #include <cmath>
+#include <cstddef>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -32,7 +33,7 @@ using pele::Array;
 using std::cout;
 
 // Test for whether the switch works for mixed descent
-TEST(EXTENDED_MXD, TEST_256_RUN) {
+TEST(GENERIC_MXD, TEST_256_RUN) {
   static const size_t _ndim = 2;
   size_t n_particles;
   size_t n_dof;
@@ -140,7 +141,8 @@ TEST(EXTENDED_MXD, TEST_256_RUN) {
       pot, x_new, 0.1, 1, 0.5, 5, 1.1, 0.4, 0.99, 0.1, 1e-9);
   std::shared_ptr<pele::CVODEBDFOptimizer> shared_pointer_to_cvode =
       std::make_shared<pele::CVODEBDFOptimizer>(pot, x, 1e-9);
-  pele::GenericMixedDescent optimizer_mixed_descent_fire(pot, x_new, 1e-9, shared_pointer_to_cvode, shared_pointer_to_fire, 1.0);
+  size_t steps_before_convex_check = 40;
+  pele::GenericMixedDescent optimizer_mixed_descent_fire(pot, x_new, 1e-9, shared_pointer_to_cvode, shared_pointer_to_fire, 1.0, steps_before_convex_check);
 
   optimizer_mixed_descent_fire.run(2000);
 
