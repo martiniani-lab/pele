@@ -41,7 +41,7 @@ public:
         hessian_copy_for_cholesky_(x.size(), x.size()), hessian_evaluations_(0),
         iterations_(0), steps_before_convex_check_(steps_before_convex_check),
         not_in_convex_region_(true), hessian_calculated_(false),
-        last_non_convex_x_(x.size()), GradientOptimizer(pot, x, tol) {
+        last_non_convex_x_(x.size()), use_non_convex_method_(true), GradientOptimizer(pot, x, tol) {
     // Ensure that both optimizers have the same potential
     // There is redundancy because we add the potential to each optimizer
     // but this overrides the potential in the optimizer.
@@ -74,12 +74,6 @@ private:
    * @param hessian the hessian to be calculated
    */
   void get_hess(Eigen::MatrixXd &hessian);
-
-  /**
-   * @brief Uses convex method to find the next point if true, else uses
-   * non-convex method.
-   */
-  bool use_convex_method_;
 
   void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset);
 
