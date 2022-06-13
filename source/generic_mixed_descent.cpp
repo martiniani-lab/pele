@@ -9,10 +9,11 @@
  *
  */
 
-#include "pele/mixed_descent_with_fire.hpp"
+#include "pele/generic_mixed_descent.hpp"
 #include <lapack.h>
 #include <pele/array.hpp>
 
+using namespace std;
 namespace pele {
 bool GenericMixedDescent::x_in_convex_region() {
 
@@ -54,7 +55,7 @@ void GenericMixedDescent::get_hess(Eigen::MatrixXd &hessian) {
 void GenericMixedDescent::one_iteration() {
   if ((iter_number_ % steps_before_convex_check_ == 0 and iter_number_ > 0) or
       !not_in_convex_region_) {
-    not_in_convex_region_ = x_in_convex_region();
+    not_in_convex_region_ = !x_in_convex_region();
 
     // if in convex region and non convex method is being used
     if (!not_in_convex_region_ and use_non_convex_method_) {
@@ -79,8 +80,7 @@ void GenericMixedDescent::one_iteration() {
   // update all parameters from the optimizer
 
   nfev_ = opt_non_convex_->get_nfev() + opt_convex_->get_nfev();
-  nhev_ = opt_non_convex_->get_nhev() + opt_convex_->get_nhev();
-
+  nhev_ = opt_non_convex_->get_nhev() + opt_convex_->get_nhev() + hessian_evaluations_;
   iter_number_ += 1;
 }
 

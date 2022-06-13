@@ -6,6 +6,7 @@
 #include "optimizer.hpp"
 #include <fstream>
 #include <iostream>
+#include <ostream>
 
 namespace pele {
 /**
