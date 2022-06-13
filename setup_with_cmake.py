@@ -273,6 +273,7 @@ cxx_files = ["pele/potentials/_lj_cpp.cxx",
              "pele/optimize/_lbfgs_cpp.cxx",
              "pele/optimize/_modified_fire_cpp.cxx",
              "pele/optimize/_mxopt.cxx",
+             "pele/optimize/generic_mixed_descent.cxx"
              "pele/optimize/_mxd_end_only.cxx",
              "pele/optimize/extended_mixed_descent.cxx",
              "pele/optimize/cvode_opt.cxx",             

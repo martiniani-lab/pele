@@ -5,7 +5,7 @@
 #include "pele/utils.hpp"
 // optimizer imports
 // #include "pele/extended_mixed_descent.hpp"
-#include "pele/mixed_descent_with_fire.hpp"
+#include "pele/generic_mixed_descent.hpp"
 
 #include "pele/cvode.hpp"
 #include "pele/lbfgs.hpp"
