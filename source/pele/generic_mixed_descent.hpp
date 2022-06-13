@@ -41,7 +41,8 @@ public:
         hessian_copy_for_cholesky_(x.size(), x.size()), hessian_evaluations_(0),
         iterations_(0), steps_before_convex_check_(steps_before_convex_check),
         not_in_convex_region_(true), hessian_calculated_(false),
-        last_non_convex_x_(x.size()), use_non_convex_method_(true), GradientOptimizer(pot, x, tol) {
+        last_non_convex_x_(x.size()), use_non_convex_method_(true),
+        n_phase_1_steps(0), GradientOptimizer(pot, x, tol) {
     // Ensure that both optimizers have the same potential
     // There is redundancy because we add the potential to each optimizer
     // but this overrides the potential in the optimizer.
@@ -54,6 +55,8 @@ public:
   }
 
   void one_iteration();
+  int get_n_phase_1_steps() { return n_phase_1_steps; }
+  int get_n_phase_2_steps() { return iter_number_ - n_phase_1_steps; }
 
 private:
   std::shared_ptr<pele::GradientOptimizer> opt_non_convex_;
@@ -106,6 +109,8 @@ private:
    * @brief Failed phase 2 steps
    */
   size_t n_failed_phase_2_steps;
+
+  int n_phase_1_steps;
 };
 } // namespace pele
 

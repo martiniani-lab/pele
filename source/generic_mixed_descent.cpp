@@ -68,6 +68,7 @@ void GenericMixedDescent::one_iteration() {
   // take iteration
   if (use_non_convex_method_) {
     opt_non_convex_->one_iteration();
+    n_phase_1_steps +=1;
     rms_ = opt_non_convex_->get_rms();
   } else {
     opt_convex_->one_iteration();
