@@ -16,6 +16,7 @@ cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
     """This class is the python interface for the c++ MODIFIED_FIRE implementation
     """  
     cdef _pele.BasePotential pot
+    cdef double[:] x0
     cdef float dtstart
     cdef float dtmax
     cdef float maxstep
@@ -53,6 +54,7 @@ cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
         
         cdef _pele.BasePotential pot = potential
         cdef np.ndarray[double, ndim=1] x0c = np.array(x0, dtype=float)
+        self.x0 = x0c
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                         new cppMODIFIED_FIRE(pot.thisptr, _pele.Array[double](<double*> x0c.data, x0c.size),
                                              dtstart, dtmax, maxstep, Nmin, finc, fdec, fa, astart, tol, stepback) )

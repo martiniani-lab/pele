@@ -49,6 +49,9 @@ cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
         res = super(_Cdef_CVODEBDFOptimizer_CPP, self).get_result()
         res["nhev"] = float(mxopt_ptr.get_nhev())
         return res
+    
+    def __reduce__(self):
+        return (_Cdef_CVODEBDFOptimizer_CPP, (self.pot, self.x0, self.tol, self.rtol, self.atol, self.nsteps, self.iterative, self.use_newton_stop_criterion))
 
 class CVODEBDFOptimizer_CPP(_Cdef_CVODEBDFOptimizer_CPP):
     """This class is the python interface for the c++ LBFGS implementation
