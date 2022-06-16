@@ -194,7 +194,7 @@ public:
   inline void set_x(pele::Array<double> x) { x_.assign(x); }
 
   // functions for accessing the status of the optimizer
-  inline Array<double> get_x() const { 
+  virtual inline Array<double> get_x() const { 
     return x_; }
   inline Array<double> get_g() const { return g_; }
   inline double get_f() const { return f_; }
