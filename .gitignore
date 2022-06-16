@@ -82,3 +82,7 @@ htmlcov
 /source/main.py
 /source/pele/Eigen/
 cpp_tests/source/test_main
+/CMakeCache.txt
+/CMakeFiles/
+/cmake_install.cmake
+/out.txt
