@@ -1,4 +1,3 @@
-
 #include "pele/extended_mixed_descent.hpp"
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
@@ -7,7 +6,6 @@
 #include "pele/lsparameters.hpp"
 #include "pele/optimizer.hpp"
 #include "pele/preprocessor_directives.hpp"
-#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <complex>
 #include <cstddef>

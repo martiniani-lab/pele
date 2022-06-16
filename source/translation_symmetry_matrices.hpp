@@ -13,7 +13,6 @@
 #define TRANSLATION_SYMMETRY_MATRICES_HPP
 
 #include <Eigen/Dense>
-#include <Eigen/src/Core/Matrix.h>
 #include <cstddef>
 #include <stdexcept>
 #include <vector>

@@ -9,7 +9,6 @@
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_nvector.h"
 #include "sunmatrix/sunmatrix_dense.h"
-#include <Eigen/src/Core/Matrix.h>
 #include <cstddef>
 #include <hoomd/HOOMDMath.h>
 #include <iostream>

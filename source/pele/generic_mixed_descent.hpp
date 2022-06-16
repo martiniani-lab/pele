@@ -16,8 +16,8 @@
 #define PELE_MIXED_DESCENT_WITH_FIRE_HPP
 
 #include <Eigen/Dense>
-#include <Eigen/src/Core/Matrix.h>
 #include <cstddef>
+#include <iostream>
 #include <memory>
 #include <pele/array.hpp>
 #include <pele/base_potential.hpp>

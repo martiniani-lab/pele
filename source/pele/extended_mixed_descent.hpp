@@ -11,7 +11,6 @@
 #include "pele/combine_potentials.hpp"
 #include "pele/lbfgs.hpp"
 #include <Eigen/Dense>
-#include <Eigen/src/Core/Matrix.h>
 #include <Spectra/SymEigsSolver.h>
 #include <array>
 #include <fstream>
@@ -198,7 +197,6 @@ private:
   bool hessian_calculated; // checks whether the hessian has been calculated for
                            // updating.
   void compute_phase_1_step(Array<double> step);
-
   void compute_phase_2_step(Array<double> step);
   bool convexity_check();
   void get_hess(Eigen::MatrixXd &hess);
