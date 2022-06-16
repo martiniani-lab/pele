@@ -57,6 +57,33 @@ public:
   void one_iteration();
   int get_n_phase_1_steps() { return n_phase_1_steps; }
   int get_n_phase_2_steps() { return iter_number_ - n_phase_1_steps; }
+  /**
+   * Return true if the termination condition is satisfied, false otherwise
+   */
+  bool stop_criterion_satisfied() {
+    if (!func_initialized_) {
+      initialize_func_gradient();
+    }
+    if (use_non_convex_method_) {
+      x_.assign(opt_non_convex_->get_x());
+      g_.assign(opt_non_convex_->get_g());
+    } else {
+      x_.assign(opt_convex_->get_x());
+      g_.assign(opt_convex_->get_g());
+    }
+    if (rms_ <= tol_) {
+      return true;
+    }
+    return false;
+  }
+
+  Array<double> get_x() {
+    if (use_non_convex_method_) {
+      return opt_non_convex_->get_x();
+    } else {
+      return opt_convex_->get_x();
+    }
+  }
 
 private:
   std::shared_ptr<pele::GradientOptimizer> opt_non_convex_;
