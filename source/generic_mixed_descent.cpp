@@ -61,6 +61,7 @@ void GenericMixedDescent::one_iteration() {
     if (!not_in_convex_region_ and use_non_convex_method_) {
       use_non_convex_method_ = false;
       last_non_convex_x_.assign(x_);
+      opt_convex_->set_x(x_);
     }
 
   }

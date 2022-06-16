@@ -12,7 +12,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 enable_language(CXX)
-ADD_DEFINITIONS(-std=c++20 -O0 -ggdb3)
+ADD_DEFINITIONS(-std=c++20 -O0 -ggdb3 -fsanitize=address)
 
 
 #find conda path for python header
