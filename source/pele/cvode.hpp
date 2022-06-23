@@ -140,5 +140,7 @@ static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 
+static int check_sundials_retval(int flag, const char *funcname, int opt);
+
 } // namespace pele
 #endif

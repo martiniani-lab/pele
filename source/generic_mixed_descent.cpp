@@ -80,7 +80,7 @@ void GenericMixedDescent::one_iteration() {
     }
   }
   // update all parameters from the optimizer
-
+  std::cout << rms_ << std::endl;
   nfev_ = opt_non_convex_->get_nfev() + opt_convex_->get_nfev();
   nhev_ = opt_non_convex_->get_nhev() + opt_convex_->get_nhev() + hessian_evaluations_;
   iter_number_ += 1;
