@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <sundials/sundials_context.h>
 #include <vector>
 
 // #define EIGEN_USE_MKL_ALL
@@ -44,6 +45,9 @@ extern "C" {
 #include "xsum.h"
 }
 
+
+
+
 namespace pele {
 
 /**
@@ -73,6 +77,8 @@ private:
   SUNLinearSolver LS;
   double t0;
   double tN;
+  int ret;
+  SUNContext sunctx;  // SUNDIALS context
 #if PRINT_TO_FILE == 1
   std::ofstream trajectory_file;
   std::ofstream hessian_eigvals_file;
@@ -112,9 +118,9 @@ protected:
 /**
  * creates a new N_vector array that wraps around the pele array data
  */
-inline N_Vector N_Vector_eq_pele(pele::Array<double> x) {
+inline N_Vector N_Vector_eq_pele(pele::Array<double> x, SUNContext sunctx) {
   N_Vector y;
-  y = N_VNew_Serial(x.size());
+  y = N_VNew_Serial(x.size(), sunctx);
   for (size_t i = 0; i < x.size(); ++i) {
     NV_Ith_S(y, i) = x[i];
   }
@@ -140,7 +146,12 @@ static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 
-static int check_sundials_retval(int flag, const char *funcname, int opt);
+
+
+static int check_sundials_retval(void * return_value, const char *funcname, int opt);
 
 } // namespace pele
+
+
+
 #endif
