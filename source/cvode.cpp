@@ -1,4 +1,5 @@
 #include "pele/cvode.hpp"
+
 #include "cvode/cvode.h"
 #include "cvode/cvode_ls.h"
 #include "nvector/nvector_serial.h"
@@ -15,6 +16,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <ostream>
 #include <sundials/sundials_context.h>
 
 using namespace std;
@@ -26,19 +28,34 @@ namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0, double tol, double rtol, double atol,
-    bool iterative, bool use_newton_stop_criterion)
-    : GradientOptimizer(potential, x0, tol),
-      N_size(x0.size()), hessian(x0.size(), x0.size()), t0(0), tN(10000000.0),
-      ret(0), use_newton_stop_criterion_(use_newton_stop_criterion) {
+    bool iterative, bool use_newton_stop_criterion, bool debug_zone)
+    : GradientOptimizer(potential, x0, tol), N_size(x0.size()), rtol_(rtol),
+      atol_(atol), iterative_(iterative), hessian(x0.size(), x0.size()), t0(0),
+      tN(10000000.0), ret(0),
+      use_newton_stop_criterion_(use_newton_stop_criterion) {
+  setup_cvode();
+};
+
+
+/**
+ * setup the CVODE solver. extracted for use in assigment operators/constructors
+ */
+void CVODEBDFOptimizer::setup_cvode() {
+  cvode_mem = NULL;
+  x0_N = NULL;
+  A = NULL;
+  sunctx = NULL;
+  LS = NULL;
+
   std::cout << "CVODE constructed with parameters: " << std::endl;
-  std::cout << "x0: " << x0 << std::endl;
-  std::cout << "tol: " << tol << std::endl;
-  std::cout << "rtol: " << rtol << std::endl;
-  std::cout << "atol: " << atol << std::endl;
-  std::cout << "iterative: " << iterative << std::endl;
+  std::cout << "x0: " << x_ << std::endl;
+  std::cout << "tol: " << tol_ << std::endl;
+  std::cout << "rtol: " << rtol_ << std::endl;
+  std::cout << "atol: " << atol_ << std::endl;
+  std::cout << "iterative: " << iterative_ << std::endl;
   std::cout << "use_newton_stop_criterion: " << use_newton_stop_criterion_
             << std::endl;
-  
+
   sunctx = NULL;
   ret = SUNContext_Create(NULL, &sunctx);
   if (check_sundials_retval(&ret, "SUNContext_Create", 1)) {
@@ -53,7 +70,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
 
   // dummy t0
   double t0 = 0;
-  Array<double> x0copy = x0.copy();
+  Array<double> x0copy = x_.copy();
   x0_N = N_Vector_eq_pele(x0copy, sunctx);
   std::cout << "x0_N: creation works" << std::endl;
   std::cout << "x0_N: " << x0_N << std::endl;
@@ -66,12 +83,12 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
   }
 
   // initialize userdata
-  udata.rtol = rtol;
+  udata.rtol = rtol_;
   udata.atol = atol;
   udata.nfev = 0;
   udata.nhev = 0;
   udata.pot_ = potential_;
-  udata.stored_grad = Array<double>(x0.size(), 0);
+  udata.stored_grad = Array<double>(x_.size(), 0);
 
   ret = CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
   if (check_sundials_retval(&ret, "CVodeSStolerances", 1)) {
@@ -83,12 +100,11 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     throw std::runtime_error("CVODE user data failed");
   }
 
-  if (iterative) {
+  if (iterative_) {
     LS = SUNLinSol_SPGMR(x0_N, SUN_PREC_NONE, 0, sunctx);
-    if (check_sundials_retval((void *) LS, "SUNLinSol_SPGMR", 0)) {
+    if (check_sundials_retval((void *)LS, "SUNLinSol_SPGMR", 0)) {
       throw std::runtime_error("SUNLinSol_SPGMR failed");
     }
-
 
     ret = CVodeSetLinearSolver(cvode_mem, LS, NULL);
     if (check_sundials_retval(&ret, "CVodeSetLinearSolver", 1)) {
@@ -97,13 +113,12 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
 
   } else {
 
-
     A = SUNDenseMatrix(N_size, N_size, sunctx);
-    if (check_sundials_retval((void *) A, "SUNDenseMatrix", 0)) {
+    if (check_sundials_retval((void *)A, "SUNDenseMatrix", 0)) {
       throw std::runtime_error("SUNDenseMatrix failed");
     }
     LS = SUNLinSol_Dense(x0_N, A, sunctx);
-    if (check_sundials_retval((void *) LS, "SUNLinSol_Dense", 0)) {
+    if (check_sundials_retval((void *)LS, "SUNLinSol_Dense", 0)) {
       throw std::runtime_error("SUNLinSol_Dense failed");
     }
 
@@ -139,11 +154,14 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
 };
 
 CVODEBDFOptimizer::~CVODEBDFOptimizer() {
-    N_VDestroy(x0_N);
-    SUNMatDestroy(A);
-    SUNLinSolFree(LS);
-    CVodeFree(&cvode_mem);
-    SUNContext_Free(&sunctx);
+  std::cout << "is x0_N null" << (x0_N == NULL) << std::endl;
+  std::cout << x0_N << std::endl;
+
+  N_VDestroy(x0_N);
+  SUNMatDestroy(A);
+  SUNLinSolFree(LS);
+  CVodeFree(&cvode_mem);
+  SUNContext_Free(&sunctx);
 }
 
 void CVODEBDFOptimizer::one_iteration() {
@@ -157,7 +175,6 @@ void CVODEBDFOptimizer::one_iteration() {
     throw std::runtime_error("CVODE single step failed");
   }
 
-
   iter_number_ += 1;
 
   // Assert length of x0_N is the same as x_
@@ -170,7 +187,7 @@ void CVODEBDFOptimizer::one_iteration() {
   nfev_ = udata.nfev;
   Array<double> step = xold - x_;
 
-  // really hacky way to output $lambdamin/lambdamax on a low tolerance run 
+  // really hacky way to output $lambdamin/lambdamax on a low tolerance run
   // simply print the energy and lambdamin/lambdamax as csv values and write
   // stdout to file then plot them using python
 
@@ -241,21 +258,7 @@ void CVODEBDFOptimizer::one_iteration() {
   lbfgs_m_1_step_file << std::setprecision(17) << H0_g;
   g_old.assign(g_);
 #endif
-
-  // print to file
-
-  // double convexity_estimate;
-
-  // if (minimum<0) {
-  //     convexity_estimate = std::abs(minimum / maximum);
-  // }
-  // else {
-  //     convexity_estimate = 0;
-  // }
-  // std::cout << e << "," << convexity_estimate << "," << minimum << "," <<
-  // maximum << "\n";
-  // // TODO: This is terrible C++ code but write it better
-};
+}
 
 void CVODEBDFOptimizer::add_translation_offset_2d(Eigen::MatrixXd &hessian,
                                                   double offset) {
@@ -378,7 +381,7 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
   udata->nhev += 1;
 
   double *hessdata = SUNDenseMatrix_Data(J);
-  for (size_t i = 0; i< yw.size(); ++i) {
+  for (size_t i = 0; i < yw.size(); ++i) {
     for (size_t j = 0; j < yw.size(); ++j) {
       hessdata[i * yw.size() + j] = -h[i * yw.size() + j];
     }
@@ -388,7 +391,8 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
 
 /**
  * @brief Checks sundials error code and prints out error message. Copied from
- * the sundials examples. Honestly this is 3 functions in one. it needs to be split
+ * the sundials examples. Honestly this is 3 functions in one. it needs to be
+ * split
  *
  * @param flag
  * @param funcname
