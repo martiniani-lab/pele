@@ -266,6 +266,7 @@ public:
     }
     jammed = true;
     cout << "find rattlers finished " << endl;
+    return jammed;
   }
 };
 
