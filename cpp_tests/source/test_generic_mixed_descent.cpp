@@ -103,6 +103,7 @@ TEST(GENERIC_MXD, TEST_256_RUN) {
   /// 3d
   //////////// as generated from code params.py in basinerror library
   double k;
+
 #ifdef _OPENMP
   omp_set_num_threads(1);
 #endif
@@ -133,30 +134,47 @@ TEST(GENERIC_MXD, TEST_256_RUN) {
 
   double tol = 1e-9;
   // combine both optimizers
-  pele::MODIFIED_FIRE optimizer_fire(pot, x_new, 0.1, 1, 0.5, 5, 1.1, 0.4, 0.99,
-                                     0.1, 1e-9);
-  pele::CVODEBDFOptimizer optimizer_cvode(pot, x, 1e-9);
+  std::shared_ptr<pele::MODIFIED_FIRE> shared_pointer_to_fire_2 =
+      std::make_shared<pele::MODIFIED_FIRE>(pot, x_new, 0.1, 1, 0.5, 5, 1.1,
+                                            0.5, 0.99, 0.1, 1e-9);
 
-  std::shared_ptr<pele::MODIFIED_FIRE> shared_pointer_to_fire= std::make_shared<pele::MODIFIED_FIRE>(
-      pot, x_new, 0.1, 1, 0.5, 5, 1.1, 0.4, 0.99, 0.1, 1e-9);
+  std::shared_ptr<pele::MODIFIED_FIRE> shared_pointer_to_fire =
+      std::make_shared<pele::MODIFIED_FIRE>(pot, x_new, 0.1, 1, 0.5, 5, 1.1,
+                                            0.5, 0.99, 0.1, 1e-9);
   std::shared_ptr<pele::CVODEBDFOptimizer> shared_pointer_to_cvode =
-      std::make_shared<pele::CVODEBDFOptimizer>(pot, x, 1e-9);
-  size_t steps_before_convex_check = 40;
-  pele::GenericMixedDescent optimizer_mixed_descent_fire(pot, x_new, 1e-9, shared_pointer_to_cvode, shared_pointer_to_fire, 1.0, steps_before_convex_check);
+      std::make_shared<pele::CVODEBDFOptimizer>(pot, x_cvode, 1e-9);
+  size_t steps_before_convex_check = 1;
 
-  optimizer_mixed_descent_fire.run(2000);
+  // pele::GenericMixedDescent optimizer_mixed_descent_fire(pot, x, 1e-9,
+  // shared_pointer_to_fire_2, shared_pointer_to_fire, 1.0,
+  // steps_before_convex_check);
+  pele::CVODEBDFOptimizer optimizer_mixed_descent_fire =
+      pele::CVODEBDFOptimizer(pot, x, 1e-9, 1e-5, 1e-5);
 
+  // optimizer_mixed_descent_fire.run(10000);
 
-  double niter = optimizer_mixed_descent_fire.get_niter();
+  // double niter = optimizer_mixed_descent_fire.get_niter();
 
-  std::cout << niter << endl;
+  // double nfev = optimizer_mixed_descent_fire.get_nfev();
 
-  // optimizer_fire.run(2000);
-  // std::cout << optimizer_fire.get_niter() << std::endl;
-  // optimizer_lbfgs.run(2000);
+  // std::cout << "niter" << niter << endl;
+  // std::cout << "nfev" << nfev << endl;
 
-  // optimizer_cvode.run(10000);
-  // std::cout << "cvode steps" << optimizer_cvode.get_niter() << std::endl;
-  // std::cout << optimizer_lbfgs.get_niter() << std::endl;
-  // std::cout << optimizer_fire.get_niter() << std::endl;
+  // std::cout << "x_new" << std::endl;
+  // std::cout << "x" << optimizer_mixed_descent_fire.get_x() << std::endl;
+  // std::cout << "g" << optimizer_mixed_descent_fire.get_g() << std::endl;
+
+  // std::cout << "x_new_extension" << std::endl;
+
+  // std::cout << "-----" << std::endl;
+  // std::cout << "x" << x << std::endl;
+  // std::cout << "-----" << std::endl;
+
+  optimizer_mixed_descent_fire =
+      pele::CVODEBDFOptimizer(pot, x_new, 1e-9, 1e-5, 1e-5);
+  optimizer_mixed_descent_fire.one_iteration();
+  // optimizer_mixed_descent_fire =
+  //     pele::CVODEBDFOptimizer(pot, x, 1e-9, 1e-5, 1e-5);
+  // optimizer_mixed_descent_fire.run(10000);
+
 }

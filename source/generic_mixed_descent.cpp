@@ -17,7 +17,7 @@ using namespace std;
 namespace pele {
 bool GenericMixedDescent::x_in_convex_region() {
 
-  x_ = opt_non_convex_->get_x();
+  x_.assign(opt_non_convex_->get_x());
   // Calculate hessian at x. Current version is hessian based.
   // Ideally you should be able to get the pointer to the hessian from the
   // optimizer.
@@ -63,9 +63,7 @@ void GenericMixedDescent::one_iteration() {
       last_non_convex_x_.assign(x_);
       opt_convex_->set_x(x_);
     }
-
   }
-
   // take iteration
   if (use_non_convex_method_) {
     opt_non_convex_->one_iteration();

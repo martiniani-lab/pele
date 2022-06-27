@@ -139,9 +139,9 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
 };
 
 CVODEBDFOptimizer::~CVODEBDFOptimizer() {
+    N_VDestroy(x0_N);
     SUNMatDestroy(A);
     SUNLinSolFree(LS);
-    N_VDestroy(x0_N);
     CVodeFree(&cvode_mem);
     SUNContext_Free(&sunctx);
 }
@@ -350,7 +350,6 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
 }
 
 int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
-
   UserData udata = (UserData)user_data;
   pele::Array<double> yw = pele_eq_N_Vector(y);
   // double energy = udata->pot_->get_energy_gradient(yw, g);
