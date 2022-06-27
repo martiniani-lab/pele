@@ -55,6 +55,19 @@ MODIFIED_FIRE::MODIFIED_FIRE(std::shared_ptr<pele::BasePotential> potential,
 #if PRINT_TO_FILE == 1
   trajectory_file.open("trajectory_modified_fire.txt");
 #endif
+#if OPTIMIZER_DEBUG_LEVEL > 0
+  std::cout << "MODIFIED_FIRE Constructed with parameters:\n";
+  std::cout << "dtstart: " << _dtstart << "\n";
+  std::cout << "dtmax: " << _dtmax << "\n";
+  std::cout << "maxstep: " << _maxstep << "\n";
+  std::cout << "Nmin: " << _Nmin << "\n";
+  std::cout << "finc: " << _finc << "\n";
+  std::cout << "fdec: " << _fdec << "\n";
+  std::cout << "fa: " << _fa << "\n";
+  std::cout << "astart: " << _astart << "\n";
+  std::cout << "tol: " << tol << "\n";
+  std::cout << "stepback: " << _stepback << "\n";
+#endif
 }
 
 /**

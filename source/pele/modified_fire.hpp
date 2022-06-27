@@ -168,7 +168,9 @@ inline void MODIFIED_FIRE::_ForwardEuler_integration() {
 }
 
 inline void MODIFIED_FIRE::one_iteration() {
-
+#if OPTIMIZER_DEBUG_LEVEL > 2
+  std::cout << "func initialized" << func_initialized_ << std::endl;
+#endif
   if (!func_initialized_) {
     initialize_func_gradient();
   }

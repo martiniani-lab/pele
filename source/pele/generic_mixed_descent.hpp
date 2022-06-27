@@ -51,6 +51,15 @@ public:
     opt_convex_->set_tolerance(tol);
     opt_non_convex_->set_x(x);
     opt_non_convex_->set_tolerance(tol);
+#if OPTIMIZER_DEBUG_LEVEL > 1
+    std::cout << "GenericMixedDescent: Constructed with parameters"
+              << std::endl;
+    std::cout << "x: " << x << std::endl;
+    std::cout << "tol: " << tol << std::endl;
+    std::cout << "translation_offset: " << translation_offset << std::endl;
+    std::cout << "steps_before_convex_check: " << steps_before_convex_check
+              << std::endl;
+#endif
     uplo = 'U';
   }
 
@@ -79,8 +88,16 @@ public:
 
   Array<double> get_x() {
     if (use_non_convex_method_) {
+#if OPTIMIZER_DEBUG_LEVEL > 3
+      std::cout << "Using non convex method" << std::endl;
+      std::cout << "x_ = " << opt_non_convex_->get_x() << std::endl;
       return opt_non_convex_->get_x();
+#endif
     } else {
+#if OPTIMIZER_DEBUG_LEVEL > 3
+      std::cout << "Using convex method" << std::endl;
+      std::cout << "x_ = " << opt_non_convex_->get_x() << std::endl;
+#endif
       return opt_convex_->get_x();
     }
   }
@@ -88,7 +105,6 @@ public:
 private:
   std::shared_ptr<pele::GradientOptimizer> opt_non_convex_;
   std::shared_ptr<pele::GradientOptimizer> opt_convex_;
-
   /**
    * @brief criterion for switching from non-convex to convex optimizer.
    * @details Checks whether the current position of Mixed Descent is in a
