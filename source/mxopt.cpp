@@ -9,9 +9,11 @@
 #include "pele/optimizer.hpp"
 #include <algorithm>
 #include <complex>
+#include <cvode/cvode.h>
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <sundials/sundials_context.h>
 #include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
 #include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h>
@@ -24,7 +26,7 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                                const pele::Array<double> x0, double tol, int T,
                                double step, double conv_tol, double conv_factor,
                                double rtol, double atol, bool iterative)
-    : GradientOptimizer(potential, x0, tol), cvode_mem(CVodeCreate(CV_BDF)),
+    : GradientOptimizer(potential, x0, tol),
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T), usephase1(true),
       conv_tol_(conv_tol), conv_factor_(conv_factor), n_phase_1_steps(0),
@@ -34,13 +36,16 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
   // assume previous phase is phase 1
   prev_phase_is_phase1 = true;
 
+  SUNContext_Create(NULL, &sunctx);
+  cvode_mem = CVodeCreate(CV_BDF, sunctx);
+
   // set precision of printing
   // dummy t0
   double t0 = 0;
   uplo = 'U';
 
   Array<double> x0copy = x0.copy();
-  x0_N = N_Vector_eq_pele(x0copy);
+  x0_N = N_Vector_eq_pele(x0copy, sunctx);
   // initialization of everything CVODE needs
   int ret = CVodeInit(cvode_mem, f, t0, x0_N);
   // initialize userdata
@@ -55,11 +60,11 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
   ret = CVodeSetUserData(cvode_mem, &udata);
   // initialize hessian
   if (iterative) {
-    LS = SUNLinSol_SPGMR(x0_N, PREC_NONE, 0);
+    LS = SUNLinSol_SPGMR(x0_N, SUN_PREC_NONE, 0, sunctx);
     CVodeSetLinearSolver(cvode_mem, LS, NULL);
   } else {
-    A = SUNDenseMatrix(N_size, N_size);
-    LS = SUNLinSol_Dense(x0_N, A);
+    A = SUNDenseMatrix(N_size, N_size, sunctx);
+    LS = SUNLinSol_Dense(x0_N, A, sunctx);
     CVodeSetLinearSolver(cvode_mem, LS, A);
     CVodeSetJacFn(cvode_mem, Jac);
   }

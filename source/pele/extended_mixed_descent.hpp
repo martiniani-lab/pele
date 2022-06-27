@@ -15,6 +15,7 @@
 #include <array>
 #include <fstream>
 #include <memory>
+#include <sundials/sundials_context.h>
 
 // Lapack for cholesky
 extern "C" {
@@ -76,6 +77,7 @@ private:
   size_t N_size;
   SUNMatrix A;
   SUNLinearSolver LS;
+  SUNContext sunctx;
   double t0;
   double tN;
   N_Vector x0_N;

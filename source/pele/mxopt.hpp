@@ -10,6 +10,7 @@
 // Eigen linear algebra library
 #include "eigen_interface.hpp"
 #include "pele/lbfgs.hpp"
+#include "sundials/sundials_context.h"
 #include <Eigen/Dense>
 #include <Spectra/SymEigsSolver.h>
 
@@ -79,6 +80,7 @@ private:
   N_Vector x0_N;
   double rtol;
   double atol;
+  SUNContext sunctx;  // SUNDIALS context
 
   Array<double> xold; //!< Coordinates before taking a step
   Array<double> gold; //!< Gradient before taking a step
@@ -137,7 +139,9 @@ public:
   /**
    * Destructor
    */
-  virtual ~MixedOptimizer() {}
+  virtual ~MixedOptimizer() {
+    SUNContext_Free(&sunctx);
+  }
 
   /**
    * Do one iteration iteration of the optimization algorithm

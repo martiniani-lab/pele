@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <complex>
 #include <cstddef>
+#include <cvode/cvode.h>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -32,13 +33,17 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     : GradientOptimizer(potential, x0, tol),
       extended_potential(
           std::make_shared<ExtendedPotential>(potential, potential_extension)),
-      cvode_mem(CVodeCreate(CV_BDF)), N_size(x_.size()), t0(0), tN(100.0),
-      rtol(rtol), atol(atol), xold(x_.size()), gold(x_.size()), step(x_.size()),
-      xold_old(x_.size()), T_(T), use_phase_1(true), conv_tol_(conv_tol),
-      conv_factor_(conv_factor), n_phase_1_steps(0), n_phase_2_steps(0),
-      n_failed_phase_2_steps(0), hessian(x_.size(), x_.size()),
-      x_last_cvode(x_.size()), hessian_copy_for_cholesky(x_.size(), x_.size()),
+      N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
+      xold(x_.size()), gold(x_.size()), step(x_.size()), xold_old(x_.size()),
+      T_(T), use_phase_1(true), conv_tol_(conv_tol), conv_factor_(conv_factor),
+      n_phase_1_steps(0), n_phase_2_steps(0), n_failed_phase_2_steps(0),
+      hessian(x_.size(), x_.size()), x_last_cvode(x_.size()),
+      hessian_copy_for_cholesky(x_.size(), x_.size()),
       line_search_method(this, step) {
+
+
+  SUNContext_Create(NULL, &sunctx);
+  cvode_mem = CVodeCreate(CV_BDF, sunctx);
 
   // assume previous phase is phase 1
   prev_phase_is_phase1 = true;
@@ -62,7 +67,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   uplo = 'U';
   // set the initial step size
   Array<double> x0copy = x0.copy();
-  x0_N = N_Vector_eq_pele(x0copy);
+  x0_N = N_Vector_eq_pele(x0copy, sunctx);
   // initialization of everything CVODE needs
   int ret = CVodeInit(cvode_mem, f, t0, x0_N);
   // initialize userdata
@@ -77,11 +82,11 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   ret = CVodeSetUserData(cvode_mem, &udata);
   // initialize hessian
   if (iterative) {
-    LS = SUNLinSol_SPGMR(x0_N, PREC_NONE, 0);
+    LS = SUNLinSol_SPGMR(x0_N, SUN_PREC_NONE, 0, sunctx);
     CVodeSetLinearSolver(cvode_mem, LS, NULL);
   } else {
-    A = SUNDenseMatrix(N_size, N_size);
-    LS = SUNLinSol_Dense(x0_N, A);
+    A = SUNDenseMatrix(N_size, N_size, sunctx);
+    LS = SUNLinSol_Dense(x0_N, A, sunctx);
     CVodeSetLinearSolver(cvode_mem, LS, A);
     CVodeSetJacFn(cvode_mem, Jac);
   }
