@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <sundials/sundials_context.h>
 #include <vector>
 
@@ -45,9 +46,6 @@ extern "C" {
 #include "xsum.h"
 }
 
-
-
-
 namespace pele {
 
 /**
@@ -78,7 +76,12 @@ private:
   double t0;
   double tN;
   int ret;
-  SUNContext sunctx;  // SUNDIALS context
+  SUNContext sunctx; // SUNDIALS context
+
+  // save construction parameters
+  double rtol_;
+  double atol_;
+  bool iterative_;
 #if PRINT_TO_FILE == 1
   std::ofstream trajectory_file;
   std::ofstream hessian_eigvals_file;
@@ -93,8 +96,11 @@ private:
   bool stop_criterion_satisfied();
   bool use_newton_stop_criterion_;
   Eigen::MatrixXd hessian;
-  void add_translation_offset_2d(Eigen::MatrixXd &hessian,
-                                                       double offset);
+  void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset);
+  void setup_cvode();
+  void free_cvode_objects();
+
+
 public:
   void one_iteration();
   // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -105,7 +111,8 @@ public:
                     const pele::Array<double> x0, double tol = 1e-5,
                     double rtol = 1e-5, double atol = 1e-5,
                     bool iterative = false,
-                    bool use_newton_stop_criterion = false);
+                    bool use_newton_stop_criterion = false,
+                    bool debug_zone = false);
 
   ~CVODEBDFOptimizer();
 
@@ -114,6 +121,23 @@ public:
       : GradientOptimizer() {
     throw std::runtime_error("CVODEBDFOptimizer is not implemented");
   };
+
+  //
+  CVODEBDFOptimizer &operator=(const CVODEBDFOptimizer &other) {
+
+
+
+
+
+
+    }
+  };
+
+
+
+
+
+
 
   inline int get_nhev() const { return udata.nhev; }
 
@@ -152,12 +176,9 @@ static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 
-
-
-static int check_sundials_retval(void * return_value, const char *funcname, int opt);
+static int check_sundials_retval(void *return_value, const char *funcname,
+                                 int opt);
 
 } // namespace pele
-
-
 
 #endif

@@ -36,7 +36,6 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
   setup_cvode();
 };
 
-
 /**
  * setup the CVODE solver. extracted for use in assigment operators/constructors
  */
@@ -154,9 +153,10 @@ void CVODEBDFOptimizer::setup_cvode() {
 };
 
 CVODEBDFOptimizer::~CVODEBDFOptimizer() {
-  std::cout << "is x0_N null" << (x0_N == NULL) << std::endl;
-  std::cout << x0_N << std::endl;
+  free_cvode_objects();
+}
 
+void CVODEBDFOptimizer::free_cvode_objects() {
   N_VDestroy(x0_N);
   SUNMatDestroy(A);
   SUNLinSolFree(LS);
