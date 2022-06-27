@@ -380,7 +380,13 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
   Array<double> h = Array<double>(yw.size() * yw.size());
   udata->pot_->get_energy_gradient_hessian(pele_eq_N_Vector(y), g, h);
   udata->nhev += 1;
+
   double *hessdata = SUNDenseMatrix_Data(J);
+  for (size_t i = 0; i< yw.size(); ++i) {
+    for (size_t j = 0; j < yw.size(); ++j) {
+      hessdata[i * yw.size() + j] = -h[i * yw.size() + j];
+    }
+  }
   return 0;
 };
 
