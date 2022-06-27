@@ -109,6 +109,12 @@ public:
 
   ~CVODEBDFOptimizer();
 
+  // Copy Constructor (raises a not implemented exception)
+  CVODEBDFOptimizer(const CVODEBDFOptimizer &other)
+      : GradientOptimizer() {
+    throw std::runtime_error("CVODEBDFOptimizer is not implemented");
+  };
+
   inline int get_nhev() const { return udata.nhev; }
 
 protected:

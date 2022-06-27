@@ -122,6 +122,17 @@ public:
 
   virtual ~GradientOptimizer() {}
 
+  // copy constructor raises exception that it's not implemented
+  GradientOptimizer(const GradientOptimizer &) : Optimizer() {
+    throw std::runtime_error(
+        "GradientOptimizer copy constructor not implemented");
+  }
+
+  GradientOptimizer() : Optimizer() {
+    throw std::runtime_error("GradientOptimizer default constructor not "
+                             "implemented. Check derived class function calls");
+  }
+
   /**
    * Do one iteration iteration of the optimization algorithm
    */
