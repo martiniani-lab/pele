@@ -1,25 +1,33 @@
-set(CMAKE_CXX_COMPILER "g++-11")
-set(CMAKE_C_COMPILER "gcc-11")
+set(CMAKE_CXX_COMPILER "g++-12")
+set(CMAKE_C_COMPILER "gcc-12")
 cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(pele_tests)
 
-# if not specified by user, the standard build type is release
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release Coverage." FORCE)
-endif(NOT CMAKE_BUILD_TYPE)
+# # if not specified by user, the standard build type is release
+# if(NOT CMAKE_BUILD_TYPE)
+#   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release Coverage." FORCE)
+# endif(NOT CMAKE_BUILD_TYPE)
 
 enable_language(CXX)
-ADD_DEFINITIONS(-std=c++20 -O0 -ggdb3 -fsanitize=address)
-
+ADD_DEFINITIONS(-std=c++20 -O0 -ggdb3)
 
 #find conda path for python header
 set(PYTHON_INCLUDE_DIR $ENV{CONDA_PREFIX}/include/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR})
 message("PYTHON INCLUDE DIR" ${PYTHON_INCLUDE_DIR})
 
 
+set (CMAKE_CXX_FLAGS "-fno-omit-frame-pointer")
+set (CMAKE_C_FLAGS "-fno-omit-frame-pointer")
+set (CMAKE_EXE_LINKER_FLAGS "-fno-omit-frame-pointer")
+
+
+# MEMORY DEBUG FLAGS
+#set (CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
+#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
+#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
 
 #set OpenMP
 find_package(OpenMP)
