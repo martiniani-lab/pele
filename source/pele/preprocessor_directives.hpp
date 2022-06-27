@@ -19,7 +19,7 @@
  * @brief Defines whether optimizer should print to file
  * 
  */
-#define PRINT_TO_FILE 1
+#define PRINT_TO_FILE 0
 
 
-#endif PELE_FLAGS /* end debug flags */
+#endif //PELE_FLAGS
