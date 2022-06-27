@@ -116,7 +116,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
       throw std::runtime_error("CVODE set jacobian failed");
     }
   }
-  g_ = udata.stored_grad;
+  g_.assign(udata.stored_grad);
   ret = CVodeSetMaxNumSteps(cvode_mem, 1000000);
   if (check_sundials_retval(&ret, "CVodeSetMaxNumSteps", 1)) {
     throw std::runtime_error("CVODE set max num steps failed");
@@ -148,7 +148,7 @@ CVODEBDFOptimizer::~CVODEBDFOptimizer() {
 
 void CVODEBDFOptimizer::one_iteration() {
   /* advance solver just one internal step */
-  Array<double> xold = x_;
+  Array<double> xold = x_.copy();
 
   std::cout << "x0_N passed_correctly: " << x0_N << std::endl;
   ret = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
@@ -353,19 +353,16 @@ int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
 
   UserData udata = (UserData)user_data;
   pele::Array<double> yw = pele_eq_N_Vector(y);
-  Array<double> g;
   // double energy = udata->pot_->get_energy_gradient(yw, g);
   double *fdata = NV_DATA_S(ydot);
-  g = Array<double>(fdata, NV_LENGTH_S(ydot));
-
+  // g = Array<double>(fdata, NV_LENGTH_S(ydot));
   // calculate negative grad g
-  double energy = udata->pot_->get_energy_gradient(yw, g);
+  double energy = udata->pot_->get_energy_gradient(yw, udata->stored_grad);
   udata->nfev += 1;
 #pragma simd
   for (size_t i = 0; i < yw.size(); ++i) {
-    fdata[i] = -fdata[i];
+    fdata[i] = -udata->stored_grad[i];
   }
-  udata->stored_grad = (g);
   udata->stored_energy = energy;
   return 0;
 }
