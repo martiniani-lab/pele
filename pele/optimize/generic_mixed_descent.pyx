@@ -42,8 +42,8 @@ cdef class _Cdef_GenericMixedDescent_CPP(_pele_opt.GradientOptimizer):
     cdef _pele.BasePotential pot
     cdef _pele_opt.GradientOptimizer opt_conv
     cdef _pele_opt.GradientOptimizer opt_non_conv
-    def __cinit__(self, potential, x0, optimizer_convex,
-                  optimizer_non_convex, double tol, double translation_offset,
+    def __cinit__(self, potential, x0, optimizer_non_convex,
+                  optimizer_convex, double tol, double translation_offset,
                   int steps_before_convex_check=1):
         
         potential = as_cpp_potential(potential, verbose=True)
@@ -55,8 +55,8 @@ cdef class _Cdef_GenericMixedDescent_CPP(_pele_opt.GradientOptimizer):
                 new cppGenericMixedDescent(self.pot.thisptr,
                              _pele.Array[double](<double*> x0c.data, x0c.size), 
                              tol,
-                             self.opt_conv.thisptr,
                              self.opt_non_conv.thisptr,
+                             self.opt_conv.thisptr,
                              translation_offset,
                              steps_before_convex_check
                              ))
