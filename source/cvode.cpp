@@ -46,6 +46,7 @@ void CVODEBDFOptimizer::setup_cvode() {
   sunctx = NULL;
   LS = NULL;
 
+#if OPTIMIZER_DEBUG_LEVEL > 0
   std::cout << "CVODE constructed with parameters: " << std::endl;
   std::cout << "x0: " << x_ << std::endl;
   std::cout << "tol: " << tol_ << std::endl;
@@ -54,6 +55,7 @@ void CVODEBDFOptimizer::setup_cvode() {
   std::cout << "iterative: " << iterative_ << std::endl;
   std::cout << "use_newton_stop_criterion: " << use_newton_stop_criterion_
             << std::endl;
+#endif
 
   sunctx = NULL;
   ret = SUNContext_Create(NULL, &sunctx);
@@ -168,7 +170,6 @@ void CVODEBDFOptimizer::one_iteration() {
   /* advance solver just one internal step */
   Array<double> xold = x_.copy();
 
-  std::cout << "x0_N passed_correctly: " << x0_N << std::endl;
   ret = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
 
   if (check_sundials_retval(&ret, "CVode", 1)) {
