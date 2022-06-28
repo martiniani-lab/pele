@@ -83,7 +83,7 @@ void CVODEBDFOptimizer::setup_cvode() {
 
   // initialize userdata
   udata.rtol = rtol_;
-  udata.atol = atol;
+  udata.atol = atol_;
   udata.nfev = 0;
   udata.nhev = 0;
   udata.pot_ = potential_;
@@ -150,7 +150,7 @@ void CVODEBDFOptimizer::setup_cvode() {
   lbfgs_m_1_step_file.open("lbfgs_m_1_step_cvode.txt");
   g_old = Array<double>(x0.size(), 0);
 #endif
-};
+}
 
 CVODEBDFOptimizer::~CVODEBDFOptimizer() {
   free_cvode_objects();
@@ -174,7 +174,6 @@ void CVODEBDFOptimizer::one_iteration() {
   if (check_sundials_retval(&ret, "CVode", 1)) {
     throw std::runtime_error("CVODE single step failed");
   }
-
   iter_number_ += 1;
 
   // Assert length of x0_N is the same as x_

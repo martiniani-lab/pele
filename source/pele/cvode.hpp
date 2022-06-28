@@ -100,7 +100,6 @@ private:
   void setup_cvode();
   void free_cvode_objects();
 
-
 public:
   void one_iteration();
   // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -117,27 +116,25 @@ public:
   ~CVODEBDFOptimizer();
 
   // Copy Constructor (raises a not implemented exception)
-  CVODEBDFOptimizer(const CVODEBDFOptimizer &other)
-      : GradientOptimizer() {
+  CVODEBDFOptimizer(const CVODEBDFOptimizer &other) : GradientOptimizer() {
     throw std::runtime_error("CVODEBDFOptimizer is not implemented");
   };
 
   //
   CVODEBDFOptimizer &operator=(const CVODEBDFOptimizer &other) {
+    this->potential_ = other.potential_;
+    this->x_ = other.x_;
+    this->tol_ = other.tol_;
+    this->rtol_ = other.rtol_;
+    this->atol_ = other.atol_;
+    this->iterative_ = other.iterative_;
+    this->use_newton_stop_criterion_ = other.use_newton_stop_criterion_;
 
-
-
-
-
-
-    }
-  };
-
-
-
-
-
-
+    // free cvode memory and setup again
+    this->free_cvode_objects();
+    this->setup_cvode();
+    return *this;
+  }
 
   inline int get_nhev() const { return udata.nhev; }
 
