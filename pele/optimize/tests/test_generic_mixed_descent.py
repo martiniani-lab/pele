@@ -81,23 +81,26 @@ def test_mixed_descent():
 
     optimizer_convex = ModifiedFireCPP(x, potential, fdec=0.5, tol=1e-9)
 
-    optimizer_non_convex = CVODEBDFOptimizer(potential, x, rtol=1e-5, atol=1e-5, tol=1e-9)
+    optimizer_non_convex = CVODEBDFOptimizer(
+        potential, x, rtol=1e-5, atol=1e-5, tol=1e-9
+    )
 
     # optimizer_non_convex = ModifiedFireCPP(x, potential, tol=1e-9)
 
     opt_mixed_descent = GenericMixedDescent(
         potential,
         x,
-        optimizer_convex,
         optimizer_non_convex,
+        optimizer_convex,
         tol=1e-9,
         translation_offset=1,
-        steps_before_convex_check=1,
+        steps_before_convex_check=50,
     )
-    # res = opt_mixed_descent.run(2000)
-    
-    res = optimizer_non_convex.run(10000)
+    res = opt_mixed_descent.run(2000)
+    # res = optimizer_non_convex.run(10000)
     print(res)
+    # check that the number of steps is the same as the C++ version
+    assert res.nsteps == 466
 
 
 test_mixed_descent()

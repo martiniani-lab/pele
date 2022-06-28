@@ -154,9 +154,7 @@ void CVODEBDFOptimizer::setup_cvode() {
 #endif
 }
 
-CVODEBDFOptimizer::~CVODEBDFOptimizer() {
-  free_cvode_objects();
-}
+CVODEBDFOptimizer::~CVODEBDFOptimizer() { free_cvode_objects(); }
 
 void CVODEBDFOptimizer::free_cvode_objects() {
   N_VDestroy(x0_N);
