@@ -51,7 +51,7 @@ public:
     opt_convex_->set_tolerance(tol);
     opt_non_convex_->set_x(x);
     opt_non_convex_->set_tolerance(tol);
-#if OPTIMIZER_DEBUG_LEVEL > 1
+#if OPTIMIZER_DEBUG_LEVEL > 0
     std::cout << "GenericMixedDescent: Constructed with parameters"
               << std::endl;
     std::cout << "x: " << x << std::endl;
