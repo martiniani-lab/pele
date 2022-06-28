@@ -33,7 +33,7 @@ using pele::Array;
 using std::cout;
 
 // Test for whether the switch works for mixed descent
-TEST(GENERIC_MXD, TEST_256_RUN) {
+TEST(CVODE, COPY_ASSIGNMENT) {
   static const size_t _ndim = 2;
   size_t n_particles;
   size_t n_dof;
