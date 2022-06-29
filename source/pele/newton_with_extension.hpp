@@ -31,6 +31,11 @@ private:
   double _threshold;
   bool _jammed;
 
+  // Checks whether the hessian was calculated for the current x
+  // Gets reset at the end of each iteration when a new step is taken
+  // Sets the hessian
+  bool hessian_calculated;
+
 public:
   /**
    * @brief Newton method that ignores singular while calculating the inverse.
@@ -70,6 +75,11 @@ public:
 
   void compute_func_gradient(Array<double> x, double &func,
                              Array<double> gradient);
+
+  void set_hessian(Eigen::MatrixXd hessian) {
+    hessian_calculated = true;
+    _hessian = hessian;
+  }
 };
 
 } // namespace pele
