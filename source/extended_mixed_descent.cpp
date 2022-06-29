@@ -2,6 +2,7 @@
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
 #include "pele/eigen_interface.hpp"
+#include "pele/hessian_translations.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/lsparameters.hpp"
 #include "pele/optimizer.hpp"
@@ -40,7 +41,6 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       hessian(x_.size(), x_.size()), x_last_cvode(x_.size()),
       hessian_copy_for_cholesky(x_.size(), x_.size()),
       line_search_method(this, step) {
-
 
   SUNContext_Create(NULL, &sunctx);
   cvode_mem = CVodeCreate(CV_BDF, sunctx);
@@ -328,30 +328,6 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
 
   q = -hessian.householderQr().solve(r);
   pele_eq_eig(step, q);
-}
-
-/**
- * @brief  adds a translation offset to the hessian. This should take care of
- * translational symmetries
- * @param  hessian the hessian to be modified
- * @param  offset the offset to be added
- */
-void ExtendedMixedOptimizer::add_translation_offset_2d(Eigen::MatrixXd &hessian,
-                                                       double offset) {
-
-  // factor so that the added translation operators are unitary
-  double factor = 2.0 / hessian.rows();
-  offset = offset * factor;
-
-  for (size_t i = 0; i < hessian.rows(); ++i) {
-    for (size_t j = i + 1; j < hessian.cols(); ++j) {
-      if ((i % 2 == 0 && j % 2 == 0) || (i % 2 == 1 && j % 2 == 1)) {
-        hessian(i, j) += offset;
-        hessian(j, i) += offset;
-      }
-    }
-  }
-  hessian.diagonal().array() += offset;
 }
 
 } // namespace pele

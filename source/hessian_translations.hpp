@@ -105,5 +105,33 @@ std::vector<Eigen::MatrixXd> get_symmetries(size_t n_particles, size_t n_d) {
   return symmetries;
 }
 
+
+/**
+ * @brief  adds a translation offset to the hessian. This should take care of
+ * translational symmetries
+ * @param  hessian the hessian to be modified
+ * @param  offset the offset to be added
+ */
+void add_translation_offset_2d(Eigen::MatrixXd &hessian,
+                                                       double offset) {
+
+  // factor so that the added translation operators are unitary
+  double factor = 2.0 / hessian.rows();
+  offset = offset * factor;
+
+  for (size_t i = 0; i < hessian.rows(); ++i) {
+    for (size_t j = i + 1; j < hessian.cols(); ++j) {
+      if ((i % 2 == 0 && j % 2 == 0) || (i % 2 == 1 && j % 2 == 1)) {
+        hessian(i, j) += offset;
+        hessian(j, i) += offset;
+      }
+    }
+  }
+  hessian.diagonal().array() += offset;
+}
+
+
+
+
 }
 #endif // TRANSLATION_SYMMETRY_MATRICES_HPP
