@@ -79,7 +79,7 @@ private:
   SUNLinearSolver LS;
   SUNContext sunctx;
   double t0;
-  double tN;
+  double tN;  
   N_Vector x0_N;
   double rtol;
   double atol;
@@ -206,8 +206,6 @@ private:
 
   void update_H0_(Array<double> x_old, Array<double> &g_old,
                   Array<double> x_new, Array<double> &g_new);
-
-  void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset);
 };
 
 } // namespace pele
