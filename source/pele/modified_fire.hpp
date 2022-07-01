@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
+#include <stdexcept>
 
 namespace pele {
 /**
@@ -123,6 +124,9 @@ inline void MODIFIED_FIRE::_VelocityVerlet_integration() {
   /* the minuses in the following expressions are due to the fact that
    * the gradients rather than the forces appear in the expression
    */
+  if (_dt == 0.0) {
+    throw std::logic_error("time step cannot be zero");
+  }
   for (size_t i = 0; i < _N; ++i) {
     _v[i] -=
         0.5 * _dt * (_gold[i] + g_[i]); // update velocity assumes all masses 1
