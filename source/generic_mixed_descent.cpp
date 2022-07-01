@@ -11,6 +11,7 @@
 
 #include "pele/generic_mixed_descent.hpp"
 #include <lapack.h>
+#include <ostream>
 #include <pele/array.hpp>
 
 using namespace std;
@@ -67,11 +68,24 @@ void GenericMixedDescent::one_iteration() {
   // take iteration
   if (use_non_convex_method_) {
     opt_non_convex_->one_iteration();
-    n_phase_1_steps +=1;
+    n_phase_1_steps += 1;
     rms_ = opt_non_convex_->get_rms();
+
+    // Debugging
+#if OPTIMIZER_DEBUG_LEVEL > 2
+    std::cout << "non convex step" << std::endl;
+    std::cout << "rms" << rms_ << std::endl;
+#endif
+
   } else {
     opt_convex_->one_iteration();
     rms_ = opt_convex_->get_rms();
+
+    // Debugging
+#if OPTIMIZER_DEBUG_LEVEL > 2
+    std::cout << "convex step" << std::endl;
+    std::cout << "rms" << rms_ << std::endl;
+#endif
     if (opt_convex_->get_last_step_failed()) {
       use_non_convex_method_ = true;
       opt_non_convex_->set_x(last_non_convex_x_);
@@ -80,7 +94,8 @@ void GenericMixedDescent::one_iteration() {
   // update all parameters from the optimizer
   std::cout << rms_ << std::endl;
   nfev_ = opt_non_convex_->get_nfev() + opt_convex_->get_nfev();
-  nhev_ = opt_non_convex_->get_nhev() + opt_convex_->get_nhev() + hessian_evaluations_;
+  nhev_ = opt_non_convex_->get_nhev() + opt_convex_->get_nhev() +
+          hessian_evaluations_;
   iter_number_ += 1;
 }
 
