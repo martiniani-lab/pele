@@ -73,9 +73,6 @@ void CVODEBDFOptimizer::setup_cvode() {
   double t0 = 0;
   Array<double> x0copy = x_.copy();
   x0_N = N_Vector_eq_pele(x0copy, sunctx);
-  std::cout << "x0_N: creation works" << std::endl;
-  std::cout << "x0_N: " << x0_N << std::endl;
-  N_VPrint(x0_N);
 
   // initialization of everything CVODE needs
   ret = CVodeInit(cvode_mem, f, t0, x0_N);
@@ -170,14 +167,13 @@ void CVODEBDFOptimizer::one_iteration() {
 
   ret = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
 
-  if (check_sundials_retval(&ret, "CVode", 1)) {
-    throw std::runtime_error("CVODE single step failed");
-  }
+  // if (check_sundials_retval(&ret, "CVode", 1)) {
+  //   throw std::runtime_error("CVODE single step failed");
+  // }
   iter_number_ += 1;
 
   // Assert length of x0_N is the same as x_
   assert(N_VGetLength_Serial(x0_N) == x_.size());
-  N_VPrint_Serial(x0_N);
   x_.assign(pele_eq_N_Vector(x0_N));
   g_.assign(udata.stored_grad);
   rms_ = (norm(g_) / sqrt(x_.size()));
