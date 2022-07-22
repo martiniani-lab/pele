@@ -14,10 +14,12 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
+#include <pele/combine_potentials.hpp>
 
 namespace pele {
 
-class Newton : public GradientOptimizer {
+class NewtonWithExtendedPotential : public GradientOptimizer {
 private:
   Eigen::MatrixXd _hessian;
   Eigen::VectorXd _gradient;
@@ -27,9 +29,14 @@ private:
   Eigen::VectorXd _step;
   BacktrackingLineSearch _line_search;
   double _energy;
-  double _tolerance;
-  double _threshold;
-  bool _jammed;
+  double _translation_offset;
+  double _max_step;
+  /**
+   * @brief Extended Potential, helps regularize the hessian eigenvalues
+   *        to be positive with rattlers
+   */
+   std::shared_ptr<BasePotential> _potential_extension;
+   std::shared_ptr<ExtendedPotential> _extended_potential_wrapper;
 
   // Checks whether the hessian was calculated for the current x
   // Gets reset at the end of each iteration when a new step is taken
@@ -48,15 +55,15 @@ public:
    * @param threshold threshold for the singular values of the hessian
    * @param max_iter maximum number of iterations
    */
-  Newton(std::shared_ptr<BasePotential> potential,
-         const pele::Array<double> &x0, double tol = 1e-6,
-         double threshold = std::numeric_limits<double>::epsilon(),
-         bool use_rattler_mask = false);
+  NewtonWithExtendedPotential(
+      std::shared_ptr<BasePotential> potential, const pele::Array<double> &x0,
+      double tol, std::shared_ptr<BasePotential> potential_extension,
+      double translation_offset=1.0, double max_step=1.0);
 
   /**
    * Destructor
    */
-  virtual ~Newton() {}
+  virtual ~NewtonWithExtendedPotential() {}
 
   /**
    * @brief Do one iteration of the Newton method
@@ -72,9 +79,6 @@ public:
   inline int get_nhev() const { return nhev_; }
   inline Eigen::VectorXd get_step() const { return _step; }
   void reset(Array<double> x);
-
-  void compute_func_gradient(Array<double> x, double &func,
-                             Array<double> gradient);
 
   void set_hessian(Eigen::MatrixXd hessian) {
     hessian_calculated = true;

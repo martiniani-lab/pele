@@ -2,6 +2,7 @@
 #include "pele/array.hpp"
 #include "pele/eigen_interface.hpp"
 #include "pele/optimizer.hpp"
+#include <memory>
 // Lapack for cholesky
 extern "C" {
 #include <lapacke.h>
@@ -14,25 +15,29 @@ using namespace std;
 #define NUMERICAL_ZERO 1e-15
 namespace pele {
 
-Newton::Newton(std::shared_ptr<BasePotential> potential,
-               const pele::Array<double> &x0, double tol, double threshold,
-               bool use_rattler_mask)
-    : GradientOptimizer(potential, x0, tol), _threshold(threshold),
-      _tolerance(tol), _hessian(x0.size(), x0.size()), _gradient(x0.size()),
-      _x(x0.size()), _line_search(this, 1.0), _x_old(x0.size()),
-      _gradient_old(x0.size()) // use step size of 1.0 for newton
-{
-  // write pele array data into the Eigen array
+NewtonWithExtendedPotential::NewtonWithExtendedPotential(
+    std::shared_ptr<BasePotential> potential, const pele::Array<double> &x0,
+    double tol, std::shared_ptr<BasePotential> potential_extension,
+    double translation_offset, double max_step)
+    : GradientOptimizer(potential, x0, tol),
+      _translation_offset(translation_offset), _max_step(max_step),
+      _potential_extension(potential_extension), _hessian(x0.size(), x0.size()),
+      _gradient(x0.size()), _x(x0.size()), _line_search(this, 1.0),
+      _x_old(x0.size()), _gradient_old(x0.size()) {
+  // Setup the extended potential
+  _potential_extension = potential_extension;
+  _extended_potential_wrapper =
+      std::make_shared<ExtendedPotential>(potential, potential_extension);
+  set_potential(
+      _potential_extension); // write pele array data into the Eigen array
+
+  // Save coordinates as an Eigen vector
   for (size_t i = 0; i < x0.size(); ++i) {
     _x(i) = x0[i];
   }
-  // // Find rattlers is not necessary here in the way we're using it.
-  // if (_use_rattler_mask) {
-  //   potential->find_rattlers(x0, _not_rattlers, _jammed);
-  // }
 }
 
-void Newton::reset(pele::Array<double> x) {
+void NewtonWithExtendedPotential::reset(pele::Array<double> x) {
 
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x.size(); ++i) {
@@ -43,7 +48,7 @@ void Newton::reset(pele::Array<double> x) {
   initialize_func_gradient();
 }
 
-void Newton::one_iteration() {
+void NewtonWithExtendedPotential::one_iteration() {
   // copy in from pele to make sure initialization is taken care of
   eig_eq_pele(_x_old, x_);
   eig_eq_pele(_gradient_old, g_);
@@ -54,64 +59,18 @@ void Newton::one_iteration() {
   Array<double> gradient_pele(_gradient.data(), _gradient.size());
   Array<double> x_pele(_x.data(), _x.size());
 
-  if (_use_rattler_mask) {
-    _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele,
-                                                      hessian_pele);
-
-    _energy = potential_->get_energy_gradient_hessian_rattlers(
-        x_pele, gradient_pele, hessian_pele, _not_rattlers);
+  if (hessian_calculated) {
+    // do nothing
   } else {
     _energy = potential_->get_energy_gradient_hessian(x_pele, gradient_pele,
                                                       hessian_pele);
-  }
-  nhev_ += 1;
-
-  cout << "gradient pele" << gradient_pele << endl;
-
-  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es =
-      Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(_hessian);
-  Eigen::VectorXd eigenvalues = es.eigenvalues();
-  Eigen::MatrixXd eigenvectors = es.eigenvectors();
-  // eigenvector corresponding to smallest eigenvalue
-  Eigen::VectorXd smallest_eigenvector = eigenvectors.col(0);
-
-  Eigen::CompleteOrthogonalDecomposition<Eigen::MatrixXd> cod(_hessian);
-
-  // replace eigenvalues with their absolute values
-  for (size_t i = 0; i < eigenvalues.size(); ++i) {
-    eigenvalues(i) = std::abs(eigenvalues(i));
+    nhev_ += 1;
   }
 
-  // cout << "eigenvalues" << eigenvalues << endl;
-  // postprocess inverse Eigen
-  Eigen::VectorXd inv_eigenvalues(eigenvalues.size());
-  for (size_t i = 0; i < eigenvalues.size(); ++i) {
-    double mod_eig = abs(eigenvalues(i));
-    if (mod_eig < NUMERICAL_ZERO) {
-      // case for translational symmetries
-      inv_eigenvalues(i) = 0.0;
-    } else if (mod_eig < _threshold) {
-      // case for really small eigenvalues
-      inv_eigenvalues(i) = 1.0 / _threshold;
-    } else {
-      // case for normal eigenvalues
-      inv_eigenvalues(i) = 1.0 / mod_eig;
-    }
-  }
+  // assign negative hessian;
+  _hessian = -_hessian;
 
-  // find the largest eigenvalue
-  _step = -eigenvectors *
-          ((eigenvectors.transpose() * _gradient).cwiseProduct(inv_eigenvalues))
-              .matrix();
-
-  // cout << "gradient \n" << _gradient << endl;
-
-  // cout << "step size: " << _step.norm() << endl;
   double starting_norm = _step.norm();
-
-  // _step = smallest_eigenvector;
-  // calculate the newton step
-  // _step = -cod.solve(_gradient);
 
   _x = _x_old + _step;
 
@@ -129,12 +88,9 @@ void Newton::one_iteration() {
     throw std::runtime_error("rescaled step decreased by too much. Newton "
                              "might be in the wrong direction");
   }
-  cout << "starting step size" << starting_norm << endl;
-  cout << "step size rescaled" << stepnorm << endl;
-  // Hacky since we're not wrapping the original pele arrays. but we can change
-  // this if this if it becomes a speed constraint/causes maintainability issues
-  x_ = x_pele;
-  g_ = gradient_pele;
+  // Careful about assignment
+  x_.assign(x_pele);
+  g_.assign(gradient_pele);
 
   iter_number_ += 1;
 }
