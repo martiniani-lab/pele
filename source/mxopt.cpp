@@ -188,8 +188,12 @@ bool MixedOptimizer::convexity_check() {
   hess_shifted_data = hessian_shifted.data();
 
   int N_int = x_.size();
-  // 1 is len of uplo. The last argument is necessary for modern FORTRAN compilers
-  dpotrf_(&uplo, &N_int, hess_shifted_data, &N_int, &info, 1);
+  // 1 is strlen for uplo for new fortran compilers
+  dpotrf_(&uplo, &N_int, hess_shifted_data, &N_int, &info
+#ifdef LAPACK_FORTRAN_STRLEN_END
+    , 1
+#endif
+);
   if (info == 0) {
     // if it is positive definite, we can use the newton method to solve the
     // problem
