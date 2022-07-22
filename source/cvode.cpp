@@ -12,12 +12,12 @@
 #include "sunmatrix/sunmatrix_dense.h"
 #include <cassert>
 #include <cstddef>
-#include <hoomd/HOOMDMath.h>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <ostream>
 #include <sundials/sundials_context.h>
+//#include <hoomd/HOOMDMath.h>
 
 using namespace std;
 
