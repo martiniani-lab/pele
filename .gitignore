@@ -51,7 +51,7 @@ htmlcov
 /.cmake/
 /.dir-locals.el
 /.idea/
-/.vscode/
+/.vscode/*.log
 /Makefile
 /compile_commands.json
 /cpp_tests/source/.cache/

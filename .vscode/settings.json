@@ -1,0 +1,15 @@
+{
+    "python.pythonPath": "/home/praharsh/anaconda3/envs/changebranch3/bin/python",
+    "cSpell.words": [
+        "basinerror",
+        "boxvec",
+        "CVODE",
+        "Eigen",
+        "eigvals",
+        "hoomd",
+        "mathrm",
+        "ndim",
+        "sunctx"
+    ],
+    "esbonio.sphinx.confDir": ""
+}
