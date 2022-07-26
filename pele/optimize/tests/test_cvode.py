@@ -133,11 +133,11 @@ def test_cvode_compare_with_cpp(potential_initial_and_final_conditions):
     cvode_optimizer = CVODEBDFOptimizer(
         potential,
         initial_coordinates,
-        rtol=1e-10,
-        atol=1e-10,
+        rtol=1e-5,
+        atol=1e-5,
         tol=1e-9,
         iterative=False,
-        use_newton_stop_criterion=True,
+        use_newton_stop_criterion=False,
     )
     res = cvode_optimizer.run(10000)
     print(res)
@@ -172,6 +172,3 @@ def test_iterative_works_cvode(potential_initial_and_final_conditions):
     assert np.allclose(final_coords, expected_final_coordinates)
     # Expect steps to match with C++ results from test_cvode.cpp
     return True
-
-
-
