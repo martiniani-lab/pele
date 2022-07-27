@@ -1,6 +1,6 @@
-from pele.concurrent import ConnectWorker
-
 from start_server import create_system, get_server_uri
+
+from pele.concurrent import ConnectWorker
 
 
 def main():

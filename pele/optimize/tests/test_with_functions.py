@@ -1,9 +1,11 @@
 from __future__ import print_function
+
 import unittest
+
 import numpy as np
 
-from pele.potentials import test_functions
 from pele.optimize import _quench
+from pele.potentials import test_functions
 
 
 class TestOptimizersBeale(unittest.TestCase):

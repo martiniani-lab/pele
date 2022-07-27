@@ -1,4 +1,5 @@
 import unittest
+
 import numpy as np
 
 from pele.takestep import ParticleExchange
@@ -27,4 +28,3 @@ class TestParticleExchange(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-        

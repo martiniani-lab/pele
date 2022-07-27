@@ -1,9 +1,10 @@
 # distutils: language = c++
+from ctypes import c_size_t as size_t
+
 import numpy as np
 
-from ctypes import c_size_t as size_t
-from libcpp cimport bool as cbool
 cimport numpy as np
+from libcpp cimport bool as cbool
 
 cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport shared_ptr

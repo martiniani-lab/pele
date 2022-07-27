@@ -4,7 +4,9 @@
 import numpy as np
 
 from pele.potentials import BasePotential
+
 from pele.potentials._pele cimport shared_ptr
+
 
 #TODO: do these properly.  We need the iso c functions for amber12 cuda and the stuff for lbfgs
 #cdef extern from "_mypotential.c":

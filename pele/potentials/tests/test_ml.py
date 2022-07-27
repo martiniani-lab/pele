@@ -1,21 +1,24 @@
 from __future__ import division
+
 import unittest
+
 import numpy as np
-from pele.potentials import MLCost
-from pele.optimize import LBFGS_CPP
 from numpy.random import randn
+
+from pele.optimize import LBFGS_CPP
+from pele.potentials import MLCost
 
 
 def gauss(x, pars):
     mu = pars[0]
     ss = pars[1]
-    return np.exp(-(x - mu) ** 2 / (2 * ss)) / np.sqrt(2 * np.pi * ss)
+    return np.exp(-((x - mu) ** 2) / (2 * ss)) / np.sqrt(2 * np.pi * ss)
 
 
 def log_gauss(x, pars):
     mu = pars[0]
     ss = pars[1]
-    return (-(x - mu) ** 2 / (2 * ss)) - 0.5 * np.log(2 * np.pi * ss)
+    return (-((x - mu) ** 2) / (2 * ss)) - 0.5 * np.log(2 * np.pi * ss)
 
 
 class MLTest(unittest.TestCase):
@@ -40,8 +43,12 @@ class MLTest(unittest.TestCase):
         opt_mul = opt_parametersl[0]
         opt_ss = opt_parameters[1]
         opt_ssl = opt_parametersl[1]
-        self.assertAlmostEqual(opt_mu, self.mu, delta=2 * self.mu / np.sqrt(self.nr_points))
-        self.assertAlmostEqual(opt_ss, self.ss, delta=2 * self.ss / np.sqrt(self.nr_points))
+        self.assertAlmostEqual(
+            opt_mu, self.mu, delta=2 * self.mu / np.sqrt(self.nr_points)
+        )
+        self.assertAlmostEqual(
+            opt_ss, self.ss, delta=2 * self.ss / np.sqrt(self.nr_points)
+        )
         self.assertAlmostEqual(opt_mu, opt_mul, delta=1e-4)
         self.assertAlmostEqual(opt_ss, opt_ssl, delta=1e-4)
         confidence_intervalsl = potl.get_error_estimate(opt_parametersl)
@@ -52,4 +59,3 @@ class MLTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

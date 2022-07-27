@@ -1,14 +1,17 @@
 from __future__ import division
-from builtins import range
-import numpy as np
-from pele.potentials import BasePotential
+
 import copy
+from builtins import range
+
+import numpy as np
+
+from pele.potentials import BasePotential
 
 
 class MLCost(BasePotential):
     """
     Cost function to be used for maximum likelihood optimization.
-    
+
     Parameters
     ----------self.assertLessEqual(confidence_intervalsl[i][0], par)
             self.assertLessEqual(par, confidence_intervalsl[i][1])
@@ -20,11 +23,11 @@ class MLCost(BasePotential):
     probf : callable `probf(data, parameters)`
         Probability function which takes an array of data and an array
         of parameters and returns a float value
-    
+
     Examples
     --------
     To get maximum likelihood estimates of the parameters, do e.g.:
-    
+
         pot = MLCost(observed, probf=gauss)
         optimizer = LBFGS_CPP(parameters, pot)
         result = optimizer.run()
@@ -46,7 +49,7 @@ class MLCost(BasePotential):
     def get_error_estimate(self, opt_parameters, log_l_variation=0.5):
         """
         Get confidence interval on ML estimated parameters.
-        
+
         Parameters
         ----------
         opt_parameters : array of floats
@@ -56,19 +59,21 @@ class MLCost(BasePotential):
             parameters within the confidence interval:
             log_likelihood(interval[0]) <= log_likelihood(opt_parameters) - log_l_variation
             log_likelihood(interval[1]) <= log_likelihood(opt_parameters) - log_l_variation
-        
+
         Examples
         --------
         To get an estimate on the confidence interval of the optimum parameters,
         do e.g.:
-    
+
             error = pot.get_error_estimate(result)
         """
         self.opt_parameters = opt_parameters
         self.log_l_variation = log_l_variation
         self.minimum_cost = self.getEnergy(self.opt_parameters)
         self.cost_interval_edge = self.minimum_cost + self.log_l_variation
-        return [self.get_interval(par_idx) for par_idx in range(len(self.opt_parameters))]
+        return [
+            self.get_interval(par_idx) for par_idx in range(len(self.opt_parameters))
+        ]
 
     def get_interval(self, par_idx):
         opt_par = self.opt_parameters[par_idx]
@@ -90,5 +95,3 @@ class MLCost(BasePotential):
             else:
                 break
         return [left_interval_edge, right_interval_edge]
-    
-    

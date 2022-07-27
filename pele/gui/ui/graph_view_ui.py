@@ -8,12 +8,14 @@
 # WARNING! All changes made in this file will be lost!
 
 from builtins import object
+
 from PyQt4 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     _fromUtf8 = lambda s: s
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -28,7 +30,9 @@ class Ui_Form(object):
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.canvas = MPLWidgetWithToolbar(Form)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.canvas.sizePolicy().hasHeightForWidth())
@@ -54,8 +58,21 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_show_all.setText(QtGui.QApplication.translate("Form", "show all", None, QtGui.QApplication.UnicodeUTF8))
-        self.checkBox_zoom.setText(QtGui.QApplication.translate("Form", "zoom on click", None, QtGui.QApplication.UnicodeUTF8))
+        Form.setWindowTitle(
+            QtGui.QApplication.translate(
+                "Form", "Form", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btn_show_all.setText(
+            QtGui.QApplication.translate(
+                "Form", "show all", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.checkBox_zoom.setText(
+            QtGui.QApplication.translate(
+                "Form", "zoom on click", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+
 
 from pele.gui.ui.mplwidget import MPLWidgetWithToolbar

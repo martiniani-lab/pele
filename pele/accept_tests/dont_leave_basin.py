@@ -1,4 +1,5 @@
 from builtins import object
+
 import pele.exceptions as exc
 
 __all__ = ["DontLeaveBasin"]

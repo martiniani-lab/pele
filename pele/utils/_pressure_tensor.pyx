@@ -4,10 +4,12 @@
 This module provides access to the c++ pressure measurement.
 """
 import numpy as np
+
 cimport numpy as np
+
 cimport pele.potentials._pele as _pele
-from pele.potentials._pele cimport array_wrap_np, pele_array_to_np
-from pele.potentials._pele cimport shared_ptr
+from pele.potentials._pele cimport array_wrap_np, pele_array_to_np, shared_ptr
+
 
 cdef extern from "pele/pressure_tensor.hpp" namespace "pele":
     double c_pressure_tensor "pele::pressure_tensor"(

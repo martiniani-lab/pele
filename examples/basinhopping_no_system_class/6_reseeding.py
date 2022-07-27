@@ -4,17 +4,19 @@
 # takes 100 monte carlo steps as one basin hopping step
 # ###########################################################
 from __future__ import print_function
+
 from builtins import object
+
 import numpy as np
-import pele.potentials.lj as lj
+
 import pele.basinhopping as bh
-from pele.takestep import displace
-from pele.takestep import group
+import pele.potentials.lj as lj
 from pele.mc import MonteCarlo
+from pele.takestep import displace, group
 
 
 class TakeStepMonteCarlo(object):
-    def __init__(self, pot, T=10., nsteps=100, stepsize=0.1):
+    def __init__(self, pot, T=10.0, nsteps=100, stepsize=0.1):
         self.potential = pot
         self.T = T
         self.nsteps = nsteps
@@ -23,8 +25,9 @@ class TakeStepMonteCarlo(object):
 
     def takeStep(self, coords, **kwargs):
         # make a new monte carlo class
-        mc = MonteCarlo(coords, self.potential, self.mcstep,
-                        temperature=self.T, outstream=None)
+        mc = MonteCarlo(
+            coords, self.potential, self.mcstep, temperature=self.T, outstream=None
+        )
         mc.run(self.nsteps)
         coords[:] = mc.coords[:]
 

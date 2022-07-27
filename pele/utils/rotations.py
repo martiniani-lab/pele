@@ -30,11 +30,14 @@ Warning, they have not all been tested in this format.
 
 """
 from __future__ import division
+
 from builtins import range
-from past.utils import old_div
+
 import numpy as np
-from pele.utils._cpp_utils import rotate_aa, mx2aa, aa2q, aa2mx, \
-    rot_mat_derivatives
+from past.utils import old_div
+
+from pele.utils._cpp_utils import (aa2mx, aa2q, mx2aa, rot_mat_derivatives,
+                                   rotate_aa)
 
 rot_epsilon = 1e-6
 dprand = np.random.rand
@@ -53,22 +56,24 @@ def q_multiply(q0, q1):
 def q2aa(qin):
     """
     quaternion to angle axis
-    
+
     Parameters
     ----------
     Q: quaternion of length 4
-    
+
     Returns
     -------
     output V: angle axis vector of lenth 3
     """
     q = np.copy(qin)
-    if q[0] < 0.: q = -q
-    if q[0] > 1.0: q /= np.sqrt(np.dot(q, q))
-    theta = 2. * np.arccos(q[0])
-    s = np.sqrt(1. - q[0] * q[0])
+    if q[0] < 0.0:
+        q = -q
+    if q[0] > 1.0:
+        q /= np.sqrt(np.dot(q, q))
+    theta = 2.0 * np.arccos(q[0])
+    s = np.sqrt(1.0 - q[0] * q[0])
     if s < rot_epsilon:
-        p = 2. * q[1:4]
+        p = 2.0 * q[1:4]
     else:
         p = old_div(q[1:4], s) * theta
     return p
@@ -85,29 +90,29 @@ def q2mx(qin):
     Q3Q4 = Q[2] * Q[3]
     Q1Q2 = Q[0] * Q[1]
 
-    RMX[0, 0] = 2. * (0.5 - Q[2] * Q[2] - Q[3] * Q[3])
-    RMX[1, 1] = 2. * (0.5 - Q[1] * Q[1] - Q[3] * Q[3])
-    RMX[2, 2] = 2. * (0.5 - Q[1] * Q[1] - Q[2] * Q[2])
-    RMX[0, 1] = 2. * (Q2Q3 - Q1Q4)
-    RMX[1, 0] = 2. * (Q2Q3 + Q1Q4)
-    RMX[0, 2] = 2. * (Q2Q4 + Q1Q3)
-    RMX[2, 0] = 2. * (Q2Q4 - Q1Q3)
-    RMX[1, 2] = 2. * (Q3Q4 - Q1Q2)
-    RMX[2, 1] = 2. * (Q3Q4 + Q1Q2)
+    RMX[0, 0] = 2.0 * (0.5 - Q[2] * Q[2] - Q[3] * Q[3])
+    RMX[1, 1] = 2.0 * (0.5 - Q[1] * Q[1] - Q[3] * Q[3])
+    RMX[2, 2] = 2.0 * (0.5 - Q[1] * Q[1] - Q[2] * Q[2])
+    RMX[0, 1] = 2.0 * (Q2Q3 - Q1Q4)
+    RMX[1, 0] = 2.0 * (Q2Q3 + Q1Q4)
+    RMX[0, 2] = 2.0 * (Q2Q4 + Q1Q3)
+    RMX[2, 0] = 2.0 * (Q2Q4 - Q1Q3)
+    RMX[1, 2] = 2.0 * (Q3Q4 - Q1Q2)
+    RMX[2, 1] = 2.0 * (Q3Q4 + Q1Q2)
     return RMX
 
 
 def mx2q(mi):
     """convert a rotation matrix to a quaternion
-    
-    see discussion at 
+
+    see discussion at
     http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
     """
     q = np.zeros(4)
     m = np.transpose(mi)  # simply because I copied it from fortran code.
     trace = m[0, 0] + m[1, 1] + m[2, 2]
 
-    if trace > 0.:
+    if trace > 0.0:
         s = np.sqrt(trace + 1.0) * 2.0
         q[0] = 0.25 * s
         q[1] = old_div((m[1, 2] - m[2, 1]), s)
@@ -134,27 +139,27 @@ def mx2q(mi):
 
     if q[0] < 0:
         q = -q
-    
+
     return q
 
 
 # js850> this is commented because it's not documented and seems to be the same as q2mx()
 # def rot_q2mx(qin):
 # m = np.zeros([3,3], np.float64)
-# 
+#
 # q = qin / np.linalg.norm(qin)
-# 
+#
 # sq = q**2
-# 
+#
 # m[0,0] = ( sq[1] - sq[2] - sq[3] + sq[0])
 # m[1,1] = (-sq[1] + sq[2] - sq[3] + sq[0])
 #     m[2,2] = (-sq[1] - sq[2] + sq[3] + sq[0])
-# 
+#
 #     tmp0 = q[1]*q[2]
 #     tmp1 = q[0]*q[3]
 #     m[1,0] = 2.0 * (tmp0 + tmp1)
 #     m[0,1] = 2.0 * (tmp0 - tmp1)
-# 
+#
 #     tmp0 = q[1]*q[3]
 #     tmp1 = q[2]*q[0]
 #     m[2,0] = 2.0 * (tmp0 - tmp1)
@@ -163,14 +168,14 @@ def mx2q(mi):
 #     tmp1 = q[0]*q[1]
 #     m[2,1] = 2.0 * (tmp0 + tmp1)
 #     m[1,2] = 2.0 * (tmp0 - tmp1)
-# 
+#
 #     return m
 
 
 def random_q():
     """
     uniform random rotation in angle axis formulation
-    
+
     Notes
     -----
     input: 3 uniformly distributed random numbers
@@ -180,14 +185,14 @@ def random_q():
     a direct angle axis generation, but be careful: the angle of rotation in angle axis representation
     is NOT uniformly distributed
     """
-    from numpy import sqrt, sin, cos, pi
+    from numpy import cos, pi, sin, sqrt
 
     u = np.random.uniform(0, 1, [3])
     q = np.zeros(4, np.float64)
-    q[0] = sqrt(1. - u[0]) * sin(2. * pi * u[1])
-    q[1] = sqrt(1. - u[0]) * cos(2. * pi * u[1])
-    q[2] = sqrt(u[0]) * sin(2. * pi * u[2])
-    q[3] = sqrt(u[0]) * cos(2. * pi * u[2])
+    q[0] = sqrt(1.0 - u[0]) * sin(2.0 * pi * u[1])
+    q[1] = sqrt(1.0 - u[0]) * cos(2.0 * pi * u[1])
+    q[2] = sqrt(u[0]) * sin(2.0 * pi * u[2])
+    q[3] = sqrt(u[0]) * cos(2.0 * pi * u[2])
     return q
 
 
@@ -212,7 +217,7 @@ def small_random_aa(maxtheta):
         p = p * dprand() * maxtheta
         return p
 
-    s = 1. / (np.sin(0.5 * maxtheta) ** 2)
+    s = 1.0 / (np.sin(0.5 * maxtheta) ** 2)
     # now choose the angle theta in range 0:step
     # with distribution sin(0.5*theta)**2
     u = dprand() * maxtheta
@@ -227,9 +232,9 @@ def vec_random():
     p = np.zeros(3)
     u1 = dprand()
     u2 = dprand()
-    z = 2 * u1 - 1.
-    p[0] = np.sqrt(1 - z * z) * np.cos(2. * np.pi * u2)
-    p[1] = np.sqrt(1 - z * z) * np.sin(2. * np.pi * u2)
+    z = 2 * u1 - 1.0
+    p[0] = np.sqrt(1 - z * z) * np.cos(2.0 * np.pi * u2)
+    p[1] = np.sqrt(1 - z * z) * np.sin(2.0 * np.pi * u2)
     p[2] = z
     return p
 
@@ -255,9 +260,9 @@ def vector_random_uniform_hypersphere(k):
 
 
 def q_slerp(a, b, t):
-    if t <= 0.:
+    if t <= 0.0:
         return a
-    if t >= 1.:
+    if t >= 1.0:
         return b
     costheta = np.dot(a, b)
 
@@ -267,13 +272,15 @@ def q_slerp(a, b, t):
         costheta = -costheta
         c = -c
 
-    #linear interpolate close to zero
+    # linear interpolate close to zero
     if costheta > 1.0 - 1e-5:
         return t * b + (1 - t) * b
 
     theta = np.arccos(costheta)
 
-    return old_div((np.sin((1.0 - t) * theta) * a + np.sin(t * theta) * c), np.sin(theta))
+    return old_div(
+        (np.sin((1.0 - t) * theta) * a + np.sin(t * theta) * c), np.sin(theta)
+    )
 
 
 #
@@ -282,15 +289,15 @@ def q_slerp(a, b, t):
 
 
 def test_vector_random_uniform_hypersphere():  # pragma: no cover
-    from mpl_toolkits.mplot3d import Axes3D
     import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
 
     nvec = 1000
     r = np.zeros([nvec, 3])
     for i in range(nvec):
         r[i, :] = vector_random_uniform_hypersphere(3)
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection="3d")
     ax.scatter(r[:, 0], r[:, 1], r[:, 2])
     plt.show()
 

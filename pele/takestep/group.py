@@ -6,6 +6,7 @@ Created on Jun 7, 2012
 from __future__ import print_function
 
 from builtins import str
+
 from pele.takestep import TakestepInterface
 
 __all__ = ["GroupSteps", "BlockMoves", "Reseeding"]
@@ -75,7 +76,7 @@ class BlockMoves(TakestepInterface):
 
     def takeStep(self, coords, **kwargs):
         if self._counter >= self._steptakers[self._current][0]:
-            # move to the next step taker 
+            # move to the next step taker
             self._current += 1
             self._counter = 0
             if self._current >= len(self._steptakers):
@@ -118,10 +119,13 @@ class Reseeding(TakestepInterface):
 
     def takeStep(self, coords, **kwargs):
         if self._noimprove >= self.maxnoimprove:
-            print("The energy did not improve after " + str(self._noimprove) + \
-                  " steps, reseeding")
+            print(
+                "The energy did not improve after "
+                + str(self._noimprove)
+                + " steps, reseeding"
+            )
             self.reseed.takeStep(coords, **kwargs)
-            kwargs['driver'].acceptTest.forceAccept()
+            kwargs["driver"].acceptTest.forceAccept()
             self.lowest = None
         else:
             self.takestep.takeStep(coords, **kwargs)
@@ -140,4 +144,3 @@ class Reseeding(TakestepInterface):
             else:
                 self.lowest = driver.markovE
                 self._noimprove = 1
-            

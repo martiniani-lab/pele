@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 import numpy as np
 
 from pele.potentials import BasePotential
@@ -8,7 +9,7 @@ from pele.potentials.fortran.morse import morse as fmorse
 class Morse(BasePotential):
     """
     the morse potential
-    
+
     R0 is the position of the bottom of the well.
     rho is the width of the well and has units of inverse length.
     A is the energy scale.
@@ -28,19 +29,37 @@ class Morse(BasePotential):
 
         if rcut is None:
             self.use_cutoff = False
-            self.rcut = 0.
+            self.rcut = 0.0
         else:
             self.use_cutoff = True
             self.rcut = rcut
 
     def getEnergy(self, x):
-        v, emorse = fmorse(x, False, self.rho, self.r0, self.A, self.periodic,
-                           self.boxvec, self.use_cutoff, self.rcut)
+        v, emorse = fmorse(
+            x,
+            False,
+            self.rho,
+            self.r0,
+            self.A,
+            self.periodic,
+            self.boxvec,
+            self.use_cutoff,
+            self.rcut,
+        )
         return emorse
 
     def getEnergyGradient(self, x):
-        v, emorse = fmorse(x, True, self.rho, self.r0, self.A, self.periodic,
-                           self.boxvec, self.use_cutoff, self.rcut)
+        v, emorse = fmorse(
+            x,
+            True,
+            self.rho,
+            self.r0,
+            self.A,
+            self.periodic,
+            self.boxvec,
+            self.use_cutoff,
+            self.rcut,
+        )
         return emorse, v
 
 

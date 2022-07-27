@@ -8,11 +8,12 @@ We now use setup.py to create the shared object library
     python setup.py build_ext -i
 """
 import numpy as np
-cimport numpy as np
 
 cimport cython
+cimport numpy as np
 
 from pele.potentials import BasePotential
+
 
 @cython.boundscheck(False)
 @cython.cdivision(True)

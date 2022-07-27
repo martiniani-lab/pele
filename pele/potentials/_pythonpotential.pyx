@@ -3,9 +3,9 @@
 """
 import numpy as np
 
+cimport cython
 cimport numpy as np
 cimport numpy as cnp
-cimport cython
 from cpython.ref cimport PyObject
 
 from pele.potentials cimport _pele

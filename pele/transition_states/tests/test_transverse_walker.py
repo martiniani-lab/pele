@@ -1,4 +1,5 @@
 import unittest
+
 import numpy as np
 
 from pele.systems import LJCluster

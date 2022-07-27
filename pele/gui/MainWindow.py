@@ -8,7 +8,9 @@
 # WARNING! All changes made in this file will be lost!
 
 from __future__ import absolute_import
+
 from builtins import object
+
 from PyQt4 import QtCore, QtGui
 
 try:
@@ -16,11 +18,14 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.resize(839, 623)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
@@ -38,7 +43,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
         self.ogl_main = Show3D(self.BHTab)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.ogl_main.sizePolicy().hasHeightForWidth())
@@ -48,10 +55,14 @@ class Ui_MainWindow(object):
         self.verticalLayout_3 = QtGui.QVBoxLayout()
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.list_minima_main = QtGui.QTableView(self.BHTab)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.list_minima_main.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.list_minima_main.sizePolicy().hasHeightForWidth()
+        )
         self.list_minima_main.setSizePolicy(sizePolicy)
         self.list_minima_main.setMaximumSize(QtCore.QSize(200, 16777215))
         self.list_minima_main.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
@@ -88,10 +99,14 @@ class Ui_MainWindow(object):
         self.label_bh_nproc.setObjectName(_fromUtf8("label_bh_nproc"))
         self.gridLayout_3.addWidget(self.label_bh_nproc, 4, 1, 1, 1)
         self.lineEdit_bh_nsteps = QtGui.QLineEdit(self.BHTab)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lineEdit_bh_nsteps.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.lineEdit_bh_nsteps.sizePolicy().hasHeightForWidth()
+        )
         self.lineEdit_bh_nsteps.setSizePolicy(sizePolicy)
         self.lineEdit_bh_nsteps.setObjectName(_fromUtf8("lineEdit_bh_nsteps"))
         self.gridLayout_3.addWidget(self.lineEdit_bh_nsteps, 3, 1, 1, 1)
@@ -107,7 +122,9 @@ class Ui_MainWindow(object):
         self.verticalLayout.setContentsMargins(5, -1, -1, -1)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.oglPath = Show3DWithSlider(self.NEBTab)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.oglPath.sizePolicy().hasHeightForWidth())
@@ -121,7 +138,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_5 = QtGui.QVBoxLayout()
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.listMinima1 = QtGui.QTableView(self.NEBTab)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.listMinima1.sizePolicy().hasHeightForWidth())
@@ -135,7 +154,9 @@ class Ui_MainWindow(object):
         self.listMinima1.verticalHeader().setVisible(False)
         self.verticalLayout_5.addWidget(self.listMinima1)
         self.listMinima2 = QtGui.QTableView(self.NEBTab)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.listMinima2.sizePolicy().hasHeightForWidth())
@@ -152,7 +173,9 @@ class Ui_MainWindow(object):
         self.gridLayout_2.setContentsMargins(20, 0, 20, -1)
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
         self.btnAlign = QtGui.QPushButton(self.NEBTab)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnAlign.sizePolicy().hasHeightForWidth())
@@ -164,7 +187,9 @@ class Ui_MainWindow(object):
         self.btnReconnect.setObjectName(_fromUtf8("btnReconnect"))
         self.gridLayout_2.addWidget(self.btnReconnect, 3, 1, 1, 1)
         self.btnNEB = QtGui.QPushButton(self.NEBTab)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnNEB.sizePolicy().hasHeightForWidth())
@@ -179,7 +204,9 @@ class Ui_MainWindow(object):
         self.btnShowGraph.setObjectName(_fromUtf8("btnShowGraph"))
         self.gridLayout_2.addWidget(self.btnShowGraph, 5, 0, 1, 1)
         self.btnDisconnectivity_graph = QtGui.QPushButton(self.NEBTab)
-        self.btnDisconnectivity_graph.setObjectName(_fromUtf8("btnDisconnectivity_graph"))
+        self.btnDisconnectivity_graph.setObjectName(
+            _fromUtf8("btnDisconnectivity_graph")
+        )
         self.gridLayout_2.addWidget(self.btnDisconnectivity_graph, 5, 1, 1, 1)
         self.btn_connect_in_optim = QtGui.QPushButton(self.NEBTab)
         self.btn_connect_in_optim.setObjectName(_fromUtf8("btn_connect_in_optim"))
@@ -202,7 +229,9 @@ class Ui_MainWindow(object):
         self.gridLayout_8 = QtGui.QGridLayout(self.TSTab)
         self.gridLayout_8.setObjectName(_fromUtf8("gridLayout_8"))
         self.oglTS = Show3DWithSlider(self.TSTab)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.oglTS.sizePolicy().hasHeightForWidth())
@@ -212,7 +241,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_9 = QtGui.QVBoxLayout()
         self.verticalLayout_9.setObjectName(_fromUtf8("verticalLayout_9"))
         self.list_TS = QtGui.QTableView(self.TSTab)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.list_TS.sizePolicy().hasHeightForWidth())
@@ -262,7 +293,9 @@ class Ui_MainWindow(object):
         self.action_merge_minima = QtGui.QAction(MainWindow)
         self.action_merge_minima.setObjectName(_fromUtf8("action_merge_minima"))
         self.action_compute_thermodynamic_info = QtGui.QAction(MainWindow)
-        self.action_compute_thermodynamic_info.setObjectName(_fromUtf8("action_compute_thermodynamic_info"))
+        self.action_compute_thermodynamic_info.setObjectName(
+            _fromUtf8("action_compute_thermodynamic_info")
+        )
         self.menuSimulation.addAction(self.action_db_connect)
         self.menuHelp.addAction(self.actionAbout)
         self.menuActions.addAction(self.action_delete_minimum)
@@ -278,53 +311,315 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_stop_basinhopping.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Stop all basinhopping processes</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_stop_basinhopping.setText(QtGui.QApplication.translate("MainWindow", "Stop basin-hopping", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushNormalmodesMin.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>launch a tool to explore the normal modees of the current structure</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushNormalmodesMin.setText(QtGui.QApplication.translate("MainWindow", "Normalmodes", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushTakestepExplorer.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>launch a tool to look at the basinhopping steps in detail</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushTakestepExplorer.setText(QtGui.QApplication.translate("MainWindow", "Takestep explorer", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_heat_capacity.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>launch a tool to compute the heat capacity in the harmonic superposition approximation</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_heat_capacity.setText(QtGui.QApplication.translate("MainWindow", "heat capacity", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_start_basinhopping.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Start a basinhopping run</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_start_basinhopping.setText(QtGui.QApplication.translate("MainWindow", "Start basin-hopping", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_bh_nproc.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>This lists the number of basinhopping processes currently running in parallel</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_bh_nproc.setText(QtGui.QApplication.translate("MainWindow", "0 B.H. processes", None, QtGui.QApplication.UnicodeUTF8))
-        self.lineEdit_bh_nsteps.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Set the number of basinhopping iterations</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.lineEdit_bh_nsteps.setText(QtGui.QApplication.translate("MainWindow", "# B.H. steps", None, QtGui.QApplication.UnicodeUTF8))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.BHTab), QtGui.QApplication.translate("MainWindow", "Basin Hopping", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnAlign.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Find best alignment between two structures</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnAlign.setText(QtGui.QApplication.translate("MainWindow", "Align", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnReconnect.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Start a fresh double ended connect run</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnReconnect.setText(QtGui.QApplication.translate("MainWindow", "Reconnect", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnNEB.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Start an NEB run (no alignment is done)</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnNEB.setText(QtGui.QApplication.translate("MainWindow", "NEB", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnConnect.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Start a double ended connect run</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnConnect.setText(QtGui.QApplication.translate("MainWindow", "Connect", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnShowGraph.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Show the graph of minima and transition states</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnShowGraph.setText(QtGui.QApplication.translate("MainWindow", "Show graph", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnDisconnectivity_graph.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Show the disconnectivity graph</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnDisconnectivity_graph.setText(QtGui.QApplication.translate("MainWindow", "Disconnectivity graph", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_connect_in_optim.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Spawn an external OPTIM job</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_connect_in_optim.setText(QtGui.QApplication.translate("MainWindow", "Connect in OPTIM", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_connect_all.setText(QtGui.QApplication.translate("MainWindow", "Connect All", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_close_all.setText(QtGui.QApplication.translate("MainWindow", "Close windows", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_rates.setText(QtGui.QApplication.translate("MainWindow", "Compute rates", None, QtGui.QApplication.UnicodeUTF8))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.NEBTab), QtGui.QApplication.translate("MainWindow", "Connect", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushNormalmodesTS.setText(QtGui.QApplication.translate("MainWindow", "Normalmodes", None, QtGui.QApplication.UnicodeUTF8))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.TSTab), QtGui.QApplication.translate("MainWindow", "Transition States", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuSimulation.setTitle(QtGui.QApplication.translate("MainWindow", "Database", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuHelp.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuActions.setTitle(QtGui.QApplication.translate("MainWindow", "Actions", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionNew.setText(QtGui.QApplication.translate("MainWindow", "New", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionClear.setText(QtGui.QApplication.translate("MainWindow", "Clear Database", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_db_connect.setText(QtGui.QApplication.translate("MainWindow", "Connect to Database", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionAbout.setText(QtGui.QApplication.translate("MainWindow", "About", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_delete_minimum.setText(QtGui.QApplication.translate("MainWindow", "Delete Minimum", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_edit_params.setText(QtGui.QApplication.translate("MainWindow", "Edit default parameters", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_merge_minima.setText(QtGui.QApplication.translate("MainWindow", "Merge Minima", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_compute_thermodynamic_info.setText(QtGui.QApplication.translate("MainWindow", "Compute thermodynamic info", None, QtGui.QApplication.UnicodeUTF8))
+        MainWindow.setWindowTitle(
+            QtGui.QApplication.translate(
+                "MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btn_stop_basinhopping.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>Stop all basinhopping"
+                " processes</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btn_stop_basinhopping.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Stop basin-hopping", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.pushNormalmodesMin.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>launch a tool to explore the normal modees of"
+                " the current structure</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.pushNormalmodesMin.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Normalmodes", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.pushTakestepExplorer.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>launch a tool to look at the basinhopping steps"
+                " in detail</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.pushTakestepExplorer.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Takestep explorer", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btn_heat_capacity.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>launch a tool to compute the heat capacity in"
+                " the harmonic superposition approximation</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btn_heat_capacity.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "heat capacity", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btn_start_basinhopping.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>Start a basinhopping run</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btn_start_basinhopping.setText(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "Start basin-hopping",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.label_bh_nproc.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>This lists the number of basinhopping processes"
+                " currently running in parallel</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.label_bh_nproc.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "0 B.H. processes", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.lineEdit_bh_nsteps.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>Set the number of basinhopping"
+                " iterations</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.lineEdit_bh_nsteps.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "# B.H. steps", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.BHTab),
+            QtGui.QApplication.translate(
+                "MainWindow", "Basin Hopping", None, QtGui.QApplication.UnicodeUTF8
+            ),
+        )
+        self.btnAlign.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>Find best alignment between two"
+                " structures</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btnAlign.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Align", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btnReconnect.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>Start a fresh double ended connect"
+                " run</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btnReconnect.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Reconnect", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btnNEB.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>Start an NEB run (no alignment is"
+                " done)</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btnNEB.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "NEB", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btnConnect.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>Start a double ended connect"
+                " run</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btnConnect.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Connect", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btnShowGraph.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>Show the graph of minima and transition"
+                " states</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btnShowGraph.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Show graph", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btnDisconnectivity_graph.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>Show the disconnectivity"
+                " graph</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btnDisconnectivity_graph.setText(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "Disconnectivity graph",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btn_connect_in_optim.setToolTip(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "<html><head/><body><p>Spawn an external OPTIM job</p></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.btn_connect_in_optim.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Connect in OPTIM", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btn_connect_all.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Connect All", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btn_close_all.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Close windows", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btn_rates.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Compute rates", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.NEBTab),
+            QtGui.QApplication.translate(
+                "MainWindow", "Connect", None, QtGui.QApplication.UnicodeUTF8
+            ),
+        )
+        self.pushNormalmodesTS.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Normalmodes", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.TSTab),
+            QtGui.QApplication.translate(
+                "MainWindow", "Transition States", None, QtGui.QApplication.UnicodeUTF8
+            ),
+        )
+        self.menuSimulation.setTitle(
+            QtGui.QApplication.translate(
+                "MainWindow", "Database", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.menuHelp.setTitle(
+            QtGui.QApplication.translate(
+                "MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.menuActions.setTitle(
+            QtGui.QApplication.translate(
+                "MainWindow", "Actions", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionNew.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "New", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionClear.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Clear Database", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.action_db_connect.setText(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "Connect to Database",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.actionAbout.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "About", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.action_delete_minimum.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Delete Minimum", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.action_edit_params.setText(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "Edit default parameters",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.action_merge_minima.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Merge Minima", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.action_compute_thermodynamic_info.setText(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "Compute thermodynamic info",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+
+
+from pele.gui.show3d import Show3D
 
 from .show3d_with_slider import Show3DWithSlider
-from pele.gui.show3d import Show3D

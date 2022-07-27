@@ -1,4 +1,5 @@
 from builtins import object
+
 from pele.systems import BaseSystem
 
 
@@ -6,7 +7,7 @@ class MolecularSystem(BaseSystem):
     """
     Representation for a molecular system, this system stores info about atoms, bonds,
     angles and torsions.
-    
+
     It is possible to represent the molecule using a graph. However, this class is used
     to quickly and efficiently:
         - add/remove atoms, bonds, angles and torsions;
@@ -19,5 +20,5 @@ class MolecularSystem(BaseSystem):
 
 class Atom(object):
     """
-    Representation of an Atom, object. Can have 
+    Representation of an Atom, object. Can have
     """

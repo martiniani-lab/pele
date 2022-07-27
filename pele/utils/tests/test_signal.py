@@ -1,6 +1,7 @@
 from __future__ import print_function
-from builtins import object
+
 import unittest
+from builtins import object
 
 from pele.utils.events import Signal
 

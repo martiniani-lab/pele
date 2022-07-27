@@ -1,22 +1,24 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import str
-from builtins import object
+from __future__ import absolute_import, print_function
+
+from builtins import object, str
+
 import matplotlib
+
 matplotlib.use("QT4Agg")
 
-from collections import deque
-import numpy as np
-from PyQt4.QtGui import QDialog, QApplication, QWidget, QVBoxLayout
 import sys
+from collections import deque
 
+import numpy as np
 from matplotlib.lines import Line2D
 from matplotlib.patches import Circle
-
+from PyQt4.QtGui import QApplication, QDialog, QVBoxLayout, QWidget
 
 from pele.storage import Database
 from pele.utils.events import Signal
+
 from . import ui.nebbrowser
+
 
 def no_event(*args, **kwargs):
     return
@@ -206,9 +208,10 @@ def start():
     neb.optimize()
     
 if __name__ == "__main__":
-    from pele.systems import LJCluster
-    from pele.storage import Database
     import pylab as pl
+
+    from pele.storage import Database
+    from pele.systems import LJCluster
     app = QApplication(sys.argv)
     
     def process_events():

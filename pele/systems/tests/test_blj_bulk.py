@@ -6,7 +6,7 @@ from pele.systems import BLJBulk
 class TestLJClusterSystem(unittest.TestCase):
     def setUp(self):
         self.natoms = 13
-        boxvec = [7.] * 3
+        boxvec = [7.0] * 3
         self.system = BLJBulk(self.natoms, boxvec)
 
     def test_database_property(self):
@@ -14,7 +14,7 @@ class TestLJClusterSystem(unittest.TestCase):
         p = db.get_property("natoms")
         self.assertIsNotNone(p)
         self.assertEqual(p.value(), self.natoms)
-        
+
         self.assertIsNotNone(db.get_property("ntypeA"))
         self.assertIsNotNone(db.get_property("boxvec"))
 

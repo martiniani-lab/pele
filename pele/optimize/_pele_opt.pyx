@@ -3,15 +3,17 @@ import sys
 
 import numpy as np
 
-from pele.potentials import _pele
 from pele.optimize import Result
+from pele.potentials import _pele
 
+cimport cython
 cimport numpy as np
 from libcpp cimport bool as cbool
-cimport cython
+
 import copy
 
 from pele.potentials cimport _pele
+
 
 @cython.boundscheck(False)
 cdef pele_array_to_np_array(_pele.Array[double] v):

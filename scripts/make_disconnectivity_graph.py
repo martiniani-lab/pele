@@ -1,24 +1,28 @@
 from __future__ import print_function
-from builtins import map
-import sys
-import os
+
 import getopt
+import os
+import sys
 import time
-import numpy as np
-import networkx as nx
+from builtins import map
+
 import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
 
 import pele.utils.disconnectivity_graph as dg
 from pele.storage import Database
 from pele.utils.optim_compatibility import OptimDBConverter
 
-
 try:
     from PyQt4.QtGui import QApplication
+
     from pele.gui.ui.dgraph_dlg import DGraphDialog, reduced_db2graph
+
     use_gui = True
 except ImportError:
     use_gui = False
+
 
 def read_minA(fname, db):
     """load data from min.A or min.B"""
@@ -30,20 +34,22 @@ def read_minA(fname, db):
             else:
                 sline = line.split()
                 ids += list(map(int, sline))
-    
+
     assert nminima == len(ids)
     print(len(ids), "minima read from file:", fname)
     return [db.getMinimum(mid) for mid in ids]
+
 
 def read_AB(db):
     minA = "min.A"
     minB = "min.B"
     if os.path.isfile(minA) and os.path.isfile(minA):
-        A = read_minA(minA, db) 
+        A = read_minA(minA, db)
         B = read_minA(minB, db)
-        return A,B
+        return A, B
     else:
         return None
+
 
 def usage():
     print("usage:")
@@ -55,36 +61,43 @@ def usage():
     print(" options to pass to DisconnectivityGraph:")
     print("   --nlevels=n : number of energy levels")
     print("   --subgraph_size=n :  include all disconnected subgraphs up to size n")
-    print("   --order_by_basin_size : ") 
-    print("   --order_by_energy : ") 
-    print("   --include_gmin : ") 
+    print("   --order_by_basin_size : ")
+    print("   --order_by_energy : ")
+    print("   --include_gmin : ")
     print("   --center_gmin : ")
-    print("   --Emax=emax   :") 
+    print("   --Emax=emax   :")
+
 
 def main():
     if len(sys.argv) < 2:
         usage()
         exit(1)
-    
-    
-    
+
     kwargs = {}
     outfile = None
     OPTIM = False
 
-    opts, args = getopt.gnu_getopt(sys.argv[1:], "ho:", 
-                                   ["help", "nlevels=", "subgraph_size=", "OPTIM",
-                                    "order_by_basin_size", "order_by_energy",
-                                    "include_gmin",
-                                    "center_gmin",
-                                    "Emax=",
-                                    ])
+    opts, args = getopt.gnu_getopt(
+        sys.argv[1:],
+        "ho:",
+        [
+            "help",
+            "nlevels=",
+            "subgraph_size=",
+            "OPTIM",
+            "order_by_basin_size",
+            "order_by_energy",
+            "include_gmin",
+            "center_gmin",
+            "Emax=",
+        ],
+    )
     for o, a in opts:
         if o == "-h" or o == "--help":
             usage()
             exit(1)
         if o == "-o":
-            outfile = a 
+            outfile = a
         elif o == "--nlevels":
             kwargs["nlevels"] = int(a)
         elif o == "--Emax":
@@ -106,12 +119,11 @@ def main():
             print("")
             usage()
             exit(1)
-    
-    
+
     groups = None
-    
+
     if OPTIM:
-        #make database from min.data ts.data
+        # make database from min.data ts.data
         db = Database()
         converter = OptimDBConverter(db)
         converter.convert_no_coords()
@@ -126,11 +138,11 @@ def main():
         if not os.path.exists(dbfile):
             print("database file doesn't exist", dbfile)
             exit()
-        
+
         db = Database(dbfile)
-        
+
     if outfile is None and use_gui:
-        app = QApplication(sys.argv) 
+        app = QApplication(sys.argv)
         kwargs["show_minima"] = False
         md = DGraphDialog(db, params=kwargs)
         md.rebuild_disconnectivity_graph()
@@ -139,15 +151,15 @@ def main():
             md.dgraph_widget.redraw_disconnectivity_graph()
         md.show()
         sys.exit(app.exec_())
-        
+
     # make graph from database
     t0 = time.time()
     if "Emax" in kwargs and use_gui:
-        graph = reduced_db2graph(db, kwargs['Emax'])
+        graph = reduced_db2graph(db, kwargs["Emax"])
     else:
         graph = dg.database2graph(db)
     t1 = time.time()
-    print("loading the data into a transition state graph took", t1-t0, "seconds")
+    print("loading the data into a transition state graph took", t1 - t0, "seconds")
 
     # do the disconnectivity graph analysis
     mydg = dg.DisconnectivityGraph(graph, **kwargs)
@@ -156,12 +168,11 @@ def main():
     t1 = time.time()
     mydg.calculate()
     t2 = time.time()
-    print("d-graph analysis finished in", t2-t1, "seconds")
+    print("d-graph analysis finished in", t2 - t1, "seconds")
     print("number of minima:", mydg.tree_graph.number_of_leaves())
     print("plotting disconnectivigy graph")
     sys.stdout.flush()
-    
-    
+
     # make the figure and save it
     mydg.plot()
     if outfile is None:
@@ -169,9 +180,8 @@ def main():
     else:
         plt.savefig(outfile)
     t3 = time.time()
-    print("plotting finished in", t3-t2, "seconds")
-        
-    
+    print("plotting finished in", t3 - t2, "seconds")
+
 
 if __name__ == "__main__":
     main()

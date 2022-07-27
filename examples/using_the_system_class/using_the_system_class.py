@@ -2,15 +2,16 @@
 examples of how to do various things using the system class.  I will use
 the Lennard-Jones system as an example
 """
-from __future__ import division
-from __future__ import print_function
-from builtins import range
-from past.utils import old_div
+from __future__ import division, print_function
+
 import logging
+from builtins import range
+
+from past.utils import old_div
 
 from pele.systems import LJCluster
-from pele.utils.disconnectivity_graph import DisconnectivityGraph, database2graph
-
+from pele.utils.disconnectivity_graph import (DisconnectivityGraph,
+                                              database2graph)
 
 # initialize the system class
 natoms = 13
@@ -48,7 +49,12 @@ minimum2 = db.addMinimum(e2, coords2)
 bh = system.get_basinhopping(database=db, outstream=None)
 niter = 20
 bh.run(niter)
-print("the lowest energy found after", niter, " basinhopping steps is", db.minima()[0].energy)
+print(
+    "the lowest energy found after",
+    niter,
+    " basinhopping steps is",
+    db.minima()[0].energy,
+)
 
 # print the energies of all the minima found
 print("the minima in the database have energies")
@@ -62,8 +68,8 @@ dist, coords1, coords2 = mindist(m1.coords, m2.coords)
 print("the minimum distance between the two lowest minima is", dist)
 
 # find a connected series of minima and transition states between m1 and m2
-# 
-# first use the logging module to turn off the status messages 
+#
+# first use the logging module to turn off the status messages
 logger = logging.getLogger("pele.connect")
 logger.setLevel("WARNING")
 # now create the double ended connect object
@@ -98,8 +104,3 @@ dg = DisconnectivityGraph(graph, nlevels=6)
 dg.calculate()
 dg.plot()
 pl.show()
-
-
-    
-
-

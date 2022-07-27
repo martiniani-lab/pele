@@ -1,7 +1,3 @@
-from numpy.distutils.core import setup
-from numpy.distutils.core import Extension
+from numpy.distutils.core import Extension, setup
 
-
-setup(
-      ext_modules=[Extension("mypotential", ["mypotential.c"])]
-      )
+setup(ext_modules=[Extension("mypotential", ["mypotential.c"])])

@@ -1,5 +1,6 @@
-from pele.potentials import BasePotential
 import numpy as np
+
+from pele.potentials import BasePotential
 
 __all__ = ["GMINPotential"]
 
@@ -51,7 +52,7 @@ class GMINPotential(BasePotential):  # pragma: no cover
         self.ncalls += 1
         grad = np.zeros(3 * self.GMIN.getNAtoms())
         E = self.GMIN.getEnergyGradient(coords, grad)
-        return E, grad[0:coords.size]
+        return E, grad[0 : coords.size]
 
     def getCoords(self):
         coords = np.zeros(self.GMIN.getDOF())

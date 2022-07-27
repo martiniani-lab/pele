@@ -3,10 +3,10 @@
 # Example 4: adaptive step size
 ############################################################
 import numpy as np
-import pele.potentials.lj as lj
+
 import pele.basinhopping as bh
-from pele.takestep import displace
-from pele.takestep import adaptive
+import pele.potentials.lj as lj
+from pele.takestep import adaptive, displace
 
 natoms = 12
 

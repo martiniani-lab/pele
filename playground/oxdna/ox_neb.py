@@ -1,12 +1,14 @@
+import pickle
 import sys
+
 from OpenGL.GLUT import glutInit
 from oxgui import OXDNASystem
 from PyQt4.QtGui import QApplication
-import pickle
 
 glutInit()
 app = QApplication(sys.argv)
 from pele.gui.neb_explorer import NEBExplorer
+
 system = OXDNASystem()
 
 wnd = NEBExplorer(None, system, app)

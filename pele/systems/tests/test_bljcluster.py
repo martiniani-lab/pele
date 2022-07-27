@@ -18,6 +18,7 @@ class TestBLJClusterSystem(unittest.TestCase):
         self.assertIsNotNone(p)
         self.assertEqual(p.value(), self.ntypeA)
 
+
 # for name in ["sigAA", "sigBB", "sigAB", "epsAA", "epsAB", "epsBB"]:
 #             p = db.get_property("ntypeA")
 #             self.assertIsNotNone(p)

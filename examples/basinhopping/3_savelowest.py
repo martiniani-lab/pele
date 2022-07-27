@@ -2,7 +2,9 @@
 Example 3: Saving all minima found to an xyz file
 """
 from __future__ import print_function
+
 from builtins import str
+
 from pele.systems import LJCluster
 from pele.utils.xyz import write_xyz
 
@@ -18,16 +20,17 @@ with open("lowest", "w") as fout:
     for minimum in db.minima():
         title = "energy = ", str(minimum.energy)
         write_xyz(fout, minimum.coords, title)
-           
+
 ############################################################
 # some visualization
 ############################################################
-try: 
+try:
     import pele.utils.pymolwrapper as pym
+
     pym.start()
-    frame=1  
-    for minimum in db.minima():        
+    frame = 1
+    for minimum in db.minima():
         pym.draw_spheres(minimum.coords.reshape(-1, 3), "A", frame)
         frame += 1
 except:
-    print("Could not draw using pymol, skipping this step") 
+    print("Could not draw using pymol, skipping this step")

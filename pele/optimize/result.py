@@ -1,8 +1,9 @@
 from __future__ import print_function
+
 # Result object copied from scipy 0.11
-from builtins import map
-from builtins import range
-__all__ = ['Result']
+from builtins import map, range
+
+__all__ = ["Result"]
 
 
 class Result(dict):
@@ -31,8 +32,8 @@ class Result(dict):
     Notes
     -----
     There may be additional attributes not listed above depending of the
-    specific solver. 
-    
+    specific solver.
+
     Also, since this class is essentially a subclass of dict
     with attribute accessors, one can see which attributes are available
     using the `keys()` method.
@@ -47,19 +48,17 @@ class Result(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-
     def __repr__(self):
         if list(self.keys()):
             m = max(list(map(len, list(self.keys())))) + 1
-            return '\n'.join([k.rjust(m) + ': ' + repr(v)
-                              for k, v in self.items()])
+            return "\n".join([k.rjust(m) + ": " + repr(v) for k, v in self.items()])
         else:
             return self.__class__.__name__ + "()"
 
     def __getitem__(self, i):
         """
         April 26, 2013
-             
+
         this overloaded function exists only for compatibility with the old quenchers.
         It should be removed at some point in the future
         """
@@ -69,10 +68,11 @@ class Result(dict):
             return vals
 
         if i in range(4):
-            maplist = {0: "coords",
-                       1: "energy",
-                       2: "rms",
-                       3: "nfev",
+            maplist = {
+                0: "coords",
+                1: "energy",
+                2: "rms",
+                3: "nfev",
             }
             i = maplist[i]
         elif i == 4:
@@ -82,7 +82,7 @@ class Result(dict):
     def __iter__(self):
         """
         April 26, 2013
-             
+
         this overloaded function exists only for compatibility with the old quenchers.
         It should be removed at some point in the future
         """
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     res = Result()
     res.coords = np.array([0])
-    res.energy = 1.
+    res.energy = 1.0
     res.rms = 1e-4
     res.nfev = 100
     print(dir(res))

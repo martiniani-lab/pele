@@ -1,12 +1,17 @@
 """
 # distutils: language = C++
 """
+cimport numpy as np
+
 cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport array_wrap_np
-cimport numpy as np
+
 import numpy as np
-from libc.stdlib cimport malloc, free
+
+from libc.stdlib cimport free, malloc
+
 from distance_enum import Distance
+
 
 # cython has no support for integer template argument.  This is a hack to get around it
 # https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs

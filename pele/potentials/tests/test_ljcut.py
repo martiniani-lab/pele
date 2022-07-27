@@ -1,9 +1,10 @@
 from __future__ import division
-from builtins import range
-from past.utils import old_div
+
 import unittest
+from builtins import range
 
 import numpy as np
+from past.utils import old_div
 
 from pele.potentials.ljcut import LJCut
 
@@ -11,7 +12,9 @@ from pele.potentials.ljcut import LJCut
 class LJCutTest(unittest.TestCase):
     def setUp(self):
         self.natoms = 10
-        self.coords = np.random.uniform(-1, 1., 3 * self.natoms) * self.natoms ** (old_div(-1., 3))
+        self.coords = np.random.uniform(-1, 1.0, 3 * self.natoms) * self.natoms ** (
+            old_div(-1.0, 3)
+        )
         self.pot = LJCut()
         self.E = self.pot.getEnergy(self.coords)
         self.Egrad, self.grad = self.pot.getEnergyGradient(self.coords)

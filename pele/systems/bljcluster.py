@@ -1,11 +1,12 @@
 from __future__ import absolute_import
-from builtins import range
-import tempfile
 
-from pele.systems import AtomicCluster
-from pele.potentials import BLJCut
-from pele.utils.xyz import write_xyz
+import tempfile
+from builtins import range
+
 from pele.mindist import CoMToOrigin
+from pele.potentials import BLJCut
+from pele.systems import AtomicCluster
+from pele.utils.xyz import write_xyz
 
 __all__ = ["BLJCluster"]
 
@@ -13,7 +14,7 @@ __all__ = ["BLJCluster"]
 class BLJCluster(AtomicCluster):
     """
     define the System class for a binary Lennard-Jones cluster
-    
+
     Parameters
     ----------
     natoms : int
@@ -21,7 +22,7 @@ class BLJCluster(AtomicCluster):
         number of type-A, big particles
     **kwargs : other keyword parameters
         these are passed on to the potential
-    
+
     See Also
     --------
     BaseSystem, AtomicCluster
@@ -39,7 +40,6 @@ class BLJCluster(AtomicCluster):
 
         self.params["database"]["accuracy"] = 1e-3
 
-
     def get_potential(self):
         return BLJCut(self.natoms, self.ntypeA, **self.potential_kwargs)
 
@@ -47,15 +47,16 @@ class BLJCluster(AtomicCluster):
         return [list(range(self.ntypeA)), list(range(self.ntypeA, self.natoms))]
 
     def get_system_properties(self):
-        return dict(natoms=int(self.natoms),
-                    ntypeA=int(self.ntypeA),
-                    potential="BLJ cluster",
-                    # sigAA=pot.sigAA,
-                    # sigAB=pot.sigAB,
-                    # sigBB=pot.sigBB,
-                    # epsAA=pot.epsAA,
-                    # epsAB=pot.epsAB,
-                    # epsBB=pot.epsBB,
+        return dict(
+            natoms=int(self.natoms),
+            ntypeA=int(self.ntypeA),
+            potential="BLJ cluster",
+            # sigAA=pot.sigAA,
+            # sigAB=pot.sigAB,
+            # sigBB=pot.sigBB,
+            # epsAA=pot.epsAA,
+            # epsAB=pot.epsAB,
+            # epsBB=pot.epsBB,
         )
 
     #
@@ -65,26 +66,30 @@ class BLJCluster(AtomicCluster):
     def draw(self, coordslinear, index, subtract_com=True):  # pragma: no cover
         """
         tell the gui how to represent your system using openGL objects
-        
+
         Parameters
         ----------
         coords : array
         index : int
             we can have more than one molecule on the screen at one time.  index tells
             which one to draw.  They are viewed at the same time, so they should be
-            visually distinct, e.g. different colors.  accepted values are 1 or 2        
+            visually distinct, e.g. different colors.  accepted values are 1 or 2
         """
         from ._opengl_tools import draw_atomic_binary
 
-        draw_atomic_binary(coordslinear, index, list(range(self.ntypeA)),
-                           list(range(self.ntypeA, self.natoms)), subtract_com=subtract_com)
-
+        draw_atomic_binary(
+            coordslinear,
+            index,
+            list(range(self.ntypeA)),
+            list(range(self.ntypeA, self.natoms)),
+            subtract_com=subtract_com,
+        )
 
     def load_coords_pymol(self, coordslist, oname, index=1):  # pragma: no cover
         """load the coords into pymol
-        
+
         the new object must be named oname so we can manipulate it later
-                        
+
         Parameters
         ----------
         coordslist : list of arrays
@@ -95,11 +100,11 @@ class BLJCluster(AtomicCluster):
             we can have more than one molecule on the screen at one time.  index tells
             which one to draw.  They are viewed at the same time, so should be
             visually distinct, e.g. different colors.  accepted values are 1 or 2
-        
+
         Notes
         -----
         the implementation here is a bit hacky.  we create a temporary xyz file from coords
-        and load the molecule in pymol from this file.  
+        and load the molecule in pymol from this file.
         """
         # pymol is imported here so you can do, e.g. basinhopping without installing pymol
         import pymol
@@ -135,7 +140,6 @@ class BLJCluster(AtomicCluster):
         seleB = "%s and name LB" % oname
         pymol.cmd.set("sphere_scale", value=1.0, selection=seleA)
         pymol.cmd.set("sphere_scale", value=0.8, selection=seleB)
-
 
         # set the color according to index
         if index == 1:

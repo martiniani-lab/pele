@@ -91,16 +91,18 @@ These are not used very often and may be buggy.
 """
 from __future__ import absolute_import
 
-from .result import *
-from ._lbfgs_py import *
-from ._mylbfgs import *
 from ._fire import *
 from ._gradient_descent_cpp import GradientDescent_CPP
-from ._modified_fire_cpp import ModifiedFireCPP
 from ._lbfgs_cpp import LBFGS_CPP
-from ._mxopt import MixedOptimizer_CPP as MixedOptimizer
-from .cvode_opt import CVODEBDFOptimizer_CPP as CVODEBDFOptimizer
+from ._lbfgs_py import *
+from ._modified_fire_cpp import ModifiedFireCPP
 from ._mxd_end_only import MXDOptimizer_CPP as MXDOptimizer
-from .extended_mixed_descent import ExtendedMixedOptimizer_CPP as ExtendedMixedOptimizer
-from .generic_mixed_descent import GenericMixedDescent_CPP as GenericMixedDescent
+from ._mxopt import MixedOptimizer_CPP as MixedOptimizer
+from ._mylbfgs import *
 from ._quench import *
+from .cvode_opt import CVODEBDFOptimizer_CPP as CVODEBDFOptimizer
+from .extended_mixed_descent import \
+    ExtendedMixedOptimizer_CPP as ExtendedMixedOptimizer
+from .generic_mixed_descent import \
+    GenericMixedDescent_CPP as GenericMixedDescent
+from .result import *

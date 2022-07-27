@@ -2,21 +2,18 @@
 classes to organize strategies for selecting which minima in a database to
 choose for a double ended connect run. 
 """
-from __future__ import division
-from __future__ import print_function
-from builtins import str
-from builtins import range
-from past.utils import old_div
-from builtins import object
+from __future__ import division, print_function
+
+from builtins import object, range, str
 from collections import deque
 
+import networkx as nx
 import numpy as np
 import sqlalchemy
-import networkx as nx
+from past.utils import old_div
 
-from pele.storage import Minimum
 from pele.landscape import TSGraph
-
+from pele.storage import Minimum
 
 __all__ = ["ConnectManager"]
 
@@ -89,14 +86,14 @@ class ConnectManagerGMin(BaseConnectManager):
 
 class ConnectManagerUntrap(BaseConnectManager):
     """class to select double ended connect jobs using the untrap strategy
-    
+
     Notes
     ------
     the untrap strategy selects minima with the goal of eliminating artificially high
     energy barriers.  Each minima is weighted by the energy barrier to get to the global
     minimum divided by the energy difference with the global minimum.  This weight determines
     the order with in the minima are selected for a double ended connect run.
-    
+
     Parameters
     ----------
     database : pele Database object
@@ -155,14 +152,16 @@ class ConnectManagerUntrap(BaseConnectManager):
             # make sure that the global minimum is in group1
             print("warning, the global minimum is not the in the largest cluster.")
 
-        # compute the energy barriers for all minima in the cluster        
+        # compute the energy barriers for all minima in the cluster
         subgraph = nx.subgraph(graph, group1)
         energy_barriers = self._compute_barriers(subgraph, min1)
 
         # sort the minima by the barrier height divided by the energy difference
-        weights = [(m, old_div(np.abs(barrier), np.abs(m.energy - min1.energy)))
-                   for (m, barrier) in energy_barriers.items()]
-        weights.sort(key=lambda v: 1. / v[1])
+        weights = [
+            (m, old_div(np.abs(barrier), np.abs(m.energy - min1.energy)))
+            for (m, barrier) in energy_barriers.items()
+        ]
+        weights.sort(key=lambda v: 1.0 / v[1])
 
         self.minpairs = deque()
         for min2, w in weights:
@@ -175,13 +174,21 @@ class ConnectManagerUntrap(BaseConnectManager):
             self.minpairs.append((min1, min2))
             if True:
                 # print some stuff
-                print("    untrap analysis: minimum", min2.id(), "with energy", min2.energy, "barrier", energy_barriers[
-                    min2], "untrap weight", w)
+                print(
+                    "    untrap analysis: minimum",
+                    min2.id(),
+                    "with energy",
+                    min2.energy,
+                    "barrier",
+                    energy_barriers[min2],
+                    "untrap weight",
+                    w,
+                )
 
 
 class ConnectManagerCombine(BaseConnectManager):
     """a class to organize choosing minima in order to combine disconnected clusters of minima
-    
+
     Parameters
     ----------
     database : Database object
@@ -223,9 +230,11 @@ class ConnectManagerCombine(BaseConnectManager):
             # make sure that the global minimum is in group1
             global_min = self.database.minima()[0]
             if global_min not in group1:
-                print("warning, the global minimum is not the in the largest cluster.  Will try to connect them")
+                print(
+                    "warning, the global minimum is not the in the largest cluster. "
+                    " Will try to connect them"
+                )
                 self.minpairs.append((min1, global_min))
-
 
         # remove group1 from cclist
         cclist.remove(group1)
@@ -235,7 +244,13 @@ class ConnectManagerCombine(BaseConnectManager):
             if len(self.minpairs) > self.list_len:
                 break
 
-            print("adding groups of size", len(group1), "and", len(group2), "to the connect list")
+            print(
+                "adding groups of size",
+                len(group1),
+                "and",
+                len(group2),
+                "to the connect list",
+            )
 
             # sort the groups by energy
             group2 = sorted(group2, key=lambda m: m.energy)
@@ -268,7 +283,8 @@ class ConnectManagerRandom(BaseConnectManager):
             min1 = query.order_by(sqlalchemy.func.random()).first()
             min2 = query.order_by(sqlalchemy.func.random()).first()
 
-            if min1 == min2: continue
+            if min1 == min2:
+                continue
             if self.is_good_pair(min1, min2):
                 return min1, min2
 
@@ -280,42 +296,56 @@ class ConnectManagerRandom(BaseConnectManager):
 
 class ConnectManager(object):
     """class to manage which minima to try to connect
-    
+
     Notes
     -----
     Organize which minima pairs to submit for double ended connect jobs.
-    This class chooses between the different selection strategies.  
+    This class chooses between the different selection strategies.
     The actual strategies are implemented in separate classes.
 
     Selection strategies:
-    
+
         1. "random" : choose two minima randomly
         #. "gmin" : connect all minima to the global minimum
         #. "combine" : try to connect disconnected clusters of minima.
-        #. "untrap" : try to eliminate non-physical barriers to the global minimum 
-    
-    
+        #. "untrap" : try to eliminate non-physical barriers to the global minimum
+
+
     Parameters
     ----------
     database : pele Database object
     strategy : string
-        define the default strategy for the connect runs.  Can be one of 
-        ["random", "combine", "untrap", "gmin"] 
+        define the default strategy for the connect runs.  Can be one of
+        ["random", "combine", "untrap", "gmin"]
     """
 
     class NoMoreConnectionsError(Exception):
         """raised when the connect manager can't find any more pairs to connect"""
 
-    def __init__(self, database, strategy="random", list_len=20, clust_min=4, Emax=None,
-                 untrap_nlevels=20, verbosity=1):
+    def __init__(
+        self,
+        database,
+        strategy="random",
+        list_len=20,
+        clust_min=4,
+        Emax=None,
+        untrap_nlevels=20,
+        verbosity=1,
+    ):
         self.database = database
         self.default_strategy = strategy
         self.verbosity = verbosity
 
         self.manager_random = ConnectManagerRandom(self.database, Emax)
-        self.manager_combine = ConnectManagerCombine(self.database, list_len=list_len, clust_min=4)
-        self.manager_untrap = ConnectManagerUntrap(database, list_len=list_len, nlevels=untrap_nlevels)
-        self.manager_gmin = ConnectManagerGMin(database, list_len=list_len, verbosity=self.verbosity)
+        self.manager_combine = ConnectManagerCombine(
+            self.database, list_len=list_len, clust_min=4
+        )
+        self.manager_untrap = ConnectManagerUntrap(
+            database, list_len=list_len, nlevels=untrap_nlevels
+        )
+        self.manager_gmin = ConnectManagerGMin(
+            database, list_len=list_len, verbosity=self.verbosity
+        )
 
         self.possible_strategies = ["random", "combine", "untrap", "gmin"]
         self.backup_strategy = "random"
@@ -330,7 +360,6 @@ class ConnectManager(object):
         self.manager_gmin.set_good_pair_test(self.untried)
 
     def _already_tried(self, min1, min2):
-
         if (min1, min2) in self.attempted_list:
             return True
         elif (min2, min1) in self.attempted_list:
@@ -348,8 +377,9 @@ class ConnectManager(object):
 
     def _check_strategy(self, strategy):
         if strategy not in self.possible_strategies:
-            raise Exception("strategy must be from %s" % (str(self.possible_strategies)))
-
+            raise Exception(
+                "strategy must be from %s" % (str(self.possible_strategies))
+            )
 
     def get_connect_job(self, strategy=None):
         """return the next connect job according to the chosen strategy"""
@@ -362,7 +392,11 @@ class ConnectManager(object):
             min1, min2 = self.manager_untrap.get_connect_job()
             if min1 is None or min2 is None:
                 if self.verbosity > 0:
-                    print("couldn't find any minima to untrap.  Doing", self.backup_strategy, "strategy instead")
+                    print(
+                        "couldn't find any minima to untrap.  Doing",
+                        self.backup_strategy,
+                        "strategy instead",
+                    )
                 strategy = self.backup_strategy
             else:
                 if self.verbosity > 0:
@@ -372,27 +406,47 @@ class ConnectManager(object):
             min1, min2 = self.manager_combine.get_connect_job()
             if min1 is None or min2 is None:
                 if self.verbosity > 0:
-                    print("couldn't find any minima clusters to combine.  Doing", self.backup_strategy, "strategy instead")
+                    print(
+                        "couldn't find any minima clusters to combine.  Doing",
+                        self.backup_strategy,
+                        "strategy instead",
+                    )
                 strategy = self.backup_strategy
             else:
                 if self.verbosity > 0:
-                    print("sending a connect job to combine two disconnected clusters", min1.id(), min2.id())
+                    print(
+                        "sending a connect job to combine two disconnected clusters",
+                        min1.id(),
+                        min2.id(),
+                    )
 
         if strategy == "gmin":
             min1, min2 = self.manager_gmin.get_connect_job()
             if min1 is None or min2 is None:
                 if self.verbosity > 0:
-                    print("couldn't find any minima not connected to the global minimum.  Doing", self.backup_strategy, "strategy instead")
+                    print(
+                        "couldn't find any minima not connected to the global minimum. "
+                        " Doing",
+                        self.backup_strategy,
+                        "strategy instead",
+                    )
                 strategy = self.backup_strategy
             else:
                 if self.verbosity > 0:
-                    print("sending a connect job to connect all minima with the global minimum", min1.id(), min2.id())
+                    print(
+                        "sending a connect job to connect all minima with the global"
+                        " minimum",
+                        min1.id(),
+                        min2.id(),
+                    )
 
         if strategy == "random":
             min1, min2 = self.manager_random.get_connect_job()
             if min1 is None or min2 is None:
                 raise self.NoMoreConnectionsError(
-                    "couldn't find any random minima pair to connect.  Have we tried all pairs?")
+                    "couldn't find any random minima pair to connect.  Have we tried"
+                    " all pairs?"
+                )
             if self.verbosity > 0:
                 print("sending a random connect job", min1.id(), min2.id())
 

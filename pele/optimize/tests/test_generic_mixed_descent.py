@@ -1,8 +1,10 @@
 """ Test for generating mixed descent run in C++
 """
-from matplotlib import use
 import numpy as np
-from pele.optimize import GenericMixedDescent, ModifiedFireCPP, CVODEBDFOptimizer
+from matplotlib import use
+
+from pele.optimize import (CVODEBDFOptimizer, GenericMixedDescent,
+                           ModifiedFireCPP)
 from pele.potentials import InversePower
 
 
@@ -76,7 +78,12 @@ def test_mixed_descent():
     eps = 1.0  # epsilon for the main potential
 
     potential = InversePower(
-        power, eps, radii, use_cell_lists=use_cell_lists, ndim=ndim, boxvec=box_vec,
+        power,
+        eps,
+        radii,
+        use_cell_lists=use_cell_lists,
+        ndim=ndim,
+        boxvec=box_vec,
     )
 
     optimizer_convex = ModifiedFireCPP(x, potential, fdec=0.5, tol=1e-9)

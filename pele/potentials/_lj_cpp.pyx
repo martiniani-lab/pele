@@ -1,8 +1,9 @@
 """
 # distutils: language = C++
 """
-import numpy as np
 from ctypes import c_size_t as size_t
+
+import numpy as np
 
 from pele.potentials import FrozenPotentialWrapper
 
@@ -10,8 +11,8 @@ cimport numpy as np
 from cpython cimport bool
 
 cimport pele.potentials._pele as _pele
-from pele.potentials._pele cimport shared_ptr
-from pele.potentials._pele cimport array_wrap_np, array_wrap_np_size_t
+from pele.potentials._pele cimport (array_wrap_np, array_wrap_np_size_t,
+                                    shared_ptr)
 
 
 # use external c++ class

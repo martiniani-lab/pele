@@ -1,12 +1,12 @@
 from __future__ import print_function
-from builtins import str
-from builtins import range
-from builtins import object
+
 import os
-import subprocess
-import numpy as np
-import tempfile
 import shutil
+import subprocess
+import tempfile
+from builtins import object, range, str
+
+import numpy as np
 
 from pele.optimize import Result
 
@@ -35,7 +35,6 @@ class PathInfoReader(object):
                     print("I think I'm done... ??")
                     break
 
-
     def read_coords(self, fin):
         coords = np.zeros([self.natoms, 3])
         for i in range(self.natoms):
@@ -46,7 +45,7 @@ class PathInfoReader(object):
     def read_minimum(self, fin):
         """
         the minima and transition states are stored as
-        
+
         1 line with energy
         1 line with point group info
         natoms lines with eigenvalues
@@ -70,7 +69,7 @@ class PathInfoReader(object):
 class SpawnOPTIM(object):
     """
     this class will control spawning of optim jobs and importing the results
-    
+
     1. make temp directory
     #. make imput files (odata, finish, perm.allow, etc)
     #. call OPTIM
@@ -91,7 +90,6 @@ class SpawnOPTIM(object):
         self.call_optim(rundir, self.OPTIM)
 
     def make_input_files(self, rundir):
-
         # make odata file
         odata = rundir + "/odata"
         with open(odata, "w") as fout:
@@ -111,17 +109,16 @@ class SpawnOPTIM(object):
         # make any additional files
         self.write_additional_input_files(rundir, self.coords1, self.coords2)
 
-
     def write_odata(self, fout):
         """write the odata file to the open file fout
-        
+
         stop after the line POINTS.  i.e. don't write coordinates
         """
         raise NotImplementedError
 
     def write_odata_coords(self, coords, fout):
         """write the coords to odata
-        
+
         need to label the atoms correctly for the system
         """
         raise NotImplementedError
@@ -178,7 +175,7 @@ class SpawnOPTIM(object):
 
     def load_results(self, database):
         """load the resulting min-ts-min triplets from the path.info file and put them in the database
-        
+
         Returns
         -------
         newminima : a set of the minima found
@@ -254,10 +251,12 @@ POINTS
 # only testing stuff below here
 #
 
+
 def spawnlj(**kwargs):
-    from pele.systems import LJCluster
-    from pele.config import config
     import os
+
+    from pele.config import config
+    from pele.systems import LJCluster
 
     natoms = 13
     sys = LJCluster(natoms)
@@ -277,6 +276,3 @@ def spawnlj(**kwargs):
 
 if __name__ == "__main__":
     spawnlj(tempdir=True)
-    
-    
-    

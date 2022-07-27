@@ -5,10 +5,10 @@ Created on 6 Apr 2012
 """
 from __future__ import print_function
 
-from builtins import str
-from builtins import object
-import numpy as np
 import copy
+from builtins import object, str
+
+import numpy as np
 
 __all__ = ["QuenchBenchmark"]
 
@@ -41,7 +41,6 @@ class QuenchBenchmark(object):
     """
     classdocs
     """
-
 
     def __init__(self, potential):
         """
@@ -77,8 +76,9 @@ class QuenchBenchmark(object):
 
 
 if __name__ == "__main__":
-    import pele.potentials.lj as lj
     import scipy.optimize
+
+    import pele.potentials.lj as lj
     from pele.optimize import _quench as quench
 
     print("Running benchmark with lennard jones potential")

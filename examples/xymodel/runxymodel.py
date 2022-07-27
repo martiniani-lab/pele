@@ -1,9 +1,11 @@
-from __future__ import division
-from __future__ import print_function
-from past.utils import old_div
+from __future__ import division, print_function
+
+from copy import copy
+
 import numpy as np
 from numpy import cos, sin
-from copy import copy
+from past.utils import old_div
+
 from pele.potentials.xyspin import XYModel
 
 
@@ -21,7 +23,7 @@ def printspins(fout, pot, angles):
 
 pi = np.pi
 L = 24
-nspins = L ** 2
+nspins = L**2
 
 pot = XYModel(dim=[L, L], phi=np.pi)
 
@@ -30,7 +32,6 @@ print(angles)
 
 e = pot.getEnergy(angles)
 print("energy ", e)
-
 
 
 # try a quench
@@ -45,9 +46,9 @@ if False:
 # set up and run basin hopping
 
 from pele.basinhopping import BasinHopping
-from pele.takestep.displace import RandomDisplacement
-from pele.takestep.adaptive import AdaptiveStepsize
 from pele.storage import savenlowest
+from pele.takestep.adaptive import AdaptiveStepsize
+from pele.takestep.displace import RandomDisplacement
 
 # should probably use a different take step routine  which takes into account
 # the cyclical periodicity of angles
@@ -64,7 +65,7 @@ with open("out.spin", "w") as fout:
         print("energy", min.energy)
         fout.write("# %g\n" % (min.energy))
         printspins(fout, pot, min.coords)
-        fout.write('\n\n')
+        fout.write("\n\n")
         """
         view this in gnuplot with the command
         set size ratio -1
@@ -91,5 +92,3 @@ try:
     plt.show()
 except:
     print("problem ploting with matplotlib")
-
-

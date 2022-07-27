@@ -3,25 +3,23 @@ with general rigid body systems.  i.e. those that do not
 necessarily have a representation as a set of atomistic coords.
 see rigidbody.py for those classes which derive from these.
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
-from builtins import zip
-from builtins import range
-from past.utils import old_div
-from builtins import object
-import numpy as np
-from pele.utils import rotations
-from pele.angleaxis import CoordsAdapter
-from pele.transition_states import interpolate_linear
+from builtins import object, range, zip
 from math import pi
-from pele import takestep
-from pele.transition_states import _zeroev as zeroev
-from pele.angleaxis.aamindist import TransformAngleAxisCluster
 
+import numpy as np
+from past.utils import old_div
+
+from pele import takestep
+from pele.angleaxis import CoordsAdapter
+from pele.angleaxis.aamindist import TransformAngleAxisCluster
+from pele.transition_states import _zeroev as zeroev
+from pele.transition_states import interpolate_linear
+from pele.utils import rotations
 from pele.utils.rotations import rot_mat_derivatives
-from ._aadist import sitedist_grad, sitedist
+
+from ._aadist import sitedist, sitedist_grad
 
 __all__ = ["AASiteType", "AATopology", "interpolate_angleaxis", "TakestepAA"]
 
@@ -41,8 +39,9 @@ def interpolate_angleaxis(initial, final, t):
     """
     conf = initial.copy()
     for i in range(conf.shape[0]):
-        conf[i] = rotations.q2aa(rotations.q_slerp(rotations.aa2q(initial[i]),
-                                                   rotations.aa2q(final[i]), t))
+        conf[i] = rotations.q2aa(
+            rotations.q_slerp(rotations.aa2q(initial[i]), rotations.aa2q(final[i]), t)
+        )
     return conf
 
 
@@ -57,7 +56,7 @@ class AASiteType(object):
         sum of all weights
     S : 3x3 array
         weighted tensor of gyration S_ij = \sum m_i x_i x_j
-        sn402: weighted tensor of gyration S_{\alpha\beta} = \sum_i m_i x_{i,\alpha} 
+        sn402: weighted tensor of gyration S_{\alpha\beta} = \sum_i m_i x_{i,\alpha}
         x_{i, \beta}  ?
     cog : 3 dim np.array
         center of geometry
@@ -112,6 +111,7 @@ class AASiteType(object):
     RigidFragment
 
     """
+
     Sm = None  # this will be defined in finalize_setup
     symmetriesaa = None  # this will be defined in finalize_setup
 
@@ -137,8 +137,6 @@ class AASiteType(object):
         """return the shortest vector from com1 to com2"""
         return com2 - com1
 
-
-
     def distance_squared(self, com1, p1, com2, p2):
         """
         distance measure between 2 angle axis bodies of same type
@@ -158,7 +156,9 @@ class AASiteType(object):
         returns:
             distance squared
         """
-        return sitedist(self.get_smallest_rij(com1, com2), p1, p2, self.S, self.W, self.cog)
+        return sitedist(
+            self.get_smallest_rij(com1, com2), p1, p2, self.S, self.W, self.cog
+        )
 
     def distance_squared_grad(self, com1, p1, com2, p2):
         """
@@ -180,10 +180,12 @@ class AASiteType(object):
             spring cart, spring rot
         """
 
-        return sitedist_grad(self.get_smallest_rij(com1, com2), p1, p2, self.S, self.W, self.cog)
+        return sitedist_grad(
+            self.get_smallest_rij(com1, com2), p1, p2, self.S, self.W, self.cog
+        )
 
     def metric_tensor(self, p):
-        """calculate the mass weighted metric tensor """
+        """calculate the mass weighted metric tensor"""
         R, R1, R2, R3 = rot_mat_derivatives(p, True)
         g = np.zeros([3, 3])
 
@@ -212,7 +214,7 @@ class AASiteType(object):
         # the com part
         g[0:3, 0:3] = self.W * np.identity(3)
 
-        # the rotational part        
+        # the rotational part
         g[3, 3] = np.trace(np.dot(R1, np.dot(self.Sm, R1.transpose())))
         g[3, 4] = np.trace(np.dot(R1, np.dot(self.Sm, R2.transpose())))
         g[3, 5] = np.trace(np.dot(R1, np.dot(self.Sm, R3.transpose())))
@@ -259,6 +261,7 @@ class AATopology(object):
 
 
     """
+
     cpp_topology = None  # this will be defined in finalize_setup()
 
     def __init__(self, sites=None):
@@ -268,12 +271,12 @@ class AATopology(object):
 
     def add_sites(self, sites):
         """
-            Add a site to the topology
-            
-            Parameters
-            ---------
-            sites : iteratable
-                list of AASiteType
+        Add a site to the topology
+
+        Parameters
+        ---------
+        sites : iteratable
+            list of AASiteType
         """
         self.sites += sites
 
@@ -281,20 +284,21 @@ class AATopology(object):
         return len(self.sites)
 
     def coords_adapter(self, coords=None):
-        """ Create a coords adapter to easy access coordinate array """
+        """Create a coords adapter to easy access coordinate array"""
         return CoordsAdapter(nrigid=self.get_nrigid(), coords=coords)
 
     def _distance_squared_python(self, coords1, coords2):
-        """ Calculate the squared distance between 2 configurations"""
+        """Calculate the squared distance between 2 configurations"""
 
         ca1 = self.coords_adapter(coords=coords1)
         ca2 = self.coords_adapter(coords=coords2)
 
         d_sq = 0
         # first distance for sites only
-        for i in range(ca1.nrigid):            
-            d_sq += self.sites[i].distance_squared(ca1.posRigid[i], ca1.rotRigid[i],
-                                                   ca2.posRigid[i], ca2.rotRigid[i])
+        for i in range(ca1.nrigid):
+            d_sq += self.sites[i].distance_squared(
+                ca1.posRigid[i], ca1.rotRigid[i], ca2.posRigid[i], ca2.rotRigid[i]
+            )
         return d_sq
 
     def distance_squared(self, coords1, coords2):
@@ -312,8 +316,9 @@ class AATopology(object):
 
         # first distance for sites only
         for i in range(ca1.nrigid):
-            g_M, g_P = self.sites[i].distance_squared_grad(ca1.posRigid[i], ca1.rotRigid[i],
-                                                           ca2.posRigid[i], ca2.rotRigid[i])
+            g_M, g_P = self.sites[i].distance_squared_grad(
+                ca1.posRigid[i], ca1.rotRigid[i], ca2.posRigid[i], ca2.rotRigid[i]
+            )
             spring.posRigid[i] += g_M
             spring.rotRigid[i] += g_P
 
@@ -327,8 +332,8 @@ class AATopology(object):
             return self._distance_squared_grad_python(coords1, coords2)
 
     def neb_distance(self, coords1, coords2, distance=True, grad=True):
-        """wrapper function called by neb to get distance between 2 images """
-                
+        """wrapper function called by neb to get distance between 2 images"""
+
         d = None
         if distance:
             d = self.distance_squared(coords1, coords2)
@@ -357,48 +362,48 @@ class AATopology(object):
         cnew.rotRigid[:] = interpolate_angleaxis(cinitial.rotRigid, cfinal.rotRigid, t)
         return cnew.coords
 
-# js850> 9/2014 I commented this out because it seemed like it wasn't used
-# and the documentation suggests it shouldn't be used
-#    def align_coords(self, x1, x2):
-#        ''' align the angle axis coordinates to minimize |p2 - p1|
-#
-#            The angle axis vectors are perodic, this function changes the definition
-#            of the angle axis vectors in x2 to match closest the ones in x1. This can
-#            be useful if simple distances are used on angle axis vectors. However,
-#            using the difference in angle axis vectors should be avoided, instead
-#            the angle axis distance function should be used which properly takes care
-#            of the rotatational degrees of freedoms
-#        '''
-#        c2 = self.coords_adapter(x1)
-#        c1 = self.coords_adapter(x2)
-#        for p1, p2 in zip(c1.rotRigid,c2.rotRigid):
-#            if np.linalg.norm(p2) < 1e-6:
-#                if(np.linalg.norm(p1) < 1e-6):
-#                    continue
-#                n2 = p1/np.linalg.norm(p1)*2.*pi
-#            else:
-#                n2 = p2/np.linalg.norm(p2)*2.*pi
-#
-#            while True:
-#                p2n = p2+n2
-#                if(np.linalg.norm(p2n - p1) > np.linalg.norm(p2 - p1)):
-#                    break
-#                p2[:]=p2n
-#
-#            while True:
-#                p2n = p2-n2
-#                if(np.linalg.norm(p2n - p1) > np.linalg.norm(p2 - p1)):
-#                    break
-#                p2[:]=p2n
+    # js850> 9/2014 I commented this out because it seemed like it wasn't used
+    # and the documentation suggests it shouldn't be used
+    #    def align_coords(self, x1, x2):
+    #        ''' align the angle axis coordinates to minimize |p2 - p1|
+    #
+    #            The angle axis vectors are perodic, this function changes the definition
+    #            of the angle axis vectors in x2 to match closest the ones in x1. This can
+    #            be useful if simple distances are used on angle axis vectors. However,
+    #            using the difference in angle axis vectors should be avoided, instead
+    #            the angle axis distance function should be used which properly takes care
+    #            of the rotatational degrees of freedoms
+    #        '''
+    #        c2 = self.coords_adapter(x1)
+    #        c1 = self.coords_adapter(x2)
+    #        for p1, p2 in zip(c1.rotRigid,c2.rotRigid):
+    #            if np.linalg.norm(p2) < 1e-6:
+    #                if(np.linalg.norm(p1) < 1e-6):
+    #                    continue
+    #                n2 = p1/np.linalg.norm(p1)*2.*pi
+    #            else:
+    #                n2 = p2/np.linalg.norm(p2)*2.*pi
+    #
+    #            while True:
+    #                p2n = p2+n2
+    #                if(np.linalg.norm(p2n - p1) > np.linalg.norm(p2 - p1)):
+    #                    break
+    #                p2[:]=p2n
+    #
+    #            while True:
+    #                p2n = p2-n2
+    #                if(np.linalg.norm(p2n - p1) > np.linalg.norm(p2 - p1)):
+    #                    break
+    #                p2[:]=p2n
 
     def align_path(self, path):
         """ensure a series of images are aligned with each other
-        
+
         Parameters
         ----------
         path : list of arrays
             This is a list of numpy array in com + angle axis format
-        
+
         Notes
         -----
         this simply aligns the angle axis vectors
@@ -410,9 +415,9 @@ class AATopology(object):
                 if np.linalg.norm(p2) < 1e-6:
                     if np.linalg.norm(p1) < 1e-6:
                         continue
-                    n2 = old_div(p1, np.linalg.norm(p1)) * 2. * pi
+                    n2 = old_div(p1, np.linalg.norm(p1)) * 2.0 * pi
                 else:
-                    n2 = old_div(p2, np.linalg.norm(p2)) * 2. * pi
+                    n2 = old_div(p2, np.linalg.norm(p2)) * 2.0 * pi
 
                 while True:
                     p2n = p2 + n2
@@ -428,7 +433,7 @@ class AATopology(object):
 
     def _zeroEV_python(self, x):
         """return a list of zero eigenvectors
-        
+
         This does both translational and rotational eigenvectors
         """
         zev = []
@@ -443,8 +448,8 @@ class AATopology(object):
             zev.append(cv.coords.copy())
 
         # get the zero eigenvectors corresponding to rotation
-        #rotate_r = zeroev.zeroEV_rotation(ca.posRigid)
-        #rotate_aa = 
+        # rotate_r = zeroev.zeroEV_rotation(ca.posRigid)
+        # rotate_aa =
         transform = TransformAngleAxisCluster(self)
         d = 1e-5
         dx = x.copy()
@@ -465,12 +470,12 @@ class AATopology(object):
         dz -= x
         dz /= np.linalg.norm(dz)
 
-        #print "Zero eigenvectors", zev         
+        # print "Zero eigenvectors", zev
         return zev + [dx, dy, dz]
 
     def zeroEV(self, x):
         """return a list of zero eigenvectors
-        
+
         This does both translational and rotational eigenvectors
         """
         if self.cpp_topology is not None:
@@ -484,35 +489,38 @@ class AATopology(object):
         zeroev.orthogonalize(v, zev)
         return v
 
-# js850> 9/2014 I commented this out because it is not used, not documented, and spelled wrong
-#    def ortogopt_aa(self, v, coords):
-#        v = v.copy()
-#        zev = zeroev.gramm_schmidt(self.zeroEV(coords))
-#        zeroev.orthogonalize(v, zev)
-#        return v
+    # js850> 9/2014 I commented this out because it is not used, not documented, and spelled wrong
+    #    def ortogopt_aa(self, v, coords):
+    #        v = v.copy()
+    #        zev = zeroev.gramm_schmidt(self.zeroEV(coords))
+    #        zeroev.orthogonalize(v, zev)
+    #        return v
 
     def metric_tensor(self, coords):
-        """get the metric tensor for a current configuration """
+        """get the metric tensor for a current configuration"""
         ca = self.coords_adapter(coords=coords)
         g = np.zeros([coords.size, coords.size])
         offset = 3 * ca.nrigid
         # first distance for sites only
         for i in range(ca.nrigid):
             g_M, g_P = self.sites[i].metric_tensor(ca.rotRigid[i])
-            g[3*i:3 * i + 3, 3 * i:3*i + 3] = g_M
-            g[3*i + offset:3*i + 3 + offset, 3*i + offset:3*i + 3 + offset] = g_P
+            g[3 * i : 3 * i + 3, 3 * i : 3 * i + 3] = g_M
+            g[
+                3 * i + offset : 3 * i + 3 + offset, 3 * i + offset : 3 * i + 3 + offset
+            ] = g_P
 
-        return g         
+        return g
+
 
 class AATopologyBulk(AATopology):
-    """ Topology class for rigid body systems with periodic boundaries
-    
+    """Topology class for rigid body systems with periodic boundaries
+
     Notes
     -----
     Contains functions to calculate the squared distance between two sets
     of com/aa coordinates, and the gradient of this distance with respect
     to one set of coordinates
-    
+
     Parameters
     ----------
     boxvec: numpy.array
@@ -521,31 +529,34 @@ class AATopologyBulk(AATopology):
         A list of RigidFragmentBulk objects corresponding to the rigid
         bodies in the system
     """
+
     def __init__(self, boxvec, sites=None):
         if sites is None:
             sites = []
         self.sites = sites
         self.boxvec = boxvec
-        
+
     def distance_squared(self, coords1, coords2):
-        '''Calculate the squared distance between 2 configurations'''
-        if self.cpp_topology is not None:   
+        """Calculate the squared distance between 2 configurations"""
+        if self.cpp_topology is not None:
             return self.cpp_topology.distance_squared(coords1, coords2)
         else:
             print("Warning: used Python version of AATopologyBulk.distance_squared")
             return self._distance_squared_python(coords1, coords2)
-            
+
     def distance_squared_grad(self, coords1, coords2):
-        '''Calculate gradient with respect to coords 1 for the squared distance'''
+        """Calculate gradient with respect to coords 1 for the squared distance"""
         if self.cpp_topology is not None:
             return self.cpp_topology.distance_squared_grad(coords1, coords2)
         else:
-            print("Warning: used Python version of AATopologyBulk.distance_squared_grad")            
+            print(
+                "Warning: used Python version of AATopologyBulk.distance_squared_grad"
+            )
             return self._distance_squared_grad_python(coords1, coords2)
-        
-          
+
+
 class TakestepAA(takestep.TakestepInterface):
-    def __init__(self, topology, rotate=1.6, translate=0.):
+    def __init__(self, topology, rotate=1.6, translate=0.0):
         self.rotate = rotate
         self.translate = translate
         self.topology = topology
@@ -563,7 +574,7 @@ class TakestepAA(takestep.TakestepInterface):
 def test():  # pragma: no cover
     natoms = 3
     x = np.random.random([natoms, 3]) * 5
-    masses = [1., 1., 16.]  # np.random.random(natoms)
+    masses = [1.0, 1.0, 16.0]  # np.random.random(natoms)
     print(masses)
     x -= np.average(x, axis=0, weights=masses)
     cog = np.average(x, axis=0)
@@ -618,17 +629,27 @@ def test():  # pragma: no cover
         eps = 1e-6
         delta = np.zeros(3)
         delta[i] = eps
-        g_M[i] = old_div((site.distance_squared(X1 + delta, p1, X2, p2)
-                  - site.distance_squared(X1, p1, X2, p2)), eps)
-        g_P[i] = old_div((site.distance_squared(X1, p1 + delta, X2, p2)
-                  - site.distance_squared(X1, p1, X2, p2)), eps)
+        g_M[i] = old_div(
+            (
+                site.distance_squared(X1 + delta, p1, X2, p2)
+                - site.distance_squared(X1, p1, X2, p2)
+            ),
+            eps,
+        )
+        g_P[i] = old_div(
+            (
+                site.distance_squared(X1, p1 + delta, X2, p2)
+                - site.distance_squared(X1, p1, X2, p2)
+            ),
+            eps,
+        )
     print(g_M, g_P)
     xx = site.distance_squared_grad(X1, p1, X2, p2)
     print(old_div(g_M, xx[0]), old_div(g_P, xx[1]))
     print(_aadist.sitedist_grad(X2 - X1, p1, p2, site.S, site.W, cog))
 
-# print _aadist.sitedist_grad(com1, p1, com2, p2, self.S, self.W, self.cog)
 
+# print _aadist.sitedist_grad(com1, p1, com2, p2, self.S, self.W, self.cog)
 
 
 if __name__ == "__main__":

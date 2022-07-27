@@ -1,8 +1,10 @@
-from libcpp cimport bool as cbool
 cimport numpy as np
+from libcpp cimport bool as cbool
+
 cimport pele.optimize._pele_opt as _pele_opt
 from pele.potentials cimport _pele
 from pele.potentials._pele cimport shared_ptr
+
 
 # import the externally defined modified_fire implementation
 cdef extern from "pele/modified_fire.hpp" namespace "pele":

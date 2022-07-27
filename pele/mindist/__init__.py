@@ -108,12 +108,15 @@ Utilities
 
 """
 from __future__ import absolute_import
-from .backward_compatibility import CoMToOrigin
-from .permutational_alignment import *
-from .exact_match import StandardClusterAlignment, ExactMatchCluster
-from .minpermdist_stochastic import MinPermDistCluster
-from .rmsfit import *
+
 from ._minpermdist_policies import *
-from .periodic_exact_match import ExactMatchPeriodic, MeasurePeriodic, TransformPeriodic
 from ._pointgrouporder import PointGroupOrderCluster
-from ._wrapper_atomiccluster import MinPermDistAtomicCluster, ExactMatchAtomicCluster
+from ._wrapper_atomiccluster import (ExactMatchAtomicCluster,
+                                     MinPermDistAtomicCluster)
+from .backward_compatibility import CoMToOrigin
+from .exact_match import ExactMatchCluster, StandardClusterAlignment
+from .minpermdist_stochastic import MinPermDistCluster
+from .periodic_exact_match import (ExactMatchPeriodic, MeasurePeriodic,
+                                   TransformPeriodic)
+from .permutational_alignment import *
+from .rmsfit import *

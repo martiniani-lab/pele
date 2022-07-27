@@ -1,4 +1,5 @@
 import unittest
+
 import numpy as np
 
 from pele.systems import BLJBulkFrozen
@@ -7,10 +8,10 @@ from pele.systems import BLJBulkFrozen
 class TestLJClusterSystem(unittest.TestCase):
     def setUp(self):
         self.natoms = 40
-        boxl = 3.
+        boxl = 3.0
         boxvec = [boxl] * 3
-        reference_coords = np.random.uniform(0,-boxl, self.natoms*3)
-        frozen_atoms = [0, 1, 5, 7, self.natoms-1]
+        reference_coords = np.random.uniform(0, -boxl, self.natoms * 3)
+        frozen_atoms = [0, 1, 5, 7, self.natoms - 1]
         self.system = BLJBulkFrozen(self.natoms, boxvec, reference_coords, frozen_atoms)
 
     def test_database_property(self):
@@ -18,12 +19,11 @@ class TestLJClusterSystem(unittest.TestCase):
         p = db.get_property("natoms")
         self.assertIsNotNone(p)
         self.assertEqual(p.value(), self.natoms)
-        
+
         self.assertIsNotNone(db.get_property("ntypeA"))
         self.assertIsNotNone(db.get_property("boxvec"))
         self.assertIsNotNone(db.get_property("reference_coords"))
         self.assertIsNotNone(db.get_property("frozen_atoms"))
-
 
     def test_permlist(self):
         permlist = self.system.get_permlist()

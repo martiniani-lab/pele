@@ -1,9 +1,10 @@
 from __future__ import division
-from builtins import range
-from past.utils import old_div
+
 import unittest
+from builtins import range
 
 import numpy as np
+from past.utils import old_div
 
 from pele.potentials.lj import LJ
 
@@ -11,7 +12,9 @@ from pele.potentials.lj import LJ
 class LJTest(unittest.TestCase):
     def setUp(self):
         self.natoms = 10
-        self.coords = np.random.uniform(-1, 1., 3 * self.natoms) * self.natoms ** (old_div(-1., 3))
+        self.coords = np.random.uniform(-1, 1.0, 3 * self.natoms) * self.natoms ** (
+            old_div(-1.0, 3)
+        )
         self.pot = LJ()
         self.E = self.pot.getEnergy(self.coords)
         self.Egrad, self.grad = self.pot.getEnergyGradient(self.coords)
@@ -40,16 +43,17 @@ class LJTest(unittest.TestCase):
 
 
 class TestLJAfterQuench(unittest.TestCase):
-    """do the tests after a short quench so that the energies are not crazy large
-    """
+    """do the tests after a short quench so that the energies are not crazy large"""
 
     def setUp(self):
         from pele.optimize import mylbfgs
 
         self.natoms = 10
-        self.coords = np.random.uniform(-1, 1., 3 * self.natoms) * self.natoms ** (old_div(-1., 3))
+        self.coords = np.random.uniform(-1, 1.0, 3 * self.natoms) * self.natoms ** (
+            old_div(-1.0, 3)
+        )
         self.pot = LJ()
-        ret = mylbfgs(self.coords, self.pot, tol=2.)
+        ret = mylbfgs(self.coords, self.pot, tol=2.0)
         self.coords = ret.coords
         self.E = self.pot.getEnergy(self.coords)
         self.Egrad, self.grad = self.pot.getEnergyGradient(self.coords)

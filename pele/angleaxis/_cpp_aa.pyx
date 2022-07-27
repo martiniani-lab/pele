@@ -6,17 +6,19 @@ Not everything is implemented in c++, just the parts that were bottlenecks
 in python.
 """
 import numpy as np
+
 from pele.potentials import _pele
 from pele.potentials._pythonpotential import as_cpp_potential
 
 cimport numpy as np
-from libcpp.vector cimport vector as stdvector
 from libcpp cimport bool as cbool
+from libcpp.vector cimport vector as stdvector
 
 from pele.potentials cimport _pele
-from pele.potentials._pele cimport shared_ptr
-from pele.potentials._pele cimport BasePotential
-from pele.potentials._pele cimport array_wrap_np, pele_array_to_np, array_size_t_from_np
+from pele.potentials._pele cimport (BasePotential, array_size_t_from_np,
+                                    array_wrap_np, pele_array_to_np,
+                                    shared_ptr)
+
 
 # use external c++ class
 cdef extern from "pele/distance.hpp" namespace "pele":

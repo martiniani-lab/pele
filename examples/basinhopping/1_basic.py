@@ -2,6 +2,7 @@
 Example 1: Simple basin hopping
 """
 from __future__ import print_function
+
 from pele.systems import LJCluster
 
 natoms = 12
@@ -11,12 +12,18 @@ system = LJCluster(natoms)
 db = system.create_database()
 bh = system.get_basinhopping(database=db)
 bh.run(niter)
-print("the lowest energy found after", niter, " basinhopping steps is", db.minima()[0].energy)
+print(
+    "the lowest energy found after",
+    niter,
+    " basinhopping steps is",
+    db.minima()[0].energy,
+)
 print("")
 
 # some visualization
-try: 
+try:
     import pele.utils.pymolwrapper as pym
+
     pym.start()
     pym.draw_spheres(bh.coords, "A", 1)
 except:

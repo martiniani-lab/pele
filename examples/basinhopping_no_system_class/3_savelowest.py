@@ -1,14 +1,16 @@
 from __future__ import print_function
+
 # ###########################################################
 # Example 3: Saving the coordinates as an xyz file
 # ###########################################################
 from builtins import str
-import numpy as np
-import pele.potentials.lj as lj
-import pele.basinhopping as bh
-from pele.takestep import displace
-from pele.storage.savenlowest import SaveN as saveit
 
+import numpy as np
+
+import pele.basinhopping as bh
+import pele.potentials.lj as lj
+from pele.storage.savenlowest import SaveN as saveit
+from pele.takestep import displace
 
 natoms = 12
 coords = np.random.random(3 * natoms)
@@ -41,4 +43,4 @@ try:
         pym.draw_spheres(coords, "A", frame)
         frame += 1
 except:
-    print("Could not draw using pymol, skipping this step") 
+    print("Could not draw using pymol, skipping this step")
