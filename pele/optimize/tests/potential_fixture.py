@@ -113,3 +113,49 @@ def potential_initial_and_final_conditions():
         ]
     )
     return (potential, starting_coordinates, expected_corresponding_minimum)
+
+@pytest.fixture(scope="session")
+def potential_extension():
+    """
+    Generates the potential extension for the InversePower potential defined above.
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    radii = np.array(
+        [
+            0.982267,
+            0.959526,
+            1.00257,
+            0.967356,
+            1.04893,
+            0.97781,
+            0.954191,
+            0.988939,
+            0.980737,
+            0.964811,
+            1.04198,
+            0.926199,
+            0.969865,
+            1.08593,
+            1.01491,
+            0.968892,
+        ]
+    )
+    BOX_LENGTH = 7.40204
+    box_vec = np.array([BOX_LENGTH, BOX_LENGTH])
+    dim = 2
+    power = 2.5
+    eps = 1.0e-6
+    use_cell_lists = False
+    # Setup the potential
+    potential = InversePower(
+        power,
+        eps,
+        radii,
+        use_cell_lists=use_cell_lists,
+        ndim=dim,
+        boxvec=box_vec,
+    )
+    return (potential)
