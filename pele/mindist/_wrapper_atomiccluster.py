@@ -1,12 +1,10 @@
 from __future__ import absolute_import
-
-from ._minpermdist_policies import MeasureAtomicCluster, TransformAtomicCluster
-from .exact_match import ExactMatchCluster
 from .minpermdist_stochastic import MinPermDistCluster
-
+from .exact_match import ExactMatchCluster
+from ._minpermdist_policies import TransformAtomicCluster, MeasureAtomicCluster
 
 class MinPermDistAtomicCluster(MinPermDistCluster):
-    """minpermdist for atomic cluster (3 carthesian coordinates per site)
+    """ minpermdist for atomic cluster (3 carthesian coordinates per site)
 
     Parameters
     ----------
@@ -23,18 +21,14 @@ class MinPermDistAtomicCluster(MinPermDistCluster):
     MinPermDistCluster
 
     """
-
     def __init__(self, permlist=None, can_invert=True, **kwargs):
-        transform = TransformAtomicCluster(can_invert=can_invert)
+        transform=TransformAtomicCluster(can_invert=can_invert)
         measure = MeasureAtomicCluster(permlist=permlist)
-
-        MinPermDistCluster.__init__(
-            self, transform=transform, measure=measure, **kwargs
-        )
-
-
+        
+        MinPermDistCluster.__init__(self, transform=transform, measure=measure, **kwargs)
+        
 class ExactMatchAtomicCluster(ExactMatchCluster):
-    """minpermdist for atomic cluster (3 carthesian coordinates per site)
+    """ minpermdist for atomic cluster (3 carthesian coordinates per site)
 
     Parameters
     ----------
@@ -51,9 +45,8 @@ class ExactMatchAtomicCluster(ExactMatchCluster):
     ExactMatchCluster
 
     """
-
     def __init__(self, permlist=None, can_invert=True, **kwargs):
         transform = TransformAtomicCluster(can_invert=can_invert)
         measure = MeasureAtomicCluster(permlist=permlist)
-
+        
         ExactMatchCluster.__init__(self, transform=transform, measure=measure, **kwargs)

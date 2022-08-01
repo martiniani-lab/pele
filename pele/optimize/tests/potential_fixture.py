@@ -1,7 +1,6 @@
-import numpy as np
 import pytest
-
 from pele.potentials import InversePower
+import numpy as np
 
 
 # define potential and coordinates
@@ -115,7 +114,6 @@ def potential_initial_and_final_conditions():
     )
     return (potential, starting_coordinates, expected_corresponding_minimum)
 
-
 @pytest.fixture(scope="session")
 def potential_extension():
     """
@@ -160,4 +158,4 @@ def potential_extension():
         ndim=dim,
         boxvec=box_vec,
     )
-    return potential
+    return (potential)

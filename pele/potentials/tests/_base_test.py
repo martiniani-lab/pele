@@ -1,7 +1,7 @@
-import logging
-import unittest
-
 import numpy as np
+import unittest
+import logging
+
 
 
 class _BaseTest(unittest.TestCase):
@@ -62,10 +62,9 @@ def assert_arrays_almost_equal(self, v1, v2, **kwargs):
 
 class _TestConfiguration(unittest.TestCase):
     """test a potential at a single configuration single configuration
-
+    
     In setUp() you should define attributes self.pot, self.x0 and the energy of that position x0
     """
-
     pot = None
     x0 = None
     e0 = None
@@ -90,3 +89,4 @@ class _TestConfiguration(unittest.TestCase):
         self.compare_arrays(g, gnum)
         hnum = self.pot.NumericalHessian(self.x0)
         self.compare_arrays(hess.reshape(-1), hnum.reshape(-1))
+

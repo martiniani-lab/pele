@@ -8,36 +8,27 @@
 # WARNING! All changes made in this file will be lost!
 
 from builtins import object
-
 from PyQt4 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-
     def _fromUtf8(s):
         return s
 
-
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
-
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig, _encoding)
-
 except AttributeError:
-
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
-
 
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
         Form.resize(785, 580)
-        sizePolicy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred
-        )
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Form.sizePolicy().hasHeightForWidth())
@@ -52,9 +43,7 @@ class Ui_Form(object):
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName(_fromUtf8("splitter"))
         self.mplwidget = MPLWidgetWithToolbar(self.splitter)
-        sizePolicy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred
-        )
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.mplwidget.sizePolicy().hasHeightForWidth())
@@ -74,9 +63,7 @@ class Ui_Form(object):
         self.formLayout.setWidget(2, QtGui.QFormLayout.LabelRole, self.label)
         self.lineEdit_nmin_max = QtGui.QLineEdit(self.widget)
         self.lineEdit_nmin_max.setObjectName(_fromUtf8("lineEdit_nmin_max"))
-        self.formLayout.setWidget(
-            2, QtGui.QFormLayout.FieldRole, self.lineEdit_nmin_max
-        )
+        self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.lineEdit_nmin_max)
         self.label_2 = QtGui.QLabel(self.widget)
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.formLayout.setWidget(3, QtGui.QFormLayout.LabelRole, self.label_2)
@@ -107,6 +94,5 @@ class Ui_Form(object):
         self.label_2.setText(_translate("Form", "Tmin", None))
         self.label_3.setText(_translate("Form", "Tmax", None))
         self.label_4.setText(_translate("Form", "# points", None))
-
 
 from pele.gui.ui.mplwidget import MPLWidgetWithToolbar

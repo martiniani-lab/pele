@@ -2,22 +2,20 @@
 routines for computing thermodynamic information
 """
 from __future__ import print_function
-
 from future import standard_library
-
 standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from builtins import object
 import multiprocessing as mp
 import sys
-from builtins import object, range, str
 
 from pele.thermodynamics._normalmodes import NormalModeError
 
 
-class _ThermoWorker(
-    mp.Process
-):  # pragma: no cover (coverage can't see it because it's in a separate process)
+class _ThermoWorker(mp.Process):  # pragma: no cover (coverage can't see it because it's in a separate process)
     """worker to calculate the thermodynamic data in a separate process
-
+    
     Parameters
     ----------
     input_queue : mp.Queue object
@@ -36,7 +34,7 @@ class _ThermoWorker(
 
     def process_input(self):
         """get input from queue and process it
-
+        
         return True if the queue is empty, raise any exception that occurs
         """
         # run until the input queue is empty
@@ -59,29 +57,23 @@ class _ThermoWorker(
         invalid = False
         pgorder = self.system.get_pgorder(coords)
         try:
-            fvib = self.system.get_log_product_normalmode_freq(
-                coords, nnegative=nnegative
-            )
+            fvib = self.system.get_log_product_normalmode_freq(coords, nnegative=nnegative)
         except NormalModeError as e:
             fvib = None
             invalid = True
             if mts == "m":
                 sys.stdout.write(
-                    "Problem computing normal modes for minimum with id {}. Setting"
-                    " m.invalid=True\n".format(mid)
-                )
+                    "Problem computing normal modes for minimum with id {}. Setting m.invalid=True\n".format(mid))
             else:
                 sys.stdout.write(
-                    "Problem computing normal modes for transition state with id {}."
-                    " Setting ts.invalid=True\n".format(mid)
-                )
+                    "Problem computing normal modes for transition state with id {}. Setting ts.invalid=True\n".format(
+                        mid))
             sys.stdout.write(str(e) + "\n")
         if self.verbose:
-            print(
-                "finished computing thermodynamic info for minimum", mid, pgorder, fvib
-            )
+            print("finished computing thermodynamic info for minimum", mid, pgorder, fvib)
 
         self.output_queue.put((mts, mid, fvib, pgorder, invalid))
+
 
     def run(self):
         while True:
@@ -99,7 +91,7 @@ class _ThermoWorker(
 class GetThermodynamicInfoParallel(object):
     """
     a class to compute thermodynamic information in parallel
-
+    
     Parameters
     ----------
     system : pele system object
@@ -112,16 +104,8 @@ class GetThermodynamicInfoParallel(object):
         if True the transition state free energy will not be computed
     """
 
-    def __init__(
-        self,
-        system,
-        database,
-        npar=4,
-        verbose=False,
-        only_minima=False,
-        recalculate=False,
-        commit_interval=100,
-    ):
+    def __init__(self, system, database, npar=4, verbose=False, only_minima=False,
+                 recalculate=False, commit_interval=100):
         self.system = system
         self.database = database
         self.verbose = verbose
@@ -133,14 +117,13 @@ class GetThermodynamicInfoParallel(object):
         self.send_queue = mp.Queue()
         self.done_queue = mp.Queue()
         for _ in range(npar):
-            worker = _ThermoWorker(
-                self.send_queue, self.done_queue, system, verbose=self.verbose
-            )
+            worker = _ThermoWorker(self.send_queue, self.done_queue, system, verbose=self.verbose)
             worker.daemon = True
             self.workers.append(worker)
 
     def _populate_queue(self):
-        """load the jobs into the queue"""
+        """load the jobs into the queue
+        """
         self.njobs = 0
         nmin = 0
         nts = 0
@@ -156,10 +139,7 @@ class GetThermodynamicInfoParallel(object):
                 self.send_queue.put(("ts", ts.id(), ts.coords))
                 nts += 1
         if self.verbose:
-            print(
-                "computing thermodynamic info for {} minima and {} transition states"
-                .format(nmin, nts)
-            )
+            print("computing thermodynamic info for {} minima and {} transition states".format(nmin, nts))
 
     def _process_return_value(self, ret):
         # if the a worker throws an unexpected exception, kill the workers and raise it
@@ -189,10 +169,10 @@ class GetThermodynamicInfoParallel(object):
         #        return True
 
     def _get_results(self):
-        """receive the results from the return queue"""
+        """receive the results from the return queue
+        """
         i = 0
         from queue import Empty
-
         while i < self.njobs:
             try:
                 ret = self.done_queue.get()
@@ -226,9 +206,10 @@ class GetThermodynamicInfoParallel(object):
             worker.terminate()
             worker.join()
 
+
     def start(self):
         """start the computations
-
+        
         this should be called after __init__
         """
         # populate the queue
@@ -260,27 +241,24 @@ def get_thermodynamic_information_minimum(system, database, minimum, commit=True
     return changed
 
 
-def get_thermodynamic_information(
-    system, database, nproc=4, recalculate=False, verbose=False
-):
+def get_thermodynamic_information(system, database, nproc=4, recalculate=False, verbose=False):
     """
     compute thermodynamic information for all minima and transition states in a database
-
+    
     Parameters
     ----------
     system : pele System class
     database : a Database object
     nproc : number of processors to use
-
+    
     Notes
     -----
     The information that is computed is the point group order (m.pgorder) and the
     log product of the squared normal mode frequencies (m.fvib).
     """
     if nproc is not None:
-        computer = GetThermodynamicInfoParallel(
-            system, database, npar=nproc, recalculate=recalculate, verbose=verbose
-        )
+        computer = GetThermodynamicInfoParallel(system, database, npar=nproc,
+                                              recalculate=recalculate, verbose=verbose)
         computer.start()
         return
 
@@ -288,8 +266,7 @@ def get_thermodynamic_information(
     try:
         for m in database.minima():
             c = get_thermodynamic_information_minimum(system, database, m, commit=False)
-            if c:
-                changed = True
+            if c: changed = True
     except KeyboardInterrupt:
         if changed:
             database.session.commit()
@@ -303,10 +280,9 @@ def get_thermodynamic_information(
 # only testing stuff below here
 #
 
-
 def test():  # pragma: no cover
-    from pele.landscape import ConnectManager
     from pele.systems import LJCluster
+    from pele.landscape import ConnectManager
 
     system = LJCluster(13)
 

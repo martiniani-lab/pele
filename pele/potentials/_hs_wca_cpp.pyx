@@ -2,19 +2,15 @@
 # distutils: language = C++
 """
 import numpy as np
-
+cimport pele.potentials._pele as _pele
+from pele.potentials._pele cimport shared_ptr
+from pele.potentials._pele cimport array_wrap_np
+from pele.potentials._pele cimport array_wrap_np_long, array_wrap_np_size_t
 cimport numpy as np
 from libcpp cimport bool
 from libcpp cimport bool as cbool
-
-cimport pele.potentials._pele as _pele
-from pele.potentials._pele cimport (array_wrap_np, array_wrap_np_long,
-                                    array_wrap_np_size_t, shared_ptr)
-
 from ctypes import c_size_t as size_t
-
 from pele.distance import Distance
-
 
 # cython has no support for integer template argument.  This is a hack to get around it
 # https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs

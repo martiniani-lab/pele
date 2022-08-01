@@ -6,19 +6,15 @@ import sys
 import numpy as np
 
 from pele.potentials import _pele
-
 from pele.potentials cimport _pele
-
 from pele.optimize import Result
 from pele.potentials._pythonpotential import as_cpp_potential
 
-cimport cython
 cimport numpy as np
-from cpython cimport bool as cbool
-
 cimport pele.optimize._pele_opt as _pele_opt
 from pele.optimize._pele_opt cimport shared_ptr
-
+cimport cython
+from cpython cimport bool as cbool
 
 # import the externally defined ljbfgs implementation
 cdef extern from "pele/lbfgs.hpp" namespace "pele":

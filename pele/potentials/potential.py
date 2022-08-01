@@ -1,12 +1,12 @@
 """
 this module holds the base classes for potentials
 """
-from __future__ import division, print_function
-
-from builtins import object, range
-
-import numpy as np
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from builtins import object
 from past.utils import old_div
+import numpy as np
 
 __all__ = ["BasePotential", "BasePotentialAtomistic"]
 
@@ -40,9 +40,9 @@ class BasePotential(object):
         for i in range(coords.size):
             x[i] += eps
             g[i] = self.getEnergy(x)
-            x[i] -= 2.0 * eps
+            x[i] -= 2. * eps
             g[i] -= self.getEnergy(x)
-            g[i] /= 2.0 * eps
+            g[i] /= 2. * eps
             x[i] += eps
         return g
 
@@ -53,7 +53,7 @@ class BasePotential(object):
 
     def NumericalHessian(self, coords, eps=1e-6):
         """return the Hessian matrix of second derivatives computed numerically
-
+        
         this takes 2*len(coords) calls to getGradient
         """
         x = coords.copy()
@@ -65,7 +65,7 @@ class BasePotential(object):
             g1 = self.getGradient(x)
             x[i] = xbkup - eps
             g2 = self.getGradient(x)
-            hess[i, :] = old_div((g1 - g2), (2.0 * eps))
+            hess[i, :] = old_div((g1 - g2), (2. * eps))
             x[i] = xbkup
         return hess
 
@@ -81,8 +81,7 @@ class BasePotential(object):
         return h
 
     def test_potential(self, coords, eps=1e-6):
-        """print some information testing whether the analytical gradients are correct
-        """
+        """print some information testing whether the analytical gradients are correct"""
         E1 = self.getEnergy(coords)
         E2, grad = self.getEnergyGradient(coords)
         gradnum = self.NumericalDerivative(coords, eps=eps)
@@ -92,29 +91,16 @@ class BasePotential(object):
         print("difference", np.abs(E1 - E2))
         # print "analytical gradient", grad
         # print "numerical gradient ", gradnum
-        print(
-            "analytical rms gradient",
-            old_div(np.linalg.norm(grad), np.sqrt(coords.size)),
-        )
-        print(
-            "numerical rms gradient ",
-            old_div(np.linalg.norm(gradnum), np.sqrt(coords.size)),
-        )
-        print(
-            "maximum difference between analytical and numerical gradient",
-            np.max(np.abs(grad - gradnum)),
-        )
-        print(
-            "normalized by the maximum gradient",
-            old_div(np.max(np.abs(grad - gradnum)), np.max(np.abs(grad))),
-        )
+        print("analytical rms gradient", old_div(np.linalg.norm(grad), np.sqrt(coords.size)))
+        print("numerical rms gradient ", old_div(np.linalg.norm(gradnum), np.sqrt(coords.size)))
+        print("maximum difference between analytical and numerical gradient", np.max(np.abs(grad - gradnum)))
+        print("normalized by the maximum gradient", old_div(np.max(np.abs(grad - gradnum)), np.max(np.abs(grad))))
 
 
 class potential(BasePotential):
     """
     for backward compatibility
     """
-
     pass
 
 
@@ -129,12 +115,12 @@ class BasePotentialAtomistic(object):
 
     def getEnergyList(self, coords, ilist):
         """the energy of select interactions defined in ilist
-
+        
         Parameters
         ----------
         coords : array
         ilist : array, shape (*,2)
-            a numpy array containing pairs of atoms (ilist[i,:]).
+            a numpy array containing pairs of atoms (ilist[i,:]).  
         """
         return NotImplementedError
 
@@ -145,6 +131,8 @@ class BasePotentialAtomistic(object):
         ----------
         coords : array
         ilist : array, shape (*,2)
-            a numpy array containing pairs of atoms (ilist[i,:]).
+            a numpy array containing pairs of atoms (ilist[i,:]).  
         """
         return NotImplementedError
+    
+

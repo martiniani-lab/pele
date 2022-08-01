@@ -73,10 +73,11 @@ The takestep interface
 """
 from __future__ import absolute_import
 
-from .adaptive import *
-from .adaptive_step_temperature import *
+
 from .buildingblocks import *
-from .displace import *
 from .generic import *
 from .group import *
+from .adaptive import *
+from .displace import *
+from .adaptive_step_temperature import *
 from .particle_exchange import *

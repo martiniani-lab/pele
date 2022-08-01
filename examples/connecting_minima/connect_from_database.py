@@ -6,14 +6,12 @@ Since we don't already have a database, for this example we'll build a small one
 basinhopping"
 """
 from __future__ import print_function
-
+import numpy as np
 import logging
 
-import numpy as np
-
 from pele.systems import LJCluster
-from pele.utils.disconnectivity_graph import (DisconnectivityGraph,
-                                              database2graph)
+from pele.utils.disconnectivity_graph import DisconnectivityGraph, database2graph
+
 
 natoms = 13
 system = LJCluster(natoms)
@@ -23,7 +21,7 @@ if use_existing_database:
     db = system.create_database("lj13.sqlite", createdb=False)
 else:
     # build a small database using basinhopping
-    print("building a small database using basinhopping")
+    print("building a small database using basinhopping""")
     db = system.create_database()
     bh = system.get_basinhopping(database=db, outstream=None)
     bh.run(20)
@@ -31,7 +29,7 @@ else:
 print("starting with a database of", len(db.minima()), "minima")
 
 # turn of status printing for the connect run
-# first use the logging module to turn off the status messages
+# first use the logging module to turn off the status messages 
 logger = logging.getLogger("pele.connect")
 logger.setLevel("WARNING")
 
@@ -52,7 +50,6 @@ print("    ", len(db.transition_states()), "transition states")
 # finally, create a disconnectivity graph from the database
 print("computing and showing disconnectivity graph")
 import pylab as pl
-
 graph = database2graph(db)
 dg = DisconnectivityGraph(graph, nlevels=6)
 dg.calculate()

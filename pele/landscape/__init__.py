@@ -55,9 +55,11 @@ More core routines can be found in the documentation for the
 """
 from __future__ import absolute_import
 
+
+
 from ._graph import *
-# from singleended import *
+from .local_connect import *
+from .connect_min import *
+#from singleended import *
 from ._smooth_path import *
 from .connect_manager import *
-from .connect_min import *
-from .local_connect import *

@@ -3,23 +3,23 @@
 """
 
 
-import sys
 from multiprocessing.dummy import Array
+import sys
 
 import numpy as np
 
 from pele.potentials import _pele
-
 from pele.potentials cimport _pele
-
 from pele.optimize import Result
 from pele.potentials._pythonpotential import as_cpp_potential
 
-cimport cython
-cimport numpy as np
 
+cimport numpy as np
 cimport pele.optimize._pele_opt as _pele_opt
 from pele.optimize._pele_opt cimport shared_ptr
+cimport cython
+
+
 
 
 cdef extern from "pele/generic_mixed_descent.hpp" namespace "pele":

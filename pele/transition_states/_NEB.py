@@ -1,18 +1,18 @@
-from __future__ import absolute_import, division
-
+from __future__ import division
+from __future__ import absolute_import
+from builtins import zip
+from builtins import range
+from builtins import object
+from past.utils import old_div
+import numpy as np
+import os.path
 import copy
 import logging
-import os.path
-from builtins import object, range, zip
 
-import numpy as np
-from past.utils import old_div
+from pele.optimize import Result
+from pele.optimize import mylbfgs
 
-from pele.optimize import Result, mylbfgs
-
-__all__ = [
-    "NEB",
-]
+__all__ = ["NEB", ]
 
 logger = logging.getLogger("pele.connect.neb")
 
@@ -20,12 +20,11 @@ try:
     import scipy.linalg
 
     blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
-    bnorm = blas("nrm2", np.array([], dtype="float64"))
+    bnorm = blas('nrm2', np.array([], dtype="float64"))
 
     def norm(x):
         assert x.dtype == "float64"
         return bnorm(x)
-
 except Exception:
     norm = np.linalg.norm
 
@@ -50,7 +49,7 @@ class NEB(object):
     distance : callable
         distance function for the elastic band
     k : float, optional
-        the elastic band spring constant
+        the elastic band spring constant 
     adjustk_freq : integer
         frequency to adjust k, set to zero to disable
     adjustk_tol : float
@@ -70,8 +69,8 @@ class NEB(object):
     quenchParams :
         parameters passed to the quench routine. The default tolerance for quench is 1e-4
     save_energies : bool
-        if True and quenchParams.iprint exists and is positive, then the energy
-        along the NEB path will be printed to a file of the form "neb.EofS.####"
+        if True and quenchParams.iprint exists and is positive, then the energy 
+        along the NEB path will be printed to a file of the form "neb.EofS.####" 
         every iprint steps.
     verbose : integer
         verbosity level
@@ -84,34 +83,17 @@ class NEB(object):
     -----
     use the Interpolation tools in this package to construct the initial path
     from a starting and ending point
-
+    
     See Also
     --------
     InterpolatedPath : used to construct required parameter `path`
     InterpolatedPathDensity : alternate interpolater
     """
 
-    def __init__(
-        self,
-        path,
-        potential,
-        distance=distance_cart,
-        k=100.0,
-        adjustk_freq=0,
-        adjustk_tol=0.1,
-        adjustk_factor=1.05,
-        with_springenergy=False,
-        dneb=True,
-        copy_potential=False,
-        quenchParams=None,
-        quenchRoutine=None,
-        save_energies=False,
-        verbose=-1,
-        events=None,
-        use_minimizer_callback=True,
-    ):
-        if quenchParams is None:
-            quenchParams = dict()
+    def __init__(self, path, potential, distance=distance_cart, k=100.0, adjustk_freq=0, adjustk_tol=0.1,
+                 adjustk_factor=1.05, with_springenergy=False, dneb=True, copy_potential=False, quenchParams=None,
+                 quenchRoutine=None, save_energies=False, verbose=-1, events=None, use_minimizer_callback=True):
+        if quenchParams is None: quenchParams = dict()
         self.distance = distance
         self.potential = potential
         self.k = k
@@ -128,9 +110,7 @@ class NEB(object):
         assert self.nimages >= 3
         self.copy_potential = copy_potential
         if self.copy_potential:
-            self.potential_list = [
-                copy.deepcopy(self.potential) for _ in range(nimages)
-            ]
+            self.potential_list = [copy.deepcopy(self.potential) for _ in range(nimages)]
 
         self.getEnergyCount = 0
         self.printStateFile = None
@@ -161,15 +141,16 @@ class NEB(object):
         for i in range(0, nimages):
             self.energies[i] = potential.getEnergy(self.coords[i, :])
         # the active range of the coords, endpoints are fixed
-        self.active = self.coords[1 : nimages - 1, :]
+        self.active = self.coords[1:nimages - 1, :]
 
         self.dneb = dneb
         self.with_springenergy = with_springenergy
 
         self.distances = np.zeros(self.nimages - 1)
-        self.rms = 0.0
+        self.rms = 0.
 
-    def optimize(self, quenchRoutine=None, **kwargs):
+    def optimize(self, quenchRoutine=None,
+                 **kwargs):
         """
         Optimize the band
 
@@ -189,16 +170,16 @@ class NEB(object):
 
         :quenchRoutine: quench algorithm to use for optimization.
 
-        :quenchParams: parameters for the quench"""
+        :quenchParams: parameters for the quench """
         if quenchRoutine is None:
             if self.quenchRoutine is None:
                 quenchRoutine = mylbfgs
             else:
                 quenchRoutine = self.quenchRoutine
                 # combine default and passed params.  passed params will overwrite default
-        quenchParams = dict(
-            [("nsteps", 300)] + list(self.quenchParams.items()) + list(kwargs.items())
-        )
+        quenchParams = dict([("nsteps", 300)] +
+                            list(self.quenchParams.items()) +
+                            list(kwargs.items()))
 
         if "iprint" in quenchParams:
             self.iprint = quenchParams["iprint"]
@@ -210,8 +191,8 @@ class NEB(object):
 
         self.step = 0
         qres = quenchRoutine(
-            self.active.reshape(self.active.size), self, **quenchParams
-        )
+            self.active.reshape(self.active.size), self,
+            **quenchParams)
         # if isinstance(qres, tuple): # for compatability with old and new quenchers
         # qres = qres[4]
 
@@ -242,14 +223,10 @@ class NEB(object):
         if self.copy_potential:
             for i in range(1, self.nimages - 1):
                 pot = self.potential_list[i]
-                self.energies[i], realgrad[i, :] = pot.getEnergyGradient(
-                    coordsall[i, :]
-                )
+                self.energies[i], realgrad[i, :] = pot.getEnergyGradient(coordsall[i, :])
         else:
             for i in range(1, self.nimages - 1):
-                self.energies[i], realgrad[i, :] = self.potential.getEnergyGradient(
-                    coordsall[i, :]
-                )
+                self.energies[i], realgrad[i, :] = self.potential.getEnergyGradient(coordsall[i, :])
         return realgrad
 
     def getEnergy(self, coords):
@@ -266,7 +243,7 @@ class NEB(object):
         """
         # make array access a bit simpler, create array which contains end images
         tmp = self.coords.copy()
-        tmp[1 : self.nimages - 1, :] = coords1d.reshape(self.active.shape)
+        tmp[1:self.nimages - 1, :] = coords1d.reshape(self.active.shape)
         grad = np.zeros(self.active.shape)
 
         # calculate real energy and gradient along the band. energy is needed for tangent
@@ -284,7 +261,7 @@ class NEB(object):
                 [self.energies[i - 1], tmp[i - 1, :]],
                 [self.energies[i + 1], tmp[i + 1, :]],
                 realgrad[i, :],
-                i,
+                i
             )
             Eneb += En
         if self.iprint > 0:
@@ -297,13 +274,8 @@ class NEB(object):
         rms = old_div(np.linalg.norm(grad), np.sqrt(self.active.size))
 
         for event in self.events:
-            event(
-                path=tmp,
-                energies=self.energies,
-                distances=self.distances,
-                stepnum=self.getEnergyCount,
-                rms=rms,
-            )
+            event(path=tmp, energies=self.energies,
+                  distances=self.distances, stepnum=self.getEnergyCount, rms=rms)
 
         return E + Eneb, grad.reshape(grad.size)
 
@@ -329,7 +301,7 @@ class NEB(object):
 
         Parameters
         ----------
-
+        
         central : float
             central image energy
         left : float
@@ -349,9 +321,7 @@ class NEB(object):
         tright = -gright
 
         # special interpolation treatment for maxima/minima
-        if (central >= left and central >= right) or (
-            central <= left and central <= right
-        ):
+        if (central >= left and central >= right) or (central <= left and central <= right):
             if left > right:
                 t = vmax * tleft + vmin * tright
             else:
@@ -385,19 +355,18 @@ class NEB(object):
 
         t = self.tangent(image[0], left[0], right[0], g_left, g_right)
         if isclimbing:
-            return greal - 2.0 * np.dot(greal, t) * t
+            return greal - 2. * np.dot(greal, t) * t
 
         if True:
             from . import _NEB_utils
 
-            E, g_tot = _NEB_utils.neb_force(
-                t, greal, d_left, g_left, d_right, g_right, self.k, self.dneb
-            )
+            E, g_tot = _NEB_utils.neb_force(t, greal, d_left, g_left, d_right, g_right, self.k, self.dneb)
             if self.with_springenergy:
                 return E, g_tot
             else:
-                return 0.0, g_tot
+                return 0., g_tot
         else:  # pragma: no cover
+
             # project out parallel part
             gperp = greal - np.dot(greal, t) * t
 
@@ -412,14 +381,12 @@ class NEB(object):
                 # perpendicular part of spring
                 gs_perp = g_spring - np.dot(g_spring, t) * t
                 # double nudging
-                g_tot += gs_perp - old_div(
-                    np.dot(gs_perp, gperp) * gperp, np.dot(gperp, gperp)
-                )
+                g_tot += gs_perp - old_div(np.dot(gs_perp, gperp) * gperp, np.dot(gperp, gperp))
 
             if self.with_springenergy:
-                E = 0.5 / self.k * (d_left**2 + d_right**2)
+                E = 0.5 / self.k * (d_left ** 2 + d_right ** 2)
             else:
-                E = 0.0
+                E = 0.
             return E, g_tot
 
     def _step(self, coords=None, energy=None, rms=None):
@@ -431,13 +398,11 @@ class NEB(object):
 
     def _adjust_k(self, coords):
         tmp = self.coords.copy()
-        tmp[1 : self.nimages - 1, :] = coords.reshape(self.active.shape)
+        tmp[1:self.nimages - 1, :] = coords.reshape(self.active.shape)
 
         d = []
         for i in range(0, self.nimages - 1):
-            d.append(
-                self.distance(tmp[i, :], tmp[i + 1, :], distance=True, grad=False)[0]
-            )
+            d.append(self.distance(tmp[i, :], tmp[i + 1, :], distance=True, grad=False)[0])
 
         d = np.array(np.sqrt(d))
         average_d = np.average(d)
@@ -466,10 +431,7 @@ class NEB(object):
         Make all maxima along the neb climbing images.
         """
         for i in range(1, len(self.energies) - 1):
-            if (
-                self.energies[i] > self.energies[i - 1]
-                and self.energies[i] > self.energies[i + 1]
-            ):
+            if self.energies[i] > self.energies[i - 1] and self.energies[i] > self.energies[i + 1]:
                 self.isclimbing[i] = True
 
     def printState(self):  # pragma: no cover
@@ -486,25 +448,23 @@ class NEB(object):
         with open(self.printStateFile, "a") as fout:
             fout.write("\n\n")
             fout.write("#neb step: %d\n" % self.getEnergyCount)
-            S = 0.0
+            S = 0.
             for i in range(self.nimages):
                 if i == 0:
-                    dist = 0.0
+                    dist = 0.
                 else:
-                    dist, t = self.distance(
-                        self.coords[i, :], self.coords[i - 1, :], grad=False
-                    )
+                    dist, t = self.distance(self.coords[i, :], self.coords[i - 1, :], grad=False)
                 S += dist
                 fout.write("%f %g\n" % (S, self.energies[i]))
 
     def copy(self):
-        """create a copy of the current neb"""
+        """ create a copy of the current neb """
         neb = copy.copy(self)
         neb.coords = neb.coords.copy()
         neb.energies = neb.energies.copy()
         neb.isclimbing = copy.deepcopy(neb.isclimbing)
 
-        neb.active = neb.coords[1 : neb.nimages - 1, :]
+        neb.active = neb.coords[1:neb.nimages - 1, :]
         return neb
 
 
@@ -522,7 +482,7 @@ class NEB(object):
 #    NEBquenchParams["iprint"]=20
 #    NEBquenchParams["debug"]=True
 #    NEBquenchParams["maxErise"]=0.1
-#
+#    
 #    x = np.arange(.5, 5., .05)
 #    y = np.arange(.5, 5., .05)
 #    z = np.zeros([len(x), len(y)])
@@ -577,7 +537,7 @@ class NEB(object):
 #    pl.xlabel("image")
 #    pl.ylabel("energy")
 #    pl.legend(loc='best')
-#
+#    
 #    pl.subplot(1,2,2)
 #    pl.title("energy")
 #    pl.plot(energies_interpolate, 'ko-', label="interpolate")
@@ -587,5 +547,5 @@ class NEB(object):
 #    pl.legend(loc='best')
 #    pl.show()
 #
-# if __name__ == "__main__":
+#if __name__ == "__main__":
 #    nebtest()

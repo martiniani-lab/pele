@@ -1,12 +1,9 @@
 from __future__ import absolute_import
-
+import numpy as np
 import logging
 from collections import namedtuple
 
-import numpy as np
-
 from pele.optimize import LBFGS
-
 from .mylbfgs_updatestep import mylbfgs_updatestep
 
 __all__ = ["MYLBFGS"]
@@ -17,16 +14,16 @@ _logger = logging.getLogger("pele.optimize")
 class MYLBFGS(LBFGS):
     """
     minimize a function using the LBFGS routine
-
+    
     this class inherits everything from the pythonic LBFGS
     except the implementation of the LBFGS algorithm (determining an appropriate
-    step size and direction). This is reimplemented
+    step size and direction). This is reimplemented 
     using the Fortran code from GMIN.
-
+    
     Parameters
     ----------
     see base class LBFGS
-
+    
     See Also
     --------
     LBFGS : base class
@@ -44,6 +41,7 @@ class MYLBFGS(LBFGS):
         self.W = np.zeros(N * (2 * M + 1) + 2 * M)  # mylbfgs working space
         self._iter = 0
         self._point = 0
+
 
     def getStep(self, X, G):
         """
@@ -66,12 +64,10 @@ class MYLBFGS(LBFGS):
             NPT = N * ((self._point + M - 1) % M)
             # s = X - self.Xold
             # y = G - self.Gold
-            self.W[ISPT + NPT : ISPT + NPT + N] = self.dXold
-            self.W[IYPT + NPT : IYPT + NPT + N] = self.dGold
+            self.W[ISPT + NPT: ISPT + NPT + N] = self.dXold
+            self.W[IYPT + NPT: IYPT + NPT + N] = self.dGold
 
-        self.stp = mylbfgs_updatestep(
-            self._iter, self.M, G, self.W, self.H0vec, self._point
-        )
+        self.stp = mylbfgs_updatestep(self._iter, self.M, G, self.W, self.H0vec, self._point)
 
         self.H0 = self.H0vec[0]
         self._iter += 1
@@ -81,14 +77,9 @@ class MYLBFGS(LBFGS):
 
     def get_state(self):
         State = namedtuple("State", "W dXold dGold iter point H0 have_dXold")
-        state = State(
-            W=self.W.copy(),
-            dXold=self.dXold.copy(),
-            dGold=self.dGold.copy(),
-            iter=self._iter,
-            point=self._point,
-            H0=self.H0vec[0],
-            have_dXold=self._have_dXold,
+        state = State(W=self.W.copy(), dXold=self.dXold.copy(), dGold=self.dGold.copy(),
+                      iter=self._iter, point=self._point, H0=self.H0vec[0],
+                      have_dXold=self._have_dXold
         )
         return state
 

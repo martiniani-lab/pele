@@ -1,13 +1,13 @@
 """
 tools for reading and writing OPTIM input and output files
 """
-from __future__ import division, print_function
+from __future__ import division
+from __future__ import print_function
 
-from builtins import map, object
-
-import numpy as np
+from builtins import map
+from builtins import object
 from past.utils import old_div
-
+import numpy as np
 from pele.storage import Minimum, TransitionState
 
 _id_count = 0
@@ -36,38 +36,37 @@ _id_count = 0
 #            return self.id() == m.id()
 #        else:
 #            return self.id() == m
-#
+#        
 #    def __hash__(self):
 #        assert self.id() is not None
 #        return self.id()
 
-
 def read_points_min_ts(fname, ndof=None, endianness="="):
     """
     read coords from a points.min or a points.ts file
-
+    
     Notes
     -----
     the files were written with fortran code that looks something like this::
-
+    
         NOPT = 3 * NATOMS
         INQUIRE(IOLENGTH=NDUMMY) COORDS(1:NOPT)
         OPEN(13,FILE='points.min,ACCESS='DIRECT',FORM='UNFORMATTED',STATUS='UNKNOWN',RECL=NDUMMY)
         DO J1=1,NMIN
             WRITE(13,REC=J1) COORDS(1:NOPT)
         ENDDO
-        CLOSE(13)
-
-    This means the data is stored without any header information.
+        CLOSE(13) 
+    
+    This means the data is stored without any header information.  
     It is just a long list of double precision floating point numbers.
-
+    
     Note that some fortran compilers use different endiness for the data.  If
     the coordinates comes out garbage this is probably the problem.  The solution
     is to pass a different data type
-
+    
     dtype=np.dtype("<d")  # for little-endian double precision
     dtype=np.dtype(">d")  # for big-endian double precision
-
+    
     Parameters
     ----------
     fname : str
@@ -75,20 +74,17 @@ def read_points_min_ts(fname, ndof=None, endianness="="):
     ndof : int, optional
         for testing to make sure the number of floats read is a multiple of ndof
     endianness : str
-        define the endianness of the data. can be "=", "<", ">"
-
+        define the endianness of the data. can be "=", "<", ">" 
+     
     """
     with open(fname, "rb") as fin:
         coords = np.fromfile(fin, dtype=np.dtype(endianness + "d"))
     if ndof is not None:
         if len(coords) % ndof != 0:
-            raise Exception(
-                "number of double precision variables read from %s (%s) is not"
-                " divisible by ndof (%d)" % (fname, len(coords), ndof)
-            )
+            raise Exception("number of double precision variables read from %s (%s) is not divisible by ndof (%d)" %
+                            (fname, len(coords), ndof))
         #    print coords
     return coords.reshape(-1)
-
 
 def write_points_min_ts(fout, x, endianness="="):
     """
@@ -96,7 +92,6 @@ def write_points_min_ts(fout, x, endianness="="):
     """
     x = np.asarray(x.ravel(), dtype=np.dtype(endianness + "d"))
     x.tofile(fout)
-
 
 class OptimDBConverter(object):
     """
@@ -147,17 +142,9 @@ class OptimDBConverter(object):
 
     """
 
-    def __init__(
-        self,
-        database,
-        ndof=None,
-        mindata="min.data",
-        tsdata="ts.data",
-        pointsmin="points.min",
-        pointsts="points.ts",
-        endianness="=",
-        assert_coords=True,
-    ):
+    def __init__(self, database, ndof=None, mindata="min.data",
+                 tsdata="ts.data", pointsmin="points.min", pointsts="points.ts",
+                 endianness="=", assert_coords=True):
         self.db = database
         self.ndof = ndof
         self.mindata = mindata
@@ -172,8 +159,8 @@ class OptimDBConverter(object):
 
     def ReadMinDataFast(self):
         """read min.data file
-
-        this method uses bulk database inserts.  It is *MUCH* faster this way, but
+        
+        this method uses bulk database inserts.  It is *MUCH* faster this way, but 
         you have to be careful that this and the Minimum object stays in sync.  e.g.
         minimum.invalid must be set to false manually here.
         """
@@ -181,7 +168,7 @@ class OptimDBConverter(object):
         indx = 0
         #        f_len = file_len(self.mindata)
         minima_dicts = []
-        for line in open(self.mindata, "r"):
+        for line in open(self.mindata, 'r'):
             sline = line.split()
 
             # get the coordinates corresponding to this minimum
@@ -190,15 +177,16 @@ class OptimDBConverter(object):
             else:
                 coords = self.pointsmin_data[indx, :]
 
-            # read data from the min.data line
+
+            # read data from the min.data line            
             e, fvib = list(map(float, sline[:2]))  # energy and vibrational free energy
             pg = int(sline[2])  # point group order
 
             # create the minimum object and attach the data
             # must add minima like this.  If you use db.addMinimum()
             # some minima with similar energy might be assumed to be duplicates
-            min_dict = dict(
-                energy=e, coords=coords, invalid=False, fvib=fvib, pgorder=pg
+            min_dict = dict(energy=e, coords=coords, invalid=False,
+                            fvib=fvib, pgorder=pg
             )
             minima_dicts.append(min_dict)
 
@@ -211,12 +199,13 @@ class OptimDBConverter(object):
 
         print("--->finished loading %s minima" % indx)
 
+
     def ReadMindata(self):  # pragma: no cover
         print("reading from", self.mindata)
         indx = 0
         #        f_len = file_len(self.mindata)
         self.index2min = dict()
-        for line in open(self.mindata, "r"):
+        for line in open(self.mindata, 'r'):
             sline = line.split()
 
             # get the coordinates corresponding to this minimum
@@ -225,7 +214,7 @@ class OptimDBConverter(object):
             else:
                 coords = self.pointsmin_data[indx, :]
 
-            # read data from the min.data line
+            # read data from the min.data line            
             e, fvib = list(map(float, sline[:2]))  # energy and vibrational free energy
             pg = int(sline[2])  # point group order
 
@@ -248,8 +237,8 @@ class OptimDBConverter(object):
 
     def ReadTSdataFast(self):
         """read ts.data file
-
-        this method uses bulk database inserts.  It is *MUCH* faster this way, but
+        
+        this method uses bulk database inserts.  It is *MUCH* faster this way, but 
         you have to be careful that this and the TransitionState object stays in sync.  e.g.
         ts.invalid must be set to false manually here.
 
@@ -258,7 +247,7 @@ class OptimDBConverter(object):
 
         indx = 0
         ts_dicts = []
-        for line in open(self.tsdata, "r"):
+        for line in open(self.tsdata, 'r'):
             sline = line.split()
 
             # get the coordinates corresponding to this minimum
@@ -267,7 +256,7 @@ class OptimDBConverter(object):
             else:
                 coords = self.pointsts_data[indx, :]
 
-            # read data from the min.ts line
+            # read data from the min.ts line            
             e, fvib = list(map(float, sline[:2]))  # get energy and fvib
             pg = int(sline[2])  # point group order
             m1indx, m2indx = list(map(int, sline[3:5]))
@@ -278,14 +267,10 @@ class OptimDBConverter(object):
 
             # must add transition states like this.  If you use db.addtransitionState()
             # some transition states might be assumed to be duplicates
-            tsdict = dict(
-                energy=e,
-                coords=coords,
-                invalid=False,
-                fvib=fvib,
-                pgorder=pg,
-                _minimum1_id=m1indx,
-                _minimum2_id=m2indx,
+            tsdict = dict(energy=e, coords=coords, invalid=False,
+                          fvib=fvib, pgorder=pg,
+                          _minimum1_id=m1indx,
+                          _minimum2_id=m2indx
             )
             ts_dicts.append(tsdict)
 
@@ -297,11 +282,12 @@ class OptimDBConverter(object):
 
         print("--->finished loading %s transition states" % indx)
 
+
     def ReadTSdata(self):  # pragma: no cover
         print("reading from", self.tsdata)
 
         indx = 0
-        for line in open(self.tsdata, "r"):
+        for line in open(self.tsdata, 'r'):
             sline = line.split()
 
             # get the coordinates corresponding to this minimum
@@ -310,7 +296,7 @@ class OptimDBConverter(object):
             else:
                 coords = self.pointsts_data[indx, :]
 
-            # read data from the min.ts line
+            # read data from the min.ts line            
             e, fvib = list(map(float, sline[:2]))  # get energy and fvib
             pg = int(sline[2])  # point group order
             m1indx, m2indx = list(map(int, sline[3:5]))
@@ -334,9 +320,7 @@ class OptimDBConverter(object):
 
     def read_points_min(self):
         print("reading from", self.pointsmin)
-        coords = read_points_min_ts(
-            self.pointsmin, self.ndof, endianness=self.endianness
-        )
+        coords = read_points_min_ts(self.pointsmin, self.ndof, endianness=self.endianness)
         if coords.size == 0:
             raise Exception(self.pointsmin + " is empty")
         if self.ndof is None:
@@ -344,19 +328,15 @@ class OptimDBConverter(object):
             nminima = sum((1 for _ in open(self.mindata, "r")))
             assert len(coords.shape) == 1
             if coords.size % nminima != 0:
-                raise ValueError(
-                    "the number of data points in %s is not divisible by %s the number"
-                    " of minima in %s" % (self.mindata, coords.size, nminima)
-                )
+                raise ValueError("the number of data points in %s is not divisible by %s the number of minima in %s"
+                                 % (self.mindata, coords.size, nminima))
             self.ndof = old_div(coords.size, nminima)
             print("read %s minimum coordinates of length %s" % (nminima, self.ndof))
         self.pointsmin_data = coords.reshape([-1, self.ndof])
 
     def read_points_ts(self):
         print("reading from", self.pointsts)
-        coords = read_points_min_ts(
-            self.pointsts, self.ndof, endianness=self.endianness
-        )
+        coords = read_points_min_ts(self.pointsts, self.ndof, endianness=self.endianness)
         self.pointsts_data = coords.reshape([-1, self.ndof])
 
     def load_minima(self):
@@ -393,7 +373,6 @@ class OptimDBConverter(object):
         self.pointsts_data = None
         self.ReadMinDataFast()
         self.ReadTSdataFast()
-
 
 class WritePathsampleDB(object):
     """
@@ -439,78 +418,67 @@ class WritePathsampleDB(object):
 
     """
 
-    def __init__(
-        self,
-        database,
-        mindata="min.data",
-        tsdata="ts.data",
-        pointsmin="points.min",
-        pointsts="points.ts",
-        endianness="=",
-        assert_coords=True,
-    ):
+    def __init__(self, database, mindata="min.data",
+                 tsdata="ts.data", pointsmin="points.min", pointsts="points.ts",
+                 endianness="=", assert_coords=True):
         self.db = database
         self.mindata = mindata
         self.tsdata = tsdata
         self.pointsmin = pointsmin
         self.pointsts = pointsts
         self.endianness = endianness
-
+    
     def write_min_data_ts_data(self):
+
         # write minima ordered by energy
         minima_labels = dict()
         import sqlalchemy.orm
-
-        with open(self.pointsmin, "wb") as point_out:
+        with open(self.pointsmin, "wb") as point_out: 
             with open(self.mindata, "w") as data_out:
-                minima_iter = (
-                    self.db.session.query(Minimum)
-                    .options(sqlalchemy.orm.undefer("coords"))
-                    .order_by(Minimum.energy)
-                )
+                
+                minima_iter = self.db.session.query(Minimum).\
+                            options(sqlalchemy.orm.undefer("coords")).order_by(Minimum.energy)
                 for label, m in enumerate(minima_iter):
-                    minima_labels[m.id()] = label + 1  # +1 so it starts with 1
+                    minima_labels[m.id()] = label + 1 # +1 so it starts with 1
                     fvib = m.fvib
                     if fvib is None:
-                        fvib = 1.0
+                        fvib = 1.
                     pgorder = m.pgorder
                     if pgorder is None:
                         pgorder = 1
-
-                    data_out.write("{} {} {} 1 1 1\n".format(m.energy, fvib, pgorder))
+                    
+                    data_out.write("{} {} {} 1 1 1\n".format(m.energy,
+                                                              fvib,
+                                                              pgorder))
                     write_points_min_ts(point_out, m.coords, endianness=self.endianness)
-
+        
         del m
-
+        
         # write trasnition_states ordered by energy
-        with open(self.pointsts, "wb") as point_out:
+        with open(self.pointsts, "wb") as point_out: 
             with open(self.tsdata, "w") as data_out:
-                ts_iter = self.db.session.query(TransitionState).options(
-                    sqlalchemy.orm.undefer("coords")
-                )
+                
+                ts_iter = self.db.session.query(TransitionState).\
+                            options(sqlalchemy.orm.undefer("coords"))
                 for ts in ts_iter:
                     m1_label = minima_labels[ts._minimum1_id]
                     m2_label = minima_labels[ts._minimum2_id]
 
                     fvib = ts.fvib
                     if fvib is None:
-                        fvib = 1.0
+                        fvib = 1.
                     pgorder = ts.pgorder
                     if pgorder is None:
                         pgorder = 1
 
-                    data_out.write(
-                        "{energy} {fvib} {pgorder} {min1} {min2} 1 1 1\n".format(
-                            energy=ts.energy,
-                            fvib=fvib,
-                            pgorder=pgorder,
-                            min1=m1_label,
-                            min2=m2_label,
-                        )
-                    )
-                    write_points_min_ts(
-                        point_out, ts.coords, endianness=self.endianness
-                    )
-
+                    data_out.write("{energy} {fvib} {pgorder} {min1} {min2} 1 1 1\n".format(
+                        energy=ts.energy, fvib=fvib, pgorder=pgorder, 
+                        min1=m1_label, min2=m2_label))
+                    write_points_min_ts(point_out, ts.coords, endianness=self.endianness)
+        
+        
+    
     def write_db(self):
         self.write_min_data_ts_data()
+        
+    

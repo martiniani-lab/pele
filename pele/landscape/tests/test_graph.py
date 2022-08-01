@@ -1,5 +1,5 @@
-import unittest
 from builtins import range
+import unittest
 
 import networkx as nx
 
@@ -10,9 +10,8 @@ def create_random_database(nmin=20, nts=None, natoms=2):
     """
     create a database for test purposes
     """
-    import numpy as np
-
     from pele.storage import Database
+    import numpy as np
 
     if nts is None:
         nts = nmin
@@ -78,10 +77,11 @@ class TestGraph(unittest.TestCase):
 
         # make sure the edges were copied
         for n in neighbors:
-            if n == min1:
-                continue
-            edge_exists = graph.graph.has_edge(min1, n) or graph.graph.has_edge(n, min1)
+            if n == min1: continue
+            edge_exists = (graph.graph.has_edge(min1, n)
+                           or graph.graph.has_edge(n, min1))
             self.assert_(edge_exists)
+
 
         # make sure the new edges have transition state data attached
         for v in graph.graph.neighbors(min1):
@@ -100,7 +100,8 @@ class TestGraph(unittest.TestCase):
 
         data = graph.get_edge_data(1, 2)
         self.assertIsNotNone(data)
-        self.assertDictEqual(graph.get_edge_data(1, 2), graph.get_edge_data(2, 1))
+        self.assertDictEqual(graph.get_edge_data(1, 2),
+                             graph.get_edge_data(2, 1))
 
         self.assertTrue(graph.has_edge(1, 2))
         self.assertTrue(graph.has_edge(2, 1))
@@ -109,7 +110,7 @@ class TestGraph(unittest.TestCase):
         tsgraph = TSGraph(self.db)
         cc = nx.connected_components(tsgraph.graph)
         # networkx changed the function so now cc is an iterator over sets
-        cc = [list(c) for c in cc]
+        cc = [list(c) for c in cc] 
         for nodes in cc:
             for u, v in zip(nodes[:-1], nodes[1:]):
                 self.assertTrue(tsgraph.areConnected(u, v))
@@ -122,3 +123,4 @@ class TestGraph(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

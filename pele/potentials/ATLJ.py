@@ -1,12 +1,12 @@
-from __future__ import absolute_import, division, print_function
-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 from builtins import range
-
-import numpy as np
 from past.utils import old_div
+import numpy as np
 
-from pele.potentials import LJ, BasePotential
-
+from pele.potentials import LJ
+from pele.potentials import BasePotential
 from .fortran import AT as ATfort
 
 __all__ = ["ATLJ"]
@@ -15,16 +15,16 @@ __all__ = ["ATLJ"]
 class ATLJ(BasePotential):
     """
     Lennard Jones + three body Axilrod-Teller term
-
+    
     V = sum_ij VLJ_ij   +  sum_ijk  Z * (1 + 3*cos(t1)*cos(t2)*cos(t3)) / (rij * rjk * rik)**3 )
-
+    
     where t1, t2, t3 are the internal angles of the triangle ijk
-
-    Z > 0 stabilizes linear vs. triangular geometries
+    
+    Z > 0 stabilizes linear vs. triangular geometries 
     """
 
-    def __init__(self, eps=1.0, sig=1.0, Z=1.0):
-        """simple lennard jones potential"""
+    def __init__(self, eps=1.0, sig=1.0, Z=1.):
+        """ simple lennard jones potential"""
         self.sig = sig
         self.eps = eps
         self.Z = Z
@@ -36,7 +36,7 @@ class ATLJ(BasePotential):
         natoms = old_div(coords.size, 3)
         X = np.reshape(coords, [natoms, 3])
         Z = self.Z
-        energy = 0.0
+        energy = 0.
         for i in range(natoms):
             for j in range(i):
                 for k in range(j):
@@ -46,18 +46,11 @@ class ATLJ(BasePotential):
                     rij = np.linalg.norm(drij)
                     rik = np.linalg.norm(drik)
                     rjk = np.linalg.norm(drjk)
-                    energy += (
-                        Z
-                        * (
-                            1.0
-                            + 3.0
-                            * np.dot(drij, -drjk)
-                            * np.dot(-drij, -drik)
-                            * np.dot(drik, drjk)
-                            / (rij * rik * rjk) ** 2
-                        )
-                        / (rij * rik * rjk) ** 3
-                    )
+                    energy += (Z * (1. + 3. *
+                                    np.dot(drij, -drjk) *
+                                    np.dot(-drij, -drik) *
+                                    np.dot(drik, drjk) / (rij * rik * rjk) ** 2)
+                               / (rij * rik * rjk) ** 3 )
         energy += Elj
         return energy
 
@@ -83,13 +76,12 @@ class ATLJ(BasePotential):
 # testing only below here
 #
 
-
 def testing():  # pragma: no cover
     # test class
     natoms = 3
     coords = np.random.uniform(-1, 1, natoms * 3) * 2
 
-    lj = ATLJ(Z=1.0)
+    lj = ATLJ(Z=1.)
 
     E = lj.getEnergy(coords)
     print("E", E)
@@ -125,3 +117,4 @@ def testing():  # pragma: no cover
 
 if __name__ == "__main__":
     testing()
+

@@ -1,12 +1,9 @@
 from __future__ import division
-
-import math
-import unittest
 from builtins import range
-
-import numpy as np
 from past.utils import old_div
-
+import unittest
+import math
+import numpy as np
 import pele.exceptions as exc
 from pele.accept_tests.spherical_container import SphericalContainer as sphere
 
@@ -18,9 +15,7 @@ class TestSphericalContainer(unittest.TestCase):
         and corresponding spherical container tests
         """
         # Coordinates
-        self.coords = [
-            old_div(np.random.uniform(-1.0, 1.0), math.sqrt(3)) for _ in range(30)
-        ]
+        self.coords = [old_div(np.random.uniform(-1.0, 1.0), math.sqrt(3)) for _ in range(30)]
         self.coords_0_1 = [x * 0.1 for x in self.coords]
         self.coords_10 = [x * 10 for x in self.coords]
         self.coords_20 = [x * 20 for x in self.coords]
@@ -105,5 +100,5 @@ class TestSphericalContainer(unittest.TestCase):
         self.assertIsInstance(sphere(2).radius2, type(1.0))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

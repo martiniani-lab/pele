@@ -1,10 +1,9 @@
 from __future__ import absolute_import
-
-import tempfile
 from builtins import range
+import tempfile
 
-from pele.potentials import LJ
 from pele.systems import AtomicCluster
+from pele.potentials import LJ
 from pele.utils.xyz import write_xyz
 
 __all__ = ["LJCluster"]
@@ -13,11 +12,11 @@ __all__ = ["LJCluster"]
 class LJCluster(AtomicCluster):
     """
     define the System class for a Lennard-Jones cluster
-
+    
     Parameters
     ----------
-    natoms : int
-
+    natoms : int 
+    
     See Also
     --------
     BaseSystem, AtomicCluster
@@ -39,9 +38,8 @@ class LJCluster(AtomicCluster):
         return LJ()
 
     def get_system_properties(self):
-        return dict(
-            natoms=int(self.natoms),
-            potential="LJ cluster",
+        return dict(natoms=int(self.natoms),
+                    potential="LJ cluster",
         )
 
     #
@@ -51,24 +49,23 @@ class LJCluster(AtomicCluster):
     def draw(self, coordslinear, index, subtract_com=True):  # pragma: no cover
         """
         tell the gui how to represent your system using openGL objects
-
+        
         Parameters
         ----------
         coords : array
         index : int
             we can have more than one molecule on the screen at one time.  index tells
             which one to draw.  They are viewed at the same time, so they should be
-            visually distinct, e.g. different colors.  accepted values are 1 or 2
+            visually distinct, e.g. different colors.  accepted values are 1 or 2        
         """
         from ._opengl_tools import draw_atomic_single_atomtype
-
         draw_atomic_single_atomtype(coordslinear, index, subtract_com=subtract_com)
 
     def load_coords_pymol(self, coordslist, oname, index=1):  # pragma: no cover
         """load the coords into pymol
-
+        
         the new object must be named oname so we can manipulate it later
-
+                        
         Parameters
         ----------
         coordslist : list of arrays
@@ -79,11 +76,11 @@ class LJCluster(AtomicCluster):
             we can have more than one molecule on the screen at one time.  index tells
             which one to draw.  They are viewed at the same time, so should be
             visually distinct, e.g. different colors.  accepted values are 1 or 2
-
+        
         Notes
         -----
         the implementation here is a bit hacky.  we create a temporary xyz file from coords
-        and load the molecule in pymol from this file.
+        and load the molecule in pymol from this file.  
         """
         # pymol is imported here so you can do, e.g. basinhopping without installing pymol
         import pymol
@@ -123,7 +120,6 @@ class LJCluster(AtomicCluster):
 #
 # only for testing below here
 #
-
 
 def run():  # pragma: no cover
     # create the system object

@@ -1,5 +1,4 @@
 from __future__ import print_function
-
 from pele.takestep import TakestepInterface
 
 __all__ = ["AdaptiveStepsizeTemperature"]
@@ -8,57 +7,51 @@ __all__ = ["AdaptiveStepsizeTemperature"]
 class AdaptiveStepsizeTemperature(TakestepInterface):
     """
     adjust both the stepsize and the temperature adaptively
-
+    
     Parameters
     ----------
-    stepclass :
+    stepclass : 
         the step taking class
-    target_new_min_prob :
+    target_new_min_prob : 
         the target probability for a step ending up in a new minimum.
         Used to adjust the stepsize.
-    target_new_min_accept_prob :
+    target_new_min_accept_prob : 
         the target probability that a step that ends in a new minimum is accepted.
         Use to adjust the temperature
-
+        
         Note: the total acceptance probability is
-
+        
             accrat = 1 - target_new_min_prob * (1 - target_new_min_accept_prob)
-
-        so if you want a total acceptance probability of 0.5, you must choose both other
+        
+        so if you want a total acceptance probability of 0.5, you must choose both other 
         probabilities accordingly
-
-    interval :
+        
+    interval : 
         the interval at which to adjust temperature and stepsize
-    Tfactor :
+    Tfactor : 
         the factor with which to multiply (or divide) the temperature
-    sfactor :
+    sfactor : 
         the factor with which to multiply (or divide) the stepsize
-    ediff :
+    ediff : 
         if two minima have energies that are within ediff from each other then
         they are considered to be the same minimum
     verbose :
         print status messages
-
+        
     Notes
-    -----
-    We will base the stepsize adjustment on the probability of ending up
+    -----                    
+    We will base the stepsize adjustment on the probability of ending up 
     in a different minimum
-
+    
     We will base the temperature adjustment on the probability of accepting
     a move that ended up in a different minimum
     """
 
-    def __init__(
-        self,
-        stepclass,
-        target_new_min_prob=0.8,
-        target_new_min_accept_prob=0.3,
-        interval=100,
-        Tfactor=0.95,
-        sfactor=0.95,
-        ediff=0.001,
-        verbose=False,
-    ):
+    def __init__(self, stepclass,
+                 target_new_min_prob=0.8,
+                 target_new_min_accept_prob=0.3,
+                 interval=100, Tfactor=0.95, sfactor=0.95, ediff=.001,
+                 verbose=False):
         self.stepclass = stepclass
         self.target_new_min_accept_prob = target_new_min_accept_prob
         self.target_new_min_prob = target_new_min_prob
@@ -78,6 +71,7 @@ class AdaptiveStepsizeTemperature(TakestepInterface):
         self.nattempts = 0
         self.naccept = 0
         self.nsame = 0
+
 
     def takeStep(self, *args, **kwargs):
         """
@@ -120,37 +114,28 @@ class AdaptiveStepsizeTemperature(TakestepInterface):
 
     def adjustStep(self):
         """adjust the step size
-
+        
         increase the step size if we're ending up in the same minima too often,
         else decrease the step size
         """
-        fnew = 1.0 - float(self.nsame) / self.nattempts
+        fnew = 1. - float(self.nsame) / self.nattempts
         if fnew < self.target_new_min_prob:
-            self.stepclass.scale(1.0 / self.sfactor)
+            self.stepclass.scale(1. / self.sfactor)
         else:
             self.stepclass.scale(self.sfactor)
 
         # print some status info
         if self.verbose:
-            print(
-                "adaptive step and temperature: naccept nsame ndiff naccept_diff %d %d"
-                " %d %d new min probability %.4g"
-                % (
-                    self.naccept,
-                    self.nsame,
-                    self.nattempts - self.nsame,
-                    self.naccept - self.nsame,
-                    float(self.naccept - self.nsame) / self.nattempts,
-                )
-            )
-            print(
-                "    stepsize    is now %.4g ratio %.4g target %.4g"
-                % (self.stepclass.stepsize, fnew, self.target_new_min_prob)
-            )
+            print("adaptive step and temperature: naccept nsame ndiff naccept_diff %d %d %d %d new min probability %.4g" % (
+                self.naccept, self.nsame, self.nattempts - self.nsame,
+                self.naccept - self.nsame, float(self.naccept - self.nsame) / self.nattempts))
+            print("    stepsize    is now %.4g ratio %.4g target %.4g" % (self.stepclass.stepsize,
+                                                                          fnew, self.target_new_min_prob))
+
 
     def adjustTemp(self, driver):
         """adjust the temperature
-
+        
         increase the temeperature if new minima are rejected too often,
         else decrease the temperature
         """
@@ -165,24 +150,18 @@ class AdaptiveStepsizeTemperature(TakestepInterface):
         else:
             driver.acceptTest.temperature /= self.Tfactor
         if self.verbose:
-            print(
-                "    temperature is now %.4g ratio %.4g target %.4g"
-                % (
-                    driver.acceptTest.temperature,
-                    faccept,
-                    self.target_new_min_accept_prob,
-                )
-            )
+            print("    temperature is now %.4g ratio %.4g target %.4g" % (driver.acceptTest.temperature,
+                                                                          faccept, self.target_new_min_accept_prob))
 
 
 if __name__ == "__main__":
     import numpy as np
-
-    from pele.systems import LJCluster
     from pele.takestep import displace
+    from pele.systems import LJCluster
 
     natoms = 38
     sys = LJCluster(natoms=38)
+
 
     # random initial coordinates
     coords = sys.get_random_configuration()
@@ -194,3 +173,4 @@ if __name__ == "__main__":
     opt = sys.get_basinhopping(database=db, takestep=tsAdaptive, coords=coords)
     opt.printfrq = 50
     opt.run(5000)
+        

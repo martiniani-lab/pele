@@ -1,18 +1,17 @@
 from __future__ import print_function
-
 from builtins import object
-
 import Pyro4
 
 from pele.landscape import ConnectManager
 
+
 __all__ = ["ConnectServer", "ConnectWorker", "BasinhoppingWorker"]
 
-# we need to run pyros in multiplex mode, otherwise we run into problems with
+# we need to run pyros in multiplex mode, otherwise we run into problems with 
 # SQLAlchemy. This is due to the fact that a session can only be used from one
 # thread. We really should fix this issue and allow for multiple sessions!
 Pyro4.config.SERVERTYPE = "multiplex"
-
+        
 
 class ConnectServer(object):
     """
@@ -41,38 +40,38 @@ class ConnectServer(object):
     ConnectWorker
     pele.landscape.ConnectManager
     """
-
+    
     def __init__(self, system, database, server_name=None, host=None, port=0):
         self.system = system
         self.db = database
         self.server_name = server_name
-        self.host = host
-        self.port = port
-
+        self.host=host
+        self.port=port
+        
         self.connect_manager = ConnectManager(self.db)
 
     def set_connect_manager(self, connect_manager):
         """add a custom connect manager
-
+        
         the connect manager decides which connect jobs should be performed
         """
         self.connect_manager = connect_manager
-
-    #    def set_emax(self, Emax):
-    #        raise Exception("set_emax is not implemented yet in the new ConnectManager scheme")
-    #        self.Emax = None
+        
+#    def set_emax(self, Emax):
+#        raise Exception("set_emax is not implemented yet in the new ConnectManager scheme")
+#        self.Emax = None
 
     def get_connect_job(self, strategy="random"):
-        """get a new connect job"""
+        """ get a new connect job """
         min1, min2 = self.connect_manager.get_connect_job(strategy)
         return min1.id(), min1.coords, min2.id(), min2.coords
 
     def get_system(self):
-        """provide system class to worker"""
+        """ provide system class to worker """
         return self.system
-
+    
     def add_minimum(self, E, coords):
-        """called by worker if a new minimum is found
+        """ called by worker if a new minimum is found
 
         Returns
         -------
@@ -81,7 +80,7 @@ class ConnectServer(object):
         print("a client found a minimum", E)
         m = self.db.addMinimum(E, coords)
         return m.id()
-
+    
     def add_ts(self, id1, id2, E, coords, eigenval=None, eigenvec=None):
         """called by worker if a new transition state is found
 
@@ -103,24 +102,21 @@ class ConnectServer(object):
         print("a client found a transition state", E)
         min1 = self.db.getMinimum(id1)
         min2 = self.db.getMinimum(id2)
-
-        ts = self.db.addTransitionState(
-            E, coords, min1, min2, eigenval=eigenval, eigenvec=eigenvec
-        )
+        
+        ts = self.db.addTransitionState(E, coords, min1, min2, eigenval=eigenval, eigenvec=eigenvec)
         return ts.id()
 
     def run(self):
-        """start the server and listen for incoming connections"""
+        """ start the server and listen for incoming connections """
         print("Starting Pyros daemon")
-        daemon = Pyro4.Daemon(host=self.host, port=self.port)
+        daemon=Pyro4.Daemon(host=self.host, port=self.port)
         # make the connect_server available to Pyros children
-        uri = daemon.register(self, objectId=self.server_name)
+        uri=daemon.register(self, objectId=self.server_name)
         print("The connect server can be accessed by the following uri: ", uri)
-
+        
         print("Ready to accept connections")
-        daemon.requestLoop()
-
-
+        daemon.requestLoop() 
+        
 class ConnectWorker(object):
     """
     worker class to execute connect runs.
@@ -144,18 +140,18 @@ class ConnectWorker(object):
     ConnectServer
     pele.landscape.ConnectManager
     """
-
+    
     def __init__(self, uri, system=None, strategy="random"):
-        print("connecting to", uri)
+        print("connecting to",uri)
         self.connect_server = Pyro4.Proxy(uri)
         if system is None:
             system = self.connect_server.get_system()
         self.system = system
-
+        
         self.strategy = strategy
-
+        
     def run(self, nruns=None):
-        """start the client
+        """ start the client
 
         Parameters
         ----------
@@ -175,29 +171,24 @@ class ConnectWorker(object):
         # connect to events and forward them to server
         db.on_minimum_added.connect(self._minimum_added)
         db.on_ts_added.connect(self._ts_added)
-
+    
         while True:
             print("Obtain a new job")
-            id1, coords1, id2, coords2 = self.connect_server.get_connect_job(
-                self.strategy
-            )
-
+            id1, coords1, id2, coords2 = self.connect_server.get_connect_job(self.strategy)
+            
             print("processing connect run between minima with global id", id1, id2)
-
+            
             # add minima to local database
             min1 = db.addMinimum(pot.getEnergy(coords1), coords1)
             min2 = db.addMinimum(pot.getEnergy(coords2), coords2)
             # assigned local ids", min1.id(), min2.id()
 
             # run double ended connect
-            connect = system.get_double_ended_connect(
-                min1, min2, db, fresh_connect=True
-            )
+            connect = system.get_double_ended_connect(min1, min2, db, fresh_connect=True)
             connect.connect()
             if nruns is not None:
                 nruns -= 1
-                if nruns == 0:
-                    break
+                if nruns == 0: break
 
         print("finished successfully!")
         print("Data collected during run:")
@@ -209,16 +200,13 @@ class ConnectWorker(object):
         minid = self.connect_server.add_minimum(minimum.energy, minimum.coords)
         # store the id of minimum on server-side for quick access later on
         self.gid[minimum] = minid
-
+        
     def _ts_added(self, ts):
-        """forward new transition state to server"""
+        """forward new transition state to server""" 
         id1 = self.gid[ts.minimum1]
         id2 = self.gid[ts.minimum2]
-
-        self.connect_server.add_ts(
-            id1, id2, ts.energy, ts.coords, eigenval=ts.eigenval, eigenvec=ts.eigenvec
-        )
-
+        
+        self.connect_server.add_ts(id1, id2, ts.energy, ts.coords, eigenval=ts.eigenval, eigenvec=ts.eigenvec)
 
 class BasinhoppingWorker(object):
     """
@@ -243,17 +231,17 @@ class BasinhoppingWorker(object):
     ConnectServer
     pele.Basinhopping
     """
-
-    def __init__(self, uri, system=None, **basinhopping_kwargs):
-        print("connecting to", uri)
+    
+    def __init__(self,uri, system=None, **basinhopping_kwargs):
+        print("connecting to",uri)
         self.connect_server = Pyro4.Proxy(uri)
         if system is None:
             system = self.connect_server.get_system()
         self.system = system
         self.basinhopping_kwargs = basinhopping_kwargs
-
+    
     def run(self, nsteps=10000):
-        """start the client
+        """ start the client
 
         Parameters
         ----------
@@ -275,3 +263,4 @@ class BasinhoppingWorker(object):
     def _minimum_added(self, minimum):
         """forward new minimum to server"""
         self.connect_server.add_minimum(minimum.energy, minimum.coords)
+   

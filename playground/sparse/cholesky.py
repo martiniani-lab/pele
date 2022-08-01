@@ -1,20 +1,17 @@
 from __future__ import print_function
-
-import time
 from builtins import range
-
-import numpy as np
-import scikits.sparse.cholmod as cholmod
-import scipy.sparse
-
-import pele.transition_states as ts
 from pele.systems import LJCluster
+import numpy as np
+import scipy.sparse
+import scikits.sparse.cholmod as cholmod
+import time
+import pele.transition_states as ts
 from pele.utils.hessian import get_sorted_eig
 
 natoms = 1000
 system = LJCluster(natoms)
-# system.params.structural_quench_params.debug = True
-# system.params.structural_quench_params.iprint = 100
+#system.params.structural_quench_params.debug = True
+#system.params.structural_quench_params.iprint = 100
 db = system.create_database()
 bh = system.get_basinhopping(db)
 bh.run(1)
@@ -41,6 +38,6 @@ factor = cholmod.cholesky(sparse_hess)
 
 diagonal = np.diagonal(factor.L().todense())
 
-logar = 2 * np.log(diagonal)
+logar  = 2 * np.log(diagonal)
 log_sum = np.sum(logar)
 print("Second log sum: ", log_sum)

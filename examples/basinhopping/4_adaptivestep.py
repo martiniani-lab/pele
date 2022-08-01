@@ -4,9 +4,8 @@ note that the system class uses adaptive stepsize by default,
 so the previous examples also use adaptive stepsize
 """
 from __future__ import print_function
-
 from pele.systems import LJCluster
-from pele.takestep import AdaptiveStepsizeTemperature, RandomDisplacement
+from pele.takestep import RandomDisplacement, AdaptiveStepsizeTemperature
 
 natoms = 12
 niter = 100
@@ -21,10 +20,5 @@ wrapped_step = AdaptiveStepsizeTemperature(step, interval=30)
 
 bh = system.get_basinhopping(database=db, takestep=wrapped_step)
 bh.run(niter)
-print(
-    "the lowest energy found after",
-    niter,
-    " basinhopping steps is",
-    db.minima()[0].energy,
-)
+print("the lowest energy found after", niter, " basinhopping steps is", db.minima()[0].energy)
 print("")

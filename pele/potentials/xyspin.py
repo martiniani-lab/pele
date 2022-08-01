@@ -1,11 +1,9 @@
 from __future__ import absolute_import
-
+import numpy as np
 from copy import copy
+from pele.potentials import BasePotential
 
 import networkx as nx
-import numpy as np
-
-from pele.potentials import BasePotential
 
 __all__ = ["XYModel"]
 
@@ -20,8 +18,7 @@ class XYModel(BasePotential):
     """
 
     def __init__(self, dim=None, phi=np.pi, periodic=True, phases=None):
-        if not dim:
-            dim = [4, 4]
+        if not dim: dim = [4, 4]
         dim = copy(dim)
         self.dim = copy(dim)
         self.nspins = np.prod(dim)
@@ -86,12 +83,9 @@ class XYModel(BasePotential):
     def getEnergyGradient(self, angles):
         from . import _cython_tools
 
-        return _cython_tools.xymodel_energy_gradient(
-            angles, self.phase_matrix, self.neighbors
-        )
+        return _cython_tools.xymodel_energy_gradient(angles, self.phase_matrix, self.neighbors)
 
     # def getEnergyGradient(self, angles):
-
 
 # # do internal energies first
 # E = 0.
@@ -101,7 +95,7 @@ class XYModel(BasePotential):
 #            u = self.indices[edge[0]]
 #            v = self.indices[edge[1]]
 #            E += np.cos( -angles[u] + angles[v] + phase )
-#
+#            
 #            g = -np.sin( -angles[u] + angles[v] + phase )
 #            grad[u] += g
 #            grad[v] += -g
@@ -109,26 +103,27 @@ class XYModel(BasePotential):
 #        return E, grad
 
 
-# def test_basin_hopping(pot, angles):
+
+#def test_basin_hopping(pot, angles):
 #    from pele.basinhopping import BasinHopping
 #    from pele.takestep.displace import RandomDisplacement
 #    from pele.takestep.adaptive import AdaptiveStepsize
-#
+#    
 #    takestep = RandomDisplacement(stepsize = np.pi/4)
 #    takestepa = AdaptiveStepsize(takestep, frequency = 20)
-#
+#    
 #    bh = BasinHopping( angles, pot, takestepa, temperature = 1.01)
 #    bh.run(20)
 #
-# def test():
+#def test():
 #    pi = np.pi
 #    L = 3
 #    nspins = L**2
-#
+#    
 #    #phases = np.zeros(nspins)
 #    pot = XYModel( dim = [L,L], phi = np.pi) #, phases=phases)
-#
-#
+#    
+#    
 #    angles = np.random.uniform(-pi, pi, nspins)
 #    print angles
 #
@@ -143,17 +138,17 @@ class XYModel(BasePotential):
 #    print ret2[1]
 #    print ret[0]
 #    print ret2[0]
+#    
 #
-#
-#
+#    
 #    #try a quench
 #    from pele.optimize import mylbfgs
 #    ret = mylbfgs(angles, pot)
-#
+#    
 #    print "quenched e = ", ret.energy
 #    print ret.coords
-#
+#    
 #    test_basin_hopping(pot, angles)
 #
-# if __name__ == "__main__":
+#if __name__ == "__main__":
 #    test()

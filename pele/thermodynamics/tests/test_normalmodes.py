@@ -1,19 +1,18 @@
+import unittest
 import os
 import sys
-import unittest
 
 import numpy as np
 
-from pele.systems import LJCluster
+from pele.thermodynamics._normalmodes import logproduct_freq2, normalmodes,\
+    NormalModeError
 from pele.thermodynamics import get_thermodynamic_information
-from pele.thermodynamics._normalmodes import (NormalModeError,
-                                              logproduct_freq2, normalmodes)
+from pele.systems import LJCluster
 
 
 class TestNormalModes(unittest.TestCase):
     def setUp(self):
         import numpy as np
-
         s = np.random.randint(1000000)
         s = 322846
         self.seed = s
@@ -49,6 +48,7 @@ class TestNormalModes(unittest.TestCase):
         m = self.db.minima()[0]
         mt = np.eye(m.coords.size)
         self.check(m.fvib, m.coords, 6, 0, metric=mt)
+
 
     def test_get_thermo_info(self):
         # note, there is an intermittant error in this test

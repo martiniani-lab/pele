@@ -1,8 +1,6 @@
-from libcpp cimport bool as cbool
-
 from pele.potentials cimport _pele
 from pele.potentials._pele cimport shared_ptr
-
+from libcpp cimport bool as cbool
 
 cdef extern from "pele/optimizer.hpp" namespace "pele":
     cdef cppclass  cGradientOptimizer "pele::GradientOptimizer":

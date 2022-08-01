@@ -110,5 +110,4 @@ The rates `B -> A` can be computed in a similar manner
 
 """
 from __future__ import absolute_import
-
 from ._rates import *

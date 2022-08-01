@@ -1,20 +1,18 @@
 from __future__ import division
-
-import os
-import unittest
-from builtins import object
-
-import numpy as np
 from past.utils import old_div
+from builtins import object
+import unittest
+import numpy as np
+import os
 
-from pele.optimize import LBFGS_CPP
-from pele.potentials import BasePotential, _lj_cpp
 from pele.potentials._pythonpotential import CppPotentialWrapper
+from pele.potentials import BasePotential, _lj_cpp
+from pele.optimize import LBFGS_CPP
 
 ndof = 4
 _xrand = np.random.uniform(-1, 1, [ndof])
 _xmin = np.zeros(ndof)
-_emin = 0.0
+_emin = 0.
 
 
 class _E(BasePotential):
@@ -27,7 +25,7 @@ class _EG(object):
         return np.dot(x, x)
 
     def getEnergyGradient(self, x):
-        return self.getEnergy(x), 2.0 * x
+        return self.getEnergy(x), 2. * x
 
 
 class _Raise(BasePotential):
@@ -100,12 +98,11 @@ class TestLBFGS_CPP(unittest.TestCase):
         self.assertIn("nsteps", res)
         self.assertIn("nfev", res)
 
-    def test_event_raise(self):
-        class EventException(BaseException):
-            pass
 
-        def myevent(*args, **kwargs):
-            raise EventException
+    def test_event_raise(self):
+        class EventException(BaseException): pass
+
+        def myevent(*args, **kwargs): raise EventException
 
         with self.assertRaises(EventException):
             lbfgs = LBFGS_CPP(_xrand, _EG(), events=[myevent])
@@ -157,7 +154,7 @@ class TestLBFGS_CPP_LJ(unittest.TestCase):
         from pele.potentials import LJ
 
         self.x0 = np.zeros(6)
-        self.x0[0] = 2.0
+        self.x0[0] = 2.
         self.pot = LJ()
 
     def test_reset(self):
@@ -166,7 +163,7 @@ class TestLBFGS_CPP_LJ(unittest.TestCase):
         res1 = lbfgs1.get_result()
 
         x2 = self.x0.copy()
-        x2[1] = 2.0
+        x2[1] = 2.
         lbfgs2 = LBFGS_CPP(x2, self.pot)
         H0 = lbfgs2.get_result()["H0"]
         lbfgs2.run()

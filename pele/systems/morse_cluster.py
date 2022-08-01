@@ -1,10 +1,9 @@
 from __future__ import absolute_import
-
-import tempfile
 from builtins import range
+import tempfile
 
-from pele.potentials import Morse
 from pele.systems import AtomicCluster
+from pele.potentials import Morse
 from pele.utils.xyz import write_xyz
 
 __all__ = ["MorseCluster"]
@@ -13,17 +12,17 @@ __all__ = ["MorseCluster"]
 class MorseCluster(AtomicCluster):
     """
     define the System class for a Morse cluster cluster
-
+    
     Parameters
     ----------
-    natoms : int
-
+    natoms : int 
+    
     See Also
     --------
     BaseSystem, AtomicCluster
     """
 
-    def __init__(self, natoms, rho=2.0, r0=1.0, A=1.0, rcut=None):
+    def __init__(self, natoms, rho=2., r0=1., A=1., rcut=None):
         super(MorseCluster, self).__init__()
         self.natoms = natoms
         self.rho = rho
@@ -36,14 +35,13 @@ class MorseCluster(AtomicCluster):
         self.params.gui.basinhopping_nsteps = 100
 
     def get_system_properties(self):
-        return dict(
-            natoms=int(self.natoms),
-            potential="Morse cluster",
-            rho=float(self.rho),
-            r0=float(self.r0),
-            A=float(self.A),
-            rcut=self.rcut,
-        )
+        return dict(natoms=int(self.natoms),
+                    potential="Morse cluster",
+                    rho=float(self.rho),
+                    r0=float(self.r0),
+                    A=float(self.A),
+                    rcut=self.rcut)
+
 
     def get_permlist(self):
         return [list(range(self.natoms))]
@@ -58,26 +56,23 @@ class MorseCluster(AtomicCluster):
     def draw(self, coordslinear, index, subtract_com=True):  # pragma: no cover
         """
         tell the gui how to represent your system using openGL objects
-
+        
         Parameters
         ----------
         coords : array
         index : int
             we can have more than one molecule on the screen at one time.  index tells
             which one to draw.  They are viewed at the same time, so they should be
-            visually distinct, e.g. different colors.  accepted values are 1 or 2
+            visually distinct, e.g. different colors.  accepted values are 1 or 2        
         """
         from ._opengl_tools import draw_atomic_single_atomtype
-
-        draw_atomic_single_atomtype(
-            coordslinear, index, subtract_com=subtract_com, radius=0.5 * self.r0
-        )
+        draw_atomic_single_atomtype(coordslinear, index, subtract_com=subtract_com, radius=0.5*self.r0)
 
     def load_coords_pymol(self, coordslist, oname, index=1):  # pragma: no cover
         """load the coords into pymol
-
+        
         the new object must be named oname so we can manipulate it later
-
+                        
         Parameters
         ----------
         coordslist : list of arrays
@@ -88,11 +83,11 @@ class MorseCluster(AtomicCluster):
             we can have more than one molecule on the screen at one time.  index tells
             which one to draw.  They are viewed at the same time, so should be
             visually distinct, e.g. different colors.  accepted values are 1 or 2
-
+        
         Notes
         -----
         the implementation here is a bit hacky.  we create a temporary xyz file from coords
-        and load the molecule in pymol from this file.
+        and load the molecule in pymol from this file.  
         """
         # pymol is imported here so you can do, e.g. basinhopping without installing pymol
         import pymol
@@ -133,7 +128,6 @@ class MorseCluster(AtomicCluster):
 # only for testing below here
 #
 
-
 def run():  # pragma: no cover
     # create the system object
     sys = MorseCluster(15)
@@ -157,7 +151,7 @@ def rungui():  # pragma: no cover
 
     natoms = 17
     # system = MorseCluster(natoms, rho=1.6047, r0=2.8970, A=0.7102)
-    system = MorseCluster(natoms, rho=3.0, r0=1.0, A=1.0)
+    system = MorseCluster(natoms, rho=3., r0=1., A=1.)
     db = system.create_database()
     run_gui(system, db)
 

@@ -1,14 +1,12 @@
 from __future__ import absolute_import
-
-import logging
-import unittest
 from builtins import range
+import unittest
+import logging
 
 import numpy as np
 
-from pele.optimize._quench import lbfgs_cpp
 from pele.potentials import _wca_cpp
-
+from pele.optimize._quench import lbfgs_cpp
 from . import _base_test
 
 
@@ -50,7 +48,7 @@ class TestWCA_CPP_NeighborList(_base_test._BaseTest):
         nlist = [[i, j] for i in range(self.natoms) for j in range(i + 1, self.natoms)]
         nlist = np.array(nlist, dtype=np.int64).reshape(-1)
         self.pot = _wca_cpp.WCANeighborList(nlist)
-        self.xrandom = np.random.uniform(-1, 1, [3 * self.natoms]) * 5.0
+        self.xrandom = np.random.uniform(-1, 1, [3 * self.natoms]) * 5.
         xyz = minimize(self.xrandom, self.pot)
         self.xmin = xyz[0].reshape(-1).copy()
         self.Emin = float(xyz[1])
@@ -61,49 +59,14 @@ class TestWCA_CPP_AtomList(_base_test._TestConfiguration):
         self.natoms = 13
         atoms = np.array(list(range(self.natoms - 1)))
         self.pot = _wca_cpp.WCAAtomList(atoms)
-        self.x0 = np.array(
-            [
-                -0.4225717,
-                1.99835681,
-                -0.76517552,
-                0.59082277,
-                -0.84699246,
-                -0.76256685,
-                1.57673137,
-                -1.21902228,
-                1.27521222,
-                -0.50325388,
-                -1.69997349,
-                0.65583764,
-                1.32327954,
-                -1.81756898,
-                1.57247512,
-                -1.03150491,
-                1.41521019,
-                0.55743455,
-                1.66775241,
-                1.60385959,
-                -0.50645429,
-                0.71341477,
-                -0.41636407,
-                1.36314406,
-                -0.39649335,
-                -0.64088725,
-                0.27695302,
-                -0.36016137,
-                1.29213068,
-                0.92494101,
-                0.37140092,
-                -1.61146783,
-                1.75448354,
-                0.96222954,
-                -0.06410995,
-                -0.32505948,
-                1.21724737,
-                -1.56051696,
-                -1.36116059,
-            ]
-        )
+        self.x0 = np.array([-0.4225717, 1.99835681, -0.76517552, 0.59082277, -0.84699246,
+                            -0.76256685, 1.57673137, -1.21902228, 1.27521222, -0.50325388,
+                            -1.69997349, 0.65583764, 1.32327954, -1.81756898, 1.57247512,
+                            -1.03150491, 1.41521019, 0.55743455, 1.66775241, 1.60385959,
+                            -0.50645429, 0.71341477, -0.41636407, 1.36314406, -0.39649335,
+                            -0.64088725, 0.27695302, -0.36016137, 1.29213068, 0.92494101,
+                            0.37140092, -1.61146783, 1.75448354, 0.96222954, -0.06410995,
+                            -0.32505948, 1.21724737, -1.56051696, -1.36116059])
         self.e0 = 266.7260923712355
 
     def test_grad_is_zero(self):
@@ -115,5 +78,5 @@ class TestWCA_CPP_AtomList(_base_test._TestConfiguration):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename="lj_cpp.log", level=logging.DEBUG)
+    logging.basicConfig(filename='lj_cpp.log', level=logging.DEBUG)
     unittest.main()

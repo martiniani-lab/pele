@@ -7,19 +7,20 @@ We will do the connections for a cluster of 38 Lennard-Jones atoms.
 We will load two sets of coordinates from a file, minimize them, and try to find
 a connected set of minima and transition states betweeen them.
 """
-from __future__ import division, print_function
+from __future__ import division
+from __future__ import print_function
 
-from builtins import range, str
-
-import numpy as np
+from builtins import str
+from builtins import range
 from past.utils import old_div
+import numpy as np
 
+from pele.potentials.lj import LJ
+from pele.optimize import lbfgs_py
 from pele.landscape import DoubleEndedConnect, smooth_path
 from pele.mindist import MinPermDistAtomicCluster
-from pele.optimize import lbfgs_py
-from pele.potentials.lj import LJ
-from pele.storage import Database
 from pele.transition_states import orthogopt
+from pele.storage import Database
 from pele.utils.xyz import write_xyz
 
 np.random.seed(0)
@@ -27,7 +28,7 @@ np.random.seed(0)
 # set up the potential
 pot = LJ()
 
-# import the starting and ending points and quench them,
+# import the starting and ending points and quench them, 
 coords1 = np.genfromtxt("coords.A")
 coords2 = np.genfromtxt("coords.B")
 res1 = lbfgs_py(coords1.reshape(-1), pot)
@@ -45,6 +46,8 @@ database.addMinimum(E1, coords1)
 database.addMinimum(E2, coords2)
 min1 = database.minima()[0]
 min2 = database.minima()[1]
+
+
 
 
 # set up the structural alignment routine.
@@ -75,7 +78,7 @@ if True:
     NEBquenchParams["iprint"] = 100
 
     NEBparams = dict()
-    NEBparams["k"] = 5.0
+    NEBparams["k"] = 5.
     NEBparams["image_density"] = 15
     NEBparams["NEBquenchParams"] = NEBquenchParams
 
@@ -83,16 +86,11 @@ if True:
     local_connect_params["tsSearchParams"] = tsSearchParams
     local_connect_params["NEBparams"] = NEBparams
 
-myconnect = DoubleEndedConnect(
-    min1,
-    min2,
-    pot,
-    mindist,
-    database,
-    local_connect_params=local_connect_params,
+myconnect = DoubleEndedConnect(min1, min2, pot, mindist, database,
+                               local_connect_params=local_connect_params,
 )
 
-if myconnect.graph.areConnected(min1, min2):
+if (myconnect.graph.areConnected(min1, min2)):
     print("ALERT: The minima are already connected in the database file", dbfile)
     print("       Delete it for a fresh run.")
 
@@ -101,7 +99,8 @@ print("")
 print("found a path!")
 
 
-# the path is now saved in the database.  Lets retrieve it and
+
+# the path is now saved in the database.  Lets retrieve it and 
 # print it in a more visual format
 # now retrieve the path for printing
 print("")

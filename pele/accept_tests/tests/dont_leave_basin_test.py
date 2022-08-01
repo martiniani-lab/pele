@@ -1,12 +1,9 @@
 from __future__ import division
-
-import random
-import unittest
-
 from past.utils import old_div
-
-import pele.accept_tests.dont_leave_basin as dlb
+import unittest
+import random
 import pele.exceptions as exc
+import pele.accept_tests.dont_leave_basin as dlb
 
 
 class TestDontLeaveBasinTest(unittest.TestCase):
@@ -22,7 +19,8 @@ class TestDontLeaveBasinTest(unittest.TestCase):
     def test_default(self):
         # test that the default DontLeaveBasin object has the same Ecriterion
         # as dlb_e_4
-        self.assertEquals(self.dlb_e_4.Ecriterion, self.dlb_default.Ecriterion)
+        self.assertEquals(self.dlb_e_4.Ecriterion,
+                          self.dlb_default.Ecriterion)
 
     def test_acceptPosPos(self):
         # test that cases when both energies are positive and the difference is
@@ -79,7 +77,7 @@ class TestDontLeaveBasinTest(unittest.TestCase):
         self.assertTrue(self.dlb_e_6.acceptReject(Enew, Eold))
 
     def test_acceptZeroPos(self):
-        # test that cases when one energy is zero and the other is positive
+        # test that cases when one energy is zero and the other is positive 
         # and under the threshold are accepted
         Eold = 0
         Enew = 100.0 * random.random()
@@ -96,7 +94,7 @@ class TestDontLeaveBasinTest(unittest.TestCase):
         self.assertTrue(self.dlb_e_6.acceptReject(Enew, Eold))
 
     def test_acceptZeroNeg(self):
-        # test that cases when one energy is zero and the other is negative
+        # test that cases when one energy is zero and the other is negative 
         # and under the threshold are accepted
         Eold = 0
         Enew = -100.0 * random.random()
@@ -167,7 +165,7 @@ class TestDontLeaveBasinTest(unittest.TestCase):
         self.assertTrue(not self.dlb_e_6.acceptReject(Enew, Eold))
 
     def test_rejectZeroPos(self):
-        # test that cases when one energy is zero and the other is positive
+        # test that cases when one energy is zero and the other is positive 
         # and over the threshold are rejected
         Eold = 0
         Enew = 100.0 / random.random()
@@ -184,7 +182,7 @@ class TestDontLeaveBasinTest(unittest.TestCase):
         self.assertTrue(not self.dlb_e_6.acceptReject(Enew, Eold))
 
     def test_rejectZeroNeg(self):
-        # test that cases when one energy is zero and the other is negative
+        # test that cases when one energy is zero and the other is negative 
         # and over the threshold are rejected
         Eold = 0
         Enew = old_div(-100.0, random.random())
@@ -209,13 +207,13 @@ class TestDontLeaveBasinTest(unittest.TestCase):
         self.assertTrue(not dlb_zero.acceptReject(Eold, Enew))
 
     def test_negativeCriterionException(self):
-        # test that trying to use a negative energy criterion raises the
-        # SignError exception
+        # test that trying to use a negative energy criterion raises the 
+        # SignError exception 
         self.assertRaises(exc.SignError, dlb.DontLeaveBasin, -100.0)
         self.assertRaises(exc.SignError, dlb.DontLeaveBasin, -1.0)
         self.assertRaises(exc.SignError, dlb.DontLeaveBasin, -1.0e-4)
         self.assertRaises(exc.SignError, dlb.DontLeaveBasin, -1.0e-6)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

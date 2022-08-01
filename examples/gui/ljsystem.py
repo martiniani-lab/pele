@@ -2,8 +2,8 @@ import sys
 
 from PyQt4 import QtGui
 
-from pele.gui import run_gui
 from pele.systems import LJCluster
+from pele.gui import run_gui
 
 """
 start a gui for a lennard jones cluster.

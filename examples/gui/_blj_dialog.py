@@ -8,7 +8,6 @@
 # WARNING! All changes made in this file will be lost!
 
 from builtins import object
-
 from PyQt4 import QtCore, QtGui
 
 try:
@@ -16,14 +15,11 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
-
 class Ui_DialogLJSetup(object):
     def setupUi(self, DialogLJSetup):
         DialogLJSetup.setObjectName(_fromUtf8("DialogLJSetup"))
         DialogLJSetup.resize(351, 348)
-        sizePolicy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
-        )
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(DialogLJSetup.sizePolicy().hasHeightForWidth())
@@ -32,9 +28,7 @@ class Ui_DialogLJSetup(object):
         self.buttonBox = QtGui.QDialogButtonBox(DialogLJSetup)
         self.buttonBox.setGeometry(QtCore.QRect(30, 280, 301, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(
-            QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok
-        )
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
         self.gridLayoutWidget = QtGui.QWidget(DialogLJSetup)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(20, 20, 301, 241))
@@ -81,88 +75,23 @@ class Ui_DialogLJSetup(object):
         self.gridLayout.addWidget(self.label_6, 6, 0, 1, 1)
 
         self.retranslateUi(DialogLJSetup)
-        QtCore.QObject.connect(
-            self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), DialogLJSetup.accept
-        )
-        QtCore.QObject.connect(
-            self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), DialogLJSetup.reject
-        )
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), DialogLJSetup.accept)
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), DialogLJSetup.reject)
         QtCore.QMetaObject.connectSlotsByName(DialogLJSetup)
 
     def retranslateUi(self, DialogLJSetup):
-        DialogLJSetup.setWindowTitle(
-            QtGui.QApplication.translate(
-                "DialogLJSetup",
-                "Create binary Lennard-Jones system",
-                None,
-                QtGui.QApplication.UnicodeUTF8,
-            )
-        )
-        self.lineEdit_sigBB.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "0.88", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label_2.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "number type A", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.lineEdit_natoms.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "13", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.lineEdit_ntypeA.setInputMask(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "999; ", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.lineEdit_ntypeA.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "10", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup",
-                "Number of particles",
-                None,
-                QtGui.QApplication.UnicodeUTF8,
-            )
-        )
-        self.lineEdit_epsAB.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "1.5", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.lineEdit_sigAB.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "0.8", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.lineEdit_epsBB.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "0.5", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label_3.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "sigma AB", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label_4.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "eps AB", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label_5.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "sigma BB", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label_6.setText(
-            QtGui.QApplication.translate(
-                "DialogLJSetup", "eps BB", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
+        DialogLJSetup.setWindowTitle(QtGui.QApplication.translate("DialogLJSetup", "Create binary Lennard-Jones system", None, QtGui.QApplication.UnicodeUTF8))
+        self.lineEdit_sigBB.setText(QtGui.QApplication.translate("DialogLJSetup", "0.88", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("DialogLJSetup", "number type A", None, QtGui.QApplication.UnicodeUTF8))
+        self.lineEdit_natoms.setText(QtGui.QApplication.translate("DialogLJSetup", "13", None, QtGui.QApplication.UnicodeUTF8))
+        self.lineEdit_ntypeA.setInputMask(QtGui.QApplication.translate("DialogLJSetup", "999; ", None, QtGui.QApplication.UnicodeUTF8))
+        self.lineEdit_ntypeA.setText(QtGui.QApplication.translate("DialogLJSetup", "10", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("DialogLJSetup", "Number of particles", None, QtGui.QApplication.UnicodeUTF8))
+        self.lineEdit_epsAB.setText(QtGui.QApplication.translate("DialogLJSetup", "1.5", None, QtGui.QApplication.UnicodeUTF8))
+        self.lineEdit_sigAB.setText(QtGui.QApplication.translate("DialogLJSetup", "0.8", None, QtGui.QApplication.UnicodeUTF8))
+        self.lineEdit_epsBB.setText(QtGui.QApplication.translate("DialogLJSetup", "0.5", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(QtGui.QApplication.translate("DialogLJSetup", "sigma AB", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_4.setText(QtGui.QApplication.translate("DialogLJSetup", "eps AB", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_5.setText(QtGui.QApplication.translate("DialogLJSetup", "sigma BB", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_6.setText(QtGui.QApplication.translate("DialogLJSetup", "eps BB", None, QtGui.QApplication.UnicodeUTF8))
+

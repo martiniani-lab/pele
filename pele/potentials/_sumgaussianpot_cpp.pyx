@@ -2,16 +2,15 @@
 # distutils: language = C++
 """
 import numpy as np
-
 cimport numpy as np
-
-from ctypes import c_double as double
 from ctypes import c_size_t as size_t
+from ctypes import c_double as double
 
 cimport pele.potentials._pele as _pele
-from pele.potentials._pele cimport (Array, BasePotential, array_wrap_np,
-                                    shared_ptr)
-
+from pele.potentials._pele cimport array_wrap_np
+from pele.potentials._pele cimport Array
+from pele.potentials._pele cimport shared_ptr
+from pele.potentials._pele cimport BasePotential
 
 cdef extern from "pele/gaussianpot.hpp" namespace "pele":
     cdef cppclass cppGaussianPot "pele::GaussianPot":

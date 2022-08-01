@@ -3,21 +3,16 @@ Created on Jun 6, 2012
 
 @author: vr274
 """
-from __future__ import absolute_import, division
+from __future__ import division
+from __future__ import absolute_import
 
-import numpy as np
 from past.utils import old_div
-
+import numpy as np
+from .generic import TakestepSlice, TakestepInterface
 from pele.utils import rotations
 
-from .generic import TakestepInterface, TakestepSlice
-
-__all__ = [
-    "RandomDisplacement",
-    "UniformDisplacement",
-    "RotationalDisplacement",
-    "RandomCluster",
-]
+__all__ = ["RandomDisplacement", "UniformDisplacement",
+           "RotationalDisplacement", "RandomCluster"]
 
 
 class RandomDisplacement(TakestepSlice):
@@ -37,9 +32,7 @@ class RandomDisplacement(TakestepSlice):
         TakestepSlice.__init__(self, stepsize=stepsize)
 
     def takeStep(self, coords, **kwargs):
-        coords[self.srange] += np.random.uniform(
-            low=-self.stepsize, high=self.stepsize, size=coords[self.srange].shape
-        )
+        coords[self.srange] += np.random.uniform(low=-self.stepsize, high=self.stepsize, size=coords[self.srange].shape)
 
 
 class UniformDisplacement(TakestepSlice):
@@ -73,10 +66,12 @@ class RotationalDisplacement(TakestepSlice):
 
 
 class RandomCluster(TakestepInterface):
-    """Generate a random configuration"""
+    """Generate a random configuration
+    """
 
     def __init__(self, volume=1.0):
         self.volume = volume
 
     def takeStep(self, coords, **kwargs):
-        coords[:] = np.random.random(coords.shape) * (self.volume ** (1.0 / 3.0))
+        coords[:] = np.random.random(coords.shape) * (self.volume ** (1. / 3.))
+    

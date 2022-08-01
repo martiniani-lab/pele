@@ -12,7 +12,6 @@ from pele.potentials._pythonpotential import as_cpp_potential
 
 from libcpp cimport bool
 
-
 cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
     """This class is the python interface for the c++ MODIFIED_FIRE implementation
     """  

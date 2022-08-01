@@ -8,7 +8,6 @@
 # WARNING! All changes made in this file will be lost!
 
 from builtins import object
-
 from PyQt4 import QtCore, QtGui
 
 try:
@@ -16,19 +15,14 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
-
 class Ui_show3d_with_slider(object):
     def setupUi(self, show3d_with_slider):
         show3d_with_slider.setObjectName(_fromUtf8("show3d_with_slider"))
         show3d_with_slider.resize(658, 587)
-        sizePolicy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding
-        )
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            show3d_with_slider.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy.setHeightForWidth(show3d_with_slider.sizePolicy().hasHeightForWidth())
         show3d_with_slider.setSizePolicy(sizePolicy)
         show3d_with_slider.setMinimumSize(QtCore.QSize(200, 200))
         self.gridLayout = QtGui.QGridLayout(show3d_with_slider)
@@ -42,9 +36,7 @@ class Ui_show3d_with_slider(object):
         self.horizontalLayout.addWidget(self.btn_animate)
         self.label = QtGui.QLabel(show3d_with_slider)
         self.label.setEnabled(True)
-        sizePolicy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred
-        )
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
@@ -54,9 +46,7 @@ class Ui_show3d_with_slider(object):
         self.horizontalLayout.addWidget(self.label)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.oglwgt = Show3D(show3d_with_slider)
-        sizePolicy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding
-        )
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.oglwgt.sizePolicy().hasHeightForWidth())
@@ -64,9 +54,7 @@ class Ui_show3d_with_slider(object):
         self.oglwgt.setObjectName(_fromUtf8("oglwgt"))
         self.verticalLayout.addWidget(self.oglwgt)
         self.slider = QtGui.QSlider(show3d_with_slider)
-        sizePolicy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred
-        )
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.slider.sizePolicy().hasHeightForWidth())
@@ -80,16 +68,7 @@ class Ui_show3d_with_slider(object):
         QtCore.QMetaObject.connectSlotsByName(show3d_with_slider)
 
     def retranslateUi(self, show3d_with_slider):
-        show3d_with_slider.setWindowTitle(
-            QtGui.QApplication.translate(
-                "show3d_with_slider", "Form", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.btn_animate.setText(
-            QtGui.QApplication.translate(
-                "show3d_with_slider", "animate", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-
+        show3d_with_slider.setWindowTitle(QtGui.QApplication.translate("show3d_with_slider", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_animate.setText(QtGui.QApplication.translate("show3d_with_slider", "animate", None, QtGui.QApplication.UnicodeUTF8))
 
 from pele.gui.show3d import Show3D

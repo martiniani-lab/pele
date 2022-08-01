@@ -4,11 +4,11 @@
 from ctypes import c_size_t as size_t
 
 cimport numpy as np
-
 import numpy as np
 
+from pele.potentials._pele cimport shared_ptr, array_wrap_np
 cimport pele.potentials._pele as _pele
-from pele.potentials._pele cimport BasePotential, array_wrap_np, shared_ptr
+from pele.potentials._pele cimport BasePotential
 
 
 # define the external c++ classes

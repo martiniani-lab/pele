@@ -1,14 +1,14 @@
 from __future__ import print_function
-
 import unittest
 
-import matplotlib.pyplot as plt
-import numpy as np
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+from pele.transition_states import FindTransitionState, findTransitionState
 from pele.potentials import BasePotential
 from pele.potentials.tests import _base_test
 from pele.potentials.tests._base_test import assert_arrays_almost_equal
-from pele.transition_states import FindTransitionState, findTransitionState
 
 
 class SimpleTSPot(BasePotential):
@@ -45,12 +45,9 @@ class HarmonicPot(BasePotential):
 
 
 def plot_pot():
-    x, y = np.meshgrid(np.arange(-2, 2, 0.1), np.arange(-2, 2, 0.1))
+    x, y = np.meshgrid(np.arange(-2, 2, .1), np.arange(-2, 2, .1))
     pot = SimpleTSPot()
-    energies = [
-        pot.getEnergy(np.array([xi, yi]))
-        for xi, yi in zip(x.reshape(-1), y.reshape(-1))
-    ]
+    energies = [pot.getEnergy(np.array([xi, yi])) for xi, yi in zip(x.reshape(-1), y.reshape(-1))]
     energies = np.array(energies).reshape(x.shape)
     plt.contourf(x, y, energies)
     plt.show()
@@ -59,14 +56,14 @@ def plot_pot():
 class TestSimpleTSPot(_base_test._TestConfiguration):
     def setUp(self):
         self.pot = SimpleTSPot()
-        self.x0 = np.array([0.1, 1])
+        self.x0 = np.array([.1, 1])
         self.e0 = -0.27335478531821539
 
 
 class TestHarmonicPot(_base_test._TestConfiguration):
     def setUp(self):
         self.pot = HarmonicPot()
-        self.x0 = np.array([0.1, 1])
+        self.x0 = np.array([.1, 1])
         self.e0 = 2.11
 
 
@@ -77,20 +74,17 @@ def print_event(coords=None, **kwargs):
 class TestFindTransitionStateSimplePot(unittest.TestCase):
     def setUp(self):
         self.pot = SimpleTSPot()
-        self.x0 = np.array([0.1, 0.1])
+        self.x0 = np.array([.1, .1])
         self.xts = np.zeros(self.x0.size)
         self.ets = self.pot.getEnergy(self.xts)
 
     def test1(self):
         # plot_pot()
-        opt = FindTransitionState(
-            self.x0,
-            self.pot,
-            orthogZeroEigs=None,
-            # iprint=1,
-            # verbosity=10, event=print_event,
-            # tol=1e-3,
-            # lowestEigenvectorQuenchParams=dict(iprint=1, events=[print_event])
+        opt = FindTransitionState(self.x0, self.pot, orthogZeroEigs=None,
+                                  # iprint=1,
+                                  # verbosity=10, event=print_event,
+                                  # tol=1e-3,
+                                  # lowestEigenvectorQuenchParams=dict(iprint=1, events=[print_event])
         )
         ret = opt.run()
         self.assertTrue(ret.success)
@@ -110,28 +104,22 @@ class TestFindTransitionStateSimplePot(unittest.TestCase):
         def event(**kwargs):
             self.called = True
 
-        opt = FindTransitionState(
-            self.x0,
-            self.pot,
-            orthogZeroEigs=None,
-            tangentSpaceQuenchParams=dict(maxstep=1.0),
-            event=event,
-        )
+        opt = FindTransitionState(self.x0, self.pot, orthogZeroEigs=None,
+                                  tangentSpaceQuenchParams=dict(maxstep=1.),
+                                  event=event)
         ret = opt.run()
         self.assertTrue(ret.success)
         self.assertTrue(self.called)
 
     def test_from_near_minimum(self):
         print("\n\nstarting from a minimum")
-        x0 = np.array([0.6, 0.1])
-        opt = FindTransitionState(
-            x0,
-            self.pot,
-            orthogZeroEigs=None,
-            iprint=1,
-            verbosity=10,  # event=print_event,
-            # tol=1e-3,
-            # lowestEigenvectorQuenchParams=dict(iprint=1, events=[print_event])
+        x0 = np.array([.6, .1])
+        opt = FindTransitionState(x0, self.pot, orthogZeroEigs=None,
+                                  iprint=1,
+                                  verbosity=10,  # event=print_event,
+                                  # tol=1e-3,
+                                  # lowestEigenvectorQuenchParams=dict(iprint=1, events=[print_event])
+
         )
         ret = opt.run()
         print(ret)
@@ -142,16 +130,13 @@ class TestFindTransitionStateSimplePot(unittest.TestCase):
         print("\n\nstarting from a minimum demand")
         # demand that the eigenvalue is negative initially.
         # this should fail right away
-        x0 = np.array([0.6, 0.1])
-        opt = FindTransitionState(
-            x0,
-            self.pot,
-            orthogZeroEigs=None,
-            demand_initial_negative_vec=True,
-            iprint=1,
-            verbosity=10,  # event=print_event,
-            # tol=1e-3,
-            # lowestEigenvectorQuenchParams=dict(iprint=1, events=[print_event])
+        x0 = np.array([.6, .1])
+        opt = FindTransitionState(x0, self.pot, orthogZeroEigs=None,
+                                  demand_initial_negative_vec=True,
+                                  iprint=1,
+                                  verbosity=10,  # event=print_event,
+                                  # tol=1e-3,
+                                  # lowestEigenvectorQuenchParams=dict(iprint=1, events=[print_event])
         )
         ret = opt.run()
         print(ret)
@@ -163,14 +148,11 @@ class TestFindTS_BadPotential(unittest.TestCase):
     def test1(self):
         print("\n\ntesting find ts with harmonic potential")
         pot = HarmonicPot()
-        x0 = np.array([0.2, 0])
-        opt = FindTransitionState(
-            x0,
-            pot,
-            orthogZeroEigs=None,
-            iprint=1,
-            verbosity=10,  # event=print_event,
-            hessian_diagonalization=True,
+        x0 = np.array([.2, 0])
+        opt = FindTransitionState(x0, pot, orthogZeroEigs=None,
+                                  iprint=1,
+                                  verbosity=10,  # event=print_event,
+                                  hessian_diagonalization=True
         )
         ret = opt.run()
         self.assertFalse(ret.success)

@@ -1,13 +1,13 @@
 from __future__ import print_function
-
-import unittest
 from builtins import range
+import unittest
+
 
 import numpy as np
 
 from pele.optimize import LBFGS, MYLBFGS
-from pele.potentials import BasePotential
 from pele.systems import LJCluster
+from pele.potentials import BasePotential
 
 
 class DiscontinuousHarmonic(BasePotential):
@@ -19,7 +19,7 @@ class DiscontinuousHarmonic(BasePotential):
 
     def getEnergyGradient(self, x):
         e = self.getEnergy(x)
-        g = 2.0 * x
+        g = 2. * x
         return e, g
 
 
@@ -131,7 +131,7 @@ class TestLBFGS_discontinous(unittest.TestCase):
         pot = DiscontinuousHarmonic()
         x0 = np.array([-10, 1])
         opt = LBFGS(x0, pot, debug=True)
-        print("this runnnns")
+        print('this runnnns')
         res = opt.run()
         self.assertFalse(res.success)
 
@@ -153,13 +153,7 @@ class TestLBFGS_wolfe(unittest.TestCase):
         ret_nowolfe = minimizer.run()
         self.assertTrue(ret_nowolfe.success)
 
-        print(
-            "nfev wolfe, nowolfe",
-            ret.nfev,
-            ret_nowolfe.nfev,
-            ret.energy,
-            ret_nowolfe.energy,
-        )
+        print("nfev wolfe, nowolfe", ret.nfev, ret_nowolfe.nfev, ret.energy, ret_nowolfe.energy)
 
 
 class TestLBFGS_armijo(unittest.TestCase):
@@ -180,13 +174,7 @@ class TestLBFGS_armijo(unittest.TestCase):
 
         self.assertAlmostEqual(ret.energy, ret_nowolfe.energy, delta=1e-3)
 
-        print(
-            "nfev armijo, noarmijo",
-            ret.nfev,
-            ret_nowolfe.nfev,
-            ret.energy,
-            ret_nowolfe.energy,
-        )
+        print("nfev armijo, noarmijo", ret.nfev, ret_nowolfe.nfev, ret.energy, ret_nowolfe.energy)
 
 
 class TestLBFGSCython(unittest.TestCase):
@@ -228,3 +216,6 @@ class TestLBFGSFortran(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+        
+        
+        

@@ -8,7 +8,6 @@ cimport numpy as np
 cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport shared_ptr
 
-
 # use external c++ class
 cdef extern from "pele/morse.hpp" namespace "pele":
     cdef cppclass  cMorse "pele::Morse":

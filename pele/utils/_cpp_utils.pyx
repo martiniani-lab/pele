@@ -7,7 +7,6 @@ import numpy as np
 
 cimport numpy as np
 
-
 # cython has no support for integer template argument.  This is a hack to get around it
 # https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs
 # Basically you fool cython into thinking INT2 is the type integer,

@@ -5,11 +5,11 @@ import numpy as np
 from numpy.core.fromnumeric import _compress_dispatcher, ndim
 
 cimport numpy as np
-from libcpp cimport bool
 
 cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport shared_ptr
 
+from libcpp cimport bool
 
 # cython has no support for integer template argument.  This is a hack to get around it
 # https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs

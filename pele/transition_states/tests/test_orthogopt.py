@@ -2,9 +2,8 @@ import unittest
 
 import numpy as np
 
-from pele.transition_states._orthogopt import (orthogopt, orthogopt_slow,
-                                               orthogopt_translation_only)
-from pele.transition_states._zeroev import zeroEV_rotation, zeroEV_translation
+from pele.transition_states._orthogopt import orthogopt, orthogopt_slow, orthogopt_translation_only
+from pele.transition_states._zeroev import zeroEV_translation, zeroEV_rotation
 
 
 class TestOrthogopt(unittest.TestCase):
@@ -23,7 +22,7 @@ class TestOrthogopt(unittest.TestCase):
         zeroev = zeroEV_cluster(coords)
         for u in zeroev:
             # print np.dot(u, vec)
-            self.assertAlmostEqual(0.0, np.dot(u, vec), 5)
+            self.assertAlmostEqual(0., np.dot(u, vec), 5)
 
     def test_slow(self):
         # test orthogopt_slow
@@ -40,7 +39,7 @@ class TestOrthogopt(unittest.TestCase):
         zeroev = zeroEV_cluster(coords)
         for u in zeroev:
             # print np.dot(u, vec)
-            self.assertAlmostEqual(0.0, np.dot(u, vec), 5)
+            self.assertAlmostEqual(0., np.dot(u, vec), 5)
 
     def test_translation_only(self):
         # test orthogopt with translations only
@@ -55,12 +54,12 @@ class TestOrthogopt(unittest.TestCase):
         zeroev = zeroEV_translation(coords)
         for u in zeroev:
             # print np.dot(u, vec)
-            self.assertAlmostEqual(0.0, np.dot(u, vec), 5)
+            self.assertAlmostEqual(0., np.dot(u, vec), 5)
 
         rotev = zeroEV_rotation(coords)
         for u in rotev:
             # print np.dot(u, vec)
-            self.assertNotAlmostEqual(0.0, np.dot(u, vec), 5)
+            self.assertNotAlmostEqual(0., np.dot(u, vec), 5)
 
 
 if __name__ == "__main__":

@@ -1,14 +1,14 @@
-from __future__ import absolute_import, print_function
-
-import sys
-from builtins import object, range
-
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
+from builtins import object
 import numpy as np
+from PyQt4.QtGui import QDialog, QApplication, QListWidgetItem
 from PyQt4 import QtCore
-from PyQt4.QtGui import QApplication, QDialog, QListWidgetItem
+import sys
 
-from pele.landscape.local_connect import _refineTS
 from pele.storage import Database
+from pele.landscape.local_connect import _refineTS
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -40,7 +40,7 @@ class ConnectExplorerDialog(QDialog):
         
         self.system = system
         self.app = app
-self.database = database
+#        self.database = database
         from . import connect_explorer_ui
 
         self.ui = connect_explorer_ui.Ui_Form()
@@ -210,11 +210,9 @@ def start():
     
     
 if __name__ == "__main__":
-    from OpenGL.GLUT import glutInit
-
     from pele.systems import LJCluster
-
     from .nebdlg import getNEB
+    from OpenGL.GLUT import glutInit
 
     app = QApplication(sys.argv)
     

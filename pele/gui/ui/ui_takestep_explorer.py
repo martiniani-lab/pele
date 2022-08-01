@@ -8,14 +8,12 @@
 # WARNING! All changes made in this file will be lost!
 
 from builtins import object
-
 from PyQt4 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     _fromUtf8 = lambda s: s
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -33,9 +31,7 @@ class Ui_MainWindow(object):
         self.label.setObjectName(_fromUtf8("label"))
         self.verticalLayout_2.addWidget(self.label)
         self.show3d = Show3DWithSlider(self.centralwidget)
-        sizePolicy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
-        )
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.show3d.sizePolicy().hasHeightForWidth())
@@ -47,9 +43,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.setContentsMargins(0, -1, -1, -1)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.label_2 = QtGui.QLabel(self.centralwidget)
-        sizePolicy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Preferred
-        )
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
@@ -89,44 +83,12 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(
-            QtGui.QApplication.translate(
-                "MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label_2.setText(
-            QtGui.QApplication.translate(
-                "MainWindow", "Energy (id)", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.toolBar.setWindowTitle(
-            QtGui.QApplication.translate(
-                "MainWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.actionDisplace.setText(
-            QtGui.QApplication.translate(
-                "MainWindow", "displace", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.actionQuench.setText(
-            QtGui.QApplication.translate(
-                "MainWindow", "quench", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.actionShow_path.setText(
-            QtGui.QApplication.translate(
-                "MainWindow", "show path", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.actionShow_path.setToolTip(
-            QtGui.QApplication.translate(
-                "MainWindow",
-                "display the quench trajectory",
-                None,
-                QtGui.QApplication.UnicodeUTF8,
-            )
-        )
-
+        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("MainWindow", "Energy (id)", None, QtGui.QApplication.UnicodeUTF8))
+        self.toolBar.setWindowTitle(QtGui.QApplication.translate("MainWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionDisplace.setText(QtGui.QApplication.translate("MainWindow", "displace", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionQuench.setText(QtGui.QApplication.translate("MainWindow", "quench", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionShow_path.setText(QtGui.QApplication.translate("MainWindow", "show path", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionShow_path.setToolTip(QtGui.QApplication.translate("MainWindow", "display the quench trajectory", None, QtGui.QApplication.UnicodeUTF8))
 
 from pele.gui.show3d_with_slider import Show3DWithSlider

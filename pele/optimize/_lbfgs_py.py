@@ -1,15 +1,15 @@
-from __future__ import absolute_import, division, print_function
-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
+from builtins import object
+from past.utils import old_div
+import numpy as np
 import logging
-from builtins import object, range
 from collections import namedtuple
 
-import numpy as np
-from past.utils import old_div
-
-from pele.optimize import Result
-
 from .optimization_exceptions import LineSearchError
+from pele.optimize import Result
 
 __all__ = ["LBFGS"]
 
@@ -91,28 +91,13 @@ class LBFGS(object):
 
     """
 
-    def __init__(
-        self,
-        X,
-        pot,
-        maxstep=0.1,
-        maxErise=1e-4,
-        M=4,
-        rel_energy=False,
-        H0=0.1,
-        events=None,
-        alternate_stop_criterion=None,
-        debug=False,
-        iprint=-1,
-        nsteps=10000,
-        tol=1e-5,
-        logger=None,
-        energy=None,
-        gradient=None,
-        armijo=False,
-        armijo_c=1e-4,
-        fortran=False,
-    ):
+    def __init__(self, X, pot, maxstep=0.1, maxErise=1e-4, M=4,
+                 rel_energy=False, H0=0.1, events=None,
+                 alternate_stop_criterion=None, debug=False,
+                 iprint=-1, nsteps=10000, tol=1e-5, logger=None,
+                 energy=None, gradient=None, armijo=False,
+                 armijo_c=1e-4,
+                 fortran=False):
         X = X.copy()
         self.X = X
         self.N = len(X)
@@ -131,14 +116,13 @@ class LBFGS(object):
         else:
             self.energy, self.G = self.pot.getEnergyGradient(self.X)
             self.funcalls += 1
-        self.rms = np.linalg.norm(self.G) / np.sqrt(self.N)
+        self.rms = np.linalg.norm(self.G)/np.sqrt(self.N)
 
         self.maxstep = maxstep
         self.maxErise = maxErise
         self.rel_energy = rel_energy  # use relative energy comparison for maxErise
         self.events = events  # a list of events to run during the optimization
-        if self.events is None:
-            self.events = []
+        if self.events is None: self.events = []
         self.iprint = iprint
         self.nsteps = nsteps
         self.tol = tol
@@ -158,19 +142,15 @@ class LBFGS(object):
         else:
             self.H0 = H0
         if self.H0 < 1e-10:
-            self.logger.warning(
-                "initial guess for inverse Hessian diagonal is negative or too small"
-                " %s %s",
-                self.H0,
-                "resetting it to 0.1",
-            )
+            self.logger.warning("initial guess for inverse Hessian diagonal is negative or too small %s %s",
+                                self.H0, "resetting it to 0.1")
             self.H0 = 0.1
         self.rho = np.zeros(M)
         self.k = 0
 
         self.s[0, :] = self.X
         self.y[0, :] = self.G
-        self.rho[0] = 0.0  # 1. / np.dot(X,G)
+        self.rho[0] = 0.  # 1. / np.dot(X,G)
 
         self.dXold = np.zeros(self.X.size)
         self.dGold = np.zeros(self.X.size)
@@ -185,16 +165,10 @@ class LBFGS(object):
     def get_state(self):
         """return the state of the LBFGS memory"""
         State = namedtuple("State", "s y rho k H0 dXold dGold have_dXold")
-        state = State(
-            s=self.s.copy(),
-            y=self.y.copy(),
-            rho=self.rho.copy(),
-            k=self.k,
-            H0=self.H0,
-            dXold=self.dXold.copy(),
-            dGold=self.dGold.copy(),
-            have_dXold=self._have_dXold,
-        )
+        state = State(s=self.s.copy(), y=self.y.copy(),
+                      rho=self.rho.copy(), k=self.k, H0=self.H0,
+                      dXold=self.dXold.copy(), dGold=self.dGold.copy(),
+                      have_dXold=self._have_dXold)
         return state
 
     def set_state(self, state):
@@ -222,7 +196,7 @@ class LBFGS(object):
         self.X = X.copy()
         self.energy = float(E)
         self.G = G.copy()
-        self.rms = np.linalg.norm(self.G) / np.sqrt(self.G.size)
+        self.rms = np.linalg.norm(self.G)/ np.sqrt(self.G.size)
 
     def _add_step_to_memory(self, dX, dG):
         """
@@ -241,10 +215,10 @@ class LBFGS(object):
 
         # the local curvature along direction s is np.dot(y, s) / norm(s)
         YS = np.dot(dX, dG)
-        if YS == 0.0:
+        if YS == 0.:
             self.logger.warning("resetting YS to 1 in lbfgs %s", YS)
-            YS = 1.0
-        self.rho[klocal] = 1.0 / YS
+            YS = 1.
+        self.rho[klocal] = 1. / YS
 
         # update the approximation for the diagonal inverse hessian
         # scale H0 according to
@@ -258,10 +232,10 @@ class LBFGS(object):
         # and why BFGS (which can't have this step) gives nonsensical results without
         # a linesearch.
         YY = np.dot(dG, dG)
-        if YY == 0.0:
+        if YY == 0.:
             self.logger.warning("warning: resetting YY to 1 in lbfgs %s", YY)
-            YY = 1.0
-        self.H0 = YS / YY
+            YY = 1.
+        self.H0 = YS/YY
 
         # increment k
         self.k += 1
@@ -269,20 +243,19 @@ class LBFGS(object):
     def _get_LBFGS_step_cython(self, G):
         from . import _cython_lbfgs
 
-        return _cython_lbfgs._compute_LBFGS_step(
-            G, self.s, self.y, self.rho, self.k, self.H0
-        )
+        return _cython_lbfgs._compute_LBFGS_step(G, self.s, self.y, self.rho,
+                                                 self.k, self.H0)
 
     def _get_LBFGS_step_fortran(self, G):
         from . import mylbfgs_updatestep
 
-        ret = mylbfgs_updatestep.lbfgs_get_step_wrapper(
-            G, self.s.reshape(-1), self.y.reshape(-1), self.rho, self.k, self.H0
-        )
+        ret = mylbfgs_updatestep.lbfgs_get_step_wrapper(G, self.s.reshape(-1), self.y.reshape(-1), self.rho,
+                                                        self.k, self.H0)
         return ret
 
     def _get_LBFGS_step(self, G):
-        """use the LBFGS algorithm to compute a suggested step from the memory"""
+        """use the LBFGS algorithm to compute a suggested step from the memory
+        """
         if self._cython:
             return self._get_LBFGS_step_cython(G)
         elif self._fortran:
@@ -312,7 +285,7 @@ class LBFGS(object):
         if k == 0:
             # make first guess for the step length cautious
             gnorm = np.linalg.norm(G)
-            stp *= min(gnorm, 1.0 / gnorm)
+            stp *= min(gnorm, 1. / gnorm)
 
         return stp
 
@@ -356,23 +329,20 @@ class LBFGS(object):
         6) if nfail is greater than 5 abort the quench
 
         """
-        f = 1.0
+        f = 1.
         X0 = X.copy()
         G0 = G.copy()
         E0 = E
         if np.dot(G, stp) > 0:
             if self.debug:
                 overlap = np.dot(G, stp) / np.linalg.norm(G) / np.linalg.norm(stp)
-                self.logger.warn(
-                    "LBFGS returned uphill step, reversing step direction: overlap {}"
-                    .format(overlap)
-                )
+                self.logger.warn("LBFGS returned uphill step, reversing step direction: overlap {}".format(overlap))
             stp = -stp
 
         stepsize = np.linalg.norm(stp)
 
         if f * stepsize > self.maxstep:
-            f = self.maxstep / stepsize
+            f = self.maxstep/stepsize
 
         nincrease = 0
         while True:
@@ -385,14 +355,9 @@ class LBFGS(object):
                 break
             else:
                 if self.debug:
-                    self.logger.warn(
-                        "energy increased, trying a smaller step %s %s %s %s",
-                        E,
-                        E0,
-                        f * stepsize,
-                        nincrease,
-                    )
-                f /= 10.0
+                    self.logger.warn("energy increased, trying a smaller step %s %s %s %s", E, E0, f * stepsize,
+                                     nincrease)
+                f /= 10.
                 nincrease += 1
                 if nincrease > 10:
                     break
@@ -403,17 +368,13 @@ class LBFGS(object):
                 raise LineSearchError
 
             # abort the linesearch, reset the memory and reset the coordinates
-            self.logger.warning(
-                "lbfgs: having trouble finding a good step size. %s %s, resetting the"
-                " minimizer",
-                f * stepsize,
-                stepsize,
-            )
+            self.logger.warning("lbfgs: having trouble finding a good step size. %s %s, resetting the minimizer",
+                                f * stepsize, stepsize)
             self.reset()
             E = E0
             G = G0
             X = X0
-            f = 0.0
+            f = 0.
 
         self.stepsize = f * stepsize
         return X, E, G
@@ -446,15 +407,7 @@ class LBFGS(object):
         armijo = Enew <= Eold + overlap_old * self._wolfe1
         if not armijo and self.debug:
             stepsize = np.linalg.norm(step)
-            print(
-                self.iter_number,
-                "rejecting step due to energy",
-                Enew,
-                Enew - Eold,
-                overlap_old * self._wolfe1,
-                "stepsize",
-                stepsize,
-            )
+            print(self.iter_number, "rejecting step due to energy", Enew, Enew - Eold, overlap_old * self._wolfe1, "stepsize", stepsize)
         if return_overlap:
             return armijo, overlap_old
         return armijo
@@ -468,9 +421,7 @@ class LBFGS(object):
         wolfe2 : the overlap of the gradient with the step direction cannot
         decrease by more than a given factor
         """
-        armijo, overlap_old = self._armijo_condition(
-            Enew, Eold, Gold, step, return_overlap=True
-        )
+        armijo, overlap_old = self._armijo_condition(Enew, Eold, Gold, step, return_overlap=True)
         if not armijo:
             return False
 
@@ -481,17 +432,9 @@ class LBFGS(object):
             wolfe2 = overlap_new >= overlap_old * self._wolfe2
         if not wolfe2 and self.debug:
             stepsize = np.linalg.norm(step)
-            print(
-                "wolfe:",
-                self.iter_number,
-                "rejecting step due to gradient",
-                overlap_new,
-                overlap_old,
-                self._wolfe2,
-                "stepsize",
-                stepsize,
-            )
+            print("wolfe:", self.iter_number, "rejecting step due to gradient", overlap_new, overlap_old, self._wolfe2, "stepsize", stepsize)
         return armijo and wolfe2
+
 
     def reset(self):
         """reset the LBFGS memory and H0"""
@@ -503,7 +446,8 @@ class LBFGS(object):
         self.events.append(event)
 
     def one_iteration(self):
-        """do one iteration of the LBFGS loop"""
+        """do one iteration of the LBFGS loop
+        """
         stp = self.getStep(self.X, self.G)
 
         Xnew, self.energy, Gnew = self.adjustStepSize(self.X, self.energy, self.G, stp)
@@ -516,18 +460,8 @@ class LBFGS(object):
         self.rms = old_div(np.linalg.norm(self.G), np.sqrt(self.N))
 
         if self.iprint > 0 and self.iter_number % self.iprint == 0:
-            self.logger.info(
-                "lbfgs: %s %s %s %s %s %s %s %s %s",
-                self.iter_number,
-                "E",
-                self.energy,
-                "rms",
-                self.rms,
-                "funcalls",
-                self.funcalls,
-                "stepsize",
-                self.stepsize,
-            )
+            self.logger.info("lbfgs: %s %s %s %s %s %s %s %s %s", self.iter_number, "E", self.energy,
+                             "rms", self.rms, "funcalls", self.funcalls, "stepsize", self.stepsize)
         for event in self.events:
             event(coords=self.X, energy=self.energy, rms=self.rms)
 
@@ -539,9 +473,8 @@ class LBFGS(object):
         if self.alternate_stop_criterion is None:
             return self.rms < self.tol
         else:
-            return self.alternate_stop_criterion(
-                energy=self.energy, gradient=self.G, tol=self.tol, coords=self.X
-            )
+            return self.alternate_stop_criterion(energy=self.energy, gradient=self.G,
+                                                 tol=self.tol, coords=self.X)
 
     def run(self):
         """run the LBFGS minimizer
@@ -559,13 +492,8 @@ class LBFGS(object):
             except LineSearchError:
                 self.logger.error("problem with adjustStepSize, ending quench")
                 self.rms = old_div(np.linalg.norm(self.G), np.sqrt(self.N))
-                self.logger.error(
-                    "    on failure: quench step %s %s %s %s",
-                    self.iter_number,
-                    self.energy,
-                    self.rms,
-                    self.funcalls,
-                )
+                self.logger.error("    on failure: quench step %s %s %s %s", self.iter_number, self.energy, self.rms,
+                                  self.funcalls)
                 self.result.message.append("problem with adjustStepSize")
                 break
 
@@ -584,12 +512,11 @@ class LBFGS(object):
         res.success = self.stop_criterion_satisfied()
         return res
 
-
 #
 # only testing stuff below here
 #
 #
-# class PrintEvent:
+#class PrintEvent:
 #    def __init__(self, fname):
 #        self.fout = open(fname, "w")
 #        self.coordslist = []
@@ -601,14 +528,14 @@ class LBFGS(object):
 #
 #
 #
-# def test(pot, natoms = 100, iprint=-1):
+#def test(pot, natoms = 100, iprint=-1):
 #    #X = bfgs.getInitialCoords(natoms, pot)
 #    #X += np.random.uniform(-1,1,[3*natoms]) * 0.3
 #    X = np.random.uniform(-1,1,[natoms*3])*(1.*natoms)**(1./3)*.5
 #
 #    runtest(X, pot, natoms, iprint)
 #
-# def runtest(X, pot, natoms = 100, iprint=-1):
+#def runtest(X, pot, natoms = 100, iprint=-1):
 #    tol = 1e-5
 #
 #    Xinit = np.copy(X)
@@ -657,7 +584,7 @@ class LBFGS(object):
 #        print "error loading pymol"
 #
 #
-# if __name__ == "__main__":
+#if __name__ == "__main__":
 #    from pele.potentials.lj import LJ
 #    from pele.potentials.ATLJ import ATLJ
 #    pot = ATLJ()

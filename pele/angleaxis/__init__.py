@@ -59,13 +59,10 @@ from __future__ import absolute_import
 
 # dirty workaround. To not break the scripts import CoordsAdapter without moving it
 from pele.utils.rbtools import CoordsAdapter
-
-from ._cpp_aa import RBPotentialWrapper
-from .aamindist import (ExactMatchAACluster, MeasureAngleAxisCluster,
-                        MeasureRigidBodyCluster, MinPermDistAACluster,
-                        TransformAngleAxisCluster)
+from .aatopology import AASiteType, AATopology, interpolate_angleaxis, TakestepAA
+from .rigidbody import RigidFragment, RBTopology, RBTopologyBulk, RigidFragmentBulk
+from .aamindist import TransformAngleAxisCluster, MeasureAngleAxisCluster, \
+    MeasureRigidBodyCluster, ExactMatchAACluster, MinPermDistAACluster
 from .aasystem import AASystem, RBSystem
-from .aatopology import (AASiteType, AATopology, TakestepAA,
-                         interpolate_angleaxis)
-from .rigidbody import (RBTopology, RBTopologyBulk, RigidFragment,
-                        RigidFragmentBulk)
+from ._cpp_aa import RBPotentialWrapper
+

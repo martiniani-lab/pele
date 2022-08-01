@@ -3,11 +3,10 @@
 """
 import time
 
-from libcpp.list cimport list as stdlist
+from libcpp.vector cimport vector
 from libcpp.map cimport map
 from libcpp.pair cimport pair
-from libcpp.vector cimport vector
-
+from libcpp.list cimport list as stdlist
 
 cdef extern from "pele/graph.hpp" namespace "pele":
     ctypedef unsigned long node_id

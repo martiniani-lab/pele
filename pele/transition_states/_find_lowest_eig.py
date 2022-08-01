@@ -1,24 +1,21 @@
 """tools for finding the smallest eigenvalue and associated eigenvector
 using Rayleigh-Ritz minimization
 """
-from __future__ import division, print_function
+from __future__ import division
+from __future__ import print_function
 
-import logging
-from builtins import object, range
-
-import numpy as np
+from builtins import range
+from builtins import object
 from past.utils import old_div
+import numpy as np
+import logging
 
-import pele.utils.rotations as rotations
-from pele.optimize import MYLBFGS
-from pele.potentials.potential import BasePotential
 from pele.transition_states import orthogopt
+from pele.potentials.potential import BasePotential
+from pele.optimize import MYLBFGS
+import pele.utils.rotations as rotations
 
-__all__ = [
-    "findLowestEigenVector",
-    "analyticalLowestEigenvalue",
-    "FindLowestEigenVector",
-]
+__all__ = ["findLowestEigenVector", "analyticalLowestEigenvalue", "FindLowestEigenVector"]
 
 
 class LowestEigPot(BasePotential):
@@ -36,7 +33,7 @@ class LowestEigPot(BasePotential):
     pot : potential object
         The potential of the system.  i.e. pot.getEnergyGradient(coords)
         gives the energy and gradient
-
+    
     orthogZeroEigs : callable
         The function which makes a vector orthogonal to the known
         eigenvectors with zero eigenvalues.  The default assumes global
@@ -50,19 +47,11 @@ class LowestEigPot(BasePotential):
         potential call per iteration.
     gradient : float array
         the true gradient at coords.  If first_order is true and gradient
-        is not None then one potential call will be saved.
+        is not None then one potential call will be saved. 
     """
 
-    def __init__(
-        self,
-        coords,
-        pot,
-        orthogZeroEigs=0,
-        dx=1e-6,
-        first_order=True,
-        gradient=None,
-        verbosity=1,
-    ):
+    def __init__(self, coords, pot, orthogZeroEigs=0, dx=1e-6,
+                 first_order=True, gradient=None, verbosity=1):
         self.pot = pot
         self.first_order = first_order
         self.nfev = 0
@@ -89,13 +78,10 @@ class LowestEigPot(BasePotential):
             else:
                 if self.verbosity > 1:
                     print("possibly computing gradient unnecessarily")
-                true_energy, self.true_gradient = self._get_true_energy_gradient(
-                    self.coords
-                )
+                true_energy, self.true_gradient = self._get_true_energy_gradient(self.coords)
 
     def getEnergy(self, vec_in):
-        """return the 'energy' a.k.a. the curvature at coords along the direction vec_in
-        """
+        """return the 'energy' a.k.a. the curvature at coords along the direction vec_in"""
         if self.orthogZeroEigs is not None:
             vec_in /= np.linalg.norm(vec_in)
             vec_in = self.orthogZeroEigs(vec_in, self.coords)
@@ -114,13 +100,14 @@ class LowestEigPot(BasePotential):
             curvature = old_div(np.dot((Gplus - Gminus), vec), (2.0 * self.diff))
         return curvature
 
-    def getEnergyGradient(self, vec_in):
-        """return the curvature and the gradient of the curvature w.r.t. vec_in
 
-        vec_in : array
+    def getEnergyGradient(self, vec_in):
+        """return the curvature and the gradient of the curvature w.r.t. vec_in  
+        
+        vec_in : array 
             A guess for the lowest eigenvector.  It should be normalized
         """
-        vecl = 1.0
+        vecl = 1.
         if self.orthogZeroEigs is not None:
             vec_in /= np.linalg.norm(vec_in)
             vec_in = self.orthogZeroEigs(vec_in, self.coords)
@@ -142,18 +129,12 @@ class LowestEigPot(BasePotential):
         # C  Although DIAG3 is a more accurate estimate of the diagonal second derivative, it
         # C  cannot be differentiated analytically.
 
-        # compute the analytical derivative of the curvature with respect to vec
+        # compute the analytical derivative of the curvature with respect to vec        
         # GL(J1)=(GRAD1(J1)-GRAD2(J1))/(ZETA*VECL**2)-2.0D0*DIAG2*LOCALV(J1)/VECL**2
         if self.first_order:
-            grad = (
-                old_div((Gplus - self.true_gradient) * 2.0, self.diff)
-                - 2.0 * curvature * vec
-            )
+            grad = old_div((Gplus - self.true_gradient) * 2.0, self.diff) - 2. * curvature * vec
         else:
-            grad = (
-                old_div((Gplus - Gminus), (self.diff * vecl**2))
-                - 2.0 * curvature * vec / vecl**2
-            )
+            grad = old_div((Gplus - Gminus), (self.diff * vecl ** 2)) - 2.0 * curvature * vec / vecl ** 2
         if self.orthogZeroEigs is not None:
             grad = self.orthogZeroEigs(grad, self.coords)
 
@@ -167,7 +148,7 @@ class LowestEigPot(BasePotential):
 
 class FindLowestEigenVector(object):
     """A class to compute the lowest eigenvector of the Hessian using Rayleigh-Ritz minimization
-
+    
     Parameters
     ----------
     coords : float array
@@ -191,21 +172,13 @@ class FindLowestEigenVector(object):
         the true gradient at coords.  If first_order is true and gradient
         is not None then one potential call will be saved.
     minimizer_kwargs : kwargs
-        these kwargs are passed to the optimizer which finds the direction
+        these kwargs are passed to the optimizer which finds the direction 
         of least curvature
     """
 
-    def __init__(
-        self,
-        coords,
-        pot,
-        eigenvec0=None,
-        orthogZeroEigs=0,
-        dx=1e-6,
-        first_order=True,
-        gradient=None,
-        **minimizer_kwargs
-    ):
+    def __init__(self, coords, pot, eigenvec0=None, orthogZeroEigs=0, dx=1e-6,
+                 first_order=True, gradient=None, **minimizer_kwargs):
+
         self.minimizer_kwargs = minimizer_kwargs
 
         if eigenvec0 is None:
@@ -217,21 +190,13 @@ class FindLowestEigenVector(object):
         if "nsteps" not in minimizer_kwargs:
             minimizer_kwargs["nsteps"] = 500
         if "logger" not in minimizer_kwargs:
-            minimizer_kwargs["logger"] = logging.getLogger(
-                "pele.connect.findTS.leig_quench"
-            )
+            minimizer_kwargs["logger"] = logging.getLogger("pele.connect.findTS.leig_quench")
 
-        self.eigpot = LowestEigPot(
-            coords,
-            pot,
-            orthogZeroEigs=orthogZeroEigs,
-            dx=dx,
-            gradient=gradient,
-            first_order=first_order,
-        )
-        self.minimizer = MYLBFGS(
-            eigenvec0, self.eigpot, rel_energy=True, **self.minimizer_kwargs
-        )
+        self.eigpot = LowestEigPot(coords, pot, orthogZeroEigs=orthogZeroEigs, dx=dx,
+                                   gradient=gradient,
+                                   first_order=first_order)
+        self.minimizer = MYLBFGS(eigenvec0, self.eigpot, rel_energy=True,
+                                 **self.minimizer_kwargs)
 
     def stop_criterion_satisfied(self):
         """test if the stop criterion is satisfied"""
@@ -242,9 +207,8 @@ class FindLowestEigenVector(object):
         self.eigpot.update_coords(coords, gradient=gradient)
         state = self.minimizer.get_state()
         ret = self.get_result()
-        self.minimizer = MYLBFGS(
-            ret.eigenvec, self.eigpot, rel_energy=True, **self.minimizer_kwargs
-        )
+        self.minimizer = MYLBFGS(ret.eigenvec, self.eigpot, rel_energy=True,
+                                 **self.minimizer_kwargs)
         self.minimizer.set_state(state)
 
     def one_iteration(self):
@@ -275,17 +239,9 @@ class FindLowestEigenVector(object):
         return res
 
 
-def findLowestEigenVector(
-    coords,
-    pot,
-    eigenvec0=None,
-    H0=None,
-    orthogZeroEigs=0,
-    dx=1e-3,
-    first_order=True,
-    gradient=None,
-    **minimizer_kwargs
-):
+def findLowestEigenVector(coords, pot, eigenvec0=None, H0=None, orthogZeroEigs=0, dx=1e-3,
+                          first_order=True, gradient=None,
+                          **minimizer_kwargs):
     """Compute the lowest eigenvector of the Hessian using Rayleigh-Ritz minimization
 
     ***orthogZeroEigs is system dependent, don't forget to set it***
@@ -316,9 +272,9 @@ def findLowestEigenVector(
     gradient : float array
         the true gradient at coords.  If first_order is true and gradient
         is not None then one potential call will be saved.
-    minimizer_kwargs :
+    minimizer_kwargs : 
         any additional keyword arguments are passed to the minimizer
-
+    
     See Also
     --------
     FindTransitionState : uses this class
@@ -329,17 +285,8 @@ def findLowestEigenVector(
     if "tol" not in minimizer_kwargs:
         minimizer_kwargs["tol"] = 1e-6
 
-    optimizer = FindLowestEigenVector(
-        coords,
-        pot,
-        eigenvec0=eigenvec0,
-        H0=H0,
-        orthogZeroEigs=orthogZeroEigs,
-        dx=dx,
-        first_order=first_order,
-        gradient=gradient,
-        **minimizer_kwargs
-    )
+    optimizer = FindLowestEigenVector(coords, pot, eigenvec0=eigenvec0, H0=H0, orthogZeroEigs=orthogZeroEigs,
+                                      dx=dx, first_order=first_order, gradient=gradient, **minimizer_kwargs)
     result = optimizer.run()
     return result
 
@@ -393,8 +340,8 @@ def analyticalLowestEigenvalue(coords, pot):
 #    c = np.reshape(coords, [-1,3])
 #    for i, j in itertools.combinations(range(natoms), 2):
 #        r = np.linalg.norm(c[i,:] - c[j,:])
-#        print i, j, r
-#
+#        print i, j, r 
+#    
 #    e, g = pot.getEnergyGradient(coords)
 #    print "initial E", e
 #    print "initial G", g, np.linalg.norm(g)
@@ -402,9 +349,9 @@ def analyticalLowestEigenvalue(coords, pot):
 #    eigpot = LowestEigPot(coords, pot)
 #    vec = np.random.rand(len(coords))
 #    e, g = eigpot.getEnergyGradient(vec)
-#    print "eigenvalue", e
+#    print "eigenvalue", e 
 #    print "eigenvector", g
-#
+#    
 #    if True:
 #        e, g, hess = pot.getEnergyGradientHessian(coords)
 #        print "shape hess", np.shape(hess)
@@ -428,12 +375,12 @@ def analyticalLowestEigenvalue(coords, pot):
 #        print "lowest eigenvalue ", umin, imin
 #        print "lowest eigenvector", v[:,imin]
 #
-#
+#    
 #    from pele.optimize import lbfgs_py as quench
 #    ret = quench(vec, eigpot.getEnergyGradient, iprint=10, tol = 1e-5, maxstep = 1e-3, \
 #                 rel_energy = True)
 #    print ret
-#
+#    
 #    print "lowest eigenvalue "
 #    print umin, imin
 #    print "lowest eigenvector"
@@ -442,15 +389,15 @@ def analyticalLowestEigenvalue(coords, pot):
 #    print ret[1]
 #    print ret[0]
 #
-# def testpot3():
+#def testpot3():
 #    from transition_state_refinement import guesstsLJ
 #    pot, coords, coords1, coords2 = guesstsLJ()
 #    coordsinit = np.copy(coords)
 #
 #    eigpot = LowestEigPot(coords, pot)
-#
+#    
 #    vec = np.random.rand(len(coords))
-#
+#    
 #    from pele.optimize import lbfgs_py as quench
 #    ret = quench(vec, eigpot.getEnergyGradient, iprint=400, tol = 1e-5, maxstep = 1e-3, \
 #                 rel_energy = True)
@@ -478,9 +425,9 @@ def analyticalLowestEigenvalue(coords, pot):
 #                imin = i
 #        #print "lowest eigenvalue ", umin, imin
 #        #print "lowest eigenvector", v[:,imin]
-#
-#
-#
+#        
+#        
+#        
 #        trueval, truevec = u[imin], v[:,imin]
 #        print "analytical lowest eigenvalue", trueval
 #        maxdiff = np.max(np.abs(truevec - eigvec))
@@ -492,7 +439,9 @@ def analyticalLowestEigenvalue(coords, pot):
 #
 #
 #
-# if __name__ == "__main__":
+#if __name__ == "__main__":
 #    #testpot1()
 #    testpot3()
-#
+#    
+    
+    

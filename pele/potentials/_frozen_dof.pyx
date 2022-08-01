@@ -7,14 +7,11 @@ basic potential interface stuff
 from ctypes import c_size_t as size_t
 
 cimport numpy as np
-
 import numpy as np
 
 from pele.potentials._pythonpotential import as_cpp_potential
-
 from pele.potentials cimport _pele
 from pele.potentials._pele cimport Array, array_wrap_np, shared_ptr
-
 
 #===============================================================================
 # pele::FrozenPotentialWrapper

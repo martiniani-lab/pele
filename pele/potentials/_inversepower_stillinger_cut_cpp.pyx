@@ -7,8 +7,8 @@ cimport numpy as np
 from cpython cimport bool
 
 cimport pele.potentials._pele as _pele
-from pele.potentials._pele cimport array_wrap_np, shared_ptr
-
+from pele.potentials._pele cimport shared_ptr
+from pele.potentials._pele cimport array_wrap_np
 
 # https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs
 cdef extern from *:

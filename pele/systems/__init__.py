@@ -159,12 +159,13 @@ For a translation between an OPTIM odata file and the pele Parameter tree, see
 from __future__ import absolute_import
 
 from .basesystem import *
-from .blj_bulk import BLJBulk
-from .blj_bulk_frozen import BLJBulkFrozen
-from .bljcluster import BLJCluster
 from .cluster import AtomicCluster
 from .ljcluster import LJCluster
-from .ljcluster_frozen import LJClusterFrozen
-from .morse_bulk import put_in_box
+from .bljcluster import BLJCluster
+from .blj_bulk import BLJBulk
+from .blj_bulk_frozen import BLJBulkFrozen
 from .morse_cluster import MorseCluster
+from .morse_bulk import put_in_box
+from .ljcluster_frozen import LJClusterFrozen
 from .pspin_spherical_system import MeanFieldPSpinSphericalSystem
+

@@ -1,5 +1,4 @@
 from __future__ import print_function
-
 __all__ = ["AdaptiveStepsize"]
 
 from .generic import TakestepInterface
@@ -26,24 +25,14 @@ class AdaptiveStepsize(TakestepInterface):
     note: the keyword frequency is the same as interval.  it exists only for backward compatability
     """
 
-    def __init__(
-        self,
-        stepclass,
-        acc_ratio=0.5,
-        factor=0.9,
-        frequency=None,
-        last_step=None,
-        interval=100,
-        verbose=False,
-    ):
+    def __init__(self, stepclass, acc_ratio=0.5, factor=0.9, frequency=None, last_step=None, interval=100,
+                 verbose=False):
         self.stepclass = stepclass
         self.accrat = acc_ratio  # target accept ratio
         self.factor = factor
         self.nstepsaccrat = interval
         if frequency is not None:
-            print(
-                "AdaptiveStepsize: keyword frequency is obsolete, use interval instead"
-            )
+            print("AdaptiveStepsize: keyword frequency is obsolete, use interval instead")
             self.nstepsaccrat = frequency
         self.last_step = last_step  # stop adjusting after this many steps
 
@@ -51,6 +40,7 @@ class AdaptiveStepsize(TakestepInterface):
         self.nsteps = 0
         self.nsteps_tot = 0
         self.verbose = verbose
+
 
     def takeStep(self, coords, **kwargs):
         self.nsteps_tot += 1
@@ -72,18 +62,11 @@ class AdaptiveStepsize(TakestepInterface):
         """adjust the stepsize"""
         rat = float(self.naccepted) / self.nsteps
         if rat > self.accrat:
-            self.stepclass.scale(1.0 / self.factor)
+            self.stepclass.scale(1. / self.factor)
         else:
             self.stepclass.scale(self.factor)
 
         self.nsteps = 0
         self.naccepted = 0
         if self.verbose:
-            print(
-                "accrat was ",
-                rat,
-                "new stepsize is ",
-                self.stepclass.stepsize,
-                "f is",
-                self.factor,
-            )
+            print("accrat was ", rat, "new stepsize is ", self.stepclass.stepsize, "f is", self.factor)        

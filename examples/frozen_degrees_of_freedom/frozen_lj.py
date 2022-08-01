@@ -3,13 +3,10 @@ this example shows how to freeze degrees of freedom using the Lennard Jones pote
 an example
 """
 from __future__ import print_function
-
 from builtins import range
-
 import numpy as np
-
-from pele.optimize import mylbfgs
 from pele.potentials import LJ, FrozenPotentialWrapper
+from pele.optimize import mylbfgs
 
 
 def main():
@@ -32,12 +29,7 @@ def main():
     print(fpot.getEnergy(reduced_coords))
 
     ret = mylbfgs(reduced_coords, fpot)
-    print(
-        "after a minimization the energy is ",
-        ret.energy,
-        "and the rms gradient is",
-        ret.rms,
-    )
+    print("after a minimization the energy is ", ret.energy, "and the rms gradient is", ret.rms)
     print("the coordinates of the frozen degrees of freedom are unchanged")
     print("starting coords:", reference_coords)
     print("minimized coords:", fpot.get_full_coords(ret.coords))

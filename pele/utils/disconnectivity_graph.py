@@ -1,13 +1,15 @@
-from __future__ import division, print_function
-
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import copy
 import operator
-from builtins import object, range
+
 from collections import deque
 
-import networkx as nx
 import numpy as np
-from past.utils import old_div
+import networkx as nx
 
 from pele.landscape import database2graph
 
@@ -47,8 +49,7 @@ class TreeLeastCommonAncestor(object):
         return self.least_common_ancestor
 
     def get_all_paths_to_common_ancestor(self):
-        """return all the ancestors of all the input trees up to the least common ancestor
-        """
+        """return all the ancestors of all the input trees up to the least common ancestor"""
         trees = set(self.start_trees)
         for tree in self.start_trees:
             for parent in tree.get_ancestors():
@@ -68,7 +69,7 @@ class TreeLeastCommonAncestor(object):
 class Tree(object):
     """
     a Tree graph
-
+    
     Each member of this class is a node in a Tree.  The node can
     have many children, but only one parent.  If the node has no
     parents then it is the root node.  If the node has no children
@@ -196,7 +197,7 @@ class UnionFind(nx.utils.UnionFind):
 
 class _MakeTree(object):
     """class to Make the disconnectivity graph tree
-
+    
     Parameters
     ----------
     minima : list of Minimum objects
@@ -206,10 +207,10 @@ class _MakeTree(object):
     energy_levels : list of floats
         the energy levels at which to split the graph
     get_energy : callable
-        a function which returns the energy of a transition state.  You can
-        use this to redefine the `energy` of a transition state, e.g. for a
+        a function which returns the energy of a transition state.  You can 
+        use this to redefine the `energy` of a transition state, e.g. for a 
         free energy disconnectivity graph.
-
+        
     Notes
     -----
     This algorithm starts from a completely disconnected graph and adds
@@ -220,9 +221,9 @@ class _MakeTree(object):
     joined to make one single cluster.  As the transition states are added
     (sorted in energy) the energy levels are reached one at a time.  At each
     level, the state of the connectivity of the graph is saved in tree graphs.
-
+    
     This algorithm is very similar to kruskal's minimum spanning tree algorithm
-
+    
     """
 
     def __init__(self, minima, transition_states, energy_levels, get_energy=None):
@@ -233,6 +234,7 @@ class _MakeTree(object):
 
         self.union_find = UnionFind()
         self.minimum_to_leave = dict()
+
 
     def get_energy(self, ts):
         """return the energy of the transition state"""
@@ -273,7 +275,7 @@ class _MakeTree(object):
                 self.tree.add_branch(t)
             self.tree.data["ilevel"] = len(energy_levels) - 1
             de = energy_levels[-1] - energy_levels[-2]
-            self.tree.data["ethresh"] = energy_levels[-1] + 1.0 * de
+            self.tree.data["ethresh"] = energy_levels[-1] + 1. * de
             self.tree.data["children_not_connected"] = True
 
         if False:
@@ -284,7 +286,7 @@ class _MakeTree(object):
 
     def _add_edge(self, min1, min2):
         """add an edge between min1 and min2
-
+        
         if min1 and min2 belong to different color groups, those groups
         will be set equal
         """
@@ -297,7 +299,8 @@ class _MakeTree(object):
         return new_minima
 
     def _do_next_level(self, ilevel, previous_trees):
-        """do the disconnectivity analysis for energy level ilevel"""
+        """do the disconnectivity analysis for energy level ilevel
+        """
         ethresh = self.energy_levels[ilevel]
 
         # add the edges to the graph up to ethresh
@@ -345,19 +348,19 @@ class ColorDGraphByGroups(object):
     Parameters
     ----------
     tree_graph: a DGTree object
-        usually accessed by dgraph.tree_graph if dgraph is a
+        usually accessed by dgraph.tree_graph if dgraph is a 
         DisconnectivityGraph object.
     groups : list
         list of groups of minima that should have the same color
-
+    
     Notes
     -----
     For each node, check all minima for which the node is a parent.
-    If all minima are contained on one of the groups, the node
-    will be coloured to represent that group.
+    If all minima are contained on one of the groups, the node 
+    will be coloured to represent that group.  
     If any minimum is not contained on one of the groups, the node
-    is not coloured.
-    If all minima are contained in groups but more than one group
+    is not coloured. 
+    If all minima are contained in groups but more than one group 
     is represented, the node will be the colour of the last group listed
     """
 
@@ -377,7 +380,7 @@ class ColorDGraphByGroups(object):
         from matplotlib import cm
 
         colormap = cm.get_cmap("Dark2", lut=number)
-        colors = [colormap(i) for i in np.linspace(0.0, 1.0, number)]
+        colors = [colormap(i) for i in np.linspace(0., 1., number)]
         return colors
 
     def parse_list_of_colors(self, number, colors):
@@ -388,6 +391,7 @@ class ColorDGraphByGroups(object):
             raise ValueError("the length of colors must be the number of groups")
         rgbcolors = [cconvert.to_rgb(c) for c in colors]
         return rgbcolors
+
 
     def get_list_of_colors(self, number, colors=None):
         """return a list of colors for the groups"""
@@ -429,9 +433,7 @@ class ColorDGraphByGroups(object):
                 self._tree_to_colors[tree] = colors
                 return colors
             else:
-                colors_list = [
-                    self.tree_get_colors(subtree) for subtree in tree.get_branches()
-                ]
+                colors_list = [self.tree_get_colors(subtree) for subtree in tree.get_branches()]
                 if None in colors_list:
                     colors = None
                 else:
@@ -441,12 +443,13 @@ class ColorDGraphByGroups(object):
 
     def colors_to_color(self, colors):
         """if there are multiple colors for this tree, select which one to use
-
+        
         select the color which is listed last in self.color_list
         """
         for color in reversed(self.color_list):
             if color in colors:
                 return color
+
 
     def run(self):
         """main loop for the algorithm"""
@@ -462,7 +465,7 @@ class ColorDGraphByValue(object):
     Parameters
     ----------
     tree_graph: a DGTree object
-        usually accessed by dgraph.tree_graph if dgraph is a
+        usually accessed by dgraph.tree_graph if dgraph is a 
         DisconnectivityGraph object.
     minimum_to_value: callable
         A function that accepts a minimum and returns a float value.
@@ -471,17 +474,16 @@ class ColorDGraphByValue(object):
         function which converts a float in (0,1) to a matplotlib color (RGB)
     normalize_values: bool
         if True the values will be normalized to fall between 0 and 1
-
+    
     Notes
     -----
-    Each node in the graph will be colored according to the value of the
+    Each node in the graph will be colored according to the value of the 
     child minimum with the largest value.  If any child minimum has value None
     then the node will not be colored
     """
 
-    def __init__(
-        self, tree_graph, minimum_to_value, colormap=None, normalize_values=True
-    ):
+    def __init__(self, tree_graph, minimum_to_value, colormap=None,
+                 normalize_values=True):
         self.tree_graph = tree_graph
         self.minimum_to_value = minimum_to_value
         if colormap is None:
@@ -494,10 +496,8 @@ class ColorDGraphByValue(object):
         self._tree_to_value = dict()
 
         if normalize_values:
-            values = [
-                self.minimum_to_value(leaf.data["minimum"])
-                for leaf in self.tree_graph.leaf_iterator()
-            ]
+            values = [self.minimum_to_value(leaf.data["minimum"])
+                      for leaf in self.tree_graph.leaf_iterator()]
             values = [v for v in values if v is not None]
             self.maxval = max(values)
             self.minval = min(values)
@@ -528,12 +528,11 @@ class ColorDGraphByValue(object):
                 self._tree_to_value[tree] = value
                 return value
             else:
-                values = [
-                    self.tree_get_value(subtree) for subtree in tree.get_branches()
-                ]
+                values = [self.tree_get_value(subtree) for subtree in tree.get_branches()]
                 value = self.resolve_multiple_values(values)
                 self._tree_to_value[tree] = value
                 return value
+
 
     def run(self):
         """main loop for the algorithm"""
@@ -546,19 +545,19 @@ class ColorDGraphByValue(object):
 class DisconnectivityGraph(object):
     """
     make a disconnectivity graph
-
+    
     Parameters
     ----------
     graph : a networkx graph
         a graph with Minimum objects as nodes and transition
         states defining the edges.  You can use the function
-        database2graph() defined in this module to create this
+        database2graph() defined in this module to create this 
         from a database.
-
+        
         >>> from pele.utils.disconnectivity_graph import database2graph
         >>> graph = database2graph(database)
         >>> dg = DisconnectivityGraph(graph)
-
+         
     nlevels : int
         how many levels at which to bin the transition states
     Emax : float
@@ -589,27 +588,27 @@ class DisconnectivityGraph(object):
         main connected region
     node_offset : float
         offset between 0 and 1 for how to draw the angled lines.
-        0 for no angle, draw horizontally out then vertically down.  1 for
-        angled lines all the way to the next energy level
+        0 for no angle, draw horizontally out then vertically down.  1 for 
+        angled lines all the way to the next energy level        
     energy_attribute : string, optional
         attribute which contains energy. default is energy. This attribute can
         be used to generate free energy disconnectivity graphs
     order_by_value : callable, optional, `v = order_by_value(m)`
         If this function is passed the minima at each level will be sorted by this value
-        with small values to the left.  A group of minima will be sorted according to the
-        smallest value in the group.
-
+        with small values to the left.  A group of minima will be sorted according to the 
+        smallest value in the group.  
+    
     See Also
     ---------
     make_disconnectivity_graph.py :
         a script (in pele/scripts) to make the disconnectivity graph from the command line
     pele.storage.Database :
         The database format in which minima and transition states are stored in pele
-
+    
     Examples
     --------
     These examples assume a Database with minima already exists
-
+    
     >>> import matplotlib.pyplot as plt
     >>> graph = database2graph(database)
     >>> dg = DisconnectivityGraph(graph)
@@ -619,21 +618,11 @@ class DisconnectivityGraph(object):
 
     """
 
-    def __init__(
-        self,
-        graph,
-        minima=None,
-        nlevels=20,
-        Emax=None,
-        subgraph_size=None,
-        order_by_energy=False,
-        order_by_basin_size=True,
-        node_offset=1.0,
-        center_gmin=True,
-        include_gmin=True,
-        energy_attribute="energy",
-        order_by_value=None,
-    ):
+    def __init__(self, graph, minima=None, nlevels=20, Emax=None,
+                 subgraph_size=None, order_by_energy=False,
+                 order_by_basin_size=True, node_offset=1.,
+                 center_gmin=True, include_gmin=True, energy_attribute="energy",
+                 order_by_value=None):
         self.graph = graph
         self.nlevels = nlevels
         self.Emax = Emax
@@ -662,11 +651,11 @@ class DisconnectivityGraph(object):
         self.tree_list = [[] for _ in range(self.nlevels)]
 
     def _getEnergy(self, node):
-        """get the energy of a node"""
+        """ get the energy of a node """
         return getattr(node, self.energy_attribute)
 
     def set_energy_levels(self, elevels):
-        """manually set the energy levels"""
+        """ manually set the energy levels """
         self.elevels = elevels
 
     def _getTS(self, min1, min2):
@@ -676,10 +665,12 @@ class DisconnectivityGraph(object):
         except KeyError:
             return self.transition_states[(min2, min1)]
 
+
             # ############################################################
             # functions for building the tree by splitting the graph into
             # connected components at each level
             # ############################################################
+
 
         # def _connected_component_subgraphs(self, G):
         # """
@@ -695,13 +686,14 @@ class DisconnectivityGraph(object):
         #            graph_list.append(G.subgraph(c))
         #        return graph_list
 
+
     def _make_tree(self, graph, energy_levels):
-        """make the disconnectivity graph tree"""
+        """make the disconnectivity graph tree
+        """
         transition_states = list(nx.get_edge_attributes(graph, "ts").values())
         minima = graph.nodes()
-        maketree = _MakeTree(
-            minima, transition_states, energy_levels, get_energy=self._getEnergy
-        )
+        maketree = _MakeTree(minima, transition_states, energy_levels,
+                             get_energy=self._getEnergy)
         trees = maketree.make_tree()
         self.minimum_to_leave = maketree.minimum_to_leave
         return trees
@@ -715,7 +707,7 @@ class DisconnectivityGraph(object):
         nminima = tree.number_of_leaves()
         subtrees = tree.get_branches()
         subtrees = self._order_trees(subtrees)
-        tree.data["x"] = xmin + dx_per_min * nminima / 2.0
+        tree.data["x"] = xmin + dx_per_min * nminima / 2.
         x = xmin
         for subtree in subtrees:
             self._recursive_layout_x_axis(subtree, x, dx_per_min)
@@ -724,11 +716,11 @@ class DisconnectivityGraph(object):
 
     def _layout_x_axis(self, tree):
         """determining the x position of the branches and leaves
-
+        
         used in displaying the disconnectivity graph
         """
         xmin = 4.0
-        dx_per_min = 1.0
+        dx_per_min = 1.
         self._recursive_layout_x_axis(tree, xmin, dx_per_min)
 
     def _tree_get_minimum_energy(self, tree, emin=1e100):
@@ -740,9 +732,9 @@ class DisconnectivityGraph(object):
     def _order_trees(self, trees):
         """
         order a list of trees for printing
-
-        This is the highest level function for ordering trees.  This,
-        and functions called by this, will account for all the user options
+        
+        This is the highest level function for ordering trees.  This, 
+        and functions called by this, will account for all the user options 
         like center_gmin and order by energy
         """
         if self.get_value is not None:
@@ -754,14 +746,13 @@ class DisconnectivityGraph(object):
 
     def _order_trees_by_value(self, trees):
         """order the trees by a value. smaller numbers to the left
-
+        
         Each tree will take the smallest value of all its associated minima.
         """
 
         def get_min_val(tree):
-            return min(
-                [self.get_value(leaf.data["minimum"]) for leaf in tree.leaf_iterator()]
-            )
+            return min([self.get_value(leaf.data["minimum"])
+                        for leaf in tree.leaf_iterator()])
 
         trees.sort(key=get_min_val)
         return trees
@@ -773,7 +764,7 @@ class DisconnectivityGraph(object):
         tree_value_list :
             a list of (value, tree) pairs where value is the object
             by which to sort the trees
-
+        
         Returns
         -------
         treelist :
@@ -790,9 +781,9 @@ class DisconnectivityGraph(object):
         return list(neworder)
 
     def _ensure_gmin_is_center(self, tree_value_list):
-        """ensure that the tree containing the global minimum has the lowest value"""
-        if self.gmin0 is None:
-            return
+        """ensure that the tree containing the global minimum has the lowest value
+        """
+        if self.gmin0 is None: return
         min0index = None
         for i in range(len(tree_value_list)):
             v, tree = tree_value_list[i]
@@ -807,6 +798,7 @@ class DisconnectivityGraph(object):
             tree_value_list[i] = (newvalue, tree_value_list[i][1])
         return tree_value_list
 
+
     def _order_trees_by_most_leaves(self, trees):
         """order list of trees by the number of leaves"""
         #        if self.center_gmin:
@@ -815,6 +807,7 @@ class DisconnectivityGraph(object):
         if self.center_gmin:
             mylist = self._ensure_gmin_is_center(mylist)
         return self._order_trees_final(mylist)
+
 
     def _order_trees_by_minimum_energy(self, trees):
         """
@@ -825,12 +818,13 @@ class DisconnectivityGraph(object):
         mylist = [(self._tree_get_minimum_energy(tree), tree) for tree in trees]
         return self._order_trees_final(mylist)
 
+
     #######################################################################
     # functions which return the line segments that make up the visual graph
     #######################################################################
 
     def _get_line_segment_single(self, line_segments, line_colours, tree, eoffset):
-        color_default = (0.0, 0.0, 0.0)
+        color_default = (0., 0., 0.)
         if tree.parent is None:
             # this is a top level tree.  Add a short decorative vertical line
             if "children_not_connected" in tree.data:
@@ -850,8 +844,8 @@ class DisconnectivityGraph(object):
             #  ([x, x], [y, yhigh])
             # and an angled one connecting yhigh with the parent
             #  ([x, xparent], [yhigh, yparent])
-            xparent = tree.parent.data["x"]
-            xself = tree.data["x"]
+            xparent = tree.parent.data['x']
+            xself = tree.data['x']
             yparent = tree.parent.data["ethresh"]
 
             if tree.is_leaf():
@@ -869,7 +863,7 @@ class DisconnectivityGraph(object):
 
             # determine the line color
             try:
-                color = tree.data["colour"]
+                color = tree.data['colour']
             except KeyError:
                 color = color_default
 
@@ -881,7 +875,7 @@ class DisconnectivityGraph(object):
                 if not "_x_updated" in tree.data:
                     dxdy = old_div((xself - xparent), eoffset)
                     xself = dxdy * (yparent - yself) + xparent
-                    tree.data["x"] = xself
+                    tree.data['x'] = xself
                     tree.data["_x_updated"] = True
             else:
                 # add vertical line segment
@@ -900,15 +894,14 @@ class DisconnectivityGraph(object):
         """
         self._get_line_segment_single(line_segments, line_colours, tree, eoffset)
         for subtree in tree.get_branches():
-            self._get_line_segment_recursive(
-                line_segments, line_colours, subtree, eoffset
-            )
+            self._get_line_segment_recursive(line_segments, line_colours, subtree, eoffset)
 
-    def _get_line_segments(self, tree, eoffset=-1.0):
+
+    def _get_line_segments(self, tree, eoffset=-1.):
         """
-        get all the line segments for drawing the connection between
+        get all the line segments for drawing the connection between 
         each minimum to it's parent node.
-
+        
         Returns
         -------
         line_segments : list
@@ -920,8 +913,9 @@ class DisconnectivityGraph(object):
         assert len(line_segments) == len(line_colours)
         return line_segments, line_colours
 
+
     ##########################################################################
-    # functions for determining which minima to include in the
+    # functions for determining which minima to include in the 
     # disconnectivity graph
     ##########################################################################
 
@@ -930,25 +924,15 @@ class DisconnectivityGraph(object):
         if len(rmlist) > 0:
             if self.gmin0 is not None:
                 if self.gmin0 in rmlist:
-                    print(
-                        "global minimum has",
-                        graph.degree(self.gmin0),
-                        "edges, not showing in graph",
-                    )
-            print(
-                "removing",
-                len(rmlist),
-                "minima from graph with fewer than",
-                nmin,
-                "edges",
-            )
+                    print("global minimum has", graph.degree(self.gmin0), "edges, not showing in graph")
+            print("removing", len(rmlist), "minima from graph with fewer than", nmin, "edges")
             for n in rmlist:
                 graph.remove_node(n)
         return graph
 
+
     def _remove_high_energy_minima(self, graph, emax):
-        if emax is None:
-            return graph
+        if emax is None: return graph
         rmlist = [m for m in graph.nodes() if self._getEnergy(m) > emax]
         if len(rmlist) > 0:
             print("removing %d nodes with energy higher than" % len(rmlist), emax)
@@ -957,13 +941,9 @@ class DisconnectivityGraph(object):
         return graph
 
     def _remove_high_energy_transitions(self, graph, emax):
-        if emax is None:
-            return graph
-        rmlist = [
-            edge
-            for edge in graph.edges()
-            if self._getEnergy(self._getTS(edge[0], edge[1])) > emax
-        ]
+        if emax is None: return graph
+        rmlist = [edge for edge in graph.edges() \
+                  if self._getEnergy(self._getTS(edge[0], edge[1])) > emax]
         if len(rmlist) > 0:
             print("removing %d edges with energy higher than" % len(rmlist), emax)
         for edge in rmlist:
@@ -971,7 +951,8 @@ class DisconnectivityGraph(object):
         return graph
 
     def _reduce_graph(self, graph, min0list):
-        """determine how much of the graph to include in the disconnectivity graph"""
+        """determine how much of the graph to include in the disconnectivity graph
+        """
         used_nodes = []
         # make sure we include the subgraph containing min0
         if len(min0list) > 0:
@@ -980,8 +961,8 @@ class DisconnectivityGraph(object):
                 if len(nodes) > 2:
                     used_nodes += nodes
                 else:
-                    print("dgraph: too few nodes connected to", min0)
-        if len(used_nodes) == 0:
+                    print("dgraph: too few nodes connected to", min0)  
+        if len(used_nodes) == 0: 
             # use the biggest connected cluster
             cc = sorted(nx.connected_components(graph), key=len, reverse=True)
             used_nodes += cc[0]  # list is ordered by size of cluster
@@ -999,9 +980,10 @@ class DisconnectivityGraph(object):
     # general functions
     ##########################################################################
 
+
     def get_minima_layout(self):
         """
-        return the x position of the minima
+        return the x position of the minima        
         """
         leaves = self.tree_graph.get_leaves()
         minima = [leaf.data["minimum"] for leaf in leaves]
@@ -1016,14 +998,14 @@ class DisconnectivityGraph(object):
 
         for l in range(len(self.tree_list)):
             id += [tuple([l, i]) for i in range(len(self.tree_list[l]))]
-        x_pos = [self.tree_list[l][i].data["x"] for l, i in id]
-        energies = [self.tree_list[l][i].data["ethresh"] for l, i in id]
+        x_pos = [self.tree_list[l][i].data['x'] for l, i in id]
+        energies = [self.tree_list[l][i].data['ethresh'] for l, i in id]
 
         return id, x_pos, energies
 
     def _get_energy_levels(self, graph):
         """
-        combine input and the graph data to determine what the
+        combine input and the graph data to determine what the 
         energy levels will be.
         """
 
@@ -1033,9 +1015,7 @@ class DisconnectivityGraph(object):
         # define the energy levels
         elist = [self._getEnergy(self._getTS(*edge)) for edge in graph.edges()]
         if len(elist) == 0:
-            raise Exception(
-                "there are no edges in the graph.  Is the global minimum connected?"
-            )
+            raise Exception("there are no edges in the graph.  Is the global minimum connected?")
         emin = min(elist)
         if self.Emax is None:
             emax = max(elist)
@@ -1077,12 +1057,8 @@ class DisconnectivityGraph(object):
         graph = self._remove_high_energy_transitions(graph, elevels[-1])
         graph = self._remove_nodes_with_few_edges(graph, 1)
 
-        assert (
-            graph.number_of_nodes() > 0
-        ), "after cleaning up the graph, graph has no minima"
-        assert (
-            graph.number_of_edges() > 0
-        ), "after cleaning up the graph, graph has no edges"
+        assert graph.number_of_nodes() > 0, "after cleaning up the graph, graph has no minima"
+        assert graph.number_of_edges() > 0, "after cleaning up the graph, graph has no edges"
 
         # make the tree graph defining the discontinuity of the minima
         tree_graph = self._make_tree(graph, elevels)
@@ -1095,40 +1071,41 @@ class DisconnectivityGraph(object):
         self._layout_x_axis(tree_graph)
 
         # get the line segments which will be drawn to define the graph
-        eoffset = (
-            elevels[-1] - elevels[-2]
-        ) * self.node_offset  # this should be passable
+        eoffset = (elevels[-1] - elevels[-2]) * self.node_offset  # this should be passable
         #        line_segments = self._get_line_segments(tree_graph, eoffset=eoffset)
+
 
         self.eoffset = eoffset
         self.tree_graph = tree_graph
 
     #        self.line_segments = line_segments
 
+
     def color_by_group(self, groups, colors=None):
         """color the graph based on specified grouping of minima
-
+    
         Parameters
         ----------
         groups : list
             list of groups of minima that should have the same color
-
+        
         Notes
         -----
         For each node, check all minima for which the node is a parent.
-        If all minima are contained on one of the groups, the node
-        will be coloured to represent that group.
+        If all minima are contained on one of the groups, the node 
+        will be coloured to represent that group.  
         If any minimum is not contained on one of the groups, the node
-        is not coloured.
-        If all minima are contained in groups but more than one group
+        is not coloured. 
+        If all minima are contained in groups but more than one group 
         is represented, the node will be the colour of the last group listed
         """
         colorer = ColorDGraphByGroups(self.tree_graph, groups, colors=colors)
         colorer.run()
 
-    def color_by_value(self, minimum_to_value, colormap=None, normalize_values=True):
+    def color_by_value(self, minimum_to_value, colormap=None,
+                       normalize_values=True):
         """color the graph by values associated with minima (e.g. order parameter)
-
+    
         Parameters
         ----------
         minimum_to_value: callable
@@ -1138,24 +1115,21 @@ class DisconnectivityGraph(object):
             function which converts a float in (0,1) to a matplotlib color (RGB)
         normalize_values: bool
             if True the values will be normalized to fall between 0 and 1
-
+        
         Notes
         -----
-        Each node in the graph will be colored according to the value of the
+        Each node in the graph will be colored according to the value of the 
         child minimum with the largest value.  If any child minimum has value None
         then the node will not be colored
         """
-        colorer = ColorDGraphByValue(
-            self.tree_graph,
-            minimum_to_value,
-            colormap=colormap,
-            normalize_values=normalize_values,
-        )
+        colorer = ColorDGraphByValue(self.tree_graph, minimum_to_value,
+                                     colormap=colormap,
+                                     normalize_values=normalize_values)
         colorer.run()
 
     def draw_minima(self, minima, axes=None, **kwargs):
         """draw a specified list of minima as points
-
+        
         minima : list of minima
         axes : matlplotlib axes
             Draw them on these axes.  If None, use self.axes.
@@ -1178,23 +1152,20 @@ class DisconnectivityGraph(object):
 
         axes.scatter(xpos, energies, **kwargs)
 
-    def plot(
-        self, show_minima=False, show_trees=False, linewidth=0.5, axes=None, title=None
-    ):
+    def plot(self, show_minima=False, show_trees=False, linewidth=0.5, axes=None,
+             title=None):
         """draw the disconnectivity graph using matplotlib
-
+        
         don't forget to call calculate() first
-
+        
         also, you must call pyplot.show() to actually see the plot
         """
-        import matplotlib.pyplot as plt
         from matplotlib.collections import LineCollection
+        import matplotlib.pyplot as plt
 
-        self.line_segments, self.line_colours = self._get_line_segments(
-            self.tree_graph, eoffset=self.eoffset
-        )
+        self.line_segments, self.line_colours = self._get_line_segments(self.tree_graph, eoffset=self.eoffset)
 
-        # get the axes object
+        # get the axes object        
         if axes is not None:
             ax = axes
         else:
@@ -1202,18 +1173,18 @@ class DisconnectivityGraph(object):
                 ax = self.axes
             except AttributeError:
                 fig = plt.figure(figsize=(6, 7))
-                fig.set_facecolor("white")
-                ax = fig.add_subplot(111, adjustable="box")
+                fig.set_facecolor('white')
+                ax = fig.add_subplot(111, adjustable='box')
 
         # set up how the figure should look
-        ax.tick_params(axis="y", direction="out")
+        ax.tick_params(axis='y', direction='out')
         ax.yaxis.tick_left()
         # make the borders a bit prettier
-        ax.spines["left"].set_color("black")
-        ax.spines["left"].set_linewidth(0.5)
-        ax.spines["top"].set_color("none")
-        ax.spines["bottom"].set_color("none")
-        ax.spines["right"].set_color("none")
+        ax.spines['left'].set_color('black')
+        ax.spines['left'].set_linewidth(0.5)
+        ax.spines['top'].set_color('none')
+        ax.spines['bottom'].set_color('none')
+        ax.spines['right'].set_color('none')
         #        plt.box(on=True)
 
         if title is not None:
@@ -1223,16 +1194,15 @@ class DisconnectivityGraph(object):
         if show_minima:
             xpos, minima = self.get_minima_layout()
             energies = [m.energy for m in minima]
-            ax.plot(xpos, energies, "o")
+            ax.plot(xpos, energies, 'o')
 
-        # draw the line segments
-        # use LineCollection because it's much faster than drawing the lines individually
-        linecollection = LineCollection(
-            [[(x[0], y[0]), (x[1], y[1])] for x, y in self.line_segments]
-        )
+        # draw the line segments 
+        # use LineCollection because it's much faster than drawing the lines individually 
+        linecollection = LineCollection([[(x[0], y[0]), (x[1], y[1])] for x, y in self.line_segments])
         linecollection.set_linewidth(linewidth)
         linecollection.set_color(self.line_colours)
         ax.add_collection(linecollection)
+
 
         # scale the axes appropriately
         # note: do not call ax.relim().  As of matplotlib version 1.3
@@ -1245,13 +1215,14 @@ class DisconnectivityGraph(object):
 
         # remove xtics
         # note: the xticks are removed after ax.autoscale_view() is called.
-        # If it is the other way around the lines are too close the image border
+        # If it is the other way around the lines are too close the image border          
         ax.set_xticks([])
         self.axes = ax
 
-    def label_minima(self, minima_labels, axes=None, rotation=60.0, **kwargs):
+    def label_minima(self, minima_labels, axes=None,
+                     rotation=60., **kwargs):
         """label the specified minima
-
+        
         Parameters
         ----------
         minima_labels: dict
@@ -1262,13 +1233,13 @@ class DisconnectivityGraph(object):
         rotation: float
             angle (in degrees) of how much to rotate the text
         kwargs: kwargs
-            additional keyword arguments are passed on to matplotlib
+            additional keyword arguments are passed on to matplotlib 
             ax.set_xticklabels()
-
+        
         Notes
         -----
         if the labels are outside of the figure bounding box you can fix it with
-        plt.tight_layout() or fig.tight_layout()
+        plt.tight_layout() or fig.tight_layout() 
         """
         if axes is not None:
             ax = axes
@@ -1278,11 +1249,7 @@ class DisconnectivityGraph(object):
             except AttributeError:
                 print("you must call plot() before label_minima()")
                 raise
-        leaves = [
-            leaf
-            for leaf in self.tree_graph.leaf_iterator()
-            if leaf.data["minimum"] in minima_labels
-        ]
+        leaves = [leaf for leaf in self.tree_graph.leaf_iterator() if leaf.data["minimum"] in minima_labels]
         xpos = [leaf.data["x"] for leaf in leaves]
         labels = [minima_labels[leaf.data["minimum"]] for leaf in leaves]
         ax.set_xticks(xpos)
@@ -1292,6 +1259,7 @@ class DisconnectivityGraph(object):
     #         if rescale:
     #             import matplotlib.pyplot as plt
     #             plt.tight_layout()
+
 
     def show(self):  # pragma: no cover
         """simple wrapper for matplotlib.pyplot.show()"""
@@ -1304,3 +1272,4 @@ class DisconnectivityGraph(object):
         from matplotlib import pyplot
 
         pyplot.savefig(*args, **kwargs)
+    

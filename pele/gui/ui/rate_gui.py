@@ -8,14 +8,12 @@
 # WARNING! All changes made in this file will be lost!
 
 from builtins import object
-
 from PyQt4 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     _fromUtf8 = lambda s: s
-
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -63,28 +61,9 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(
-            QtGui.QApplication.translate(
-                "Form", "Form", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.btn_compute.setText(
-            QtGui.QApplication.translate(
-                "Form", "Compute Rates", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label_2.setText(
-            QtGui.QApplication.translate(
-                "Form", "Product State", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label.setText(
-            QtGui.QApplication.translate(
-                "Form", "Reactant State", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label_3.setText(
-            QtGui.QApplication.translate(
-                "Form", "Temperature", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
+        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_compute.setText(QtGui.QApplication.translate("Form", "Compute Rates", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("Form", "Product State", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("Form", "Reactant State", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(QtGui.QApplication.translate("Form", "Temperature", None, QtGui.QApplication.UnicodeUTF8))
+

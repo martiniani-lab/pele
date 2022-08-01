@@ -1,16 +1,14 @@
 """
 # distutils: language = C++
 """
-from ctypes import c_size_t as size_t
-
 import numpy as np
+from ctypes import c_size_t as size_t
 
 cimport numpy as np
 from cpython cimport bool
 
 cimport pele.potentials._pele as _pele
-from pele.potentials._pele cimport array_wrap_np, shared_ptr
-
+from pele.potentials._pele cimport shared_ptr, array_wrap_np
 
 # use external c++ class
 cdef extern from "pele/wca.hpp" namespace "pele":

@@ -1,17 +1,16 @@
-import pickle
-import random
 from builtins import range
-
+import random
+import pickle
 from pele.storage.database import Database
-# from math import pi
-from pele.systems.oxdna import OXDNAScrewStep, OXDNATakestep, export_xyz
+#from math import pi
+from pele.systems.oxdna import OXDNATakestep, export_xyz, OXDNAScrewStep
 
 # number of trial configurations to try
 nconf = 1000
 # generate these from the n lowest minima
 from_nlowest = 100
 # open the database with minima
-db = Database(db="storage.sqlite")
+db = Database(db = "storage.sqlite")
 
 minima = db.minima()
 
@@ -27,7 +26,7 @@ for i in range(nconf):
     coords = x.coords.copy()
     step.takeStep(coords)
     trial_configurations.append(coords)
-
+    
 pickle.dump(trial_configurations, open("quench_benchmark.dat", "w"))
 
 fl = open("quench_benchmark.xyz", "w")

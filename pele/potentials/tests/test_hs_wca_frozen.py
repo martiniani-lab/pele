@@ -1,14 +1,12 @@
 from __future__ import division
 
-import unittest
 from builtins import range
-
+import unittest
 import numpy as np
 
-from pele.distance import Distance
-from pele.optimize import ModifiedFireCPP
 from pele.potentials import HS_WCA
-
+from pele.optimize import ModifiedFireCPP
+from pele.distance import Distance
 
 class Test2dMinimization(unittest.TestCase):
     def setUp(self):
@@ -26,12 +24,7 @@ class Test2dMinimization(unittest.TestCase):
         for particle_index in range(self.nr_particles_total):
             xmean = int(particle_index % self.L_total)
             ymean = int(particle_index / self.L_total)
-            if (
-                ymean == 0
-                or ymean == self.L_total - 1
-                or xmean == 0
-                or xmean == self.L_total - 1
-            ):
+            if ymean == 0 or ymean == self.L_total - 1 or xmean == 0 or xmean == self.L_total - 1:
                 self.frozen_dof.append(particle_index * self.box_dimension)
                 self.frozen_dof.append(particle_index * self.box_dimension + 1)
                 self.frozen_atoms.append(particle_index)
@@ -42,94 +35,48 @@ class Test2dMinimization(unittest.TestCase):
             ymean = int(p / self.L_total)
             self.x[p * self.box_dimension] = xmean + 0.1 * np.random.rand()
             self.x[p * self.box_dimension + 1] = ymean + 0.1 * np.random.rand()
-        self.radii = np.asarray(
-            [0.3 + 0.01 * np.random.rand() for _ in range(self.nr_particles_total)]
-        )
+        self.radii = np.asarray([0.3 + 0.01 * np.random.rand() for _ in range(self.nr_particles_total)])
         self.sca = 1
         self.rcut = 2 * (1 + self.sca) * np.amax(self.radii)
         self.boxvec = (self.L_total + self.rcut) * np.ones(self.box_dimension)
-        self.pot_cells_N_frozen_N = HS_WCA(
-            eps=self.eps,
-            sca=self.sca,
-            radii=self.radii,
-            ndim=self.box_dimension,
-            boxvec=self.boxvec,
-            distance_method=Distance.PERIODIC,
-            use_frozen=False,
-            use_cell_lists=False,
-        )
-        self.pot_cells_Y_frozen_N = HS_WCA(
-            eps=self.eps,
-            sca=self.sca,
-            radii=self.radii,
-            ndim=self.box_dimension,
-            boxvec=self.boxvec,
-            distance_method=Distance.PERIODIC,
-            use_frozen=False,
-            use_cell_lists=True,
-            reference_coords=self.x,
-        )
-        self.pot_cells_N_frozen_Y = HS_WCA(
-            eps=self.eps,
-            sca=self.sca,
-            radii=self.radii,
-            ndim=self.box_dimension,
-            boxvec=self.boxvec,
-            distance_method=Distance.PERIODIC,
-            use_frozen=True,
-            use_cell_lists=False,
-            frozen_atoms=self.frozen_atoms,
-            reference_coords=self.x,
-        )
-        self.pot_cells_Y_frozen_Y = HS_WCA(
-            eps=self.eps,
-            sca=self.sca,
-            radii=self.radii,
-            ndim=self.box_dimension,
-            boxvec=self.boxvec,
-            distance_method=Distance.PERIODIC,
-            use_frozen=True,
-            use_cell_lists=True,
-            reference_coords=self.x,
-            frozen_atoms=self.frozen_atoms,
-        )
+        self.pot_cells_N_frozen_N = HS_WCA(eps=self.eps, sca=self.sca,
+                                    radii=self.radii, ndim=self.box_dimension,
+                                    boxvec=self.boxvec, distance_method=Distance.PERIODIC,
+                                    use_frozen=False, use_cell_lists=False)
+        self.pot_cells_Y_frozen_N = HS_WCA(eps=self.eps, sca=self.sca,
+                                    radii=self.radii, ndim=self.box_dimension,
+                                    boxvec=self.boxvec, distance_method=Distance.PERIODIC,
+                                    use_frozen=False, use_cell_lists=True,
+                                    reference_coords=self.x)
+        self.pot_cells_N_frozen_Y = HS_WCA(eps=self.eps, sca=self.sca,
+                                    radii=self.radii, ndim=self.box_dimension,
+                                    boxvec=self.boxvec, distance_method=Distance.PERIODIC,
+                                    use_frozen=True, use_cell_lists=False,
+                                    frozen_atoms=self.frozen_atoms,
+                                    reference_coords=self.x)
+        self.pot_cells_Y_frozen_Y = HS_WCA(eps=self.eps, sca=self.sca,
+                                    radii=self.radii, ndim=self.box_dimension,
+                                    boxvec=self.boxvec, distance_method=Distance.PERIODIC,
+                                    use_frozen=True, use_cell_lists=True,
+                                    reference_coords=self.x,
+                                    frozen_atoms=self.frozen_atoms)
         self.x_red = []
         for atom in range(self.nr_particles_total):
             if atom not in self.frozen_atoms:
-                self.x_red.extend(
-                    self.x[atom * self.box_dimension : (atom + 1) * self.box_dimension]
-                )
+                self.x_red.extend(self.x[atom * self.box_dimension : (atom + 1) * self.box_dimension])
         self.opt_NN = ModifiedFireCPP(self.x, self.pot_cells_N_frozen_N)
         self.opt_YN = ModifiedFireCPP(self.x, self.pot_cells_Y_frozen_N)
         self.opt_NY = ModifiedFireCPP(self.x_red, self.pot_cells_N_frozen_Y)
         self.opt_YY = ModifiedFireCPP(self.x_red, self.pot_cells_Y_frozen_Y)
-
     def test_energies(self):
         self.res_e_before_cells_N_frozen_N = self.opt_NN.get_result()
         self.res_e_before_cells_Y_frozen_N = self.opt_YN.get_result()
         self.res_e_before_cells_N_frozen_Y = self.opt_NY.get_result()
         self.res_e_before_cells_Y_frozen_Y = self.opt_YY.get_result()
-        self.assertAlmostEqual(
-            self.res_e_before_cells_N_frozen_N.energy,
-            self.res_e_before_cells_N_frozen_Y.energy,
-            places=8,
-        )
-        self.assertAlmostEqual(
-            self.res_e_before_cells_Y_frozen_N.energy,
-            self.res_e_before_cells_N_frozen_N.energy,
-            places=8,
-        )
-        self.assertAlmostEqual(
-            self.res_e_before_cells_N_frozen_N.energy,
-            self.res_e_before_cells_Y_frozen_Y.energy,
-            places=8,
-        )
-        self.assertAlmostEqual(
-            self.pot_cells_N_frozen_N.getEnergy(self.x),
-            self.pot_cells_Y_frozen_N.getEnergy(self.x),
-            places=8,
-        )
-
+        self.assertAlmostEqual(self.res_e_before_cells_N_frozen_N.energy, self.res_e_before_cells_N_frozen_Y.energy, places=8)
+        self.assertAlmostEqual(self.res_e_before_cells_Y_frozen_N.energy, self.res_e_before_cells_N_frozen_N.energy, places=8)
+        self.assertAlmostEqual(self.res_e_before_cells_N_frozen_N.energy, self.res_e_before_cells_Y_frozen_Y.energy, places=8)
+        self.assertAlmostEqual(self.pot_cells_N_frozen_N.getEnergy(self.x), self.pot_cells_Y_frozen_N.getEnergy(self.x), places=8)
     def test_minimization(self):
         self.opt_NN.run()
         self.opt_YN.run()
@@ -144,12 +91,7 @@ class Test2dMinimization(unittest.TestCase):
         self.assertTrue(self.res_NY.success)
         self.assertTrue(self.res_YY.success)
         self.assertAlmostEqual(self.res_NY.energy, self.res_YY.energy, delta=1e-10)
-        self.assertAlmostEqual(
-            self.pot_cells_N_frozen_N.getEnergy(self.res_NN.coords),
-            self.pot_cells_Y_frozen_N.getEnergy(self.res_YN.coords),
-            delta=1e-10,
-        )
-
+        self.assertAlmostEqual(self.pot_cells_N_frozen_N.getEnergy(self.res_NN.coords), self.pot_cells_Y_frozen_N.getEnergy(self.res_YN.coords), delta=1e-10)
 
 if __name__ == "__main__":
     unittest.main()

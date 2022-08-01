@@ -3,14 +3,13 @@ Created on 30 Apr 2012
 
 @author: ruehle
 """
-from __future__ import division, print_function
-
-import logging
-import math
+from __future__ import division
+from __future__ import print_function
 from builtins import object
-
-import numpy as np
 from past.utils import old_div
+import numpy as np
+import math
+import logging
 
 from pele.optimize import Result
 
@@ -94,27 +93,11 @@ class Fire(object):
     MYLBFGS
     """
 
-    def __init__(
-        self,
-        coords,
-        potential,
-        restart=None,
-        logfile="-",
-        trajectory=None,
-        dt=0.1,
-        maxstep=0.5,
-        dtmax=1.0,
-        Nmin=5,
-        finc=1.1,
-        fdec=0.5,
-        astart=0.1,
-        fa=0.99,
-        a=0.1,
-        iprint=-1,
-        alternate_stop_criterion=None,
-        events=None,
-        logger=None,
-    ):
+    def __init__(self, coords, potential, restart=None, logfile='-', trajectory=None,
+                 dt=0.1, maxstep=0.5, dtmax=1., Nmin=5, finc=1.1, fdec=0.5,
+                 astart=0.1, fa=0.99, a=0.1, iprint=-1,
+                 alternate_stop_criterion=None, events=None, logger=None):
+
         self.dt = dt
         self.Nsteps = 0
         self.maxstep = maxstep
@@ -152,9 +135,8 @@ class Fire(object):
         else:
             vf = np.vdot(f, self.v)
             if vf > 0.0:
-                self.v = (1.0 - self.a) * self.v + old_div(
-                    self.a * f, np.sqrt(np.vdot(f, f))
-                ) * np.sqrt(np.vdot(self.v, self.v))
+                self.v = (1.0 - self.a) * self.v + old_div(self.a * f, np.sqrt(
+                    np.vdot(f, f))) * np.sqrt(np.vdot(self.v, self.v))
                 if self.Nsteps > self.Nmin:
                     self.dt = min(self.dt * self.finc, self.dtmax)
                     self.a *= self.fa
@@ -192,9 +174,8 @@ class Fire(object):
             if self.alternate_stop_criterion is None:
                 i_am_done = self.converged(f)
             else:
-                i_am_done = self.alternate_stop_criterion(
-                    energy=E, gradient=f, tol=self.fmax
-                )
+                i_am_done = self.alternate_stop_criterion(energy=E, gradient=f,
+                                                          tol=self.fmax)
             if i_am_done:
                 res.success = True
                 break
@@ -218,6 +199,7 @@ class Fire(object):
         self.result = res
         return res
 
+
     def converged(self, forces=None):
         """Did the optimization converge?"""
         return old_div(np.linalg.norm(forces), math.sqrt(len(forces))) < self.fmax
@@ -227,10 +209,8 @@ if __name__ == "__main__":
     import pele.potentials.lj as lj
 
     pot = lj.LJ()
-    coords = 10.0 * np.random.random(300)
-    opt = Fire(
-        coords, pot.getEnergyGradient, dtmax=0.1, dt=0.01, maxstep=0.01, iprint=200
-    )
+    coords = 10. * np.random.random(300)
+    opt = Fire(coords, pot.getEnergyGradient, dtmax=0.1, dt=0.01, maxstep=0.01, iprint=200)
     opt.run(fmax=1e-1, steps=10000)
     print(pot.getEnergy(opt.coords))
     print(opt.nsteps)

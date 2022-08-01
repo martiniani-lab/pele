@@ -1,5 +1,4 @@
 from __future__ import print_function
-
 import numpy as np
 
 from pele.utils.hessian import sort_eigs
@@ -38,12 +37,10 @@ def normalmode_frequencies(hessian, metric=None, eps=1e-4):
 
     if np.max(np.abs(np.imag(frq))) > eps:
         print(frq)
-        raise ValueError(
-            "imaginary eigenvalue in frequency calculation"
-            ", check hessian + metric tensor\n"
-            "the largest imaginary part is %g"
-            % np.max(np.abs(np.imag(frq)))
-        )
+        raise ValueError("imaginary eigenvalue in frequency calculation"
+                         ", check hessian + metric tensor\n"
+                         "the largest imaginary part is %g" %
+                         np.max(np.abs(np.imag(frq))))
 
     return np.sort(np.real(frq))
 
@@ -80,11 +77,9 @@ def normalmodes(hessian, metric=None, eps=1e-4, symmetric=False):
 
     if np.max(np.abs(np.imag(freq))) > eps:
         print(freq)
-        raise ValueError(
-            "imaginary eigenvalue in frequency calculation"
-            ", check hessian + metric tensor\nthe largest imaginary part is %g"
-            % np.max(np.abs(np.imag(freq)))
-        )
+        raise ValueError("imaginary eigenvalue in frequency calculation"
+                         ", check hessian + metric tensor\nthe largest imaginary part is %g" % np.max(
+            np.abs(np.imag(freq))))
 
     freq = np.real(freq)
     freq, evecs = sort_eigs(freq, evecs)
@@ -92,7 +87,7 @@ def normalmodes(hessian, metric=None, eps=1e-4, symmetric=False):
 
 
 def logproduct_freq2(freqs, nzero, nnegative=0, eps=1e-4):
-    """calculate the log product of positive (squared) frequencies
+    """ calculate the log product of positive (squared) frequencies
 
     calculates
     log(product_i f_i^2)
@@ -114,14 +109,14 @@ def logproduct_freq2(freqs, nzero, nnegative=0, eps=1e-4):
     """
     negative_eigs = []
     zero_eigs = []
-    lnf = 0.0
+    lnf = 0.
     n = 0
-    print(len(freqs), freqs, "freeeeeqs")
+    print(len(freqs), freqs, 'freeeeeqs')
     for f in freqs:
         if np.abs(f) < eps:
             zero_eigs.append(f)
             continue
-        if f < 0.0:
+        if f < 0.:
             negative_eigs.append(f)
             continue
         lnf += np.log(f)
@@ -131,22 +126,14 @@ def logproduct_freq2(freqs, nzero, nnegative=0, eps=1e-4):
     inegative = len(negative_eigs)
 
     if nzero != izero:
-        raise NormalModeError(
-            "the number of zero eigenvalues (%d) differs from the expected value (%d)"
-            % (izero, nzero)
-        )
+        raise NormalModeError("the number of zero eigenvalues (%d) differs from the expected value (%d)" % (izero, nzero))
 
     if nnegative != inegative:
         if 0 < nnegative < inegative:
-            raise NormalModeError(
-                "the number of negative eigenvalues (%d) is greater than expected "
-                "(%d).  Is this a higher order saddle point?" % (inegative, nnegative)
-            )
+            raise NormalModeError("the number of negative eigenvalues (%d) is greater than expected "
+                                  "(%d).  Is this a higher order saddle point?" % (inegative, nnegative))
         else:
-            raise NormalModeError(
-                "the number of negative eigenvalues (%d) differs from the expected "
-                "number (%d) (not a minimum / transition state?)"
-                % (inegative, nnegative)
-            )
+            raise NormalModeError("the number of negative eigenvalues (%d) differs from the expected "
+                                  "number (%d) (not a minimum / transition state?)" % (inegative, nnegative))
 
     return n, lnf

@@ -1,7 +1,7 @@
 import unittest
 
-from pele.systems import LJCluster
 from pele.systems.ljcluster_frozen import LJClusterFrozen
+from pele.systems import LJCluster
 from pele.thermodynamics import get_thermodynamic_information
 
 
@@ -10,8 +10,7 @@ class TestLJCluster(unittest.TestCase):
         self.prepare_system(frozen_atoms=[0, 2, 4, 6])
 
     def prepare_system(self, frozen_atoms=None):
-        if not frozen_atoms:
-            frozen_atoms = [0, 2, 4]
+        if not frozen_atoms: frozen_atoms = [0, 2, 4]
         self.natoms = 13
 
         fsys = LJCluster(self.natoms)
@@ -34,9 +33,7 @@ class TestLJCluster(unittest.TestCase):
         pot.getEnergy(coords)
 
     def test_mobile(self):
-        self.assertEqual(
-            3 * self.system.nmobile, self.system.coords_converter.get_mobile_dof().size
-        )
+        self.assertEqual(3 * self.system.nmobile, self.system.coords_converter.get_mobile_dof().size)
 
     def testpermlist(self):
         permlist = self.system.get_permlist()
@@ -60,7 +57,6 @@ class TestLJCluster(unittest.TestCase):
         db = self.make_database()
         get_thermodynamic_information(self.system, db, nproc=1)
 
-
 # class TestLJCluster2(TestLJCluster):
 # def setUp(self):
 # self.prepare_system(frozen_atoms=[0,2])
@@ -70,4 +66,4 @@ class TestLJCluster(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main() 

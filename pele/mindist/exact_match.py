@@ -1,16 +1,16 @@
-from __future__ import absolute_import, division, print_function
-
-from builtins import object, range
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
+from builtins import object
+from past.utils import old_div
+import numpy as np
 from collections import namedtuple
 
-import numpy as np
-from past.utils import old_div
-
+from ._minpermdist_policies import TransformAtomicCluster, MeasureAtomicCluster
 from . import rmsfit
-from ._minpermdist_policies import MeasureAtomicCluster, TransformAtomicCluster
 
-__all__ = ["StandardClusterAlignment", "ExactMatchCluster"]
-
+__all__= ["StandardClusterAlignment", "ExactMatchCluster"]
 
 class StandardClusterAlignment(object):
     """
@@ -46,17 +46,16 @@ class StandardClusterAlignment(object):
     >>     print "possible rotation:",rot,"inversion:",invert
 
     """
-
-    def __init__(self, coords1, coords2, accuracy=0.01, can_invert=True):
-        x1 = coords1.reshape([-1, 3]).copy()
-        x2 = coords2.reshape([-1, 3]).copy()
+    def __init__(self, coords1, coords2, accuracy = 0.01, can_invert=True):
+        x1 = coords1.reshape([-1,3]).copy()
+        x2 = coords2.reshape([-1,3]).copy()
 
         self.accuracy = accuracy
         self.can_invert = can_invert
 
         # calculate distance of all atoms
-        R1 = np.sqrt(np.sum(x1 * x1, axis=1))
-        R2 = np.sqrt(np.sum(x2 * x2, axis=1))
+        R1 = np.sqrt(np.sum(x1*x1, axis=1))
+        R2 = np.sqrt(np.sum(x2*x2, axis=1))
 
         # at least 2 atoms are needed
         # get atom most outer atom
@@ -70,10 +69,8 @@ class StandardClusterAlignment(object):
         cos_best = 99.00
         for idx1_2 in reversed(idx_sorted[0:-1]):
             # stop if angle is larger than threshold
-            cos_theta1 = old_div(
-                np.dot(x1[idx1_1], x1[idx1_2]),
-                (np.linalg.norm(x1[idx1_1]) * np.linalg.norm(x1[idx1_2])),
-            )
+            cos_theta1 = old_div(np.dot(x1[idx1_1], x1[idx1_2]), \
+                (np.linalg.norm(x1[idx1_1])*np.linalg.norm(x1[idx1_2])))
 
             # store the best match in case it is a almost linear molecule
             if np.abs(cos_theta1) < np.abs(cos_best):
@@ -92,12 +89,10 @@ class StandardClusterAlignment(object):
             candidates2 = []
         else:
             # get indices of atoms in shell of thickness 2*accuracy
-            candidates1 = np.arange(len(R2))[
-                (R2 > R1[idx1_1] - accuracy) * (R2 < R1[idx1_1] + accuracy)
-            ]
-            candidates2 = np.arange(len(R2))[
-                (R2 > R1[idx1_2] - accuracy) * (R2 < R1[idx1_2] + accuracy)
-            ]
+            candidates1 = np.arange(len(R2))[ \
+                 (R2 > R1[idx1_1] - accuracy)*(R2 < R1[idx1_1] + accuracy)]
+            candidates2 = np.arange(len(R2))[ \
+                 (R2 > R1[idx1_2] - accuracy)*(R2 < R1[idx1_2] + accuracy)]
 
         self.x1 = x1
         self.x2 = x2
@@ -155,10 +150,8 @@ class StandardClusterAlignment(object):
 
         # we can immediately trash the match if angle does not match
         try:
-            cos_theta2 = old_div(
-                np.dot(x2[idx2_1], x2[idx2_2]),
-                (np.linalg.norm(x2[idx2_1]) * np.linalg.norm(x2[idx2_2])),
-            )
+            cos_theta2 = old_div(np.dot(x2[idx2_1], x2[idx2_2]), \
+                (np.linalg.norm(x2[idx2_1])*np.linalg.norm(x2[idx2_2])))
         except ValueError:
             raise
         if np.abs(cos_theta2 - self.cos_theta1) > 0.5:
@@ -166,67 +159,58 @@ class StandardClusterAlignment(object):
 
         mul = 1.0
         if self.invert:
-            mul = -1.0
+            mul=-1.0
 
         # get rotation for current atom match candidates
         dist, rot = rmsfit.findrotation(
-            x1[[idx1_1, idx1_2]], mul * x2[[idx2_1, idx2_2]], align_com=False
-        )
+            x1[[idx1_1, idx1_2]], mul*x2[[idx2_1, idx2_2]], align_com=False)
 
         return rot, self.invert
 
-
 class ClusterTransoformation(object):
     """an object that defines a transformation on a cluster"""
-
     translation = None
     rotation = None
     permutation = None
     invert = False
+    
 
 
 class ExactMatchCluster(object):
-    """Deterministic check if 2 clusters are a perfect match
+    """ Deterministic check if 2 clusters are a perfect match
 
-    Determines quickly if 2 clusters are a perfect match. It uses
-    check_standard_alignment_cluster to get possible orientations.
+        Determines quickly if 2 clusters are a perfect match. It uses
+        check_standard_alignment_cluster to get possible orientations.
 
 
 
-    Parameters
-    ----------
+        Parameters
+        ----------
 
-    accuracy: float, optional
-        maximum deviation of atoms to still consider cluster as a match
+        accuracy: float, optional
+            maximum deviation of atoms to still consider cluster as a match
 
-    check_inversion: boolean, optional
-        check for inversion symmetry, default is True
+        check_inversion: boolean, optional
+            check for inversion symmetry, default is True
 
-    permlist: iteratable, optional
-        list of allowed permutations. Default is None which means all
-        particles can be permuted
+        permlist: iteratable, optional
+            list of allowed permutations. Default is None which means all
+            particles can be permuted
 
-    align_com: boolean, optional
-        Flag if com should be removed before comparison
+        align_com: boolean, optional
+            Flag if com should be removed before comparison
 
-    Examples
-    --------
+        Examples
+        --------
 
-    >>> x1 = np.random.random(3*natoms)
-    >>> x2 = x1 + 1e-4*np.random.random(x1.shape)
-    >>> matches = ExactClusterMatch(accuracy=1e-3)
-    >>> if match(x1, x2):
-    >>>     print "the two structures are identical
+        >>> x1 = np.random.random(3*natoms)
+        >>> x2 = x1 + 1e-4*np.random.random(x1.shape)
+        >>> matches = ExactClusterMatch(accuracy=1e-3)
+        >>> if match(x1, x2):
+        >>>     print "the two structures are identical
 
     """
-
-    def __init__(
-        self,
-        tol=0.01,
-        accuracy=0.01,
-        transform=TransformAtomicCluster(),
-        measure=MeasureAtomicCluster(),
-    ):
+    def __init__(self, tol = 0.01, accuracy=0.01, transform=TransformAtomicCluster(), measure=MeasureAtomicCluster()):
         self.accuracy = accuracy
         self.tol = tol
         self.transform = transform
@@ -234,18 +218,13 @@ class ExactMatchCluster(object):
 
     def standard_alignments(self, coords1, coords2):
         """return an iterator over the standard alignments"""
-        return StandardClusterAlignment(
-            coords1,
-            coords2,
-            accuracy=self.accuracy,
-            can_invert=self.transform.can_invert(),
-        )
+        return StandardClusterAlignment(coords1, coords2, accuracy = self.accuracy,
+                                   can_invert=self.transform.can_invert())
+
 
     def __call__(self, coords1, coords2, check_inversion=True):
         """return True if the structures are an exact mach, False otherwise"""
-        alignment = self.find_transformation(
-            coords1, coords2, check_inversion=check_inversion
-        )
+        alignment = self.find_transformation(coords1, coords2, check_inversion=check_inversion)
         return alignment is not None
 
     def find_transformation(self, coords1, coords2, check_inversion=True):
@@ -271,8 +250,7 @@ class ExactMatchCluster(object):
         self.exact_transformation.translation = com1 - com2
 
         for rot, invert in self.standard_alignments(x1, x2):
-            if invert and not check_inversion:
-                continue
+            if invert and not check_inversion: continue
             ret = self.check_match(x1, x2, rot, invert)
             if ret is not None:
                 self.exact_transformation.invert = invert
@@ -318,7 +296,7 @@ class ExactMatchCluster(object):
         # use the maximum distance, not rms as cutoff criterion
 
         self._last_checked_rotation = np.dot(rot2, rot)
-        if self.measure.get_dist(x1, x2_trial) < self.tol:
+        if  self.measure.get_dist(x1, x2_trial) < self.tol:
             # return the rotation and permutation as a named tupple
             ret = namedtuple("alignment", ["permutation", "rotation"])
             ret.permutation = perm
@@ -350,28 +328,26 @@ class ExactMatchCluster(object):
         # add back in center of mass
         self.transform.translate(x, com)
 
-
 #
 # only testing below here
 #
 
-
-def test():  # pragma: no cover
+def test(): # pragma: no cover
     natoms = 35
     from pele.utils import rotations
 
     for i in range(100):
-        xx1 = np.random.random(3 * natoms) * 5
-        xx1 = xx1.reshape([-1, 3])
+        xx1 = np.random.random(3*natoms)*5
+        xx1 = xx1.reshape([-1,3])
         mx = rotations.q2mx(rotations.random_q())
         xx2 = -np.dot(mx, xx1.transpose()).transpose()
-        xx2 += 2.0 * (np.random.random(xx2.shape) - 0.5) * 0.001
-        # xx2 = xx1.copy()
+        xx2 +=2.*(np.random.random(xx2.shape)-0.5)*0.001
+        #xx2 = xx1.copy()
         tmp = xx2[1].copy()
         xx2[1] = xx2[4]
         xx2[4] = tmp
         print(i, ExactMatchCluster()(xx1.flatten(), xx2.flatten()))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     test()

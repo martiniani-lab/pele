@@ -1,15 +1,16 @@
-from __future__ import absolute_import, division, print_function
-
-import logging
-import os
-import unittest
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 from builtins import range
+import unittest
+import os
+import logging
 
-import _base_test
 import numpy as np
 
-from pele.optimize._quench import lbfgs_cpp
 from pele.potentials import _inversepower_cpp
+from pele.optimize._quench import lbfgs_cpp
+import _base_test
 
 
 def read_xyzdr(fname, bdim=3):
@@ -19,8 +20,7 @@ def read_xyzdr(fname, bdim=3):
     f = open(fname, "r")
     while True:
         xyzdr = f.readline()
-        if not xyzdr:
-            break
+        if not xyzdr: break
         x, y, z, d, r = xyzdr.split()
         coords.extend([float(x), float(y), float(z)])
         radii.extend([float(d) / 2])
@@ -54,5 +54,5 @@ class TestInversePower_CPP(_base_test._BaseTest):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename="hs_wca_cpp.log", level=logging.DEBUG)
+    logging.basicConfig(filename='hs_wca_cpp.log', level=logging.DEBUG)
     unittest.main()

@@ -1,5 +1,5 @@
-import unittest
 from builtins import range
+import unittest
 
 from pele.optimize import MYLBFGS
 from pele.systems import LJCluster
@@ -51,3 +51,6 @@ class TestMYLBFGS_State(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+        
+        
+        

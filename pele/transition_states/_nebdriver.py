@@ -1,16 +1,16 @@
-from __future__ import absolute_import, division, print_function
-
-import logging
-from builtins import object, range
-
-import numpy as np
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
+from builtins import object
 from past.utils import old_div
+import logging
+import numpy as np
 
 from pele.transition_states import NEB
 from pele.transition_states._NEB import distance_cart
-from pele.utils.events import Signal
-
 from ._interpolate import InterpolatedPath, interpolate_linear
+from pele.utils.events import Signal
 
 __all__ = ["NEBDriver"]
 
@@ -18,7 +18,7 @@ logger = logging.getLogger("pele.connect.neb")
 
 
 class NEBDriver(object):
-    """driver class for NEB
+    """ driver class for NEB
 
     The NEBDriver wraps calls for NEB from LocalConnect. The driver class is responsible for setting
     up the initial interpolation and optimizing the band.
@@ -73,30 +73,14 @@ class NEBDriver(object):
 
     """
 
-    def __init__(
-        self,
-        potential,
-        coords1,
-        coords2,
-        k=100.0,
-        max_images=50,
-        image_density=10.0,
-        iter_density=10.0,
-        verbose=0,
-        factor=1.05,
-        NEBquenchParams=None,
-        adjustk_freq=0,
-        adjustk_tol=0.1,
-        adjustk_factor=1.05,
-        dneb=True,
-        reinterpolate_tol=0.1,
-        reinterpolate=0,
-        adaptive_nimages=False,
-        adaptive_niter=False,
-        interpolator=interpolate_linear,
-        distance=distance_cart,
-        **kwargs
-    ):
+    def __init__(self, potential, coords1, coords2,
+                 k=100., max_images=50, image_density=10., iter_density=10.,
+                 verbose=0, factor=1.05, NEBquenchParams=None, adjustk_freq=0,
+                 adjustk_tol=0.1, adjustk_factor=1.05, dneb=True,
+                 reinterpolate_tol=0.1,
+                 reinterpolate=0, adaptive_nimages=False, adaptive_niter=False,
+                 interpolator=interpolate_linear, distance=distance_cart, **kwargs):
+
         self.potential = potential
         self.interpolator = interpolator
 
@@ -125,7 +109,7 @@ class NEBDriver(object):
         self._kwargs["dneb"] = dneb
 
         if NEBquenchParams is None:
-            NEBquenchParams = {"tol": 1e-2, "maxErise": 100.0}
+            NEBquenchParams = {'tol': 1e-2, 'maxErise': 100.0}
 
         self.quenchParams = NEBquenchParams
 
@@ -135,7 +119,7 @@ class NEBDriver(object):
     def params(cls, obj=None):
         if obj is None:
             obj = NEBDriver(None, None, None)
-        """ return the the parameters of current instance """
+        ''' return the the parameters of current instance '''
         params = obj._kwargs.copy()
         params["k"] = obj.k
         params["image_density"] = obj.image_density
@@ -173,18 +157,12 @@ class NEBDriver(object):
         for i in range(len(self.path) - 1):
             distances.append(np.sqrt(self.distance(self.path[i], self.path[i + 1])[0]))
 
-        self.update_event(
-            path=np.array(self.path),
-            energies=np.array(energies),
-            distances=np.array(distances),
-            stepnum=self.steps_total,
-            rms=1.0,
-            k=self.last_k,
-            event="initial",
-        )
+        self.update_event(path=np.array(self.path), energies=np.array(energies),
+                          distances=np.array(distances), stepnum=self.steps_total,
+                          rms=1.0, k=self.last_k, event="initial")
 
     def run(self):
-        # determine the number of iterations
+        # determine the number of iterations                
         if not self.prepared:
             self.prepare()
 
@@ -192,11 +170,7 @@ class NEBDriver(object):
         # if nimages is already max_images then increasing the number
         # of images with factor will have no effect.  so double the number of steps instead
         niter = int(self.iter_density * self.nimages)
-        if (
-            self.factor > 1.0
-            and self.nimages == self.max_images
-            and self.max_images > 0
-        ):
+        if self.factor > 1. and self.nimages == self.max_images and self.max_images > 0:
             niter *= self.factor
             niter = int(niter)
 
@@ -212,21 +186,15 @@ class NEBDriver(object):
 
         self.niter = niter
         while True:
-            # set up the NEB
+            # set up the NEB 
             k = self.last_k
-            neb = self._nebclass(
-                self.path,
-                self.potential,
-                k=k,
-                quenchParams=quenchParams,
-                verbose=self.verbose,
-                distance=self.distance,
-                **self._kwargs
-            )
+            neb = self._nebclass(self.path, self.potential, k=k,
+                                 quenchParams=quenchParams, verbose=self.verbose,
+                                 distance=self.distance, **self._kwargs)
             self.neb = neb
             neb.events.append(self._process_event)
 
-            # optimize the NEB
+            # optimize the NEB            
             res = neb.optimize()
             self.last_k = neb.k
 
@@ -237,9 +205,7 @@ class NEBDriver(object):
                 self.path = res.path
 
                 if self.verbose >= 0:
-                    logger.info(
-                        "NEB finished after %d steps, rms %e" % (res.nsteps, res.rms)
-                    )
+                    logger.info("NEB finished after %d steps, rms %e" % (res.nsteps, res.rms))
 
                 self._send_finish_event(res)
                 return neb
@@ -247,9 +213,7 @@ class NEBDriver(object):
             # get the distances between each of the images
             distances = []
             for i in range(len(res.path) - 1):
-                distances.append(
-                    np.sqrt(self.distance(res.path[i], res.path[i + 1])[0])
-                )
+                distances.append(np.sqrt(self.distance(res.path[i], res.path[i + 1])[0]))
 
             # reinterplate the path based on the distances
             path = self._reinterpolate(res.path, distances)
@@ -258,31 +222,23 @@ class NEBDriver(object):
             # update the number of iterations if required
             if self.adaptive_niter:
                 self.niter = int(self.iter_density * len(path))
-                if (
-                    self.factor > 1.0
-                    and len(path) == self.max_images
-                    and self.max_images > 0
-                ):
+                if self.factor > 1. and len(path) == self.max_images and self.max_images > 0:
                     self.niter = int(self.niter * self.factor)
 
             if self.verbose >= 1:
-                logger.info(
-                    "NEB reinterpolating path, %d images, niter is %d"
-                    % (len(path), self.niter)
-                )
+                logger.info("NEB reinterpolating path, %d images, niter is %d" % (len(path), self.niter))
+
 
     def generate_path(self, coords1, coords2):
         # determine the number of images to use
         dist, tmp = self.distance(coords1, coords2)
         dist = np.sqrt(dist)
-        nimages = int(max(1.0, dist) * self.image_density * self.factor)
+        nimages = int(max(1., dist) * self.image_density * self.factor)
         if self.max_images > 0:
             nimages = min(nimages, self.max_images)
         if nimages < self.min_images:
             nimages = int(self.min_images)
-        path = InterpolatedPath(
-            coords1, coords2, nimages, interpolator=self.interpolator
-        )
+        path = InterpolatedPath(coords1, coords2, nimages, interpolator=self.interpolator)
 
         return [x for x in path]
 
@@ -294,18 +250,15 @@ class NEBDriver(object):
         acc_dist = np.sum(distances)
         nimages = len(path)
         if self.adaptive_images:
-            nimages = int(int(max(1.0, acc_dist) * self.image_density * self.factor))
+            nimages = int(int(max(1., acc_dist) * self.image_density * self.factor))
         if self.max_images > 0:
             nimages = int(min(nimages, self.max_images))
         if nimages < self.min_images:
             nimages = int(self.min_images)
 
         # only reinterpolate if above tolerance
-        if (
-            avdev < self.reinterpolate_tol
-            and abs(float(nimages - len(path)) / float(nimages))
-            < self.reinterpolate_tol
-        ):
+        if (avdev < self.reinterpolate_tol and
+                    abs(float(nimages - len(path)) / float(nimages)) < self.reinterpolate_tol):
             print("no reinterpolation needed")
             return path
 
@@ -313,7 +266,7 @@ class NEBDriver(object):
         newpath.append(path[0].copy())
 
         icur = 0
-        s_cur = 0.0
+        s_cur = 0.
         s_next = distances[icur]
 
         for i in range(1, nimages - 1):
@@ -328,30 +281,17 @@ class NEBDriver(object):
         newpath.append(path[-1].copy())
         return newpath
 
-    def _process_event(
-        self, path=None, energies=None, distances=None, stepnum=None, rms=None
-    ):
-        self.update_event(
-            path=path,
-            energies=energies,
-            distances=distances,
-            stepnum=stepnum + self.steps_total,
-            rms=rms,
-            k=self.neb.k,
-            event="update",
-        )
+    def _process_event(self, path=None, energies=None, distances=None, stepnum=None, rms=None):
+        self.update_event(path=path, energies=energies,
+                          distances=distances, stepnum=stepnum + self.steps_total,
+                          rms=rms, k=self.neb.k, event="update")
 
     def _send_finish_event(self, res):
         distances = []
         for i in range(len(res.path) - 1):
             distances.append(np.sqrt(self.distance(res.path[i], res.path[i + 1])[0]))
 
-        self.update_event(
-            path=res.path,
-            energies=res.energy,
-            distances=np.array(distances),
-            stepnum=res.nsteps,
-            rms=res.rms,
-            k=self.neb.k,
-            event="final",
-        )
+        self.update_event(path=res.path, energies=res.energy,
+                          distances=np.array(distances), stepnum=res.nsteps,
+                          rms=res.rms, k=self.neb.k, event="final")
+        
