@@ -56,6 +56,20 @@ set(SUNDIALS_LIBRARY_DIR
   CACHE PATH "Location of SUNDIALS libraries")
 
 
+# KLU include directory and libraries
+set(KLU_INCLUDE_DIR
+  /home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/include
+  CACHE PATH "Location of KLU header files")
+
+set(KLU_LIBRARIES
+  /home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libklu.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libamd.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libcolamd.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libbtf.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libsuitesparseconfig.so
+  CACHE STRING "KLU libraries")
+# Find KLU SUNLinsol library
+find_library(SUNDIALS_SUNLINSOLKLU_LIB
+  sundials_sunlinsolklu ${SUNDIALS_LIBRARY_DIR}
+  DOC "SUNDIALS KLU linear solver library")
+
+
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
   sundials_cvode ${SUNDIALS_LIBRARY_DIR}
@@ -100,6 +114,7 @@ include_directories(${PYBIND11_INCLUDE_DIRS})
 set(pele_include ../../source)
 include_directories(${pele_include})
 include_directories(${SUNDIALS_INCLUDE_DIR})
+include_directories(${KLU_INCLUDE_DIR})
 message("pele include directory ${pele_include}")
 
 # build the pele library
@@ -114,6 +129,8 @@ target_link_libraries(test_main pele_lib gtest gtest_main pthread)
 target_link_libraries(test_main ${SUNDIALS_LIBRARIES})
 target_link_libraries(test_main ${BLAS_LIBRARIES})
 target_link_libraries(test_main ${LAPACK_LIBRARIES})
+target_link_libraries(test_main ${KLU_LIBRARIES})
+target_link_libraries(test_main ${SUNDIALS_SUNLINSOLKLU_LIB})
 
 
 add_subdirectory(benchmarks)
