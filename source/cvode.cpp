@@ -10,17 +10,17 @@
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_nvector.h"
 #include "sunmatrix/sunmatrix_dense.h"
-#include <cmath>
-#include <sundials/sundials_matrix.h>
-#include <sunmatrix/sunmatrix_sparse.h> /* access to sparse SUNMatrix           */
-#include <sunlinsol/sunlinsol_klu.h>    /* access to KLU sparse direct solver   */
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <ostream>
 #include <sundials/sundials_context.h>
+#include <sundials/sundials_matrix.h>
+#include <sunlinsol/sunlinsol_klu.h> /* access to KLU sparse direct solver   */
+#include <sunmatrix/sunmatrix_sparse.h> /* access to sparse SUNMatrix           */
 //#include <hoomd/HOOMDMath.h>
 
 using namespace std;
@@ -115,16 +115,15 @@ void CVODEBDFOptimizer::setup_cvode() {
     }
 
   } else if (sparse) {
-    A = SUNSparseMatrix(N_size, N_size, N_size*N_size, CSC_MAT, sunctx);
+    A = SUNSparseMatrix(N_size, N_size, N_size * N_size, CSC_MAT, sunctx);
     udata.stored_J = SUNDenseMatrix(N_size, N_size, sunctx);
-    LS = SUNLinSol_KLU(x0_N, A,  sunctx);
-    if (LS==NULL) {
+    LS = SUNLinSol_KLU(x0_N, A, sunctx);
+    if (LS == NULL) {
       throw std::runtime_error("SUNLinSol_KLU failed");
     }
     CVodeSetLinearSolver(cvode_mem, LS, A);
     CVodeSetJacFn(cvode_mem, Jac_sparse);
-  }
-  else {
+  } else {
 
     A = SUNDenseMatrix(N_size, N_size, sunctx);
     if (check_sundials_retval((void *)A, "SUNDenseMatrix", 0)) {
@@ -166,13 +165,17 @@ void CVODEBDFOptimizer::setup_cvode() {
 #endif
 }
 
-CVODEBDFOptimizer::~CVODEBDFOptimizer() { 
+CVODEBDFOptimizer::~CVODEBDFOptimizer() {
+  // free other sundials objects in the constructor
+  SUNMatDestroy(udata.stored_J);
   // reused in the move/copy constructor so the function has been extracted
-  free_cvode_objects(); }
+  free_cvode_objects();
+}
 
 /**
  * @brief Free CVODE objects.
- * @details This function is called in the destructor and in the move constructor.
+ * @details This function is called in the destructor and in the move
+ * constructor.
  */
 void CVODEBDFOptimizer::free_cvode_objects() {
   N_VDestroy(x0_N);
@@ -359,7 +362,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
       std::cout << "tol = " << tol_ << "\n";
       return true;
     }
-\
+
     // Wrap into a matrix
   } else {
     return false;
@@ -403,8 +406,8 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
   return 0;
 };
 
-int Jac_sparse(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
-        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+int Jac_sparse(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+               void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
   UserData udata = (UserData)user_data;
 
   pele::Array<double> yw = pele_eq_N_Vector(y);
@@ -414,29 +417,25 @@ int Jac_sparse(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data
   udata->pot_->get_energy_gradient_hessian(pele_eq_N_Vector(y), g, h);
   udata->nhev += 1;
 
-
   double *hessdata = SUNDenseMatrix_Data(udata->stored_J);
   for (size_t i = 0; i < yw.size(); ++i) {
     for (size_t j = 0; j < yw.size(); ++j) {
       hessdata[i * yw.size() + j] = -h[i * yw.size() + j];
     }
   }
-  SUNSparseFromDenseMatrix_inplace(udata->stored_J, J,  1e-12, CSC_MAT);
+  SUNSparseFromDenseMatrix_inplace(udata->stored_J, J, 1e-12, CSC_MAT);
   return 0;
 };
 
-
-
-SUNMatrix SUNSparseFromDenseMatrix_inplace(SUNMatrix Ad, SUNMatrix As, realtype droptol,
-                                   int sparsetype)
-{
+SUNMatrix SUNSparseFromDenseMatrix_inplace(SUNMatrix Ad, SUNMatrix As,
+                                           realtype droptol, int sparsetype) {
   sunindextype i, j, nnz;
   sunindextype M, N;
 
   /* check for legal sparsetype, droptol and input matrix type */
-  if ( (sparsetype != CSR_MAT) && (sparsetype != CSC_MAT) )
+  if ((sparsetype != CSR_MAT) && (sparsetype != CSC_MAT))
     return NULL;
-  if ( droptol < ZERO )
+  if (droptol < ZERO)
     return NULL;
   if (SUNMatGetID(Ad) != SUNMATRIX_DENSE)
     return NULL;
@@ -445,38 +444,37 @@ SUNMatrix SUNSparseFromDenseMatrix_inplace(SUNMatrix Ad, SUNMatrix As, realtype 
   M = SM_ROWS_D(Ad);
   N = SM_COLUMNS_D(Ad);
 
-  if (As == NULL)  return NULL;
+  if (As == NULL)
+    return NULL;
 
   /* copy nonzeros from Ad into As, based on CSR/CSC type */
   nnz = 0;
   if (sparsetype == CSC_MAT) {
-    for (j=0; j<N; j++) {
+    for (j = 0; j < N; j++) {
       (SM_INDEXPTRS_S(As))[j] = nnz;
-      for (i=0; i<M; i++) {
-        if ( abs(SM_ELEMENT_D(Ad,i,j)) > droptol ) {
+      for (i = 0; i < M; i++) {
+        if (abs(SM_ELEMENT_D(Ad, i, j)) > droptol) {
           (SM_INDEXVALS_S(As))[nnz] = i;
-          (SM_DATA_S(As))[nnz++] = SM_ELEMENT_D(Ad,i,j);
+          (SM_DATA_S(As))[nnz++] = SM_ELEMENT_D(Ad, i, j);
         }
       }
     }
     (SM_INDEXPTRS_S(As))[N] = nnz;
-  } else {       /* CSR_MAT */
-    for (i=0; i<M; i++) {
+  } else { /* CSR_MAT */
+    for (i = 0; i < M; i++) {
       (SM_INDEXPTRS_S(As))[i] = nnz;
-      for (j=0; j<N; j++) {
-        if ( abs(SM_ELEMENT_D(Ad,i,j)) > droptol ) {
+      for (j = 0; j < N; j++) {
+        if (abs(SM_ELEMENT_D(Ad, i, j)) > droptol) {
           (SM_INDEXVALS_S(As))[nnz] = j;
-          (SM_DATA_S(As))[nnz++] = SM_ELEMENT_D(Ad,i,j);
+          (SM_DATA_S(As))[nnz++] = SM_ELEMENT_D(Ad, i, j);
         }
       }
     }
     (SM_INDEXPTRS_S(As))[M] = nnz;
   }
 
-  return(As);
+  return (As);
 }
-
-
 
 /**
  * @brief Checks sundials error code and prints out error message. Copied from
