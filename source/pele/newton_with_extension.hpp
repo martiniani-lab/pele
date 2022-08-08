@@ -35,8 +35,8 @@ private:
    * @brief Extended Potential, helps regularize the hessian eigenvalues
    *        to be positive with rattlers
    */
-   std::shared_ptr<BasePotential> _potential_extension;
-   std::shared_ptr<ExtendedPotential> _extended_potential_wrapper;
+  std::shared_ptr<BasePotential> _potential_extension;
+  std::shared_ptr<ExtendedPotential> _extended_potential_wrapper;
 
   // Checks whether the hessian was calculated for the current x
   // Gets reset at the end of each iteration when a new step is taken
@@ -58,7 +58,7 @@ public:
   NewtonWithExtendedPotential(
       std::shared_ptr<BasePotential> potential, const pele::Array<double> &x0,
       double tol, std::shared_ptr<BasePotential> potential_extension,
-      double translation_offset=1.0, double max_step=1.0);
+      double translation_offset = 1.0, double max_step = 1.0);
 
   /**
    * Destructor

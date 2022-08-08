@@ -108,7 +108,7 @@ public:
     for (size_t i = 0; i < neighbor_indss.size(); i++) {
       cout << "neighbor list for atom " << i << ": ";
       for (size_t j = 0; j < neighbor_indss[i].size(); j++) {
-        cout << "neighbor " << neighbor_indss[i][j] << ": ";        
+        cout << "neighbor " << neighbor_indss[i][j] << ": ";
         cout << endl;
         cout << "displacement: ";
         for (size_t k = 0; k < neighbor_distss[i][j].size(); k++) {
@@ -209,9 +209,10 @@ public:
         if (no_of_neighbors < zmin) {
           found_rattler = true;
         } else {
-          cout << "atom " << atom_i << " has " << no_of_neighbors << " neighbors"
-               << endl;
-          cout << "atom_i" << atom_i << " neighbor distsss size" << neighbor_distss[atom_i].size() << endl;
+          cout << "atom " << atom_i << " has " << no_of_neighbors
+               << " neighbors" << endl;
+          cout << "atom_i" << atom_i << " neighbor distsss size"
+               << neighbor_distss[atom_i].size() << endl;
           found_rattler = origin_in_hull_2d(neighbor_distss[atom_i]);
         }
         if (found_rattler) {
@@ -256,7 +257,6 @@ public:
       cout << int(not_rattlers[i]) << " ";
     }
     cout << endl;
-
 
     int minimum_jammed_contacts = 2 * ((n_stable_particles - 1) * dim + 1);
 

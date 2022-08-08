@@ -8,11 +8,11 @@
 
 #ifndef PELE_LINE_SEARCH_BACKTRACKING_H
 #define PELE_LINE_SEARCH_BACKTRACKING_H
-#include "preprocessor_directives.hpp"
 #include "eigen_interface.hpp"
 #include "linesearch.hpp"
 #include "lsparameters.hpp"
 #include "optimizer.hpp"
+#include "preprocessor_directives.hpp"
 
 using Scalar = double;
 typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
@@ -34,7 +34,8 @@ public:
                min_step_, max_step_, ftol_, wolfe_, lstype_),
         xsize(opt->get_x().size()), xdum(opt->get_x().copy()), gdum(xsize),
         xvec(xsize), gradvec(xsize), initial_stpsize(inital_stpsize_),
-        step_direction(xsize), xoldvec(xsize), step_moving_away_from_min(false) {
+        step_direction(xsize), xoldvec(xsize),
+        step_moving_away_from_min(false) {
     std::cout << inital_stpsize_ << "stpsize \n";
     std::cout << max_step_ << "max step \n";
   };
@@ -68,8 +69,8 @@ private:
   Scalar initial_stpsize;
   Vector step_direction;
   Vector xoldvec;
-  bool step_moving_away_from_min; // flag to inform the optimizer whether the step is
-                           // moving to the minimum or not
+  bool step_moving_away_from_min; // flag to inform the optimizer whether the
+                                  // step is moving to the minimum or not
 };
 } // namespace pele
 

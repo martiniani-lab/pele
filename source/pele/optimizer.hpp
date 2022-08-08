@@ -93,8 +93,7 @@ protected:
   Array<double> g_; /**< The current gradient */
   double rms_;      /**< The root mean square of the gradient */
 
-
-  bool last_step_failed_; /**< Whether the last step failed 
+  bool last_step_failed_; /**< Whether the last step failed
    helpful for newton, when combining in mixed descent */
 
   /**
@@ -205,8 +204,7 @@ public:
   inline void set_x(pele::Array<double> x) { x_.assign(x); }
 
   // functions for accessing the status of the optimizer
-  virtual inline Array<double> get_x() const { 
-    return x_; }
+  virtual inline Array<double> get_x() const { return x_; }
   inline Array<double> get_g() const { return g_; }
   inline double get_f() const { return f_; }
   inline double get_rms() const { return rms_; }

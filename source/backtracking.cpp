@@ -30,7 +30,8 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
   Scalar f = opt_->get_f();
   // start with the initial stepsize
 
-  step_moving_away_from_min = false; // only true when step is opposite to gradient
+  step_moving_away_from_min =
+      false; // only true when step is opposite to gradient
   LSFunc(f, xvec, gradvec, stpsize, step_direction, xoldvec, params);
   if (step_moving_away_from_min) {
     return 0; // Line search will not work

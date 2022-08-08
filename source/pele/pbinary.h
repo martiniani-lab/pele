@@ -4,5 +4,5 @@
 
 #include <stdint.h>
 
-void pbinary_int64 (int64_t, int);
-void pbinary_double (double);
+void pbinary_int64(int64_t, int);
+void pbinary_double(double);

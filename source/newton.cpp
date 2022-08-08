@@ -11,7 +11,7 @@ extern "C" {
 using pele::Array;
 using namespace std;
 
-// value at which we assume the value is zero 
+// value at which we assume the value is zero
 #define NUMERICAL_ZERO 1e-15
 namespace pele {
 
@@ -102,7 +102,7 @@ void Newton::one_iteration() {
       inv_eigenvalues(i) = 1.0 / _threshold;
     } else {
       // case for normal eigenvalues
-      inv_eigenvalues(i) = 1.0/mod_eig;
+      inv_eigenvalues(i) = 1.0 / mod_eig;
     }
   }
 
@@ -115,7 +115,6 @@ void Newton::one_iteration() {
 
   // cout << "step size: " << _step.norm() << endl;
   double starting_norm = _step.norm();
-
 
   // _step = smallest_eigenvector;
   // calculate the newton step
@@ -140,8 +139,9 @@ void Newton::one_iteration() {
 
   // cout << "starting norm" << starting_norm << endl;
   // cout << "step norm" << stepnorm << endl;
-  if (stepnorm/starting_norm < 1e-10) {
-    throw std::runtime_error("rescaled step decreased by too much. Newton might be in the wrong direction");
+  if (stepnorm / starting_norm < 1e-10) {
+    throw std::runtime_error("rescaled step decreased by too much. Newton "
+                             "might be in the wrong direction");
   }
   cout << "starting step size" << starting_norm << endl;
   cout << "step size rescaled" << stepnorm << endl;

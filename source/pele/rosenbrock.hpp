@@ -101,7 +101,7 @@ public:
   inline double get_energy_gradient(Array<double> const &x,
                                     Array<double> &grad) {
     grad.assign(0);
-    grad[0] = 2 * m_a * (x[0]-x[1]);
+    grad[0] = 2 * m_a * (x[0] - x[1]);
     grad[1] = -grad[0];
     return m_a * x[0] * x[0];
   };
@@ -110,7 +110,7 @@ public:
                                             Array<double> &hess) {
     grad.assign(0);
     hess.assign(0);
-    grad[0] = 2 * m_a * (x[0]-x[1]);
+    grad[0] = 2 * m_a * (x[0] - x[1]);
     grad[1] = -grad[0];
     hess[0] = 2 * m_a;
     hess[1] = -hess[0];

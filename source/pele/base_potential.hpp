@@ -80,8 +80,7 @@ public:
   }
 
   virtual void add_hessian(Array<double> const &x, Array<double> &hess) {
-    throw std::runtime_error(
-        "BasePotential::add_hessian must be overloaded");
+    throw std::runtime_error("BasePotential::add_hessian must be overloaded");
   }
   /**
    * compute the energy and gradient and Hessian.

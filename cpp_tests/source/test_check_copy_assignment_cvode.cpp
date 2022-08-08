@@ -68,7 +68,6 @@ TEST(CVODE, COPY_ASSIGNMENT) {
   double box_length = pele::get_box_length(radii, _ndim, phi);
   x = pele::generate_random_coordinates(box_length, n_particles, _ndim);
 
-
   radii = {0.982267, 0.959526, 1.00257,  0.967356, 1.04893, 0.97781,
            0.954191, 0.988939, 0.980737, 0.964811, 1.04198, 0.926199,
            0.969865, 1.08593,  1.01491,  0.968892};
@@ -115,10 +114,11 @@ TEST(CVODE, COPY_ASSIGNMENT) {
 
   double tol = 1e-9;
   size_t steps_before_convex_check = 1;
-  pele::CVODEBDFOptimizer optimizer_mixed_descent_fire = pele::CVODEBDFOptimizer(pot, x, 1e-9, 1e-5, 1e-5, false, false, true);
+  pele::CVODEBDFOptimizer optimizer_mixed_descent_fire =
+      pele::CVODEBDFOptimizer(pot, x, 1e-9, 1e-5, 1e-5, false, false, true);
 
-  optimizer_mixed_descent_fire = pele::CVODEBDFOptimizer(pot, x_new, 1e-9, 1e-5, 1e-5);
+  optimizer_mixed_descent_fire =
+      pele::CVODEBDFOptimizer(pot, x_new, 1e-9, 1e-5, 1e-5);
   optimizer_mixed_descent_fire.run(2000);
   optimizer_mixed_descent_fire.get_niter();
-
 }

@@ -5,8 +5,8 @@
 #include "pele/utils.hpp"
 // optimizer imports
 #include "pele/extended_mixed_descent.hpp"
-#include "pele/modified_fire.hpp"
 #include "pele/lbfgs.hpp"
+#include "pele/modified_fire.hpp"
 
 // potential imports
 #include "pele/inversepower.hpp"
@@ -76,11 +76,22 @@ TEST(EXTENDED_MXD, TEST_256_RUN) {
 #endif
   x = pele::generate_random_coordinates(box_length, n_particles, _ndim);
 
-  // x = {2.28061, 0.96684, 3.16573, 4.31568, 5.68627, 3.70002, 4.17922, 4.82482, 4.9194, 4.06309, 2.77059, 4.03329, 5.71843, 4.22168, 1.04098, 5.16762, 2.98504, 3.97102, 3.39741, 7.20914, 1.29798, 6.73186, 0.396831, 4.22964, 1.3706, 3.12105, 5.03942, 2.20184, 1.32305, 2.31878, 5.5583, 1.16185};
+  // x = {2.28061,
+  // 0.96684, 3.16573, 4.31568, 5.68627, 3.70002, 4.17922, 4.82482, 4.9194, 4.06309,
+  // 2.77059, 4.03329, 5.71843, 4.22168, 1.04098, 5.16762, 2.98504, 3.97102, 3.39741,
+  // 7.20914, 1.29798, 6.73186,
+  // 0.396831, 4.22964, 1.3706, 3.12105, 5.03942, 2.20184, 1.32305, 2.31878, 5.5583,
+  // 1.16185};
 
-  radii = {0.982267, 0.959526, 1.00257, 0.967356, 1.04893, 0.97781, 0.954191, 0.988939, 0.980737, 0.964811, 1.04198, 0.926199, 0.969865, 1.08593, 1.01491, 0.968892};
+  radii = {0.982267, 0.959526, 1.00257,  0.967356, 1.04893, 0.97781,
+           0.954191, 0.988939, 0.980737, 0.964811, 1.04198, 0.926199,
+           0.969865, 1.08593,  1.01491,  0.968892};
   box_length = 7.40204;
-  x  = {1.8777, 3.61102, 1.70726, 6.93457, 2.14539, 2.55779, 4.1191, 7.02707, 0.357781, 4.92849, 1.28547, 2.83375, 0.775204, 6.78136, 6.27529, 1.81749, 6.02049, 6.70693, 5.36309, 4.6089, 4.9476, 5.54674, 0.677836, 6.04457, 4.9083, 1.24044, 5.09315, 0.108931, 2.18619, 6.52932, 2.85539, 2.30303};
+  x = {1.8777,  3.61102,  1.70726, 6.93457, 2.14539, 2.55779,  4.1191,
+       7.02707, 0.357781, 4.92849, 1.28547, 2.83375, 0.775204, 6.78136,
+       6.27529, 1.81749,  6.02049, 6.70693, 5.36309, 4.6089,   4.9476,
+       5.54674, 0.677836, 6.04457, 4.9083,  1.24044, 5.09315,  0.108931,
+       2.18619, 6.52932,  2.85539, 2.30303};
   boxvec = {box_length, box_length};
 
   //////////// parameters for inverse power potential at packing fraction 0.7 in
@@ -114,20 +125,25 @@ TEST(EXTENDED_MXD, TEST_256_RUN) {
   std::cout << x << std::endl;
   std::cout << "radii" << std::endl;
   std::cout << radii << std::endl;
-  pele::ExtendedMixedOptimizer optimizer_mxopt(pot, extension_potential, x, 1e-9, 60, 1, 1e-1, 2, 1e-4, 1e-4);
-  pele::MODIFIED_FIRE optimizer_fire(pot, x_new, 0.1, 1, 0.5, 5, 1.1, 0.4, 0.99, 0.1, 1e-9);
+  pele::ExtendedMixedOptimizer optimizer_mxopt(
+      pot, extension_potential, x, 1e-9, 60, 1, 1e-1, 2, 1e-4, 1e-4);
+  pele::MODIFIED_FIRE optimizer_fire(pot, x_new, 0.1, 1, 0.5, 5, 1.1, 0.4, 0.99,
+                                     0.1, 1e-9);
   pele::LBFGS optimizer_lbfgs(pot, x_new_extension, 1e-9, 4);
   pele::CVODEBDFOptimizer optimizer_cvode(pot, x, 1e-9);
   optimizer_mxopt.run(4000);
 
-  std::cout << "n phase 1 steps " <<  optimizer_mxopt.get_n_phase_1_steps() << std::endl;
-  std::cout << "n phase 2 steps " <<  optimizer_mxopt.get_n_phase_2_steps() << std::endl;
-  std::cout << "n failed phase 2 steps" << optimizer_mxopt.get_n_failed_phase_2_steps() << std::endl;
+  std::cout << "n phase 1 steps " << optimizer_mxopt.get_n_phase_1_steps()
+            << std::endl;
+  std::cout << "n phase 2 steps " << optimizer_mxopt.get_n_phase_2_steps()
+            << std::endl;
+  std::cout << "n failed phase 2 steps"
+            << optimizer_mxopt.get_n_failed_phase_2_steps() << std::endl;
   // optimizer_fire.run(2000);
   // std::cout << optimizer_fire.get_niter() << std::endl;
   // optimizer_lbfgs.run(2000);
 
   // optimizer_cvode.run(10000);
-  // std::cout << "cvode steps" << optimizer_cvode.get_niter() << std::endl; 
+  // std::cout << "cvode steps" << optimizer_cvode.get_niter() << std::endl;
   // std::cout << optimizer_lbfgs.get_niter() << std::endl;
 }

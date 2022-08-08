@@ -86,7 +86,7 @@ void LBFGS::update_memory(Array<double> x_old, Array<double> g_old,
     }
     yy = 1.;
   }
-  H0_ = ys / yy; 
+  H0_ = ys / yy;
 
   // increment k
   k_ += 1;

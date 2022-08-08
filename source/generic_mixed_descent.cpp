@@ -39,9 +39,10 @@ bool GenericMixedDescent::x_in_convex_region() {
   // 1 is strlen for uplo for new fortran compilers
   dpotrf_(&uplo, &N_int, hessian_copy_for_cholesky_data, &N_int, &info
 #ifdef LAPACK_FORTRAN_STRLEN_END
-    , 1
+          ,
+          1
 #endif
-);
+  );
 
   if (info == 0) {
     // if positive definite, we are in the convex region.

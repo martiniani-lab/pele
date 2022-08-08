@@ -2,11 +2,11 @@
 #include "pele/mxopt.hpp"
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
-#include "pele/preprocessor_directives.hpp"
 #include "pele/eigen_interface.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/lsparameters.hpp"
 #include "pele/optimizer.hpp"
+#include "pele/preprocessor_directives.hpp"
 #include <algorithm>
 #include <complex>
 #include <cvode/cvode.h>
@@ -26,12 +26,12 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                                const pele::Array<double> x0, double tol, int T,
                                double step, double conv_tol, double conv_factor,
                                double rtol, double atol, bool iterative)
-    : GradientOptimizer(potential, x0, tol),
-      N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
-      xold(x_.size()), gold(x_.size()), step(x_.size()), T_(T), usephase1(true),
-      conv_tol_(conv_tol), conv_factor_(conv_factor), n_phase_1_steps(0),
-      n_phase_2_steps(0), hessian(x_.size(), x_.size()),
-      hessian_shifted(x_.size(), x_.size()), line_search_method(this, step) {
+    : GradientOptimizer(potential, x0, tol), N_size(x_.size()), t0(0),
+      tN(100.0), rtol(rtol), atol(atol), xold(x_.size()), gold(x_.size()),
+      step(x_.size()), T_(T), usephase1(true), conv_tol_(conv_tol),
+      conv_factor_(conv_factor), n_phase_1_steps(0), n_phase_2_steps(0),
+      hessian(x_.size(), x_.size()), hessian_shifted(x_.size(), x_.size()),
+      line_search_method(this, step) {
 
   // assume previous phase is phase 1
   prev_phase_is_phase1 = true;
@@ -191,9 +191,10 @@ bool MixedOptimizer::convexity_check() {
   // 1 is strlen for uplo for new fortran compilers
   dpotrf_(&uplo, &N_int, hess_shifted_data, &N_int, &info
 #ifdef LAPACK_FORTRAN_STRLEN_END
-    , 1
+          ,
+          1
 #endif
-);
+  );
   if (info == 0) {
     // if it is positive definite, we can use the newton method to solve the
     // problem

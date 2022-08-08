@@ -157,7 +157,6 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
 
   std::shared_ptr<pele::ExtendedPotential> pot =
       std::make_shared<pele::ExtendedPotential>(pot_a, pot_b);
-  
 
   // check without potential extension switched on
   double energy = pot->get_energy(x);
@@ -182,7 +181,6 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
   // switch off extended potential
   pot->switch_off_extended_potential();
   pot->get_energy_gradient(x, grad);
-
 
   pot_a->get_energy_gradient(x, grad_a);
 
@@ -211,7 +209,7 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
   // switch off extended potential
   pot->switch_on_extended_potential();
   pot->get_energy_gradient_hessian(x, grad, hess);
-  
+
   pot_b->get_energy_gradient_hessian(x, grad_b, hess_b);
 
   for (size_t i = 0; i < n_dof * n_dof; i++) {

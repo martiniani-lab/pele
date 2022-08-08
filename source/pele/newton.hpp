@@ -33,6 +33,7 @@ private:
   Array<uint8_t> _not_rattlers;
   bool _jammed;
   bool _rattlers_found;
+
 public:
   /**
    * @brief Newton method that ignores singular while calculating the inverse.
@@ -77,10 +78,13 @@ public:
     jammed = _jammed;
   }
   // Warning: does not pass info about whether we're near a minimum or not.
-  bool is_jammed() {if(_rattlers_found) { return _jammed;} else {return false;}}
-
-
-  
+  bool is_jammed() {
+    if (_rattlers_found) {
+      return _jammed;
+    } else {
+      return false;
+    }
+  }
 
   void compute_func_gradient(Array<double> x, double &func,
                              Array<double> gradient);

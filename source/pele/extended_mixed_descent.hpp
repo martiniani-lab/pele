@@ -79,7 +79,7 @@ private:
   SUNLinearSolver LS;
   SUNContext sunctx;
   double t0;
-  double tN;  
+  double tN;
   N_Vector x0_N;
   double rtol;
   double atol;

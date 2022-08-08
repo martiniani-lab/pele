@@ -5,7 +5,6 @@
 #include "base_potential.hpp"
 #include "preprocessor_directives.hpp"
 
-
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
 #include "eigen_interface.hpp"
@@ -28,8 +27,8 @@ extern "C" {
 #include "nwpele.hpp"
 #include "optimizer.hpp"
 
-#include <cvode/cvode.h> /* access to CVODE                 */
-#include <nvector/nvector_serial.h> /* access to serial N_Vector       */
+#include <cvode/cvode.h>               /* access to CVODE                 */
+#include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
 #include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
 #include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
 
@@ -80,7 +79,7 @@ private:
   N_Vector x0_N;
   double rtol;
   double atol;
-  SUNContext sunctx;  // SUNDIALS context
+  SUNContext sunctx; // SUNDIALS context
 
   Array<double> xold; //!< Coordinates before taking a step
   Array<double> gold; //!< Gradient before taking a step
@@ -139,9 +138,7 @@ public:
   /**
    * Destructor
    */
-  virtual ~MixedOptimizer() {
-    SUNContext_Free(&sunctx);
-  }
+  virtual ~MixedOptimizer() { SUNContext_Free(&sunctx); }
 
   /**
    * Do one iteration iteration of the optimization algorithm

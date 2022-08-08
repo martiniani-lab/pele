@@ -173,12 +173,12 @@ public:
   /**
    * @brief Get the hessian of the extended potential independent of the flag
    * @details This helps with convexity checks.
-   * @param x 
-   * @param hess 
+   * @param x
+   * @param hess
    */
   void get_hessian_extended(Array<double> const &x, Array<double> &hess) {
-      nhev_extension += 1;
-      return CombinedPotential::get_hessian(x, hess);
+    nhev_extension += 1;
+    return CombinedPotential::get_hessian(x, hess);
   }
 
   size_t get_nfev_extension() { return nfev_extension; }

@@ -116,7 +116,7 @@ void CVODEBDFOptimizer::setup_cvode() {
     }
 
   } else if (sparse) {
-    A = SUNSparseMatrix(N_size, N_size, N_size*N_size, CSC_MAT, sunctx);
+    A = SUNSparseMatrix(N_size, N_size, N_size * N_size, CSC_MAT, sunctx);
     udata.stored_J = SUNDenseMatrix(N_size, N_size, sunctx);
     LS = SUNLinSol_KLU(x0_N, A, sunctx);
     if (LS == NULL) {

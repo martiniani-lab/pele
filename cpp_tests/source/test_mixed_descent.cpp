@@ -1,4 +1,4 @@
- // base imports
+// base imports
 #include "pele/array.hpp"
 #include "pele/cell_lists.hpp"
 #include "pele/utils.hpp"
@@ -60,7 +60,7 @@ TEST(MXD, TEST_256_RUN) {
   x = pele::generate_random_coordinates(box_length, n_particles, _ndim);
 
   //////////// parameters for inverse power potential at packing fraction 0.7 in
-  ///3d
+  /// 3d
   //////////// as generated from code params.py in basinerror library
 
   double k;
@@ -72,9 +72,10 @@ TEST(MXD, TEST_256_RUN) {
   // std::shared_ptr<pele::InversePowerPeriodicCellLists<_ndim>> potcell =
   //     std::make_shared<pele::InversePowerPeriodicCellLists<_ndim>>(
   //         power, eps, radii, boxvec, ncellsx_scale);
-        
-  std::shared_ptr<pele::InversePowerPeriodic<_ndim> > pot =
-  std::make_shared<pele::InversePowerPeriodic<_ndim> >(power, eps, radii, boxvec);
+
+  std::shared_ptr<pele::InversePowerPeriodic<_ndim>> pot =
+      std::make_shared<pele::InversePowerPeriodic<_ndim>>(power, eps, radii,
+                                                          boxvec);
 
   pele::MixedOptimizer optimizer(pot, x, 1e-4, 10);
   optimizer.run(500);

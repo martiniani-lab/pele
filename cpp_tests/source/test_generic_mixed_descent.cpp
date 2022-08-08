@@ -134,18 +134,19 @@ TEST(GENERIC_MXD, TEST_256_RUN) {
   double tol = 1e-9;
   // combine both optimizers
 
-  std::shared_ptr<pele::MODIFIED_FIRE> shared_pointer_to_fire= std::make_shared<pele::MODIFIED_FIRE>(
-      pot, x_new, 0.1, 1, 0.5, 5, 1.1, 0.5, 0.99, 0.1, 1e-9);
+  std::shared_ptr<pele::MODIFIED_FIRE> shared_pointer_to_fire =
+      std::make_shared<pele::MODIFIED_FIRE>(pot, x_new, 0.1, 1, 0.5, 5, 1.1,
+                                            0.5, 0.99, 0.1, 1e-9);
   std::shared_ptr<pele::CVODEBDFOptimizer> shared_pointer_to_cvode =
       std::make_shared<pele::CVODEBDFOptimizer>(pot, x, 1e-9);
   size_t steps_before_convex_check = 50;
-  pele::GenericMixedDescent optimizer_mixed_descent_fire(pot, x_new, 1e-9, shared_pointer_to_cvode, shared_pointer_to_fire, 1.0, steps_before_convex_check);
+  pele::GenericMixedDescent optimizer_mixed_descent_fire(
+      pot, x_new, 1e-9, shared_pointer_to_cvode, shared_pointer_to_fire, 1.0,
+      steps_before_convex_check);
 
   optimizer_mixed_descent_fire.run(2000);
-
 
   double niter = optimizer_mixed_descent_fire.get_niter();
 
   std::cout << niter << endl;
-
 }
