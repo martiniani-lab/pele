@@ -1,6 +1,6 @@
 #ifndef _PELE_MATRIX_H_
 #define _PELE_MATRIX_H_
-
+#include "pele/array.hpp"
 namespace pele {
 
 /**
