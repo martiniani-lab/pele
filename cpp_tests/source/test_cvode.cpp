@@ -87,3 +87,23 @@ TEST(CVODE, TEST_256_RUN){
     std::cout << optimizer.get_x() << "x \n";
     ASSERT_LE(optimizer.get_niter(), 400);
 }
+
+// Test for whether CVODE works with RosenBrock. an easy check for a dense
+// hessian system with ill conditioned minima
+TEST(CVODE, RosenBrock) {
+  auto rosenbrock = std::make_shared<pele::RosenBrock>();
+  Array<double> x0(2, 0);
+  pele::CVODEBDFOptimizer cvode(rosenbrock, x0);
+  // pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 1, 1);
+  // pele ::GradientDescent lbfgs(rosenbrock, x0);
+  cvode.run(2000);
+  Array<double> x = cvode.get_x();
+  std::cout << x << "\n";
+  cout << cvode.get_nfev() << " get_nfev() \n";
+  cout << cvode.get_niter() << " get_niter() \n";
+  cout << cvode.get_rms() << " get_rms() \n";
+  cout << cvode.get_rms() << " get_rms() \n";
+  std::cout << x0 << "\n"
+            << " \n";
+  std::cout << x << "\n";
+}
