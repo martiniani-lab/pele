@@ -17,6 +17,7 @@
 #include <iostream>
 #include <memory>
 #include <ostream>
+#include <stdio.h>
 #include <sundials/sundials_context.h>
 #include <sundials/sundials_matrix.h>
 #include <sunlinsol/sunlinsol_klu.h> /* access to KLU sparse direct solver   */
@@ -115,7 +116,7 @@ void CVODEBDFOptimizer::setup_cvode() {
     }
 
   } else if (sparse) {
-    A = SUNSparseMatrix(N_size, N_size, N_size * N_size, CSC_MAT, sunctx);
+    A = SUNSparseMatrix(N_size, N_size, N_size*N_size, CSC_MAT, sunctx);
     udata.stored_J = SUNDenseMatrix(N_size, N_size, sunctx);
     LS = SUNLinSol_KLU(x0_N, A, sunctx);
     if (LS == NULL) {
@@ -421,9 +422,20 @@ int Jac_sparse(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
   for (size_t i = 0; i < yw.size(); ++i) {
     for (size_t j = 0; j < yw.size(); ++j) {
       hessdata[i * yw.size() + j] = -h[i * yw.size() + j];
+      std::cout << hessdata << std::endl;
     }
   }
+  std::cout << "sparse jacobian before" << std::endl;
+  SUNSparseMatrix_Print(J, stdout);
+  std::cout << "dense jacobian before" << std::endl;
+  SUNDenseMatrix_Print(udata->stored_J, stdout);
+
   SUNSparseFromDenseMatrix_inplace(udata->stored_J, J, 1e-12, CSC_MAT);
+
+  std::cout << "sparse jacobian after" << std::endl;
+  SUNSparseMatrix_Print(J, stdout);
+  std::cout << "dense jacobian after" << std::endl;
+  SUNDenseMatrix_Print(udata->stored_J, stdout);
   return 0;
 };
 
