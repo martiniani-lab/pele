@@ -6,10 +6,10 @@ namespace pele {
 /**
  * This is a very minimal implementation of a matrix.  It's primary function is
  * to act as a wrapper for pele::Array, so a pele array can be act as a matrix
- * temporarily.  The idea is to redo somthing like the reshape() function in
+ * temporarily.  The idea is to redo something like the reshape() function in
  * numpy.
  */
-template <class dtype> class MatrixAdapter : public pele::Array<dtype> {
+template <typename dtype> class MatrixAdapter : public pele::Array<dtype> {
 public:
   /**
    * the second dimension of the matrix, e.g. the number of colums
