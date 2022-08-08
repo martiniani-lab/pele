@@ -1,6 +1,7 @@
 #include "pele/cell_lists.hpp"
 #include "pele/cvode.hpp"
 #include "pele/gradient_descent.hpp"
+#include "pele/harmonic.hpp"
 #include "pele/inversepower.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/mxd_end_only.hpp"
@@ -109,4 +110,35 @@ TEST(CVODE, RosenBrock) {
   std::cout << x0 << "\n"
             << " \n";
   std::cout << x << "\n";
+}
+
+// Test for whether CVODE works with a matrix with zeros.
+// This checks for memory issues when using sparse CVODE
+TEST(CVODE, Harmonic) {
+
+  double k = 1.0;
+  size_t dim = 2;
+  Array<double> origin(2);
+  origin[0] = 0;
+  origin[1] = 0;
+
+  // define potential
+  auto harmonic = std::make_shared<pele::Harmonic>(origin, k, dim);
+  // define the initial position
+  Array<double> x0(dim);
+  x0[0] = 1;
+  x0[1] = 1;
+  pele::CVODEBDFOptimizer cvode(harmonic, x0);
+  // pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 1, 1);
+  // pele ::GradientDescent lbfgs(rosenbrock, x0);
+  cvode.run(2000);
+  Array<double> x = cvode.get_x();
+  std::cout << x0 << "\n";
+  cout << cvode.get_nfev() << " get_nfev() \n";
+  cout << cvode.get_niter() << " get_niter() \n";
+  cout << cvode.get_rms() << " get_rms() \n";
+  cout << cvode.get_rms() << " get_rms() \n";
+  std::cout << x0 << "\n"
+            << " \n";
+  std::cout << x0 << "\n";
 }
