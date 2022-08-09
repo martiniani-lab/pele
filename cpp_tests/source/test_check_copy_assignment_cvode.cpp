@@ -115,7 +115,7 @@ TEST(CVODE, COPY_ASSIGNMENT) {
   double tol = 1e-9;
   size_t steps_before_convex_check = 1;
   pele::CVODEBDFOptimizer optimizer_mixed_descent_fire =
-      pele::CVODEBDFOptimizer(pot, x, 1e-9, 1e-5, 1e-5, false, false, true);
+      pele::CVODEBDFOptimizer(pot, x, 1e-9, 1e-5, 1e-5, pele::DENSE, false);
 
   optimizer_mixed_descent_fire =
       pele::CVODEBDFOptimizer(pot, x_new, 1e-9, 1e-5, 1e-5);

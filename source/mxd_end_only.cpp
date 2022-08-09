@@ -16,6 +16,7 @@
 #include <Eigen/Dense>
 #include <iostream>
 #include <memory>
+#include <pele/cvode.hpp>
 
 using namespace std;
 namespace pele {
@@ -25,7 +26,7 @@ MixedDescentEndOnly::MixedDescentEndOnly(
     double tol, double newton_step_tol, double rtol, double atol,
     double threshold, bool iterative)
     : GradientOptimizer(potential, x0, tol),
-      _cvode_optimizer(potential, x0, tol, rtol, atol, iterative,
+      _cvode_optimizer(potential, x0, tol, rtol, atol, DENSE,
                        false), // initialize the CVODE optimizer
       _newton_optimizer(potential, x0, tol, threshold,
                         false), // initialize the Newton optimizer with the
