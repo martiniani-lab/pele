@@ -430,7 +430,7 @@ int Jac_sparse(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
   std::cout << "dense jacobian before" << std::endl;
   SUNDenseMatrix_Print(udata->stored_J, stdout);
 
-  SUNSparseFromDenseMatrix_inplace(udata->stored_J, J, 1e-12, CSC_MAT);
+// SUNSparseFromDenseMatrix_inplace(udata->stored_J, J, 1e-12, CSC_MAT);
 
   std::cout << "sparse jacobian after" << std::endl;
   SUNSparseMatrix_Print(J, stdout);

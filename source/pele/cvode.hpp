@@ -48,6 +48,11 @@ extern "C" {
 
 namespace pele {
 
+enum HessianType {
+  DENSE = 0,
+  ITERATIVE = 1,
+  SPARSE = 2,
+};
 /**
  * user data passed to CVODE
  */

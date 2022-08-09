@@ -139,7 +139,4 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     include(CodeCoverage)
     setup_target_for_coverage(${PROJECT_NAME}_coverage test_main coverage)
-
-    #target_link_libraries(test_main gcov)
-    #target_link_libraries(pele_lib gcov)
 endif()

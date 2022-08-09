@@ -7,9 +7,9 @@ set(CMAKE_CXX_COMPILER "g++-12")
 project(pele)
 message("${CMAKE_C_COMPILER}")
 message("${CMAKE_CXX_COMPILER}")
-set(numpy_include /ext3/miniconda3/envs/cb3-3.9/lib/python3.9/site-packages/numpy/core/include)
-set(PYTHON_INCLUDE_DIRS /ext3/miniconda3/envs/cb3-3.9/include/python3.9 /ext3/miniconda3/envs/cb3-3.9/include/python3.9)
-set(PYTHON_LDFLAGS "-L/ext3/miniconda3/envs/cb3-3.9/lib -lcrypt -lpthread -ldl -lutil -lrt -lm -lm -lpython3.9 -Xlinker -export-dynamic")
+set(numpy_include /home/praharsh/anaconda3/lib/python3.8/site-packages/numpy/core/include)
+set(PYTHON_INCLUDE_DIRS /home/praharsh/anaconda3/include/python3.8 /home/praharsh/anaconda3/include/python3.8)
+set(PYTHON_LDFLAGS "-L/home/praharsh/anaconda3/lib -lpthread -ldl -lutil -lrt -lm -lpython3.8 -Xlinker -export-dynamic")
 message(PYTHON_LDFLAGS)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #find_package(PythonLibs)
@@ -20,23 +20,37 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 IF(APPLE)
   SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 ENDIF(APPLE)
-
+#ADD_DEFINITIONS(-std=c++20 -O3)
+# set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 
 
 ##################################### sundials #######################################
 # TODO: figure out how to remove the extra setup for sundials
-
-
 # /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
-# set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+# # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
+# set(SUNDIALS_INCLUDE_DIR
+#   /home/ps4586/sunnnew/sundials/SN_EXT/include
+#   CACHE PATH "Location of SUNDIALS header files")
+# set(SUNDIALS_LIBRARY_DIR
+#   /home/ps4586/sunnnew/sundials/SN_EXT/lib64
+#   CACHE PATH "Location of SUNDIALS libraries")
+
 set(SUNDIALS_INCLUDE_DIR
-  /home/ps4586/sunnnew/sundials/SN_EXT/include
+  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
   CACHE PATH "Location of SUNDIALS header files")
-
-
 set(SUNDIALS_LIBRARY_DIR
-  /home/ps4586/sunnnew/sundials/SN_EXT/lib64
+  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
   CACHE PATH "Location of SUNDIALS libraries")
+
+# KLU include directory and libraries
+set(KLU_INCLUDE_DIR
+  /home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/include
+  CACHE PATH "Location of KLU header files")
+
+set(KLU_LIBRARIES
+  /home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libklu.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libamd.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libcolamd.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libbtf.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libsuitesparseconfig.so
+  CACHE STRING "KLU libraries")
+
 
 
 
@@ -77,6 +91,7 @@ cmake_minimum_required(VERSION 2.8)
 # BLAS and LAPACK
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
+find_package(HOOMD REQUIRED)
 # message(${BLAS_LIBRARIES})
 message("LAPACK include dir " ${LAPACKE_INCLUDE_DIR})
 
@@ -105,10 +120,23 @@ message("pele include directory: ${pele_include}")
 # build the pele library
 # NOTE: GLOBBING MIGHT BE A BAD IDEA WHEN ADDING FILES https://stackoverflow.com/questions/1027247/is-it-better-to-specify-source-files-with-glob-or-each-file-individually-in-cmake
 # This is a likely source of undefined symbol errors
+FILE(GLOB pele_sources ${pele_include}/*.c*)
+
+
 include_directories(BEFORE SYSTEM ${SUNDIALS_INCLUDE_DIR})
 include_directories(BEFORE SYSTEM ${pele_include})
-include_directories(${LAPACKE_INCLUDE_DIR})
-FILE(GLOB pele_sources ${pele_include}/*.c*)
+
+# HOOMD includes
+get_property(HOOMD_INCLUDE_DIRS TARGET HOOMD::_hoomd PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+get_property(PYBIND11_INCLUDE_DIRS TARGET pybind11::pybind11_headers PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+
+include_directories(${HOOMD_INCLUDE_DIRS})
+include_directories(${PYBIND11_INCLUDE_DIRS})
+
+
+
+message(PYBIND11_INCLUDE_DIRS ${PYBIND11_INCLUDE_DIRS})
+
 add_library(pele_lib SHARED ${pele_sources})
 
 message("SUNDIALS LIBRARIES " ${SUNDIALS_LIBRARIES})
@@ -117,13 +145,14 @@ function(make_cython_lib cython_cxx_source)
   get_filename_component(library_name ${cython_cxx_source} NAME)
   string(REGEX REPLACE ".cxx$" "" library_name ${library_name})
   add_library(${library_name} SHARED ${cython_cxx_source})
-  target_link_libraries(${library_name} pele_lib)
-  target_link_libraries(${library_name} ${SUNDIALS_LIBRARIES})
-  target_link_libraries(${library_name} ${LAPACK_LIBRARIES})
+  target_include_directories(${library_name} PUBLIC HOOMD::_hoomd)
+  target_link_libraries(${library_name} PUBLIC pele_lib)
+  target_link_libraries(${library_name} PUBLIC ${SUNDIALS_LIBRARIES})
+  target_link_libraries(${library_name} PUBLIC HOOMD::_hoomd)
+  target_link_libraries(${library_name} PUBLIC ${LAPACK_LIBRARIES})
   set_target_properties(${library_name} PROPERTIES PREFIX "")
   message("making library ${library_name} from source ${cython_cxx_source}")
 endfunction(make_cython_lib)
-
 
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/potentials/_lj_cpp.cxx)
 make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/pele/potentials/_morse_cpp.cxx)
