@@ -34,9 +34,9 @@ namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0, double tol, double rtol, double atol,
-    bool iterative, bool use_newton_stop_criterion, bool debug_zone)
+    HessianType hessian_type, bool use_newton_stop_criterion)
     : GradientOptimizer(potential, x0, tol), N_size(x0.size()), rtol_(rtol),
-      atol_(atol), iterative_(iterative), hessian(x0.size(), x0.size()), t0(0),
+      atol_(atol), hessian_type_(hessian_type), hessian(x0.size(), x0.size()), t0(0),
       tN(10000000.0), ret(0),
       use_newton_stop_criterion_(use_newton_stop_criterion) {
   setup_cvode();
@@ -104,7 +104,7 @@ void CVODEBDFOptimizer::setup_cvode() {
     throw std::runtime_error("CVODE user data failed");
   }
   bool sparse = true;
-  if (iterative_) {
+  if (hessian_type_ == ITERATIVE) {
     LS = SUNLinSol_SPGMR(x0_N, SUN_PREC_NONE, 0, sunctx);
     if (check_sundials_retval((void *)LS, "SUNLinSol_SPGMR", 0)) {
       throw std::runtime_error("SUNLinSol_SPGMR failed");
@@ -115,7 +115,7 @@ void CVODEBDFOptimizer::setup_cvode() {
       throw std::runtime_error("CVODE linear solver failed");
     }
 
-  } else if (sparse) {
+  } else if (hessian_type_ == SPARSE) {
     A = SUNSparseMatrix(N_size, N_size, N_size * N_size, CSC_MAT, sunctx);
     udata.stored_J = SUNDenseMatrix(N_size, N_size, sunctx);
     LS = SUNLinSol_KLU(x0_N, A, sunctx);
@@ -124,7 +124,7 @@ void CVODEBDFOptimizer::setup_cvode() {
     }
     CVodeSetLinearSolver(cvode_mem, LS, A);
     CVodeSetJacFn(cvode_mem, Jac_sparse);
-  } else {
+  } else if (hessian_type_ == DENSE) {
 
     A = SUNDenseMatrix(N_size, N_size, sunctx);
     if (check_sundials_retval((void *)A, "SUNDenseMatrix", 0)) {
@@ -143,6 +143,9 @@ void CVODEBDFOptimizer::setup_cvode() {
     if (check_sundials_retval(&ret, "CVodeSetJacFn", 1)) {
       throw std::runtime_error("CVODE set jacobian failed");
     }
+  }
+  else {
+    throw std::runtime_error("Unknown Hessian type");
   }
   g_.assign(udata.stored_grad);
   ret = CVodeSetMaxNumSteps(cvode_mem, 1000000);

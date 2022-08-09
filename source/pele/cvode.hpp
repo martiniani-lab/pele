@@ -87,7 +87,7 @@ private:
   // save construction parameters
   double rtol_;
   double atol_;
-  bool iterative_;
+  bool hessian_type_;
 #if PRINT_TO_FILE == 1
   std::ofstream trajectory_file;
   std::ofstream hessian_eigvals_file;
@@ -115,9 +115,8 @@ public:
   CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potential,
                     const pele::Array<double> x0, double tol = 1e-5,
                     double rtol = 1e-5, double atol = 1e-5,
-                    bool iterative = false,
-                    bool use_newton_stop_criterion = false,
-                    bool debug_zone = false);
+                    HessianType hessian_type = DENSE,
+                    bool use_newton_stop_criterion = false);
 
   ~CVODEBDFOptimizer();
 
@@ -133,7 +132,7 @@ public:
     this->tol_ = other.tol_;
     this->rtol_ = other.rtol_;
     this->atol_ = other.atol_;
-    this->iterative_ = other.iterative_;
+    this->hessian_type_ = other.hessian_type_;
     this->use_newton_stop_criterion_ = other.use_newton_stop_criterion_;
 
     // free cvode memory and setup again
