@@ -8,44 +8,38 @@ project(pele_tests)
 
 # # if not specified by user, the standard build type is release
 # if(NOT CMAKE_BUILD_TYPE)
-#   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release Coverage." FORCE)
+# set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release Coverage." FORCE)
 # endif(NOT CMAKE_BUILD_TYPE)
-
 enable_language(CXX)
 ADD_DEFINITIONS(-std=c++20 -O0 -ggdb3)
 
-#find conda path for python header
+# find conda path for python header
 set(PYTHON_INCLUDE_DIR $ENV{CONDA_PREFIX}/include/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR})
 message("PYTHON INCLUDE DIR" ${PYTHON_INCLUDE_DIR})
 
-
-set (CMAKE_CXX_FLAGS "-fno-omit-frame-pointer")
-set (CMAKE_C_FLAGS "-fno-omit-frame-pointer")
-set (CMAKE_EXE_LINKER_FLAGS "-fno-omit-frame-pointer")
-
+set(CMAKE_CXX_FLAGS "-fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS "-fno-omit-frame-pointer")
+set(CMAKE_EXE_LINKER_FLAGS "-fno-omit-frame-pointer")
 
 # MEMORY DEBUG FLAGS
-#set (CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
-#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
-#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
+set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
 
-#set OpenMP
+# set OpenMP
 find_package(OpenMP)
 message("${OpenMP_C_FLAGS}")
 message("${OpenMP_CXX_FLAGS}")
-if (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+
+if(OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
 # include LAPACK AND BLAS
-
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(HOOMD REQUIRED)
-
-
-
 
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
 set(SUNDIALS_INCLUDE_DIR
@@ -55,7 +49,6 @@ set(SUNDIALS_LIBRARY_DIR
   /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
   CACHE PATH "Location of SUNDIALS libraries")
 
-
 # KLU include directory and libraries
 set(KLU_INCLUDE_DIR
   /home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/include
@@ -64,11 +57,11 @@ set(KLU_INCLUDE_DIR
 set(KLU_LIBRARIES
   /home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libklu.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libamd.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libcolamd.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libbtf.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libsuitesparseconfig.so
   CACHE STRING "KLU libraries")
+
 # Find KLU SUNLinsol library
 find_library(SUNDIALS_SUNLINSOLKLU_LIB
   sundials_sunlinsolklu ${SUNDIALS_LIBRARY_DIR}
   DOC "SUNDIALS KLU linear solver library")
-
 
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
@@ -88,8 +81,10 @@ set(SUNDIALS_LIBRARIES
   ${SUNDIALS_SOLVER_LIB}
   ${SUNDIALS_NVEC_LIB}
   ${SUNDIALS_MANYVEC_LIB}
-  ${SUNDIALS_EXTRA_LIBS})
-#####################################################################################
+  ${SUNDIALS_EXTRA_LIBS}
+  ${SUNDIALS_SUNLINSOLKLU_LIB})
+
+message("SUNDIALS KLU LIB ${SUNDIALS_SUNLINSOLKLU_LIB}")
 
 # Add and compile the gtest library
 set(gtest_src ../gtest)
@@ -103,18 +98,21 @@ message("gtest_libs ${gtest_libs}")
 
 # HOOMD includes
 get_property(HOOMD_INCLUDE_DIRECTORY TARGET HOOMD::_hoomd PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-get_property(PYBIND11_INCLUDE_DIRS TARGET pybind11::pybind11_headers PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+get_property(PYBIND11_INCLUDE_DIRS TARGET pybind11::headers PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 
+# get_property(PYBIND11_LIBRARIES TARGET pybind11::headers PROPERTY INTERFACE_LINK_LIBRARIES)
+# # HOOMD link flags
+# get_property(HOOMD_LIBRARIES TARGET HOOMD::_hoomd PROPERTY INTERFACE_LINK_LIBRARIES)
 include_directories(${PYTHON_INCLUDE_DIR})
 include_directories(${HOOMD_INCLUDE_DIRECTORY})
 include_directories(${PYBIND11_INCLUDE_DIRS})
-
 
 # set the pele include directory
 set(pele_include ../../source)
 include_directories(${pele_include})
 include_directories(${SUNDIALS_INCLUDE_DIR})
 include_directories(${KLU_INCLUDE_DIR})
+
 message("pele include directory ${pele_include}")
 
 # build the pele library
@@ -125,18 +123,19 @@ add_library(pele_lib ${pele_sources})
 FILE(GLOB sources *.c*)
 
 add_executable(test_main ${sources})
+
+# pybind11_add_module(test_main ${sources})
 target_link_libraries(test_main pele_lib gtest gtest_main pthread)
 target_link_libraries(test_main ${SUNDIALS_LIBRARIES})
 target_link_libraries(test_main ${BLAS_LIBRARIES})
 target_link_libraries(test_main ${LAPACK_LIBRARIES})
 target_link_libraries(test_main ${KLU_LIBRARIES})
-target_link_libraries(test_main ${SUNDIALS_SUNLINSOLKLU_LIB})
 
-
-add_subdirectory(benchmarks)
-
+# link to python libraries as well to make HOOMD references work
+# target_link_libraries(test_main PUBLIC HOOMD::_hoomd)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
-    include(CodeCoverage)
-    setup_target_for_coverage(${PROJECT_NAME}_coverage test_main coverage)
+  include(CodeCoverage)
+  setup_target_for_coverage(${PROJECT_NAME}_coverage test_main coverage)
 endif()
