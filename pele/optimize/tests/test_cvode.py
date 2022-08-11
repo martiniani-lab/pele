@@ -5,7 +5,7 @@ TODO: The results are hardcoded for the current test_cvode.py.
       We need to later ensure that we automate the comparison.
 """
 
-from pele.optimize import CVODEBDFOptimizer
+from pele.optimize import CVODEBDFOptimizer, HessianType
 import numpy as np
 
 from .potential_fixture import potential_initial_and_final_conditions
@@ -47,7 +47,7 @@ def test_iterative_works_cvode(potential_initial_and_final_conditions):
         rtol=1e-10,
         atol=1e-10,
         tol=1e-9,
-        iterative=True,
+        hessian_type=HessianType.ITERATIVE,
         use_newton_stop_criterion=True,
     )
     res = cvode_optimizer.run(10000)

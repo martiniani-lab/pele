@@ -99,7 +99,7 @@ from ._gradient_descent_cpp import GradientDescent_CPP
 from ._modified_fire_cpp import ModifiedFireCPP
 from ._lbfgs_cpp import LBFGS_CPP
 from ._mxopt import MixedOptimizer_CPP as MixedOptimizer
-from .cvode_opt import CVODEBDFOptimizer_CPP as CVODEBDFOptimizer
+from .cvode_opt import CVODEBDFOptimizer_CPP as CVODEBDFOptimizer, HessianType
 from ._mxd_end_only import MXDOptimizer_CPP as MXDOptimizer
 from .extended_mixed_descent import ExtendedMixedOptimizer_CPP as ExtendedMixedOptimizer
 from .generic_mixed_descent import GenericMixedDescent_CPP as GenericMixedDescent

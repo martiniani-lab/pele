@@ -20,9 +20,15 @@ from cpython cimport bool as cbool
 from libcpp cimport bool
 
 cdef extern from "pele/cvode.hpp" namespace "pele":
+    cpdef enum HessianType:
+        DENSE,
+        ITERATIVE,
+        SPARSE
+
+cdef extern from "pele/cvode.hpp" namespace "pele":
     cdef cppclass cppCVODEBDFOptimizer "pele::CVODEBDFOptimizer":
         cppCVODEBDFOptimizer(shared_ptr[_pele.cBasePotential], _pele.Array[double],
-                             double, double, double, bool, bool) except +
+                             double, double, double, HessianType, bool) except +
         double get_nhev() except +
 
 
@@ -33,15 +39,17 @@ cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
        when it gets close to a minimum, just like an optimizer
     """
     cdef _pele.BasePotential pot
-    def __cinit__(self, potential, x0,  double tol=1e-4, double rtol = 1e-4, double atol = 1e-4, int nsteps=10000, bool iterative=False, bool use_newton_stop_criterion=False):
+    cdef HessianType hess_type
+    def __cinit__(self, potential, x0,  double tol=1e-4, double rtol = 1e-4, double atol = 1e-4, int nsteps=10000, HessianType hessian_type=HessianType.DENSE, bool use_newton_stop_criterion=False):
         potential = as_cpp_potential(potential, verbose=True)
 
         self.pot = potential
         cdef np.ndarray[double, ndim=1] x0c = np.array(x0, dtype=float)
+        hess_type = hessian_type
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppCVODEBDFOptimizer(self.pot.thisptr,
                              _pele.Array[double](<double*> x0c.data, x0c.size),
-                                tol, rtol, atol, iterative, use_newton_stop_criterion))
+                                tol, rtol, atol, hess_type, use_newton_stop_criterion))
         cdef cppCVODEBDFOptimizer* mxopt_ptr = <cppCVODEBDFOptimizer*> self.thisptr.get()
     
     def get_result(self):
