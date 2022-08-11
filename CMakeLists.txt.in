@@ -63,6 +63,10 @@ find_library(SUNDIALS_NVEC_LIB
   sundials_nvecserial PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
   DOC "NVECTOR_SERIAL library")
 
+find_library(SUNDIALS_SUNLINSOLKLU_LIB
+  sundials_sunlinsolklu ${SUNDIALS_LIBRARY_DIR}
+  DOC "SUNDIALS KLU linear solver library")
+
 # find_library(SUNDIALS_MANYVEC_LIB
 #   sundials_nvecmanyvector ${SUNDIALS_LIBRARY_DIR}
 #   DOC "NVECTOR_MANYVECTOR library")
@@ -72,8 +76,8 @@ set(SUNDIALS_LIBRARIES
   ${SUNDIALS_SOLVER_LIB}
   ${SUNDIALS_NVEC_LIB}
   ${SUNDIALS_MANYVEC_LIB}
-  ${SUNDIALS_EXTRA_LIBS})
-#####################################################################################
+  ${SUNDIALS_EXTRA_LIBS}
+  ${SUNDIALS_SUNLINSOLKLU_LIB})
 
 message("python include dirs: ${PYTHON_INCLUDE_DIRS}")
 message("python ldflags: ${PYTHON_LDFLAGS}")
