@@ -36,8 +36,8 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     const pele::Array<double> x0, double tol, double rtol, double atol,
     HessianType hessian_type, bool use_newton_stop_criterion)
     : GradientOptimizer(potential, x0, tol), N_size(x0.size()), rtol_(rtol),
-      atol_(atol), hessian_type_(hessian_type), hessian(x0.size(), x0.size()), t0(0),
-      tN(10000000.0), ret(0),
+      atol_(atol), hessian_type_(hessian_type), hessian(x0.size(), x0.size()),
+      t0(0), tN(10000000.0), ret(0),
       use_newton_stop_criterion_(use_newton_stop_criterion) {
   setup_cvode();
 };
@@ -103,7 +103,6 @@ void CVODEBDFOptimizer::setup_cvode() {
   if (check_sundials_retval(&ret, "CVodeSetUserData", 1)) {
     throw std::runtime_error("CVODE user data failed");
   }
-  bool sparse = true;
   if (hessian_type_ == ITERATIVE) {
     LS = SUNLinSol_SPGMR(x0_N, SUN_PREC_NONE, 0, sunctx);
     if (check_sundials_retval((void *)LS, "SUNLinSol_SPGMR", 0)) {
@@ -143,8 +142,7 @@ void CVODEBDFOptimizer::setup_cvode() {
     if (check_sundials_retval(&ret, "CVodeSetJacFn", 1)) {
       throw std::runtime_error("CVODE set jacobian failed");
     }
-  }
-  else {
+  } else {
     throw std::runtime_error("Unknown Hessian type");
   }
   g_.assign(udata.stored_grad);
@@ -435,7 +433,7 @@ int Jac_sparse(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
   std::cout << "dense jacobian before" << std::endl;
   SUNDenseMatrix_Print(udata->stored_J, stdout);
 
-// SUNSparseFromDenseMatrix_inplace(udata->stored_J, J, 1e-12, CSC_MAT);
+  SUNSparseFromDenseMatrix_inplace(udata->stored_J, J, 1e-12, CSC_MAT);
 
   std::cout << "sparse jacobian after" << std::endl;
   SUNSparseMatrix_Print(J, stdout);
