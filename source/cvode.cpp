@@ -171,7 +171,9 @@ void CVODEBDFOptimizer::setup_cvode() {
 
 CVODEBDFOptimizer::~CVODEBDFOptimizer() {
   // free other sundials objects in the constructor
-  SUNMatDestroy(udata.stored_J);
+  if (hessian_type_ == SPARSE) {
+    SUNMatDestroy(udata.stored_J);
+  }
   // reused in the move/copy constructor so the function has been extracted
   free_cvode_objects();
 }
