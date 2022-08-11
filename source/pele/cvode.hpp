@@ -87,7 +87,7 @@ private:
   // save construction parameters
   double rtol_;
   double atol_;
-  bool hessian_type_;
+  HessianType hessian_type_;
 #if PRINT_TO_FILE == 1
   std::ofstream trajectory_file;
   std::ofstream hessian_eigvals_file;
