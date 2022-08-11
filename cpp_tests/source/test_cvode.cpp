@@ -92,24 +92,28 @@ TEST(CVODE, TEST_256_RUN) {
   ASSERT_LE(optimizer.get_niter(), 400);
 }
 
-// Test for whether CVODE works with RosenBrock. an easy check for a dense
-// hessian system with ill conditioned minima
-TEST(CVODE, RosenBrock) {
+// Test for whether CVODE works with RosenBrock. an easy check whether the
+// Dense variation works and matches with the sparse case
+TEST(CVODE, RosenBrockDenseandSparseMatch) {
   auto rosenbrock = std::make_shared<pele::RosenBrock>();
-  Array<double> x0(2, 0);
-  pele::CVODEBDFOptimizer cvode(rosenbrock, x0);
+  Array<double> x_sparse(2, 0);
+  Array<double> x_dense = x_sparse.copy();
+  pele::CVODEBDFOptimizer cvode_sparse(rosenbrock, x_sparse, 1e-9, 1e-5, 1e-5, pele::SPARSE);
+  pele::CVODEBDFOptimizer cvode_dense(rosenbrock, x_dense, 1e-9, 1e-5, 1e-5, pele::DENSE);
   // pele::LBFGS lbfgs(rosenbrock, x0, 1e-4, 1, 1);
   // pele ::GradientDescent lbfgs(rosenbrock, x0);
-  cvode.run(2000);
-  Array<double> x = cvode.get_x();
-  std::cout << x << "\n";
-  cout << cvode.get_nfev() << " get_nfev() \n";
-  cout << cvode.get_niter() << " get_niter() \n";
-  cout << cvode.get_rms() << " get_rms() \n";
-  cout << cvode.get_rms() << " get_rms() \n";
-  std::cout << x0 << "\n"
-            << " \n";
-  std::cout << x << "\n";
+  cvode_sparse.run(2000);
+  cvode_dense.run(2000);
+  Array<double> x_sparse_end = cvode_sparse.get_x();
+  Array<double> x_dense_end = cvode_dense.get_x();
+  
+  for (size_t i = 0; i < x_sparse.size(); ++i) {
+    ASSERT_NEAR(x_sparse_end[i], x_dense_end[i], 1e-6);
+  }
+  
+  ASSERT_EQ(cvode_sparse.get_nfev(), cvode_dense.get_nfev());
+  ASSERT_EQ(cvode_sparse.get_nhev(), cvode_dense.get_nhev());
+  ASSERT_EQ(cvode_sparse.get_niter(), cvode_dense.get_niter());
 }
 
 // Test for whether CVODE works with a matrix with zeros.
