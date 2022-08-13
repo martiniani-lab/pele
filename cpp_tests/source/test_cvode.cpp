@@ -24,7 +24,7 @@ using std::cout;
 
 // Test for whether the switch works for mixed descent
 // TODO: seed the random number generator
-TEST(CVODE, TEST_256_RUN) {
+TEST(CVODE, TEST_16_INVERSE_POWER_SPARSE_VS_DENSE) {
   static const size_t _ndim = 2;
   size_t n_particles;
   size_t n_dof;
@@ -32,7 +32,7 @@ TEST(CVODE, TEST_256_RUN) {
   double eps;
   double phi;
   double box_length;
-  pele::Array<double> x;
+  pele::Array<double> x_sparse;
   pele::Array<double> radii;
   pele::Array<double> xfinal;
   pele::Array<double> boxvec;
@@ -52,11 +52,12 @@ TEST(CVODE, TEST_256_RUN) {
            0.954191, 0.988939, 0.980737, 0.964811, 1.04198, 0.926199,
            0.969865, 1.08593,  1.01491,  0.968892};
   box_length = 7.40204;
-  x = {1.8777,  3.61102,  1.70726, 6.93457, 2.14539, 2.55779,  4.1191,
+  x_sparse = {1.8777,  3.61102,  1.70726, 6.93457, 2.14539, 2.55779,  4.1191,
        7.02707, 0.357781, 4.92849, 1.28547, 2.83375, 0.775204, 6.78136,
        6.27529, 1.81749,  6.02049, 6.70693, 5.36309, 4.6089,   4.9476,
        5.54674, 0.677836, 6.04457, 4.9083,  1.24044, 5.09315,  0.108931,
        2.18619, 6.52932,  2.85539, 2.30303};
+  Array<double> x_dense = x_sparse.copy();
   boxvec = {box_length, box_length};
 
   //////////// parameters for inverse power potential at packing fraction 0.7 in
@@ -82,14 +83,29 @@ TEST(CVODE, TEST_256_RUN) {
       std::make_shared<pele::InverseHalfIntPowerPeriodic<_ndim, pow2>>(
           eps, radii, boxvec, exact_sum);
 
-  pele::CVODEBDFOptimizer optimizer(pot, x, 1e-9, 1e-5, 1e-5);
-  optimizer.run();
-  std::cout << optimizer.get_nfev() << "nfev \n";
-  std::cout << optimizer.get_nhev() << "nhev \n";
-  std::cout << optimizer.get_rms() << "rms \n";
-  std::cout << optimizer.get_niter() << "the \n";
-  std::cout << optimizer.get_x() << "x \n";
-  ASSERT_LE(optimizer.get_niter(), 400);
+  pele::CVODEBDFOptimizer cvode_sparse(pot, x_sparse, 1e-9, 1e-5, 1e-5, pele::SPARSE);
+  pele::CVODEBDFOptimizer cvode_dense(pot, x_dense, 1e-9, 1e-5, 1e-5, pele::DENSE);
+
+
+
+  cvode_sparse.run();
+  cvode_dense.run();
+
+  xfinal = cvode_sparse.get_x();
+  xfinal = cvode_dense.get_x();
+
+  for (size_t i = 0; i < n_dof; i++) {
+    EXPECT_NEAR(xfinal[i], x_sparse[i], 1e-3);
+  }
+
+  // check nfev nhev and niter are the same
+
+  EXPECT_EQ(cvode_sparse.get_nfev(), cvode_dense.get_nfev());
+  EXPECT_EQ(cvode_sparse.get_nhev(), cvode_dense.get_nhev());
+  EXPECT_EQ(cvode_sparse.get_niter(), cvode_dense.get_niter());
+
+  
+  ASSERT_LE(cvode_sparse.get_niter(), 400);
 }
 
 // Test for whether CVODE works with RosenBrock. an easy check whether the
