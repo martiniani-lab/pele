@@ -43,19 +43,19 @@ find_package(HOOMD REQUIRED)
 
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
 set(SUNDIALS_INCLUDE_DIR
-  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/include
+  /home/praharsh/research/bv-libraries/sunnnew/sundials/SN_EXT/include
   CACHE PATH "Location of SUNDIALS header files")
 set(SUNDIALS_LIBRARY_DIR
-  /home/praharsh/Dropbox/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
+  /home/praharsh/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
   CACHE PATH "Location of SUNDIALS libraries")
 
 # KLU include directory and libraries
 set(KLU_INCLUDE_DIR
-  /home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/include
+  /home/praharsh/research/bv-libraries/SuiteSparse/include
   CACHE PATH "Location of KLU header files")
 
 set(KLU_LIBRARIES
-  /home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libklu.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libamd.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libcolamd.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libbtf.so;/home/praharsh/Dropbox/research/bv-libraries/SuiteSparse/lib/libsuitesparseconfig.so
+  /home/praharsh/research/bv-libraries/SuiteSparse/lib/libklu.so;/home/praharsh/research/bv-libraries/SuiteSparse/lib/libamd.so;/home/praharsh/research/bv-libraries/SuiteSparse/lib/libcolamd.so;/home/praharsh/research/bv-libraries/SuiteSparse/lib/libbtf.so;/home/praharsh/research/bv-libraries/SuiteSparse/lib/libsuitesparseconfig.so
   CACHE STRING "KLU libraries")
 
 # Find KLU SUNLinsol library
