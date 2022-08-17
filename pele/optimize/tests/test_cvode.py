@@ -23,7 +23,7 @@ def test_cvode_compare_with_cpp(potential_initial_and_final_conditions):
         rtol=1e-5,
         atol=1e-5,
         tol=1e-9,
-        iterative=False,
+        hessian_type=HessianType.DENSE,
         use_newton_stop_criterion=False,
     )
     res = cvode_optimizer.run(10000)
