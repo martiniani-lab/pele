@@ -10,22 +10,32 @@ project(pele_tests)
 # if(NOT CMAKE_BUILD_TYPE)
 # set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release Coverage." FORCE)
 # endif(NOT CMAKE_BUILD_TYPE)
+
+
 enable_language(CXX)
-ADD_DEFINITIONS(-std=c++20 -O0 -ggdb3)
+#TODO: Add a build type option specifically for memory leak testing
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fno-omit-frame-pointer -fsanitize=address -fsanitize=leak -static-libasan")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -fno-omit-frame-pointer -fsanitize=address -fsanitize=leak -static-libasan")
+elseif(CMAKE_BUILD_TYPE STREQUAL Release)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG")
+elseif(CMAKE_BUILD_TYPE STREQUAL Coverage)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -fprofile-arcs -ftest-coverage")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG -fprofile-arcs -ftest-coverage")
+endif()
+message(CMAKE_CONFIGURATION_TYPES ${CMAKE_CONFIGURATION_TYPES})
+
+
+
 
 # find conda path for python header
 set(PYTHON_INCLUDE_DIR $ENV{CONDA_PREFIX}/include/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR})
 message("PYTHON INCLUDE DIR" ${PYTHON_INCLUDE_DIR})
-
-set(CMAKE_CXX_FLAGS "-fno-omit-frame-pointer")
-set(CMAKE_C_FLAGS "-fno-omit-frame-pointer")
-set(CMAKE_EXE_LINKER_FLAGS "-fno-omit-frame-pointer")
-
-# MEMORY DEBUG FLAGS
-set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address -fsanitize=leak -static-libasan")
-
 # set OpenMP
 find_package(OpenMP)
 message("${OpenMP_C_FLAGS}")
