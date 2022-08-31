@@ -28,10 +28,15 @@ parser.add_argument("-j", type=int, default=4)
 parser.add_argument("-c", "--compiler", type=str, default=None)
 parser.add_argument("--opt-report", action='store_true',
                     help="Print optimization report (for Intel compiler). Default: False", default=False)
+# for building 
+parser.add_argument("--build-type", type=str, default="Release", help="Build type. Default: Release,  types Release, Debug, RelWithDebInfo, MemCheck, Coverage")
 jargs, remaining_args = parser.parse_known_args(sys.argv)
 
 # record c compiler choice. use unix (gcc) by default
 # Add it back into remaining_args so distutils can see it also
+
+
+
 idcompiler = None
 if not jargs.compiler or jargs.compiler in ("unix", "gnu", "gcc"):
     idcompiler = "unix"
@@ -48,13 +53,32 @@ if jargs.j is None:
 else:
     cmake_parallel_args = ["-j" + str(jargs.j)]
 
-#extra compiler args
-cmake_compiler_extra_args = ["-std=c++2a","-Wall", "-Wextra", "-pedantic", "-O3", "-fPIC"]
-cmake_compiler_extra_args = ["-std=c++2a", "-O3", "-fPIC"]
-if idcompiler.lower() == 'unix':
-    cmake_compiler_extra_args += ['-march=native', '-flto', '-fopenmp']
+build_type = jargs.build_type
+
+if (build_type == "Release"):
+    cmake_compiler_extra_args = ["-std=c++2a","-Wall", "-Wextra", "-pedantic", "-O3", "-fPIC", "-DNDEBUG", "--march=native"]
+elif (build_type == "Debug"):
+    cmake_compiler_extra_args = ["-std=c++2a","-Wall", "-Wextra", "-pedantic", "-ggdb3", "-O0", "-fPIC"]
+elif (build_type == "RelWithDebInfo"):
+    cmake_compiler_extra_args = ["-std=c++2a","-Wall", "-Wextra", "-pedantic", "-g", "-O3", "-fPIC"]
+elif (build_type == "MemCheck"):
+    cmake_compiler_extra_args = ["-std=c++2a","-Wall", "-Wextra", "-pedantic", "-g", "-O0", "-fPIC", "-fsanitize=address", "-fsanitize=leak"]
 else:
-    cmake_compiler_extra_args += ['-axCORE-AVX2', '-ipo', '-qopenmp', '-ip', '-unroll']
+    raise ValueError("Unknown build type: " + build_type)
+
+
+
+
+
+
+if idcompiler.lower() == 'unix':
+    cmake_compiler_extra_args += ['-fopenmp']
+    if build_type == "Release":
+        cmake_compiler_extra_args += ['-flto']
+else:
+    cmake_compiler_extra_args += ['-qopenmp']
+    if build_type == "Release":
+        ['-axCORE-AVX2', '-ipo',  '-ip', '-unroll']
     if jargs.opt_report:
         cmake_compiler_extra_args += ['-qopt-report=5']
 
