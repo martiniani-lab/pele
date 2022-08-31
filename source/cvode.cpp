@@ -425,7 +425,6 @@ int Jac_sparse(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
   for (size_t i = 0; i < yw.size(); ++i) {
     for (size_t j = 0; j < yw.size(); ++j) {
       hessdata[i * yw.size() + j] = -h[i * yw.size() + j];
-      std::cout << hessdata << std::endl;
     }
   }
   std::cout << "sparse jacobian before" << std::endl;

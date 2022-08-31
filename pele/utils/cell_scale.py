@@ -22,17 +22,17 @@ def get_ncellsx_scale(radii, boxv, omp_threads=None):
     return ncellsx_scale
 
 
-def get_box_length(hs_radii, dim, phi):
+def get_box_length(radii, dim : int, phi : float) -> float:
     """ gets the box length for a given number
         of particles and given packing fraction
     """
     
     if dim == 3:
-        vol_spheres = np.sum(4./3. * np.pi*hs_radii**3)
+        vol_spheres = np.sum(4./3. * np.pi*radii**3)
         box_length = (vol_spheres/phi)**(1/3.)
         return box_length
     elif dim == 2:
-        vol_discs = np.sum(np.pi*hs_radii**2)
+        vol_discs = np.sum(np.pi*radii**2)
         box_length = (vol_discs/phi)**(1/2.)
         return box_length
     else:

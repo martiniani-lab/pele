@@ -56,7 +56,7 @@ else:
 build_type = jargs.build_type
 
 if (build_type == "Release"):
-    cmake_compiler_extra_args = ["-std=c++2a","-Wall", "-Wextra", "-pedantic", "-O3", "-fPIC", "-DNDEBUG", "--march=native"]
+    cmake_compiler_extra_args = ["-std=c++2a","-Wall", "-Wextra", "-pedantic", "-O3", "-fPIC", "-DNDEBUG", "-march=native"]
 elif (build_type == "Debug"):
     cmake_compiler_extra_args = ["-std=c++2a","-Wall", "-Wextra", "-pedantic", "-ggdb3", "-O0", "-fPIC"]
 elif (build_type == "RelWithDebInfo"):
