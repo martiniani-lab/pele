@@ -41,7 +41,7 @@ public:
       : opt_non_convex_(opt_non_convex), opt_convex_(opt_convex),
         translation_offset_(translation_offset), hessian_(x.size(), x.size()),
         hessian_copy_for_cholesky_(x.size(), x.size()), hessian_evaluations_(0),
-        iterations_(0), steps_before_convex_check_(steps_before_convex_check),
+        steps_before_convex_check_(steps_before_convex_check),
         not_in_convex_region_(true), hessian_calculated_(false),
         last_non_convex_x_(x.size()), use_non_convex_method_(true),
         n_phase_1_steps(0), GradientOptimizer(pot, x, tol) {
@@ -137,7 +137,6 @@ private:
   void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset);
 
   size_t hessian_evaluations_;
-  size_t iterations_;
 
   double translation_offset_;
   Eigen::MatrixXd hessian_;
