@@ -33,7 +33,6 @@ bool GenericMixedDescent::x_in_convex_region() {
   double *hessian_copy_for_cholesky_data;
   hessian_copy_for_cholesky_data = hessian_copy_for_cholesky_.data();
   int info = 0;
-
   dpotrf_(&uplo, &N_int, hessian_copy_for_cholesky_data, &N_int, &info
 #ifdef LAPACK_FORTRAN_STRLEN_END // 1 is the length of the uplo string,
                                  // necessary for current fortran
@@ -53,7 +52,7 @@ void GenericMixedDescent::get_hess(Eigen::MatrixXd &hessian) {
   // Does not allocate memory for hessian just wraps around the data
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
   if (pot_extension_provided_) {
-    extended_potential_.get_hessian(x_, hessian_pele);
+    extended_potential_->get_hessian(x_, hessian_pele);
   } else {
     potential_->get_hessian(x_, hessian_pele);
   }
