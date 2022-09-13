@@ -17,6 +17,7 @@
 
 #include "pele/gradient_descent.hpp"
 #include <cmath>
+#include <complex>
 #include <cstddef>
 #include <fstream>
 #include <gtest/gtest.h>

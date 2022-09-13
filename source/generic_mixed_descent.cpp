@@ -60,11 +60,12 @@ void GenericMixedDescent::get_hess(Eigen::MatrixXd &hessian) {
 }
 
 void GenericMixedDescent::one_iteration() {
-  if ((iter_number_ % steps_before_convex_check_ == 0 and iter_number_ > 0) or
-      !not_in_convex_region_) {
+  if ((iter_number_ % steps_before_convex_check_ == 0 and iter_number_ > 0) and
+      not_in_convex_region_) {
     not_in_convex_region_ = !x_in_convex_region();
 
     // if in convex region and non convex method is being used
+    // switch to convex method
     if (!not_in_convex_region_ and use_non_convex_method_) {
       use_non_convex_method_ = false;
       last_non_convex_x_.assign(x_);
