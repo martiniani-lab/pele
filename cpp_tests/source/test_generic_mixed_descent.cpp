@@ -143,11 +143,13 @@ TEST(GENERIC_MXD, TEST_256_RUN) {
   size_t steps_before_convex_check = 50;
   pele::GenericMixedDescent optimizer_mixed_descent_fire(
       pot, x_new, 1e-9, shared_pointer_to_cvode, shared_pointer_to_fire, 1.0,
-      steps_before_convex_check);
+      steps_before_convex_check, extension_potential);
 
   optimizer_mixed_descent_fire.run(2000);
 
   double niter = optimizer_mixed_descent_fire.get_niter();
 
-  std::cout << niter << endl;
+  optimizer_mixed_descent_fire.print_stats();
+
+  std::cout << "x_new" << std::endl;
 }
