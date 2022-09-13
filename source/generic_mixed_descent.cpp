@@ -52,8 +52,11 @@ bool GenericMixedDescent::x_in_convex_region() {
 void GenericMixedDescent::get_hess(Eigen::MatrixXd &hessian) {
   // Does not allocate memory for hessian just wraps around the data
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
-  potential_->get_hessian(
-      x_, hessian_pele); // preferably switch this to sparse Eigen
+  if (pot_extension_provided_) {
+    extended_potential_.get_hessian(x_, hessian_pele);
+  } else {
+    potential_->get_hessian(x_, hessian_pele);
+  }
   hessian_evaluations_ += 1;
 }
 

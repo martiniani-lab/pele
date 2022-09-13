@@ -56,9 +56,13 @@ public:
 
     if (pot_extension != nullptr) {
       extended_potential_ = ExtendedPotential(pot, pot_extension);
-    } else {
-      extended_potential_ = *pot;
+      extended_potential_.switch_on_extended_potential();
+      pot_extension_provided_ = true;
     }
+    else {
+      pot_extension_provided_ = false;
+    }
+
 #if OPTIMIZER_DEBUG_LEVEL > 0
     std::cout << "GenericMixedDescent: Constructed with parameters"
               << std::endl;
@@ -170,7 +174,8 @@ private:
    *          If extension potential is not provided
    *          Combined potential = pot
    */
-  BasePotential extended_potential_;
+  ExtendedPotential extended_potential_;
+  bool pot_extension_provided_;
 };
 } // namespace pele
 
