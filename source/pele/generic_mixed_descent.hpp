@@ -15,6 +15,7 @@
 #ifndef PELE_MIXED_DESCENT_WITH_FIRE_HPP
 #define PELE_MIXED_DESCENT_WITH_FIRE_HPP
 
+#include "pele/combine_potentials.hpp"
 #include <Eigen/Dense>
 #include <cstddef>
 #include <iostream>
@@ -31,11 +32,12 @@ namespace pele {
  */
 class GenericMixedDescent : public GradientOptimizer {
 public:
-  GenericMixedDescent(std::shared_ptr<BasePotential> pot, pele::Array<double> x,
+  GenericMixedDescent(std::shared_ptr<BasePotential> pot, Array<double> x,
                       double tol,
-                      std::shared_ptr<pele::GradientOptimizer> opt_non_convex,
-                      std::shared_ptr<pele::GradientOptimizer> opt_convex,
-                      double translation_offset, int steps_before_convex_check)
+                      std::shared_ptr<GradientOptimizer> opt_non_convex,
+                      std::shared_ptr<GradientOptimizer> opt_convex,
+                      double translation_offset, int steps_before_convex_check,
+                      std::shared_ptr<BasePotential> pot_extension = nullptr)
       : opt_non_convex_(opt_non_convex), opt_convex_(opt_convex),
         translation_offset_(translation_offset), hessian_(x.size(), x.size()),
         hessian_copy_for_cholesky_(x.size(), x.size()), hessian_evaluations_(0),
@@ -51,6 +53,12 @@ public:
     opt_convex_->set_tolerance(tol);
     opt_non_convex_->set_x(x);
     opt_non_convex_->set_tolerance(tol);
+
+    if (pot_extension != nullptr) {
+      extended_potential_ = ExtendedPotential(pot, pot_extension);
+    } else {
+      extended_potential_ = *pot;
+    }
 #if OPTIMIZER_DEBUG_LEVEL > 0
     std::cout << "GenericMixedDescent: Constructed with parameters"
               << std::endl;
@@ -154,6 +162,15 @@ private:
   size_t n_failed_phase_2_steps;
 
   int n_phase_1_steps;
+
+  /**
+   * @brief Potential to be applied in the convex region
+   * @details If extension potential is provided
+   *          Combined potential = pot + pot_extension
+   *          If extension potential is not provided
+   *          Combined potential = pot
+   */
+  BasePotential extended_potential_;
 };
 } // namespace pele
 
