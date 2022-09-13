@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <vector>
 
@@ -88,14 +89,19 @@ TEST(CVODE, TEST_16_INVERSE_POWER_SPARSE_VS_DENSE) {
 
 
 
-  cvode_sparse.run();
-  cvode_dense.run();
+  Array<double> x_sparse_end;
+  Array<double> x_dense_end;
 
-  xfinal = cvode_sparse.get_x();
-  xfinal = cvode_dense.get_x();
+  size_t nstep = 2000;
 
-  for (size_t i = 0; i < n_dof; i++) {
-    EXPECT_NEAR(xfinal[i], x_sparse[i], 1e-3);
+  for (auto i=0; i<nstep; i++) {
+    cvode_sparse.one_iteration();
+    cvode_dense.one_iteration();
+     x_sparse_end = cvode_sparse.get_x();
+     x_dense_end = cvode_dense.get_x();
+    for (auto i = 0; i < x_sparse.size(); ++i) {
+      ASSERT_NEAR(x_sparse_end[i], x_dense_end[i], 1e-6);
+    }
   }
 
   // check nfev nhev and niter are the same
