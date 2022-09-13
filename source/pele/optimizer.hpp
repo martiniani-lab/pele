@@ -10,6 +10,7 @@
 #include <iostream>
 #include <math.h>
 #include <memory>
+#include <ostream>
 #include <vector>
 
 namespace pele {
@@ -155,6 +156,14 @@ public:
       }
       one_iteration();
     }
+  }
+
+
+  void print_stats() {
+    std::cout << "iter: " << iter_number_ << std::endl;
+    std::cout << " rms: " << rms_ << std::endl;
+    std::cout << " nfev: " << nfev_ << std::endl;
+    std::cout << " nhev: " << nhev_ << std::endl;
   }
 
   /**
