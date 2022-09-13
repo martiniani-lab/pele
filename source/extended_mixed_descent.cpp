@@ -209,6 +209,24 @@ void ExtendedMixedOptimizer::one_iteration() {
   iter_number_ += 1;
 }
 
+
+
+ExtendedMixedOptimizer::~ExtendedMixedOptimizer() {
+#if PRINT_TO_FILE == 1
+    trajectory_file.close();
+#endif
+  free_cvode_objects();
+}
+
+void ExtendedMixedOptimizer::free_cvode_objects() {
+
+  N_VDestroy(x0_N);
+  SUNLinSolFree(LS);
+  SUNMatDestroy(A);
+  CVodeFree(&cvode_mem);
+  SUNContext_Free(&sunctx);
+}
+
 /**
  * resets the minimizer for usage again
  */

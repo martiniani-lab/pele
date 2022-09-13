@@ -42,24 +42,6 @@ extern "C" {
 
 namespace pele {
 
-// /**
-//  * user data passed to CVODE
-//  */
-// typedef struct UserData_
-// {
-//     double rtol; /* integration tolerances */
-//     double atol;
-//     size_t nfev;                // number of gradient(function) evaluations
-//     size_t nhev;                // number of hessian (jacobian) evaluations
-//     double stored_energy = 0;       // stored energy
-//     Array<double>    stored_grad;      // stored gradient. need to pass this
-//     on to std::shared_ptr<pele::BasePotential> pot_;
-// } * UserData;
-
-/**
- * Mixed optimization scheme that uses different methods of solving far and away
- * from the minimum/ somewhat close to the minimum and near the minimum
- */
 class ExtendedMixedOptimizer : public GradientOptimizer {
 private:
   /**
@@ -68,7 +50,7 @@ private:
    */
   /**
    * User_Data object. This is important for mxopt because it stores the number
-   * of getEnergyGradient and getEnegyGradientHessian evaluations. We're saving
+   * of getEnergyGradient and getEnergyGradientHessian evaluations. We're saving
    * them here instead of the optimizer because we'd need to keep a double count
    * since SUNDIALS needs this object.
    */
@@ -170,11 +152,9 @@ public:
   /**
    * Destructor
    */
-  virtual ~ExtendedMixedOptimizer() {
-#if PRINT_TO_FILE == 1
-    trajectory_file.close();
-#endif
-  }
+  virtual ~ExtendedMixedOptimizer();
+
+  void free_cvode_objects();
 
   /**
    * Do one iteration iteration of the optimization algorithm
