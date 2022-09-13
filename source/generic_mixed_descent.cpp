@@ -34,11 +34,9 @@ bool GenericMixedDescent::x_in_convex_region() {
   hessian_copy_for_cholesky_data = hessian_copy_for_cholesky_.data();
   int info = 0;
 
-  // 1 is the length of the uplo string, necessary for current fortran
-  // compilers.
-  // 1 is strlen for uplo for new fortran compilers
   dpotrf_(&uplo, &N_int, hessian_copy_for_cholesky_data, &N_int, &info
-#ifdef LAPACK_FORTRAN_STRLEN_END
+#ifdef LAPACK_FORTRAN_STRLEN_END // 1 is the length of the uplo string,
+                                 // necessary for current fortran
           ,
           1
 #endif
