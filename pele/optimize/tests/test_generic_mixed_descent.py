@@ -5,91 +5,27 @@ import numpy as np
 from pele.optimize import GenericMixedDescent, ModifiedFireCPP, CVODEBDFOptimizer
 from pele.potentials import InversePower
 
+from .potential_fixture import potential_initial_and_final_conditions
 
-def test_mixed_descent():
+
+def test_mixed_descent(potential_initial_and_final_conditions):
     # use radii, box_length and coordinates from the C++ test test_mixed_descent.cpp
 
-    radii = [
-        0.982267,
-        0.959526,
-        1.00257,
-        0.967356,
-        1.04893,
-        0.97781,
-        0.954191,
-        0.988939,
-        0.980737,
-        0.964811,
-        1.04198,
-        0.926199,
-        0.969865,
-        1.08593,
-        1.01491,
-        0.968892,
-    ]
-    box_length = 7.40204
-    x = [
-        1.8777,
-        3.61102,
-        1.70726,
-        6.93457,
-        2.14539,
-        2.55779,
-        4.1191,
-        7.02707,
-        0.357781,
-        4.92849,
-        1.28547,
-        2.83375,
-        0.775204,
-        6.78136,
-        6.27529,
-        1.81749,
-        6.02049,
-        6.70693,
-        5.36309,
-        4.6089,
-        4.9476,
-        5.54674,
-        0.677836,
-        6.04457,
-        4.9083,
-        1.24044,
-        5.09315,
-        0.108931,
-        2.18619,
-        6.52932,
-        2.85539,
-        2.30303,
-    ]
-    box_vec = [box_length, box_length]
+    potential, initial_coordinates, expected_final_coordinates, _ = potential_initial_and_final_conditions
 
-    radii = np.array(radii)
-    box_vec = np.array(box_vec)
-    x = np.array(x)
-    print(radii)
+    
 
-    ### potential parameters ###
-    ndim = 2
-    use_cell_lists = False
-    power = 2.5
-    eps = 1.0  # epsilon for the main potential
-
-    potential = InversePower(
-        power, eps, radii, use_cell_lists=use_cell_lists, ndim=ndim, boxvec=box_vec,
-    )
-
-    optimizer_convex = ModifiedFireCPP(x, potential, fdec=0.5, tol=1e-9)
+    optimizer_convex = ModifiedFireCPP(initial_coordinates, potential, fdec=0.5, tol=1e-9)
 
     optimizer_non_convex = CVODEBDFOptimizer(
-        potential, x, rtol=1e-5, atol=1e-5, tol=1e-9
+        potential, initial_coordinates, rtol=1e-5, atol=1e-5, tol=1e-9
     )
 
     # optimizer_non_convex = ModifiedFireCPP(x, potential, tol=1e-9)
 
     opt_mixed_descent = GenericMixedDescent(
         potential,
-        x,
+        initial_coordinates,
         optimizer_non_convex,
         optimizer_convex,
         tol=1e-9,
@@ -101,6 +37,6 @@ def test_mixed_descent():
     print(res)
     # check that the number of steps is the same as the C++ version
     assert res.nsteps == 466
+    assert np.allclose(res.coords, expected_final_coordinates)
 
 
-test_mixed_descent()
