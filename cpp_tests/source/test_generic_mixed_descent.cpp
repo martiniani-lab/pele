@@ -127,11 +127,6 @@ TEST(GENERIC_MXD, TEST_256_RUN) {
   Array<double> x_new_extension = x.copy();
   Array<double> x_cvode = x.copy();
 
-  std::cout << "x" << std::endl;
-  std::cout << x << std::endl;
-  std::cout << "radii" << std::endl;
-  std::cout << radii << std::endl;
-
   double tol = 1e-9;
   // combine both optimizers
 
