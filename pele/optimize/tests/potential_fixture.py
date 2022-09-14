@@ -66,6 +66,15 @@ def potential_initial_and_final_conditions():
     power = 2.5
     eps = 1.0
     use_cell_lists = False
+    potential_dict = {
+        "power": power,
+        "eps": eps,
+        "radii": radii,
+        "use_cell_lists": use_cell_lists,
+        "ndim": dim,
+        "boxvec": box_vec,
+    }
+
     # Setup the potential
     potential = InversePower(
         power,
@@ -112,7 +121,14 @@ def potential_initial_and_final_conditions():
             3.43821332,
         ]
     )
-    return (potential, starting_coordinates, expected_corresponding_minimum)
+    # return potential dict for generating potential_extension if needed
+    return (
+        potential,
+        starting_coordinates,
+        expected_corresponding_minimum,
+        potential_dict,
+    )
+
 
 @pytest.fixture(scope="session")
 def potential_extension():
@@ -158,4 +174,4 @@ def potential_extension():
         ndim=dim,
         boxvec=box_vec,
     )
-    return (potential)
+    return potential

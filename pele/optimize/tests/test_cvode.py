@@ -15,8 +15,13 @@ def test_cvode_compare_with_cpp(potential_initial_and_final_conditions):
     """
     Test the CVODE results through the python wrapper match with the C++ results.
     """
-    
-    potential, initial_coordinates, expected_final_coordinates = potential_initial_and_final_conditions
+
+    (
+        potential,
+        initial_coordinates,
+        expected_final_coordinates,
+        _,
+    ) = potential_initial_and_final_conditions
     cvode_optimizer = CVODEBDFOptimizer(
         potential,
         initial_coordinates,
@@ -40,7 +45,12 @@ def test_iterative_works_cvode(potential_initial_and_final_conditions):
     """
     Test the CVODE results through the python wrapper match with the C++ results.
     """
-    potential, initial_coordinates, expected_final_coordinates = potential_initial_and_final_conditions
+    (
+        potential,
+        initial_coordinates,
+        expected_final_coordinates,
+        _,
+    ) = potential_initial_and_final_conditions
     cvode_optimizer = CVODEBDFOptimizer(
         potential,
         initial_coordinates,
