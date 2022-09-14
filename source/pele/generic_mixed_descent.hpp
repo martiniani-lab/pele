@@ -55,11 +55,11 @@ public:
     opt_non_convex_->set_tolerance(tol);
 
     if (pot_extension != nullptr) {
-      extended_potential_ = std::make_shared<ExtendedPotential>(pot, pot_extension);
+      extended_potential_ =
+          std::make_shared<ExtendedPotential>(pot, pot_extension);
       extended_potential_->switch_on_extended_potential();
       pot_extension_provided_ = true;
-    }
-    else {
+    } else {
       extended_potential_ = nullptr;
       pot_extension_provided_ = false;
     }
