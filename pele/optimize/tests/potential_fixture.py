@@ -67,7 +67,7 @@ def potential_initial_and_final_conditions():
     eps = 1.0
     use_cell_lists = False
     potential_dict = {
-        "power": power,
+        "pow": power,
         "eps": eps,
         "radii": radii,
         "use_cell_lists": use_cell_lists,
@@ -169,7 +169,7 @@ def potential_extension():
     potential = InversePower(
         power,
         eps,
-        radii,
+        radii*2,
         use_cell_lists=use_cell_lists,
         ndim=dim,
         boxvec=box_vec,
