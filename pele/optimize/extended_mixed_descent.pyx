@@ -21,7 +21,7 @@ cdef extern from "pele/extended_mixed_descent.hpp" namespace "pele":
     cdef cppclass cppExtendedMixedOptimizer "pele::ExtendedMixedOptimizer":
         cppExtendedMixedOptimizer(shared_ptr[_pele.cBasePotential], shared_ptr[_pele.cBasePotential], _pele.Array[double],
                           double, int,
-                          double, double, double,
+                          double, double,
                           double, double, bool) except +
         int get_nhev() except +
         int get_n_phase_1_steps() except +
@@ -35,7 +35,7 @@ cdef class _Cdef_ExtendedMixedOptimizer_CPP(_pele_opt.GradientOptimizer):
     cdef _pele.BasePotential pot_ext
     def __cinit__(self, potential, x0, potential_extension=None, double tol=1e-5,
                   int T=1, double step=1, double conv_tol = 1e-1,
-                  double conv_factor=2, double rtol=1e-3, double atol=1e-3, int nsteps=10000, bool iterative=False):
+                  double rtol=1e-3, double atol=1e-3, int nsteps=10000, bool iterative=False):
         if potential_extension is None:
             raise Exception("potential_extension is required")
         potential = as_cpp_potential(potential, verbose=True)
@@ -46,7 +46,7 @@ cdef class _Cdef_ExtendedMixedOptimizer_CPP(_pele_opt.GradientOptimizer):
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppExtendedMixedOptimizer(self.pot.thisptr, self.pot_ext.thisptr,
                              _pele.Array[double](<double*> x0c.data, x0c.size),
-                                tol, T, step, conv_tol, conv_factor, rtol, atol, iterative))
+                                tol, T, step, conv_tol, rtol, atol, iterative))
         cdef cppExtendedMixedOptimizer* mxopt_ptr = <cppExtendedMixedOptimizer*> self.thisptr.get()
     
     def get_result(self):

@@ -36,7 +36,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
           std::make_shared<ExtendedPotential>(potential, potential_extension)),
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), xold_old(x_.size()),
-      T_(T), use_phase_1(true), conv_tol_(conv_tol), conv_factor_(conv_factor),
+      T_(T), use_phase_1(true), conv_tol_(conv_tol), 
       n_phase_1_steps(0), n_phase_2_steps(0), n_failed_phase_2_steps(0),
       hessian(x_.size(), x_.size()), x_last_cvode(x_.size()),
       hessian_copy_for_cholesky(x_.size(), x_.size()),
@@ -75,8 +75,6 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   set_potential(
       extended_potential); // because we can only create the extended potential
   // after we instantiate the extended potential
-  // set precision of printing
-  // dummy t0
   double t0 = 0;
 #if PRINT_TO_FILE == 1
   trajectory_file.open("trajectory.txt");
@@ -111,7 +109,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   // pass hessian information
   g_ = udata.stored_grad;
   // initialize CVODE steps and stop time
-  CVodeSetMaxNumSteps(cvode_mem, 100000);
+  CVodeSetMaxNumSteps(cvode_mem, 1000000);
   CVodeSetStopTime(cvode_mem, tN);
   inv_sqrt_size = 1 / sqrt(x_.size());
   // optmizer debug level
@@ -226,11 +224,9 @@ void ExtendedMixedOptimizer::one_iteration() {
   iter_number_ += 1;
 }
 
-
-
 ExtendedMixedOptimizer::~ExtendedMixedOptimizer() {
 #if PRINT_TO_FILE == 1
-    trajectory_file.close();
+  trajectory_file.close();
 #endif
   free_cvode_objects();
 }
@@ -359,7 +355,6 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
     convexity_check();
   }
 
-  // hessian.diagonal().array() += conv_factor_ * conv_tol_ * 10;
   Eigen::VectorXd r(step.size());
   Eigen::VectorXd q(step.size());
 

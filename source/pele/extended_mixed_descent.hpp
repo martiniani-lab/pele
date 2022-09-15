@@ -131,11 +131,6 @@ private:
    * needs to be before switching to newton
    */
   double conv_tol_;
-  /**
-   * -conv_factor*\lambda_min is added to the hessian to make it
-   * covex if it is not convex
-   */
-  double conv_factor_;
   // Need to refactor line searches
   BacktrackingLineSearch line_search_method;
 
