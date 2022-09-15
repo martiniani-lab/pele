@@ -29,7 +29,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     std::shared_ptr<pele::BasePotential> potential_extension,
     const pele::Array<double> x0, double tol, int T, double step,
-    double conv_tol, double conv_factor, double rtol, double atol,
+    double conv_tol, double rtol, double atol,
     bool iterative)
     : GradientOptimizer(potential, x0, tol),
       extended_potential(
@@ -52,7 +52,6 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   std::cout << "T: " << T << std::endl;
   std::cout << "step: " << step << std::endl;
   std::cout << "conv_tol: " << conv_tol << std::endl;
-  std::cout << "conv_factor: " << conv_factor << std::endl;
   std::cout << "rtol: " << rtol << std::endl;
   std::cout << "atol: " << atol << std::endl;
   if (iterative) {

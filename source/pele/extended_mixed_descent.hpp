@@ -142,7 +142,7 @@ public:
       std::shared_ptr<pele::BasePotential> potential,
       std::shared_ptr<pele::BasePotential> potential_extension,
       const pele::Array<double> x0, double tol = 1e-4, int T = 10,
-      double step = 1, double conv_tol = 1e-8, double conv_factor = 2,
+      double step = 1, double conv_tol = 1e-8,
       double rtol = 1e-5, double atol = 1e-5, bool iterative = false);
   /**
    * Destructor
