@@ -25,9 +25,10 @@ def test_extended_mixed_descent_compare_with_cpp(potential_initial_and_final_con
         potential,
         initial_coordinates,
         potential_extension,
-        rtol=1e-6,
-        atol=1e-6,
+        rtol=1e-4,
+        atol=1e-4,
         tol=1e-9,
+        T=60,
         iterative=False,
     )
     res = emd.run(10000)
@@ -39,7 +40,7 @@ def test_extended_mixed_descent_compare_with_cpp(potential_initial_and_final_con
     return True
 
 
-def test_extended_mixed_descent_compare_with_cpp_iterative(potential_initial_and_final_conditions, potential_extension):
+def test_extended_mixed_descent_compare_with_cpp_iterative(potential_initial_and_final_conditions):
     """
     Test the CVODE results through the python wrapper match with the C++ results.
     """
@@ -49,9 +50,10 @@ def test_extended_mixed_descent_compare_with_cpp_iterative(potential_initial_and
         potential,
         initial_coordinates,
         potential_extension,
-        rtol=1e-5,
-        atol=1e-5,
+        rtol=1e-4,
+        atol=1e-4,
         tol=1e-9,
+        T=60,
         iterative=True,
     )
     res = emd.run(10000)
