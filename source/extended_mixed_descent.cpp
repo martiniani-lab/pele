@@ -45,6 +45,23 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   SUNContext_Create(NULL, &sunctx);
   cvode_mem = CVodeCreate(CV_BDF, sunctx);
 
+#if OPTIMIZER_DEBUG_LEVEL > 0
+  std::cout << "ExtendedMixedOptimizer Parameters" << std::endl;
+  std::cout << "x0: " << x0 << std::endl;
+  std::cout << "tol: " << tol << std::endl;
+  std::cout << "T: " << T << std::endl;
+  std::cout << "step: " << step << std::endl;
+  std::cout << "conv_tol: " << conv_tol << std::endl;
+  std::cout << "conv_factor: " << conv_factor << std::endl;
+  std::cout << "rtol: " << rtol << std::endl;
+  std::cout << "atol: " << atol << std::endl;
+  if (iterative) {
+    std::cout << "iterative: true" << std::endl;
+  } else {
+    std::cout << "iterative: false " << std::endl;
+  }
+#endif
+
   // assume previous phase is phase 1
   prev_phase_is_phase1 = true;
   // Check whether potentials are Null
