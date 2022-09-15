@@ -58,7 +58,17 @@ void CVODEBDFOptimizer::setup_cvode() {
   std::cout << "tol: " << tol_ << std::endl;
   std::cout << "rtol: " << rtol_ << std::endl;
   std::cout << "atol: " << atol_ << std::endl;
-  std::cout << "iterative: " << iterative_ << std::endl;
+  switch(hessian_type_) {
+    case HessianType::DENSE:
+      std::cout << "hessian_type: DENSE" << std::endl;
+      break;
+    case HessianType::SPARSE:
+      std::cout << "hessian_type: SPARSE" << std::endl;
+      break;
+    case HessianType::ITERATIVE:
+      std::cout << "hessian_type: ITERATIVE" << std::endl;
+      break;
+  }
   std::cout << "use_newton_stop_criterion: " << use_newton_stop_criterion_
             << std::endl;
 #endif
