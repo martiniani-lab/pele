@@ -29,15 +29,14 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     std::shared_ptr<pele::BasePotential> potential_extension,
     const pele::Array<double> x0, double tol, int T, double step,
-    double conv_tol, double rtol, double atol,
-    bool iterative)
+    double conv_tol, double rtol, double atol, bool iterative)
     : GradientOptimizer(potential, x0, tol),
       extended_potential(
           std::make_shared<ExtendedPotential>(potential, potential_extension)),
       N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
       xold(x_.size()), gold(x_.size()), step(x_.size()), xold_old(x_.size()),
-      T_(T), use_phase_1(true), conv_tol_(conv_tol), 
-      n_phase_1_steps(0), n_phase_2_steps(0), n_failed_phase_2_steps(0),
+      T_(T), use_phase_1(true), conv_tol_(conv_tol), n_phase_1_steps(0),
+      n_phase_2_steps(0), n_failed_phase_2_steps(0),
       hessian(x_.size(), x_.size()), x_last_cvode(x_.size()),
       hessian_copy_for_cholesky(x_.size(), x_.size()),
       line_search_method(this, step), iterative_(iterative) {
@@ -185,6 +184,14 @@ void ExtendedMixedOptimizer::one_iteration() {
     }
     // if max step is too big, switch back to CVODE
     if (max_step > conv_tol_) {
+#if OPTIMIZER_DEBUG_LEVEL >= 3
+      std::cout << "max step too big, switching back to CVODE"
+                << "\n";
+      std::cout << "using phase 1 step"
+                << "\n";
+      std::cout << "switching off extended potential"
+                << "\n";
+#endif
       use_phase_1 = true;
       x_.assign(x_last_cvode);
       extended_potential->switch_off_extended_potential();
@@ -196,7 +203,14 @@ void ExtendedMixedOptimizer::one_iteration() {
       double stepnorm = line_search_method.line_search(x_, step);
       // if step is going uphill, phase two has failed.
       phase_2_failed_ = line_search_method.get_step_moving_away_from_min();
+
       if (phase_2_failed_) {
+#if OPTIMIZER_DEBUG_LEVEL >= 3
+        std::cout << "phase 2 failed, step moving away from minimum"
+                  << "\n";
+        std::cout << "switching back to CVODE"
+                  << "\n";
+#endif
         use_phase_1 = true;
         x_.assign(x_last_cvode);
         extended_potential->switch_off_extended_potential();
