@@ -234,7 +234,9 @@ void ExtendedMixedOptimizer::free_cvode_objects() {
 
   N_VDestroy(x0_N);
   SUNLinSolFree(LS);
-  SUNMatDestroy(A);
+  if (!iterative_) {
+    SUNMatDestroy(A);
+  }
   CVodeFree(&cvode_mem);
   SUNContext_Free(&sunctx);
 }
