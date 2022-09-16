@@ -43,6 +43,11 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
 
   SUNContext_Create(NULL, &sunctx);
   cvode_mem = CVodeCreate(CV_BDF, sunctx);
+  if (T <= 1) {
+    throw std::runtime_error(
+        "T must be greater than 1. switching back to CVODE from Newton will "
+        "get stuck in an infinite loop");
+  }
 
 #if OPTIMIZER_DEBUG_LEVEL > 0
   std::cout << "ExtendedMixedOptimizer Parameters" << std::endl;

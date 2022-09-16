@@ -28,10 +28,10 @@ def test_extended_mixed_descent_compare_with_cpp(potential_initial_and_final_con
         rtol=1e-4,
         atol=1e-4,
         tol=1e-9,
-        T=60,
+        T=1,
         iterative=False,
     )
-    res = emd.run(10000)
+    res = emd.run(200)
     final_coords = res.coords
     print(res.nsteps)
     # check whether right minima is reached
