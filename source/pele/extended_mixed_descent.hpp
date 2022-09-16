@@ -134,6 +134,7 @@ private:
   // Need to refactor line searches
   BacktrackingLineSearch line_search_method;
 
+  bool iterative_; // if true, use iterative solver for hessian solve
 public:
   /**
    * Constructor

@@ -40,7 +40,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       n_phase_1_steps(0), n_phase_2_steps(0), n_failed_phase_2_steps(0),
       hessian(x_.size(), x_.size()), x_last_cvode(x_.size()),
       hessian_copy_for_cholesky(x_.size(), x_.size()),
-      line_search_method(this, step) {
+      line_search_method(this, step), iterative_(iterative) {
 
   SUNContext_Create(NULL, &sunctx);
   cvode_mem = CVodeCreate(CV_BDF, sunctx);
