@@ -44,6 +44,7 @@ pele/version.py
 _ngt_cpp.cxx
 .coverage
 htmlcov
+**/charmap.json.gz
 
 /.cache/
 /.clang-format
