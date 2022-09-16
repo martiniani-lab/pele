@@ -213,6 +213,7 @@ void ExtendedMixedOptimizer::one_iteration() {
   std::cout << "mixed optimizer: " << iter_number_ << " E " << f_ << " n "
             << rms_ << " nfev " << nfev_ << " nhev " << udata.nhev << std::endl;
   std::cout << "optimizer position \n" << x_ << "\n";
+  std::cout << "optimizer step \n" << step << "\n";
 #endif
   /**
    * Checks whether the stop criterion is satisfied: if stop criterion is
