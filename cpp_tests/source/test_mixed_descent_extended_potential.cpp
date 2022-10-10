@@ -126,7 +126,7 @@ TEST(EXTENDED_MXD, TEST_256_RUN_DENSE) {
   std::cout << "radii" << std::endl;
   std::cout << radii << std::endl;
   pele::ExtendedMixedOptimizer optimizer_mxopt(
-      pot, extension_potential, x, 1e-9, 60, 1, 1e-1, 2, 1e-4, 1e-4, false);
+      pot, extension_potential, x, 1e-9, 60, 1, 1e-1, 1e-4, 1e-4, false);
   optimizer_mxopt.run(4000);
 
   std::cout << "n phase 1 steps " << optimizer_mxopt.get_n_phase_1_steps()
@@ -235,7 +235,7 @@ TEST(EXTENDED_MXD, TEST_256_RUN_ITERATIVE) {
   std::cout << "radii" << std::endl;
   std::cout << radii << std::endl;
   pele::ExtendedMixedOptimizer optimizer_mxopt(
-      pot, extension_potential, x, 1e-9, 60, 1, 1e-1, 2, 1e-4, 1e-4, false);
+      pot, extension_potential, x, 1e-9, 60, 1, 1e-1, 1e-4, 1e-4, false);
   optimizer_mxopt.run(4000);
 
   std::cout << "n phase 1 steps " << optimizer_mxopt.get_n_phase_1_steps()
