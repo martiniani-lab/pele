@@ -32,7 +32,7 @@ struct frenkel_interaction : BaseInteraction {
                    pow(3 / (2 * ((_rcut2 / _sig2) - 1)), 3)) {}
 
   /* calculate energy from distance squared */
-  double inline energy(double r2, double radius_sum) const {
+  double inline energy(double r2, double dij) const {
     if (r2 >= _rcut2) {
       return 0.;
     }
@@ -45,7 +45,7 @@ struct frenkel_interaction : BaseInteraction {
   /* calculate energy and gradient from distance squared, gradient is in
    * |g|/|rij| */
   double inline energy_gradient(double r2, double *gij,
-                                double radius_sum) const {
+                                double dij) const {
     double ir2 = 1.0 / r2;
     double cutoff_factor = _rcut2 * ir2 - 1;
     double sigma_factor = _sig2 * ir2 - 1;
@@ -58,7 +58,7 @@ struct frenkel_interaction : BaseInteraction {
   }
 
   double inline energy_gradient_hessian(double r2, double *gij, double *hij,
-                                        double radius_sum) const {
+                                        double dij) const {
     double ir2 = 1.0 / r2;
     double cutoff_factor = _rcut2 * ir2 - 1;
     double sigma_factor = _sig2 * ir2 - 1;

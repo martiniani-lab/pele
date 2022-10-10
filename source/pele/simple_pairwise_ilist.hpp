@@ -100,7 +100,7 @@ SimplePairwiseNeighborList<pairwise_interaction, distance_policy>::
       r2 += dr[k] * dr[k];
     }
 
-    e += _interaction->energy_gradient(r2, &gij, sum_radii(atom1, atom2));
+    e += _interaction->energy_gradient(r2, &gij, get_dij(atom1, atom2));
     for (size_t k = 0; k < _ndim; ++k) {
       grad[i1 + k] -= gij * dr[k];
     }
@@ -132,7 +132,7 @@ SimplePairwiseNeighborList<pairwise_interaction, distance_policy>::get_energy(
     for (size_t k = 0; k < _ndim; ++k) {
       r2 += dr[k] * dr[k];
     }
-    e += _interaction->energy(r2, sum_radii(atom1, atom2));
+    e += _interaction->energy(r2, get_dij(atom1, atom2));
   }
 
   return e;

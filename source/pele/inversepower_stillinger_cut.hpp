@@ -16,11 +16,11 @@ struct InversePowerStillinger_cut_interaction : BaseInteraction {
         m_q0(-0.5 * (m_pow + 1) * (m_pow + 2) / std::pow(m_rcut, m_pow)),
         m_q1(m_pow * (m_pow + 2) / std::pow(m_rcut, m_pow + 1)),
         m_q2(-0.5 * m_pow * (m_pow + 1) / std::pow(m_rcut, m_pow + 2)) {}
-  double energy(double r2, const double radius_sum) const {
+  double energy(double r2, const double dij) const {
     if (r2 > m_rcut2) {
       return 0.;
     }
-    const double an = power_inp2(radius_sum * radius_sum, m_pow);
+    const double an = power_inp2(dij * dij, m_pow);
     const double irn = 1. / power_inp2(r2, m_pow);
     const double E = an * (irn + m_q0 + m_q1 * std::sqrt(r2) + m_q2 * r2);
     return E;
@@ -28,12 +28,12 @@ struct InversePowerStillinger_cut_interaction : BaseInteraction {
   // calculate energy and gradient from distance squared, gradient is in
   // -(dv/drij)/|rij|
   double energy_gradient(double r2, double *gij,
-                         const double radius_sum) const {
+                         const double dij) const {
     if (r2 > m_rcut2) {
       *gij = 0;
       return 0.;
     }
-    const double an = power_inp2(radius_sum * radius_sum, m_pow);
+    const double an = power_inp2(dij * dij, m_pow);
     const double r = std::sqrt(r2);
     const double irn = 1. / this->power(r, m_pow);
     const double E = an * (irn + m_q0 + m_q1 * r + m_q2 * r2);
@@ -41,13 +41,13 @@ struct InversePowerStillinger_cut_interaction : BaseInteraction {
     return E;
   }
   double energy_gradient_hessian(double r2, double *gij, double *hij,
-                                 const double radius_sum) const {
+                                 const double dij) const {
     if (r2 > m_rcut2) {
       *gij = 0;
       *hij = 0;
       return 0.;
     }
-    const double an = power_inp2(radius_sum * radius_sum, m_pow);
+    const double an = power_inp2(dij * dij, m_pow);
     const double r = std::sqrt(r2);
     const double irn = 1. / this->power(r, m_pow);
     const double E = an * (irn + m_q0 + m_q1 * r + m_q2 * r2);

@@ -150,13 +150,13 @@ public:
   virtual inline double get_interaction_energy_gradient(double r2, double *gij,
                                                         size_t atom_i,
                                                         size_t atom_j) const {
-    return _interaction->energy_gradient(r2, gij, sum_radii(atom_i, atom_j));
+    return _interaction->energy_gradient(r2, gij, get_dij(atom_i, atom_j));
   }
   virtual inline double
   get_interaction_energy_gradient_hessian(double r2, double *gij, double *hij,
                                           size_t atom_i, size_t atom_j) const {
     return _interaction->energy_gradient_hessian(r2, gij, hij,
-                                                 sum_radii(atom_i, atom_j));
+                                                 get_dij(atom_i, atom_j));
   }
 
   // Compute the maximum of all single atom norms
@@ -217,7 +217,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
           r2 += dr[k] * dr[k];
         }
         xsum_large_add1(&esum, _interaction->energy_gradient(
-                                   r2, &gij, sum_radii(atom_i, atom_j)));
+                                   r2, &gij, get_dij(atom_i, atom_j)));
         if (gij != 0) {
 #pragma unroll
           for (size_t k = 0; k < m_ndim; ++k) {
@@ -256,7 +256,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
           r2 += dr[k] * dr[k];
         }
 
-        e += _interaction->energy_gradient(r2, &gij, sum_radii(atom_i, atom_j));
+        e += _interaction->energy_gradient(r2, &gij, get_dij(atom_i, atom_j));
         if (gij != 0) {
 #pragma unroll
           for (size_t k = 0; k < m_ndim; ++k) {
@@ -313,7 +313,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
         }
         if (mask[i1] && mask[j1]) {
           xsum_large_add1(&esum, _interaction->energy_gradient(
-                                     r2, &gij, sum_radii(atom_i, atom_j)));
+                                     r2, &gij, get_dij(atom_i, atom_j)));
         } else {
           gij = 0;
         }
@@ -356,7 +356,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
         }
         if (mask[i1] && mask[j1]) {
           e += _interaction->energy_gradient(r2, &gij,
-                                             sum_radii(atom_i, atom_j));
+                                             get_dij(atom_i, atom_j));
         } else {
           gij = 0;
         }
@@ -415,7 +415,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
         r2 += dr[k] * dr[k];
       }
       xsum_large_add1(&esum, _interaction->energy_gradient(
-                                 r2, &gij, sum_radii(atom_i, atom_j)));
+                                 r2, &gij, get_dij(atom_i, atom_j)));
       if (gij != 0) {
 #pragma unroll
         for (size_t k = 0; k < m_ndim; ++k) {
@@ -474,7 +474,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
       }
 
       e += _interaction->energy_gradient_hessian(r2, &gij, &hij,
-                                                 sum_radii(atom_i, atom_j));
+                                                 get_dij(atom_i, atom_j));
 
       if (gij != 0) {
 #pragma unroll
@@ -550,7 +550,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
       }
       if (mask[i1] && mask[j1]) {
         e += _interaction->energy_gradient_hessian(r2, &gij, &hij,
-                                                   sum_radii(atom_i, atom_j));
+                                                   get_dij(atom_i, atom_j));
       } else {
         gij = 0;
         hij = 0;
@@ -625,7 +625,7 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian(
       }
 
       e += _interaction->energy_gradient_hessian(r2, &gij, &hij,
-                                                 sum_radii(atom_i, atom_j));
+                                                 get_dij(atom_i, atom_j));
 
       if (hij != 0) {
 #pragma unroll
@@ -682,7 +682,7 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::get_energy(
       for (size_t k = 0; k < m_ndim; ++k) {
         r2 += dr[k] * dr[k];
       }
-      e += _interaction->energy(r2, sum_radii(atom_i, atom_j));
+      e += _interaction->energy(r2, get_dij(atom_i, atom_j));
     }
   }
   return e;
@@ -744,7 +744,7 @@ void SimplePairwisePotential<pairwise_interaction, distance_policy>::
             neg_dr[k] = -dr[k];
           }
 
-          const double r_H = sum_radii(atom_i, atom_j);
+          const double r_H = get_dij(atom_i, atom_j);
           const double r_S = cutoff_sca * r_H;
           const double r_S2 = r_S * r_S;
           if (r2 <= r_S2) {
@@ -787,7 +787,7 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::get_overlaps(
         r2 += dr[k] * dr[k];
       }
 
-      const double r_H = sum_radii(atom_i, atom_j);
+      const double r_H = get_dij(atom_i, atom_j);
       const double r_H2 = r_H * r_H;
       if (r2 <= r_H2) {
         overlap_inds.push_back(atom_i);

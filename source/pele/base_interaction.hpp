@@ -4,18 +4,18 @@
 namespace pele {
 
 struct BaseInteraction {
-  virtual double energy(const double r2, const double radius_sum) const {
+  virtual double energy(const double r2, const double dij) const {
     throw std::runtime_error("BaseInteraction::energy must be overloaded");
   }
 
   virtual double energy_gradient(const double r2, double *const gij,
-                                 const double radius_sum) const {
+                                 const double dij) const {
     throw std::runtime_error("BaseInteraction::energy must be overloaded");
   }
 
   virtual double energy_gradient_hessian(const double r2, double *const gij,
                                          double *const hij,
-                                         const double radius_sum) const {
+                                         const double dij) const {
     throw std::runtime_error("BaseInteraction::energy must be overloaded");
   }
 };

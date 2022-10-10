@@ -25,9 +25,9 @@ namespace pele {
  * \text{ if } r \leq r_\times Here: E_\times = V_\text{fHS-WCA}(r_\times)
  * G_\times = \text{grad}[V_\text{fHS-WCA}](r_\times)
  * And:
- * radius_sum : sum of hard radii
- * r_S = (1 + \alpha) * radius_sum
- * r_\times = radius_sum + \delta
+ * dij : sum of hard radii
+ * r_S = (1 + \alpha) * dij
+ * r_\times = dij + \delta
  * The choice of the delta parameter below is somewhat arbitrary and
  * could probably be optimised.
  * Computing the gradient GX at the point where we go from fWCA to
@@ -47,14 +47,14 @@ template <size_t exp = 6> class sf_HS_WCA_interaction : BaseInteraction {
 public:
   sf_HS_WCA_interaction(const double eps, const double alpha,
                         const double delta = 1e-10);
-  double energy(const double r2, const double radius_sum) const;
+  double energy(const double r2, const double dij) const;
   double energy_gradient(const double r2, double *const gij,
-                         const double radius_sum) const;
+                         const double dij) const;
   double energy_gradient_hessian(const double r2, double *const gij,
                                  double *const hij,
-                                 const double radius_sum) const;
+                                 const double dij) const;
   void evaluate_pair_potential(const double rmin, const double rmax,
-                               const size_t nr_points, const double radius_sum,
+                               const size_t nr_points, const double dij,
                                std::vector<double> &x,
                                std::vector<double> &y) const;
 };
@@ -75,15 +75,15 @@ sf_HS_WCA_interaction<exp>::sf_HS_WCA_interaction(const double eps,
 
 template <size_t exp>
 double sf_HS_WCA_interaction<exp>::energy(const double r2,
-                                          const double radius_sum) const {
-  const double r_H2 = pos_int_pow<2>(radius_sum);
+                                          const double dij) const {
+  const double r_H2 = pos_int_pow<2>(dij);
   const double r_S2 = m_alpha1_2 * r_H2;
   if (r2 > r_S2) {
     // Energy: separation larger than soft shell.
     return 0;
   }
   // r2 <= r_S2: we have to compute the remaining quantities.
-  const double r_X = radius_sum + m_delta;
+  const double r_X = dij + m_delta;
   const double r_X2 = pos_int_pow<2>(r_X);
   if (__builtin_expect(r2 > r_X2, 1)) {
     // Energy: separation in fHS-WCA regime.
@@ -111,8 +111,8 @@ double sf_HS_WCA_interaction<exp>::energy(const double r2,
 template <size_t exp>
 double
 sf_HS_WCA_interaction<exp>::energy_gradient(const double r2, double *const gij,
-                                            const double radius_sum) const {
-  const double r_H2 = pos_int_pow<2>(radius_sum);
+                                            const double dij) const {
+  const double r_H2 = pos_int_pow<2>(dij);
   const double r_S2 = m_alpha1_2 * r_H2;
   if (r2 > r_S2) {
     // Energy, gradient: separation larger than soft shell.
@@ -120,7 +120,7 @@ sf_HS_WCA_interaction<exp>::energy_gradient(const double r2, double *const gij,
     return 0;
   }
   // r2 <= r_S2: we have to compute the remaining quantities.
-  const double r_X = radius_sum + m_delta;
+  const double r_X = dij + m_delta;
   const double r_X2 = pos_int_pow<2>(r_X);
   if (__builtin_expect(r2 > r_X2, 1)) {
     // Energy, gradient: separation in fHS-WCA regime.
@@ -149,8 +149,8 @@ sf_HS_WCA_interaction<exp>::energy_gradient(const double r2, double *const gij,
 template <size_t exp>
 double sf_HS_WCA_interaction<exp>::energy_gradient_hessian(
     const double r2, double *const gij, double *const hij,
-    const double radius_sum) const {
-  const double r_H2 = pos_int_pow<2>(radius_sum);
+    const double dij) const {
+  const double r_H2 = pos_int_pow<2>(dij);
   const double r_S2 = m_alpha1_2 * r_H2;
   if (r2 > r_S2) {
     // Energy, gradient, hessian: separation larger than soft shell.
@@ -159,7 +159,7 @@ double sf_HS_WCA_interaction<exp>::energy_gradient_hessian(
     return 0;
   }
   // r2 <= r_S2: we have to compute the remaining quantities.
-  const double r_X = radius_sum + m_delta;
+  const double r_X = dij + m_delta;
   const double r_X2 = pos_int_pow<2>(r_X);
   if (__builtin_expect(r2 > r_X2, 1)) {
     // Energy, gradient, hessian: separation in fHS-WCA regime.
@@ -195,14 +195,14 @@ double sf_HS_WCA_interaction<exp>::energy_gradient_hessian(
 template <size_t exp>
 void sf_HS_WCA_interaction<exp>::evaluate_pair_potential(
     const double rmin, const double rmax, const size_t nr_points,
-    const double radius_sum, std::vector<double> &x,
+    const double dij, std::vector<double> &x,
     std::vector<double> &y) const {
   x = std::vector<double>(nr_points, 0);
   y = std::vector<double>(nr_points, 0);
   const double rdelta = (rmax - rmin) / (nr_points - 1);
   for (size_t i = 0; i < nr_points; ++i) {
     x.at(i) = rmin + i * rdelta;
-    y.at(i) = energy(x.at(i) * x.at(i), radius_sum);
+    y.at(i) = energy(x.at(i) * x.at(i), dij);
   }
 }
 
@@ -224,13 +224,13 @@ struct HS_WCA_interaction : BaseInteraction {
 
   /* calculate energy from distance squared, r0 is the hard core distance, r is
    * the distance between the centres */
-  double inline energy(const double r2, const double radius_sum) const {
-    const double r02 = radius_sum * radius_sum;
+  double inline energy(const double r2, const double dij) const {
+    const double r02 = dij * dij;
     if (r2 <= r02) {
       return _infty;
     }
     const double coff =
-        radius_sum *
+        dij *
         (1.0 + _sca); // distance at which the soft cores are at contact
     if (r2 > coff * coff) {
       return 0;
@@ -244,17 +244,17 @@ struct HS_WCA_interaction : BaseInteraction {
   }
 
   /* calculate energy and gradient from distance squared, gradient is in
-   * g/|rij|, radius_sum is the hard core distance, r is the distance between
+   * g/|rij|, dij is the hard core distance, r is the distance between
    * the centres */
   double inline energy_gradient(const double r2, double *const gij,
-                                const double radius_sum) const {
-    const double r02 = radius_sum * radius_sum;
+                                const double dij) const {
+    const double r02 = dij * dij;
     if (r2 <= r02) {
       *gij = _infty;
       return _infty;
     }
     const double coff =
-        radius_sum *
+        dij *
         (1.0 + _sca); // distance at which the soft cores are at contact
     if (r2 > coff * coff) {
       *gij = 0.;
@@ -272,15 +272,15 @@ struct HS_WCA_interaction : BaseInteraction {
 
   double inline energy_gradient_hessian(const double r2, double *const gij,
                                         double *const hij,
-                                        const double radius_sum) const {
-    const double r02 = radius_sum * radius_sum;
+                                        const double dij) const {
+    const double r02 = dij * dij;
     if (r2 <= r02) {
       *gij = _infty;
       *hij = _infty;
       return _infty;
     }
     const double coff =
-        radius_sum *
+        dij *
         (1.0 + _sca); // distance at which the soft cores are at contact
     if (r2 > coff * coff) {
       *gij = 0.;
@@ -313,7 +313,7 @@ struct HS_WCA_interaction : BaseInteraction {
    * This can be used to plot the potential, as evaluated numerically.
    */
   void evaluate_pair_potential(const double rmin, const double rmax,
-                               const size_t nr_points, const double radius_sum,
+                               const size_t nr_points, const double dij,
                                std::vector<double> &x,
                                std::vector<double> &y) const {
     x = std::vector<double>(nr_points, 0);
@@ -321,7 +321,7 @@ struct HS_WCA_interaction : BaseInteraction {
     const double rdelta = (rmax - rmin) / (nr_points - 1);
     for (size_t i = 0; i < nr_points; ++i) {
       x.at(i) = rmin + i * rdelta;
-      y.at(i) = energy(x.at(i) * x.at(i), radius_sum);
+      y.at(i) = energy(x.at(i) * x.at(i), dij);
     }
   }
 };

@@ -111,20 +111,20 @@ struct harmonic_interaction : BaseInteraction {
   harmonic_interaction(double k) : m_k(k) {}
 
   /* calculate energy from distance squared */
-  double inline energy(double r2, const double radius_sum) const {
+  double inline energy(double r2, const double dij) const {
     return 0.5 * m_k * r2;
   }
 
   /* calculate energy and gradient from distance squared, gradient is in g/|rij|
    */
   double inline energy_gradient(double r2, double *gij,
-                                const double radius_sum) const {
+                                const double dij) const {
     *gij = -m_k;
     return 0.5 * m_k * r2;
   }
 
   double inline energy_gradient_hessian(double r2, double *gij, double *hij,
-                                        const double radius_sum) const {
+                                        const double dij) const {
     *gij = -m_k;
     *hij = 1.;
     return 0.5 * m_k * r2;

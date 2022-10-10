@@ -11,21 +11,21 @@ struct InversePowerStillinger_interaction : BaseInteraction {
   // http://dx.doi.org/10.1063/1.449840
   const double m_pow;
   InversePowerStillinger_interaction(const size_t pow) : m_pow(pow) {}
-  double energy(double r2, const double radius_sum) const {
-    const double E = power_inp2((radius_sum * radius_sum) / r2, m_pow);
+  double energy(double r2, const double dij) const {
+    const double E = power_inp2((dij * dij) / r2, m_pow);
     return E;
   }
   // calculate energy and gradient from distance squared, gradient is in
   // -(dv/drij)/|rij|
   double energy_gradient(double r2, double *gij,
-                         const double radius_sum) const {
-    const double E = power_inp2((radius_sum * radius_sum) / r2, m_pow);
+                         const double dij) const {
+    const double E = power_inp2((dij * dij) / r2, m_pow);
     *gij = m_pow * E / r2;
     return E;
   }
   double energy_gradient_hessian(double r2, double *gij, double *hij,
-                                 const double radius_sum) const {
-    const double E = power_inp2((radius_sum * radius_sum) / r2, m_pow);
+                                 const double dij) const {
+    const double E = power_inp2((dij * dij) / r2, m_pow);
     *gij = m_pow * E / r2;
     *hij = *gij * (m_pow + 1);
     return E;

@@ -73,14 +73,14 @@ public:
     for (size_t k = 0; k < m_ndim; ++k) {
       r2 += dr[k] * dr[k];
     }
-    double radius_sum = 0;
+    double dij = 0;
     if (m_radii.size() > 0) {
-      radius_sum = m_radii[atom_i] + m_radii[atom_j];
+      dij = m_radii[atom_i] + m_radii[atom_j];
     }
 #ifdef _OPENMP
-    *m_energies[isubdom] += m_interaction->energy(r2, radius_sum);
+    *m_energies[isubdom] += m_interaction->energy(r2, dij);
 #else
-    *m_energies[0] += m_interaction->energy(r2, radius_sum);
+    *m_energies[0] += m_interaction->energy(r2, dij);
 #endif
   }
 
@@ -154,15 +154,15 @@ public:
       r2 += dr[k] * dr[k];
     }
     double gij;
-    double radius_sum = 0;
+    double dij = 0;
     if (m_radii.size() > 0) {
-      radius_sum = m_radii[atom_i] + m_radii[atom_j];
+      dij = m_radii[atom_i] + m_radii[atom_j];
     }
 #ifdef _OPENMP
     *m_energies[isubdom] +=
-        m_interaction->energy_gradient(r2, &gij, radius_sum);
+        m_interaction->energy_gradient(r2, &gij, dij);
 #else
-    *m_energies[0] += m_interaction->energy_gradient(r2, &gij, radius_sum);
+    *m_energies[0] += m_interaction->energy_gradient(r2, &gij, dij);
 #endif
     if (gij != 0) {
       for (size_t k = 0; k < m_ndim; ++k) {
@@ -245,16 +245,16 @@ public:
       r2 += dr[k] * dr[k];
     }
     double gij, hij;
-    double radius_sum = 0;
+    double dij = 0;
     if (m_radii.size() > 0) {
-      radius_sum = m_radii[atom_i] + m_radii[atom_j];
+      dij = m_radii[atom_i] + m_radii[atom_j];
     }
 #ifdef _OPENMP
     *m_energies[isubdom] +=
-        m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
+        m_interaction->energy_gradient_hessian(r2, &gij, &hij, dij);
 #else
     *m_energies[0] +=
-        m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
+        m_interaction->energy_gradient_hessian(r2, &gij, &hij, dij);
 #endif
     if (gij != 0) {
       for (size_t k = 0; k < m_ndim; ++k) {
@@ -366,16 +366,16 @@ public:
     }
     double gij; // gij dummy
     double hij;
-    double radius_sum = 0;
+    double dij = 0;
     if (m_radii.size() > 0) {
-      radius_sum = m_radii[atom_i] + m_radii[atom_j];
+      dij = m_radii[atom_i] + m_radii[atom_j];
     }
 #ifdef _OPENMP
     *m_energies[isubdom] +=
-        m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
+        m_interaction->energy_gradient_hessian(r2, &gij, &hij, dij);
 #else
     *m_energies[0] +=
-        m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
+        m_interaction->energy_gradient_hessian(r2, &gij, &hij, dij);
 #endif
     const size_t N = m_coords->size();
     const size_t i1 = xi_off;
@@ -470,15 +470,15 @@ public:
     for (size_t k = 0; k < m_ndim; ++k) {
       r2 += dr[k] * dr[k];
     }
-    double radius_sum = 0;
+    double dij = 0;
     if (m_radii.size() > 0) {
-      radius_sum = m_radii[atom_i] + m_radii[atom_j];
+      dij = m_radii[atom_i] + m_radii[atom_j];
     }
 #ifdef _OPENMP
     xsum_large_add1(&(m_energies[isubdom]),
-                    m_interaction->energy(r2, radius_sum));
+                    m_interaction->energy(r2, dij));
 #else
-    xsum_large_add1(&(m_energies[0]), m_interaction->energy(r2, radius_sum));
+    xsum_large_add1(&(m_energies[0]), m_interaction->energy(r2, dij));
 #endif
   }
 
@@ -554,16 +554,16 @@ public:
       r2 += dr[k] * dr[k];
     }
     double gij;
-    double radius_sum = 0;
+    double dij = 0;
     if (m_radii.size() > 0) {
-      radius_sum = m_radii[atom_i] + m_radii[atom_j];
+      dij = m_radii[atom_i] + m_radii[atom_j];
     }
 #ifdef _OPENMP
     xsum_large_add1(&(m_energies[isubdom]),
-                    m_interaction->energy_gradient(r2, &gij, radius_sum));
+                    m_interaction->energy_gradient(r2, &gij, dij));
 #else
     xsum_large_add1(&(m_energies[0]),
-                    m_interaction->energy_gradient(r2, &gij, radius_sum));
+                    m_interaction->energy_gradient(r2, &gij, dij));
 #endif
     if (gij != 0) {
       for (size_t k = 0; k < m_ndim; ++k) {
@@ -645,16 +645,16 @@ public:
       r2 += dr[k] * dr[k];
     }
     double gij, hij;
-    double radius_sum = 0;
+    double dij = 0;
     if (m_radii.size() > 0) {
-      radius_sum = m_radii[atom_i] + m_radii[atom_j];
+      dij = m_radii[atom_i] + m_radii[atom_j];
     }
 #ifdef _OPENMP
     *m_energies[isubdom] +=
-        m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
+        m_interaction->energy_gradient_hessian(r2, &gij, &hij, dij);
 #else
     *m_energies[0] +=
-        m_interaction->energy_gradient_hessian(r2, &gij, &hij, radius_sum);
+        m_interaction->energy_gradient_hessian(r2, &gij, &hij, dij);
 #endif
     if (gij != 0) {
       for (size_t k = 0; k < m_ndim; ++k) {
@@ -743,8 +743,8 @@ public:
         r2 += dr[k] * dr[k];
         neg_dr[k] = -dr[k];
       }
-      const double radius_sum = m_radii[atom_i] + m_radii[atom_j];
-      const double r_S = m_cutoff_sca * radius_sum;
+      const double dij = m_radii[atom_i] + m_radii[atom_j];
+      const double r_S = m_cutoff_sca * dij;
       const double r_S2 = r_S * r_S;
       if (r2 <= r_S2) {
         m_neighbor_indss[atom_i].push_back(atom_j);
@@ -788,8 +788,8 @@ public:
     for (size_t k = 0; k < m_ndim; ++k) {
       r2 += dr[k] * dr[k];
     }
-    const double radius_sum = m_radii[atom_i] + m_radii[atom_j];
-    const double r_H2 = radius_sum * radius_sum;
+    const double dij = m_radii[atom_i] + m_radii[atom_j];
+    const double r_H2 = dij * dij;
     if (r2 <= r_H2) {
 #pragma omp critical(add_overlap)
       {
@@ -1221,7 +1221,7 @@ public:
                                                         size_t atom_i,
                                                         size_t atom_j) const {
     double energy =
-        m_interaction->energy_gradient(r2, gij, sum_radii(atom_i, atom_j));
+        m_interaction->energy_gradient(r2, gij, get_dij(atom_i, atom_j));
     *gij *= sqrt(r2);
     return energy;
   }
@@ -1230,7 +1230,7 @@ public:
   get_interaction_energy_gradient_hessian(double r2, double *gij, double *hij,
                                           size_t atom_i, size_t atom_j) const {
     double energy = m_interaction->energy_gradient_hessian(
-        r2, gij, hij, sum_radii(atom_i, atom_j));
+        r2, gij, hij, get_dij(atom_i, atom_j));
     *gij *= sqrt(r2);
     return energy;
   }

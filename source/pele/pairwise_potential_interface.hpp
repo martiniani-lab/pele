@@ -6,6 +6,7 @@
 #include "utils.hpp"
 #include <bits/stdc++.h>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <set>
@@ -17,24 +18,27 @@ namespace pele {
 class PairwisePotentialInterface : public BasePotential {
 protected:
   const Array<double> m_radii;
+  const double epsilon;
 
   // Data members for finding rattlers close to minima
 
-  double sum_radii(const size_t atom_i, const size_t atom_j) const {
+  /*
+   * Finds the interaction distance between two particles, i and j. defaults to
+   * radii[i] + radii[j] when epsilon is zero
+   */
+  inline double get_dij(const std::size_t atom_i,
+                                const std::size_t atom_j) const {
     if (m_radii.size() == 0) {
       return 0;
     } else {
-      return m_radii[atom_i] + m_radii[atom_j];
+      return m_radii[atom_i] + m_radii[atom_j]*(1 - 2*epsilon* abs(m_radii[atom_i] - m_radii[atom_j]));
     }
   }
 
 public:
-  PairwisePotentialInterface() : m_radii(0) {
-    // rattler finding at minima not implemented when radii are not explicitly
-    // set
-  }
-  PairwisePotentialInterface(pele::Array<double> const &radii)
-      : m_radii(radii.copy()) {
+  PairwisePotentialInterface() : m_radii(0), epsilon(0) {}
+  PairwisePotentialInterface(pele::Array<double> const &radii, double epsilon = 0)
+      : m_radii(radii.copy()), epsilon(epsilon) {
     if (radii.size() == 0) {
       throw std::runtime_error(
           "PairwisePotentialInterface: illegal input: radii");
