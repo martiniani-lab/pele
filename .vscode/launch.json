@@ -3,11 +3,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch extended mixed descent",
+      "name": "Launch CVODE iterative",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/cpp_tests/source/test_main",
-      "args": ["--gtest_filter=\"EXTENDED_MXD*\""],
+      "args": ["--gtest_filter=\"CVODE.It*\""],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/cpp_tests/source",
       "environment": [],
