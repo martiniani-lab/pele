@@ -15,7 +15,8 @@
 namespace pele {
 
 /**
- * Pairwise interaction for Inverse power potential eps/pow * (1 - r/r0)^pow
+ * Pairwise interaction for Inverse power potential eps/pow * (1 - r/dij)^pow
+ * eps is the energy scale, dij sets the maximum distance of interaction
  * the radii array allows for polydispersity
  * The most common exponents are:
  * pow=2   -> Hookean interaction
@@ -46,46 +47,46 @@ struct InversePower_interaction : BaseInteraction {
   InversePower_interaction(double pow, double eps) : _eps(eps), _pow(pow) {}
 
   /* calculate energy from distance squared */
-  double energy(double r2, const double radius_sum) const {
+  double energy(double r2, const double dij) const {
     double E;
-    if (r2 >= radius_sum * radius_sum) {
+    if (r2 >= dij * dij) {
       E = 0.;
     } else {
       // Sqrt moved into else, based on previous comment by CPG.
       const double r = std::sqrt(r2);
-      E = std::pow((1 - r / radius_sum), _pow) * _eps / _pow;
+      E = std::pow((1 - r / dij), _pow) * _eps / _pow;
     }
     return E;
   }
 
   /* calculate energy and gradient from distance squared, gradient is in
-   * -(dv/drij)/|rij| */
+   * -(dv/ddij)/|dij| */
   double energy_gradient(double r2, double *gij,
-                         const double radius_sum) const {
+                         const double dij) const {
     double E;
-    if (r2 >= radius_sum * radius_sum) {
+    if (r2 >= dij * dij) {
       E = 0.;
       *gij = 0.;
     } else {
       const double r = std::sqrt(r2);
-      const double factor = std::pow((1 - r / radius_sum), _pow) * _eps;
+      const double factor = std::pow((1 - r / dij), _pow) * _eps;
       E = factor / _pow;
-      *gij = -factor / ((r - radius_sum) * r);
+      *gij = -factor / ((r - dij) * r);
     }
     return E;
   }
 
   double inline energy_gradient_hessian(double r2, double *gij, double *hij,
-                                        const double radius_sum) const {
+                                        const double dij) const {
     double E;
-    if (r2 >= radius_sum * radius_sum) {
+    if (r2 >= dij * dij) {
       E = 0.;
       *gij = 0;
       *hij = 0;
     } else {
       const double r = std::sqrt(r2);
-      const double factor = std::pow((1 - r / radius_sum), _pow) * _eps;
-      const double denom = 1.0 / (r - radius_sum);
+      const double factor = std::pow((1 - r / dij), _pow) * _eps;
+      const double denom = 1.0 / (r - dij);
       E = factor / _pow;
       *gij = -factor * denom / r;
       *hij = (_pow - 1) * factor * denom * denom;
@@ -101,45 +102,45 @@ template <int POW> struct InverseIntPower_interaction : BaseInteraction {
   InverseIntPower_interaction(double eps) : _eps(eps), _pow(POW) {}
 
   /* calculate energy from distance squared */
-  double energy(double r2, const double radius_sum) const {
+  double energy(double r2, const double dij) const {
     double E;
-    if (r2 >= radius_sum * radius_sum) {
+    if (r2 >= dij * dij) {
       E = 0.;
     } else {
       const double r = std::sqrt(r2);
-      E = pos_int_pow<POW>(1 - r / radius_sum) * _eps / _pow;
+      E = pos_int_pow<POW>(1 - r / dij) * _eps / _pow;
     }
     return E;
   }
 
   /* calculate energy and gradient from distance squared, gradient is in
-   * -(dv/drij)/|rij| */
+   * -(dv/ddij)/|dij| */
   double energy_gradient(double r2, double *gij,
-                         const double radius_sum) const {
+                         const double dij) const {
     double E;
-    if (r2 >= radius_sum * radius_sum) {
+    if (r2 >= dij * dij) {
       E = 0.;
       *gij = 0;
     } else {
       const double r = std::sqrt(r2);
-      const double factor = pos_int_pow<POW>(1 - r / radius_sum) * _eps;
+      const double factor = pos_int_pow<POW>(1 - r / dij) * _eps;
       E = factor / _pow;
-      *gij = -factor / ((r - radius_sum) * r);
+      *gij = -factor / ((r - dij) * r);
     }
     return E;
   }
 
   double inline energy_gradient_hessian(double r2, double *gij, double *hij,
-                                        const double radius_sum) const {
+                                        const double dij) const {
     double E;
-    if (r2 >= radius_sum * radius_sum) {
+    if (r2 >= dij * dij) {
       E = 0.;
       *gij = 0;
       *hij = 0;
     } else {
       const double r = std::sqrt(r2);
-      const double factor = pos_int_pow<POW>(1 - r / radius_sum) * _eps;
-      const double denom = 1.0 / (r - radius_sum);
+      const double factor = pos_int_pow<POW>(1 - r / dij) * _eps;
+      const double denom = 1.0 / (r - dij);
       E = factor / _pow;
       *gij = -factor * denom / r;
       *hij = (_pow - 1) * factor * denom * denom;
@@ -155,45 +156,45 @@ template <int POW2> struct InverseHalfIntPower_interaction : BaseInteraction {
   InverseHalfIntPower_interaction(double eps) : _eps(eps), _pow(0.5 * POW2) {}
 
   /* calculate energy from distance squared */
-  double energy(double r2, const double radius_sum) const {
+  double energy(double r2, const double dij) const {
     double E;
-    if (r2 >= radius_sum * radius_sum) {
+    if (r2 >= dij * dij) {
       E = 0.;
     } else {
       const double r = std::sqrt(r2);
-      E = pos_half_int_pow<POW2>(1 - r / radius_sum) * _eps / _pow;
+      E = pos_half_int_pow<POW2>(1 - r / dij) * _eps / _pow;
     }
     return E;
   }
 
   /* calculate energy and gradient from distance squared, gradient is in
-   * -(dv/drij)/|rij| */
+   * -(dv/ddij)/|dij| */
   double energy_gradient(double r2, double *gij,
-                         const double radius_sum) const {
+                         const double dij) const {
     double E;
-    if (r2 >= radius_sum * radius_sum) {
+    if (r2 >= dij * dij) {
       E = 0.;
       *gij = 0;
     } else {
       const double r = std::sqrt(r2);
-      const double factor = pos_half_int_pow<POW2>(1 - r / radius_sum) * _eps;
+      const double factor = pos_half_int_pow<POW2>(1 - r / dij) * _eps;
       E = factor / _pow;
-      *gij = -factor / ((r - radius_sum) * r);
+      *gij = -factor / ((r - dij) * r);
     }
     return E;
   }
 
   double inline energy_gradient_hessian(double r2, double *gij, double *hij,
-                                        const double radius_sum) const {
+                                        const double dij) const {
     double E;
-    if (r2 >= radius_sum * radius_sum) {
+    if (r2 >= dij * dij) {
       E = 0.;
       *gij = 0;
       *hij = 0;
     } else {
       const double r = std::sqrt(r2);
-      const double factor = pos_half_int_pow<POW2>(1 - r / radius_sum) * _eps;
-      const double denom = 1.0 / (r - radius_sum);
+      const double factor = pos_half_int_pow<POW2>(1 - r / dij) * _eps;
+      const double denom = 1.0 / (r - dij);
       E = factor / _pow;
       *gij = -factor * denom / r;
       *hij = (_pow - 1) * factor * denom * denom;
