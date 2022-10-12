@@ -79,19 +79,13 @@ template <size_t ndim> struct cartesian_distance {
     static_assert(ndim > 0, "illegal box dimension");
     meta_dist<ndim>::f(r_ij, r1, r2);
   }
-
-  /**
-   * This should not be called. It's only here for running CellList tests.
-   * The particles can't be outside the box when
-   * using cartesian distance with cell lists.
-   */
   inline void put_atom_in_box(double *const xnew, const double *x) const {
-    throw std::runtime_error(
-        "Cartesian distance, CellLists: coords are outside of boxvector");
+    // There is no box, so do nothing
+    for (size_t i = 0; i < ndim; ++i) {
+      xnew[i] = x[i];
+    }
   }
   inline void put_atom_in_box(double *const x) const {
-    throw std::runtime_error(
-        "Cartesian distance, CellLists: coords are outside of boxvector");
   }
 };
 
