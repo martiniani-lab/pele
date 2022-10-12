@@ -46,7 +46,6 @@ endif()
 # include LAPACK AND BLAS
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
-find_package(HOOMD REQUIRED)
 
 set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/../../../extern/install")
 
@@ -89,16 +88,8 @@ add_subdirectory(../gtest ${gtest_binary_dir})
 set(gtest_libs gtest gtest_main)
 message("gtest_libs ${gtest_libs}")
 
-# HOOMD includes
-get_property(HOOMD_INCLUDE_DIRECTORY TARGET HOOMD::_hoomd PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-get_property(PYBIND11_INCLUDE_DIRS TARGET pybind11::headers PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 
-# get_property(PYBIND11_LIBRARIES TARGET pybind11::headers PROPERTY INTERFACE_LINK_LIBRARIES)
-# # HOOMD link flags
-# get_property(HOOMD_LIBRARIES TARGET HOOMD::_hoomd PROPERTY INTERFACE_LINK_LIBRARIES)
 include_directories(${PYTHON_INCLUDE_DIR})
-include_directories(${HOOMD_INCLUDE_DIRECTORY})
-include_directories(${PYBIND11_INCLUDE_DIRS})
 
 # set the pele include directory
 set(pele_include ../../source)
@@ -116,14 +107,12 @@ FILE(GLOB sources *.c*)
 
 add_executable(test_main ${sources})
 
-# pybind11_add_module(test_main ${sources})
 target_link_libraries(test_main pele_lib gtest gtest_main pthread)
 target_link_libraries(test_main ${SUNDIALS_LIBRARIES})
 target_link_libraries(test_main ${BLAS_LIBRARIES})
 target_link_libraries(test_main ${LAPACK_LIBRARIES})
 
-# link to python libraries as well to make HOOMD references work
-# target_link_libraries(test_main PUBLIC HOOMD::_hoomd)
+
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
