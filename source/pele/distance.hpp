@@ -86,12 +86,12 @@ template <size_t ndim> struct cartesian_distance {
    * using cartesian distance with cell lists.
    */
   inline void put_atom_in_box(double *const xnew, const double *x) const {
-    // throw std::runtime_error("Cartesian distance, CellLists: coords are
-    // outside of boxvector");
+    throw std::runtime_error(
+        "Cartesian distance, CellLists: coords are outside of boxvector");
   }
   inline void put_atom_in_box(double *const x) const {
-    // throw std::runtime_error("Cartesian distance, CellLists: coords are
-    // outside of boxvector");
+    throw std::runtime_error(
+        "Cartesian distance, CellLists: coords are outside of boxvector");
   }
 };
 
