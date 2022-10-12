@@ -23,8 +23,6 @@ void compute_eigvals(MatrixXd m) {
     eigs.init();
     int nconv = eigs.compute(Spectra::SortRule::SmallestAlge);
     Eigen::VectorXd evals = eigs.eigenvalues();
-    std::cout << "hello"
-              << "\n";
   }
 }
 void compute_lowest_eigenvalue(MatrixXd m) {
@@ -87,8 +85,6 @@ void setup() {
   std::shared_ptr<pele::InversePowerPeriodicCellLists<_ndim>> potcell =
       std::make_shared<pele::InversePowerPeriodicCellLists<_ndim>>(
           power, eps, radii, boxvec, ncellsx_scale);
-  std::cout << "hello"
-            << "\n";
 
   pele::Array<double> g = pele::Array<double>(x.size());
   potcell->get_energy_gradient(x, g);
@@ -121,26 +117,5 @@ void setup() {
   std::cout << lowesteigenvalue << "lowest eigenvalue from pele \n";
 }
 
-TEST(EigenBenchmark, eb) {
-  double n = 512;
-  MatrixXd m = MatrixXd::Random(n, n);
-  m = m * m.transpose();
-  std::cout << m << "\n";
-  // Define operator vector product
-
-  // Initialize and compute
-  compute_eigvals(m);
-}
-
-// TEST(EigenBenchmark, sym){
-//     double n = 512;
-//     MatrixXd m = MatrixXd::Random(n,n);
-//     m = m*m.transpose();
-//     std::cout << m << "\n";
-//     // Define operator vector product
-
-//   // Initialize and compute
-//     compute_eigenvalues_symmetric(m);
-// }
 
 TEST(EIG, sym) { setup(); }
