@@ -48,27 +48,16 @@ find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(HOOMD REQUIRED)
 
+set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/../../../extern/install")
+
+
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
 set(SUNDIALS_INCLUDE_DIR
-  /home/praharsh/research/bv-libraries/sunnnew/sundials/SN_EXT/include
+  ${EXT_INSTALL_PATH}/include
   CACHE PATH "Location of SUNDIALS header files")
 set(SUNDIALS_LIBRARY_DIR
-  /home/praharsh/research/bv-libraries/sunnnew/sundials/SN_EXT/lib
+  ${EXT_INSTALL_PATH}/lib
   CACHE PATH "Location of SUNDIALS libraries")
-
-# KLU include directory and libraries
-set(KLU_INCLUDE_DIR
-  /home/praharsh/research/bv-libraries/SuiteSparse/include
-  CACHE PATH "Location of KLU header files")
-
-set(KLU_LIBRARIES
-  /home/praharsh/research/bv-libraries/SuiteSparse/lib/libklu.so;/home/praharsh/research/bv-libraries/SuiteSparse/lib/libamd.so;/home/praharsh/research/bv-libraries/SuiteSparse/lib/libcolamd.so;/home/praharsh/research/bv-libraries/SuiteSparse/lib/libbtf.so;/home/praharsh/research/bv-libraries/SuiteSparse/lib/libsuitesparseconfig.so
-  CACHE STRING "KLU libraries")
-
-# Find KLU SUNLinsol library
-find_library(SUNDIALS_SUNLINSOLKLU_LIB
-  sundials_sunlinsolklu ${SUNDIALS_LIBRARY_DIR}
-  DOC "SUNDIALS KLU linear solver library")
 
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
@@ -88,10 +77,7 @@ set(SUNDIALS_LIBRARIES
   ${SUNDIALS_SOLVER_LIB}
   ${SUNDIALS_NVEC_LIB}
   ${SUNDIALS_MANYVEC_LIB}
-  ${SUNDIALS_EXTRA_LIBS}
-  ${SUNDIALS_SUNLINSOLKLU_LIB})
-
-message("SUNDIALS KLU LIB ${SUNDIALS_SUNLINSOLKLU_LIB}")
+  ${SUNDIALS_EXTRA_LIBS})
 
 # Add and compile the gtest library
 set(gtest_src ../gtest)
@@ -118,7 +104,6 @@ include_directories(${PYBIND11_INCLUDE_DIRS})
 set(pele_include ../../source)
 include_directories(${pele_include})
 include_directories(${SUNDIALS_INCLUDE_DIR})
-include_directories(${KLU_INCLUDE_DIR})
 
 message("pele include directory ${pele_include}")
 
@@ -136,7 +121,6 @@ target_link_libraries(test_main pele_lib gtest gtest_main pthread)
 target_link_libraries(test_main ${SUNDIALS_LIBRARIES})
 target_link_libraries(test_main ${BLAS_LIBRARIES})
 target_link_libraries(test_main ${LAPACK_LIBRARIES})
-target_link_libraries(test_main ${KLU_LIBRARIES})
 
 # link to python libraries as well to make HOOMD references work
 # target_link_libraries(test_main PUBLIC HOOMD::_hoomd)
