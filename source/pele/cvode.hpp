@@ -51,7 +51,6 @@ namespace pele {
 enum HessianType {
   DENSE = 0,
   ITERATIVE = 1,
-  SPARSE = 2,
 };
 /**
  * user data passed to CVODE
@@ -170,11 +169,6 @@ inline pele::Array<double> pele_eq_N_Vector(N_Vector x) {
   }
   return pele::Array<double>(NV_DATA_S(x), N_VGetLength(x)).copy();
 }
-
-SUNMatrix SUNSparseFromDenseMatrix_inplace(SUNMatrix Ad, SUNMatrix As,
-                                           realtype droptol, int sparsetype);
-int Jac_sparse(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
-               void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
 int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
