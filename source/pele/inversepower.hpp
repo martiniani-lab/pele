@@ -60,7 +60,7 @@ struct InversePower_interaction : BaseInteraction {
   }
 
   /* calculate energy and gradient from distance squared, gradient is in
-   * -(dv/ddij)/|dij| */
+   * -(dv/drij)/|rij| */
   double energy_gradient(double r2, double *gij,
                          const double dij) const {
     double E;

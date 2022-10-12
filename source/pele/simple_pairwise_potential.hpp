@@ -46,8 +46,8 @@ protected:
   SimplePairwisePotential(std::shared_ptr<pairwise_interaction> interaction,
                           const Array<double> radii,
                           std::shared_ptr<distance_policy> dist = NULL,
-                          const double radii_sca = 0.0, bool exact_sum = false)
-      : PairwisePotentialInterface(radii), _interaction(interaction),
+                          const double radii_sca = 0.0, bool exact_sum = false, double eps_r = 0.0)
+      : PairwisePotentialInterface(radii, eps_r), _interaction(interaction),
         _dist(dist), m_radii_sca(radii_sca), exact_gradient_initialized(false),
         exact_sum(exact_sum) {
     if (_dist == NULL)
