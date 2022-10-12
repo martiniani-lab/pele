@@ -344,14 +344,8 @@ public:
    */
   cell_vec_t position_to_cell_vec(const double *const x) const {
     double x_in_box[ndim];
-    // std::cout << "x:" << std::endl;
-    // for (size_t idim = 0; idim < ndim; ++idim) {
-    //     std::cout << x[idim] << " ";
-    // }
-    // std::cout << std::endl;
+
     m_dist->put_atom_in_box(x_in_box, x);
-    // std::cout << "x_in_box: " << x_in_box[0] << " " << x_in_box[1] << " " <<
-    // std::endl;
     cell_vec_t cell_vec;
     for (size_t idim = 0; idim < ndim; ++idim) {
       cell_vec[idim] =

@@ -6,7 +6,9 @@
 #include "pele/modified_fire.hpp"
 #include "test_utils.hpp"
 #include <gtest/gtest.h>
+#include <iostream>
 #include <omp.h>
+#include <ostream>
 #include <random>
 
 using pele::Array;
@@ -277,13 +279,21 @@ TEST_F(CellListsTestMoreHS_WCA, HSWCAEnergyCartesian_Works) {
   pele::HS_WCA<3> pot_no_cells(eps, sca, radii);
   const double e_no_cells = pot_no_cells.get_energy(x);
   for (size_t factor = 1; factor < 2; ++factor) {
-    // std::cout << "factor: " << factor << std::endl;
+    std::cout << "epsilon: " << eps << std::endl;
+    std::cout << "sca: " << sca << std::endl;
+    std::cout << "radii: " << radii << std::endl;
+    std::cout << "boxvec: " << boxvec << std::endl;
     pele::HS_WCACellLists<3> pot_cell1(eps, sca, radii, boxvec);
+    
     const double e_cell1 = pot_cell1.get_energy(x);
+    std::cout << "e_cell1: " << e_cell1 << std::endl;
     pele::HS_WCACellLists<3> pot_cellA(eps, sca, radii, boxvec, factor);
     pele::HS_WCACellLists<3> pot_cellB(eps, sca, radii, boxvec);
+
     const double e_cellA = pot_cellA.get_energy(x);
+    std::cout << "e_cellA: " << e_cellA << std::endl;
     const double e_cellB = pot_cellB.get_energy(x);
+    std::cout << "e_cellB: " << e_cellB << std::endl;
     // std::cout << "e_no_cells: " << e_no_cells << "\n";
     // std::cout << "e_cell1: " << e_cell1 << std::endl;
     EXPECT_DOUBLE_EQ(e_cell1, e_cellA);
@@ -613,6 +623,7 @@ public:
         x[k * ndim + j] -= center;
       }
     }
+    std::cout << "x = " << x << std::endl;
     rcut = 2 * (1 + sca) *
            *std::max_element(radii.data(), radii.data() + nparticles);
     boxvec = Array<double>(
@@ -677,7 +688,7 @@ TEST_F(CellListsTestMoreHS_WCA2D, HSWCAEnergyCartesian_Works) {
   pele::HS_WCA<2> pot_no_cells(eps, sca, radii);
   pele::HS_WCAPeriodic<2> pot_no_cells_periodic(eps, sca, radii, boxvec);
   const double e_no_cells = pot_no_cells.get_energy(x);
-  // const double e_no_cells_periodic = pot_no_cells_periodic.get_energy(x);
+
   for (size_t factor = 1; factor < 3; ++factor) {
     pele::HS_WCACellLists<2> pot_cellA(eps, sca, radii, boxvec, factor);
     pele::HS_WCAPeriodicCellLists<2> pot_cellA_per(eps, sca, radii, boxvec,
@@ -685,24 +696,6 @@ TEST_F(CellListsTestMoreHS_WCA2D, HSWCAEnergyCartesian_Works) {
     pele::HS_WCACellLists<2> pot_cellB(eps, sca, radii, boxvec, factor + 0.2);
     const double e_cellA = pot_cellA.get_energy(x);
     const double e_cellB = pot_cellB.get_energy(x);
-    // std::cout << "factor: " << factor << "\n";
-    // std::cout << "e_no_cells_periodic: " << e_no_cells_periodic << std::endl;
-    // std::cout << "radii" << std::endl;
-    /*
-    for (size_t i = 0; i < radii.size(); ++i) {
-        std::cout << radii[i] << "\n";
-    }
-    std::cout << "boxvec" << std::endl;
-    for (size_t i = 0; i < boxvec.size(); ++i) {
-        std::cout << boxvec[i] << "\n";
-    }
-    std::cout << "coords" << std::endl;
-    for (size_t i = 0; i < nparticles; ++i) {
-        std::cout << x[i * 2] << "\t" << x[i * 2 + 1] << "\t" << radii[i] <<
-    "\t" << radii[i] * (1 + sca) << "\n";
-    }
-    std::cout << "coords_end" << std::endl;
-    */
     EXPECT_DOUBLE_EQ(e_no_cells, e_cellA);
     EXPECT_DOUBLE_EQ(e_no_cells, e_cellB);
   }
