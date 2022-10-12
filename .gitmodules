@@ -1,6 +1,6 @@
 [submodule "extern/sundials"]
 	path = extern/sundials
 	url = https://github.com/LLNL/sundials.git
-[submodule "cpp_tests/googletest"]
-	path = cpp_tests/googletest
+[submodule "cpp_tests/gtest"]
+	path = cpp_tests/gtest
 	url = https://github.com/google/googletest.git

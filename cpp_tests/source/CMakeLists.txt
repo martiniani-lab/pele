@@ -47,7 +47,7 @@ endif()
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
-set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/../../../extern/install")
+set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/../../extern/install")
 
 
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
@@ -58,6 +58,7 @@ set(SUNDIALS_LIBRARY_DIR
   ${EXT_INSTALL_PATH}/lib
   CACHE PATH "Location of SUNDIALS libraries")
 
+message("SUNDIALS_INCLUDE_DIR ${SUNDIALS_INCLUDE_DIR}")
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
   sundials_cvode ${SUNDIALS_LIBRARY_DIR}
