@@ -87,3 +87,7 @@ cpp_tests/source/test_main
 /CMakeFiles/
 /cmake_install.cmake
 /out.txt
+
+
+# Extern files
+extern/install
