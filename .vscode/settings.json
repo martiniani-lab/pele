@@ -9,6 +9,7 @@
         "hoomd",
         "mathrm",
         "ndim",
+        "Stillinger",
         "sunctx"
     ],
     "esbonio.sphinx.confDir": ""
