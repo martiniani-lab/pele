@@ -89,3 +89,7 @@ cpp_tests/source/test_main
 
 # Extern files
 extern/install
+cpp_tests/source/lib/libgmock_main.a
+cpp_tests/source/lib/libgmock.a
+cpp_tests/source/lib/libgtest_main.a
+cpp_tests/source/lib/libgtest.a
