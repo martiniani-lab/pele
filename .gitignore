@@ -22,7 +22,6 @@ build
 *.html
 pele/*/*cxx
 cpp_tests/build
-cpp_tests/gtest
 source/autodiff/*
 source/Eigen/*
 source/Spectra/*
@@ -60,7 +59,6 @@ htmlcov
 /cpp_tests/source/CMakeFiles/
 /cpp_tests/source/Makefile
 /cpp_tests/source/.CMakeLists.txt.swp
-/cpp_tests/gtest-1.7.0.zip
 /cpp_tests/source/benchmarks/CMakeFiles/
 /cpp_tests/source/benchmarks/Makefile
 /cpp_tests/source/benchmarks/bench_cell_lists
