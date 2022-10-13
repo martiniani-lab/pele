@@ -22,8 +22,7 @@ from libcpp cimport bool
 cdef extern from "pele/cvode.hpp" namespace "pele":
     cpdef enum HessianType:
         DENSE,
-        ITERATIVE,
-        SPARSE
+        ITERATIVE
 
 cdef extern from "pele/cvode.hpp" namespace "pele":
     cdef cppclass cppCVODEBDFOptimizer "pele::CVODEBDFOptimizer":
