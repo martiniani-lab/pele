@@ -22,9 +22,6 @@ build
 *.html
 pele/*/*cxx
 cpp_tests/build
-source/autodiff/*
-source/Eigen/*
-source/Spectra/*
 
 CMakeLists.txt
 
