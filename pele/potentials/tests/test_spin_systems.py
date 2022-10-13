@@ -68,35 +68,35 @@ def xy_energy_gradient(self, angles):
     return E, grad
 
 
-class TestHeisenbergModel(_base_test._TestConfiguration):
+class TestHeisenbergModel(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.pot = HeisenbergModel(dim=[L, L], field_disorder=0.)
         self.x0 = coords
         self.e0 = 3.600645294790505
 
 
-class TestHeisenbergModelDisorder(_base_test._TestConfiguration):
+class TestHeisenbergModelDisorder(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.pot = HeisenbergModel(dim=[L, L], fields=fields)
         self.x0 = coords
         self.e0 = 3.6355173650964892
 
 
-class TestXYModel(_base_test._TestConfiguration):
+class TestXYModel(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.pot = XYModel(dim=[L, L], phi=0, periodic=False, phases=None)
         self.x0 = _x0_xy
         self.e0 = -0.6195031129867052
 
 
-class TestXYModelPeriodic(_base_test._TestConfiguration):
+class TestXYModelPeriodic(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.pot = XYModel(dim=[L, L], phi=0, periodic=True)
         self.x0 = _x0_xy
         self.e0 = -0.08896226597510098
 
 
-class TestXYModelDisorder(_base_test._TestConfiguration):
+class TestXYModelDisorder(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.pot = XYModel(dim=[L, L], phi=1., periodic=False, phases=phases)
         self.x0 = _x0_xy
@@ -114,13 +114,13 @@ class TestXYModelDisorder(_base_test._TestConfiguration):
         self.assertAlmostEqual(e, e1, 5)
         self.compare_arrays(g, g1)
 
-class TestHeisenbergModelRADisorder(_base_test._TestConfiguration):
+class TestHeisenbergModelRADisorder(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.pot = HeisenbergModelRA(dim=[L, L], fields=fields)
         self.x0 = coords
         self.e0 = -1.0352033463288723
 
-class TestMeanFieldPSpinSpherical2(_base_test._TestConfiguration):
+class TestMeanFieldPSpinSpherical2(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         p=2
         nspins = 10
@@ -130,7 +130,7 @@ class TestMeanFieldPSpinSpherical2(_base_test._TestConfiguration):
         self.x0 = coords
         self.e0 = -45
 
-class TestMeanFieldPSpinSpherical3(_base_test._TestConfiguration):
+class TestMeanFieldPSpinSpherical3(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         p=3
         nspins = 10
@@ -140,7 +140,7 @@ class TestMeanFieldPSpinSpherical3(_base_test._TestConfiguration):
         self.x0 = coords
         self.e0 = -120/np.power(nspins,(p-1)/2)
 
-class TestMeanFieldPSpinSpherical4(_base_test._TestConfiguration):
+class TestMeanFieldPSpinSpherical4(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         p=4
         nspins = 10
@@ -150,7 +150,7 @@ class TestMeanFieldPSpinSpherical4(_base_test._TestConfiguration):
         self.x0 = coords
         self.e0 = -210/np.power(nspins,(p-1)/2)
 
-class TestMeanFieldPSpinSpherical5(_base_test._TestConfiguration):
+class TestMeanFieldPSpinSpherical5(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         p=5
         nspins = 10

@@ -15,7 +15,7 @@ def minimize(coords, pot):
     return result.coords, result.energy, result.grad, result.rms
 
 
-class TestWCA_CPP(_base_test._BaseTest):
+class TestWCA_CPP(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         boxv = [3, 3, 3]
         self.pot = _wca_cpp.WCA(ndim=3, boxvec=boxv)
@@ -29,7 +29,7 @@ class TestWCA_CPP(_base_test._BaseTest):
         self.Emin = float(xyz[1])
 
 
-class TestWCA2D_CPP(_base_test._BaseTest):
+class TestWCA2D_CPP(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         boxv = [3, 3]
         self.pot = _wca_cpp.WCA(ndim=2, boxvec=boxv)
@@ -42,7 +42,7 @@ class TestWCA2D_CPP(_base_test._BaseTest):
         self.Emin = float(xy[1])
 
 
-class TestWCA_CPP_NeighborList(_base_test._BaseTest):
+class TestWCA_CPP_NeighborList(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         self.natoms = 13
         nlist = [[i, j] for i in range(self.natoms) for j in range(i + 1, self.natoms)]
@@ -54,7 +54,7 @@ class TestWCA_CPP_NeighborList(_base_test._BaseTest):
         self.Emin = float(xyz[1])
 
 
-class TestWCA_CPP_AtomList(_base_test._TestConfiguration):
+class TestWCA_CPP_AtomList(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.natoms = 13
         atoms = np.array(list(range(self.natoms - 1)))

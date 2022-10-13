@@ -5,7 +5,7 @@ from pele.potentials.test_functions import BealeSystem
 from . import _base_test
 
 
-class TestBeale(_base_test._BaseTest):
+class TestBeale(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         self.system = BealeSystem()
         self.pot = self.system.get_potential()

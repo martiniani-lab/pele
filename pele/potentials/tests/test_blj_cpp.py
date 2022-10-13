@@ -43,7 +43,7 @@ _x0 = np.array([ 2.77463041, -2.08121793, -0.04984229,  0.95964575,  2.6318472 ,
        -2.54709719,  2.49486958,  2.99969316,  1.50730602,  0.5559553 ,
        -2.71222851, -0.26495982, -1.23862359, -2.19968034,  0.74009495])
 
-class TestBLJ_CPP_simple(_base_test._TestConfiguration):
+class TestBLJ_CPP_simple(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         natoms = 50
         rcut = 1.6
@@ -59,7 +59,7 @@ class TestBLJ_CPP_simple(_base_test._TestConfiguration):
         efort = self.pot_fortran.getEnergy(self.x0)
         self.assertAlmostEqual(self.e0, efort)
 
-class TestBLJ_CPP_Bulk(_base_test._TestConfiguration):
+class TestBLJ_CPP_Bulk(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         natoms = 50
         rcut = 1.6
@@ -75,7 +75,7 @@ class TestBLJ_CPP_Bulk(_base_test._TestConfiguration):
         efort = self.pot_fortran.getEnergy(self.x0)
         self.assertAlmostEqual(self.e0, efort)
 
-class TestBLJ_CPP(_base_test._BaseTest):
+class TestBLJ_CPP(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         np.random.seed(1)
         current_dir = os.path.dirname(__file__)

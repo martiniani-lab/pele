@@ -35,7 +35,7 @@ def minimize(coords, pot):
     return result.coords, result.energy, result.grad, result.rms
 
 
-class TestHS_WCA_CPP(_base_test._BaseTest):
+class TestHS_WCA_CPP(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
         xyz, hs_radii, rattlers = read_xyzdr(current_dir + "/_hswca20_min2.xyzdr")
@@ -49,7 +49,7 @@ class TestHS_WCA_CPP(_base_test._BaseTest):
         self.Emin = result[1]  # self.pot.getEnergy(self.xmin)
         self.xrandom = np.random.uniform(-1, 1, len(xyz)) * 1e-2
 
-class TestHS_WCA_CPP_LeesEdwards_NoShear(_base_test._BaseTest):
+class TestHS_WCA_CPP_LeesEdwards_NoShear(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
         xyz, hs_radii, rattlers = read_xyzdr(current_dir + "/_hswca20_min2.xyzdr")
@@ -63,7 +63,7 @@ class TestHS_WCA_CPP_LeesEdwards_NoShear(_base_test._BaseTest):
         self.Emin = result[1]  # self.pot.getEnergy(self.xmin)
         self.xrandom = np.random.uniform(-1, 1, len(xyz)) * 1e-2
 
-class TestHS_WCA_CPP_LeesEdwards_Shear(_base_test._BaseTest):
+class TestHS_WCA_CPP_LeesEdwards_Shear(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
         xyz, hs_radii, rattlers = read_xyzdr(current_dir + "/_hswca20_shear_min.xyzdr")
@@ -78,7 +78,7 @@ class TestHS_WCA_CPP_LeesEdwards_Shear(_base_test._BaseTest):
         self.Emin = result[1]  # self.pot.getEnergy(self.xmin)
         self.xrandom = np.random.uniform(-1, 1, len(xyz)) * 1e-2
 
-# class TestHS_WCA_CPP_NeighborList(_base_test._BaseTest):
+# class TestHS_WCA_CPP_NeighborList(_base_test.BaseTestCases._BaseTest):
 # def setUp(self):
 #        current_dir = os.path.dirname(__file__)
 #        xyz, hs_radii, rattlers = read_xyzdr(current_dir + "/_hswca20_min.xyzdr")
