@@ -1,11 +1,10 @@
 #ifndef __PELE_TEST_UTILS_HPP__
 #define __PELE_TEST_UTILS_HPP__
-
+#include <gtest/gtest.h>
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
 
 #include <cmath>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>

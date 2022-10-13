@@ -1,3 +1,5 @@
+#include <gtest/gtest.h>
+
 #include "pele/array.hpp"
 #include "pele/base_interaction.hpp"
 #include "pele/base_potential.hpp"
@@ -8,7 +10,6 @@
 
 #include <cmath>
 #include <fstream>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <stdexcept>
 

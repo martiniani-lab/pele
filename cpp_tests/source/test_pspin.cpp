@@ -1,3 +1,4 @@
+#include <gtest/gtest.h>
 #include "pele/array.hpp"
 #include "pele/combination.hpp"
 #include "pele/meta_pow.hpp"
@@ -5,7 +6,6 @@
 #include "test_utils.hpp"
 
 #include <fstream>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <stdexcept>
 

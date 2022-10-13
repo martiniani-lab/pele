@@ -1,3 +1,5 @@
+#include <gtest/gtest.h>
+
 #include "pele/array.hpp"
 #include "pele/cell_lists.hpp"
 #include "pele/distance.hpp"
@@ -10,7 +12,6 @@
 
 #include <algorithm>
 #include <ctime>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <omp.h>
 #include <random>

@@ -1,5 +1,5 @@
-#include "pele/array.hpp"
 #include <gtest/gtest.h>
+#include "pele/array.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <vector>

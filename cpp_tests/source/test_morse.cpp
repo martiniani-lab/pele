@@ -1,8 +1,8 @@
+#include <gtest/gtest.h>
 #include "pele/array.hpp"
 #include "pele/morse.hpp"
 #include "test_utils.hpp"
 #include <cmath>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <stdexcept>
 #include <vector>

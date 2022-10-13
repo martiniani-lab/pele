@@ -1,6 +1,7 @@
+#include <gtest/gtest.h>
+
 #include "pele/matrix.hpp"
 #include "pele/vecn.hpp"
-#include <gtest/gtest.h>
 #include <iostream>
 #include <stdexcept>
 #include <vector>

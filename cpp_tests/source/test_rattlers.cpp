@@ -11,12 +11,11 @@
  * @copyright Copyright (c) 2021
  *
  */
-
+#include <gtest/gtest.h>
 #include "pele/array.hpp"
 #include "pele/inversepower.hpp"
 #include "gtest/internal/gtest-internal.h"
 #include <cstddef>
-#include <gtest/gtest.h>
 #include <memory>
 
 using pele::Array;

@@ -1,3 +1,4 @@
+#include <gtest/gtest.h>
 #include "pele/cell_lists.hpp"
 #include "pele/cvode.hpp"
 #include "pele/gradient_descent.hpp"
@@ -13,7 +14,6 @@
 
 #include "pele/array.hpp"
 #include <cmath>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <ostream>

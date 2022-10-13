@@ -5,13 +5,11 @@
  * lbfgs)]
  *
  */
-
+#include <gtest/gtest.h>
 #include <random>
-
 #include "pele/hs_wca.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/modified_fire.hpp"
-#include <gtest/gtest.h>
 #include <vector>
 
 // Class for making sure the minimizer gives the same answer with and without

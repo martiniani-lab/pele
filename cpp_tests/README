@@ -11,3 +11,4 @@ make
 ```
 
 current version uses gtest 1.12.x
+remember to keep `#include <gtest/gtest.h>` at the top of the test file. the order of the includes may raise compilation errors.

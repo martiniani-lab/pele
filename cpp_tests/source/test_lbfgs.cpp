@@ -1,4 +1,4 @@
-
+#include <gtest/gtest.h>
 #include "pele/cvode.hpp"
 #include "pele/gradient_descent.hpp"
 #include "pele/harmonic.hpp"
@@ -7,7 +7,6 @@
 #include "pele/mxopt.hpp"
 #include "pele/rosenbrock.hpp"
 #include <cmath>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>

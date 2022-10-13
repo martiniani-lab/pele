@@ -1,9 +1,8 @@
-
+#include <gtest/gtest.h>
 #include "pele/array.hpp"
 #include "pele/utils.hpp"
 
 #include <cmath>
-#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
