@@ -1,15 +1,11 @@
 
-cmake_minimum_required(VERSION 2.8)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+cmake_minimum_required(VERSION 3.5)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(pele_tests)
-
-# # if not specified by user, the standard build type is release
-# if(NOT CMAKE_BUILD_TYPE)
-# set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release Coverage." FORCE)
-# endif(NOT CMAKE_BUILD_TYPE)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 enable_language(CXX)
