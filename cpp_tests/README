@@ -1,16 +1,13 @@
 get gtest
 ---------
-get gtest from github.com/google
 
-  wget https://github.com/google/googletest/archive/release-1.8.0.zip
+build the tests using
 
-unzip it and put it in source/gtest
+```
+git submodule update --init --recursive
+cd cpp_tests/source
+cmake -DCMAKE_BUILD_TYPE=Debug .
+make
+```
 
-  unzip release-1.8.0.zip
-  mv googletest-release-1.8.0/googletest gtest
-
-build the tests
-
-  mkdir build && cd build
-  cmake ../source
-make -j8
+current version uses gtest 1.12.x
