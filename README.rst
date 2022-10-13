@@ -53,17 +53,24 @@ INSTALLATION
 Required packages
 -----------------
 
-for compilation:
+for compilation
+^^^^^^^^^^^^^^^
 
 #. fortran compiler
-#. c++ compiler (must support c++17)
+#. c++ compiler (must support c++17, preferably gcc)
+#. CMake (version 3.5 or higher)
 
 C/C++ packages:
+^^^^^^^^^^^^^^^^^
 #. Eigen (http://eigen.tuxfamily.org)
 #. SUNDIALS (https://computing.llnl.gov/projects/sundials)
-SUNDIALS and Eigen are automatically downloaded with :bash:`git submodule update --init --recursive`
+
+SUNDIALS and Eigen are automatically downloaded with :code:`git submodule update --init --recursive` (which will also download GoogleTest for C++ tests)
+an install script is provided for sundials, Eigen can be installed by running the command :code:`cp -r eigen/Eigen install/include/`
 
 python packages:
+^^^^^^^^^^^^^^^^
+pele requires python 3.8 or higher, and the following packages
 
 1. numpy: 
      We use numpy everywhere for doing numerical work.  It also installs f2py which
@@ -75,13 +82,16 @@ python packages:
 #. networkx: 
      For graph functionality. https://networkx.lanl.gov
 
+#. cython: 
+     For calling C++ code from python for speed
+
 #. matplotlib:
      For making plots (e.g. disconnectivity graphs)
 
 #. SQLAlchemy 0.7: 
      For managing database of stationary points.  http://www.sqlalchemy.org/
 
-#. hungarian: 
+#. munkres: 
      For permutational alignment
 
 #. pyro4: 
@@ -94,10 +104,7 @@ python packages:
      For viewing molecular structures
 
 
-All the above packages can be installed via the python package manager pip (or
-easy_install).  However, some of the packages (numpy, scipy) have additional
-dependencies and it can be more convenient to use the linux package manager
-(apt, yum, ...).
+We recommend installing all the above packages in a conda environment.
 
 If you want to use the gui you will additionally need:
 
@@ -111,15 +118,16 @@ The Ubuntu packages (apt-get) for these are: python-qt4, python-opengl, and pyth
 In fedora Fedora (yum) you will want the packages: PyQt4, and PyOpenGl
 
 
-Installing prerequisites on Ubuntu
+Installing using Conda
 ----------------------------------
-If you're running ubuntu, you can get all the prerequisites with the following
+We recommend you set up a new conda environment using :code:`conda create -n myenv python=3.9`
+
 commands::
 
-  $ sudo apt-get install python-numpy python-scipy python-matplotlib python-qt4 python-opengl python-qt4-gl python-pip pymol
-  $ pip install --user networkx sqlalchemy hungarian pyro4 brewer2mpl cython
-
-(in the above, the flag --user will install localy, in directory $HOME/.local/)
+  $ conda activate myenv
+  $ conda install numpy scipy networkx matplotlib cython
+  $ conda install -c conda-forge sqlalchemy munkres pyro4 scikit-sparse
+  $ conda install -c conda-forge -c schrodinger pymol-bundle
 
 
 Compilation
@@ -128,32 +136,12 @@ Compilation
 Compilation is required as many of the computationally intensive parts (especially potentials)
 are written in fortran and c++.  Theoretically you should be able to use any fortran compiler,
 but we mostly use gfortran and GCC, so it's the least likely to have problems.  This
-package uses the standard python setup utility (distutils).  There are lots of
-options for how and where to install. For more information::
-  
-  $ python setup.py --help 
-  $ python setup.py --help-commands
+package uses the standard python setup utility (distutils).  The current installation procedure
+is:
 
-Developers probably want to install "in-place", i.e. build the extension
-modules in their current directories::
+  $ python setup_with_cmake.py build_ext -i --fcompiler=gfortran
 
-  $ python setup.py build_ext -i --fcompiler=gfortran
-
-Users can install pele in the standard python package location::
-
-  $ python setup.py build --fcompiler=gfortran
-  $ python setup.py install [--user]
-
-where --user installs it in $HOME/.local/
-
-We now have an alternate form of compilation that uses CMake to compile the c++
-libraries.  This is *much* faster because it can be done in parallel and can
-take advantage of common libraries.  Simply use the file `setup_with_cmake.py`
-in place of `setup.py`
-
-PYTHONPATH  
-----------
-If you do an in-place install, make sure to add the install directory to your
+make sure to add the install directory to your
 PYTHONPATH environment variable.  This is not necessary if you install to a
 standard location.
 
@@ -164,7 +152,7 @@ Most things installed very easily on my Macbook Air OS X Version 10.9 but it
 turns out that python distutils doesn't play very nicely with clang, the osx c
 compiler.  
 
-I was seeing erros of the type:
+I was seeing errors of the type:
 
     error: no type named 'shared_ptr' in namespace 'std'
 
@@ -237,14 +225,6 @@ This worked even though I'm using osx Mavericks
 If you have updates or more complete installation instructions please email or
 submit a pull request.
 
-Running
-=======
-
-You can find examples of how to run pele in the examples folder.  More
-information can be found in the documentation at
-
-http://pele-python.github.com/pele/
-
 
 Notes
 =====
@@ -252,11 +232,17 @@ pele has recently been renamed from pygmin
 
 Tests
 =====
-Pele has a large suite of unit tests.  They can be run using the nose testing
-framework (which can be installed using pip).  The tests are run from the top
-directory with this command::
 
-  nosetests pele
+The C++ tests use GoogleTest. To run the tests, after running :code:`git submodule update --init --recursive` to get the GoogleTest submodule if you haven't already, run::
 
-We also have test for our c++ code writen in pure c++.  These are stored in
-the folder cpp_tests/ and can be compiled using CMake.
+  $ cd cpp_tests/source
+  $ cmake -DCMAKE_BUILD_TYPE=Debug .
+  $ make -j8
+  $ ./test_main
+
+The python tests have originally been written using nose. But we have transitioned to using pytests. 
+To run the tests, run::
+
+  $ pytest pele/
+
+from the base directory. However the tests are being rewritten, so expect to see some failures.
