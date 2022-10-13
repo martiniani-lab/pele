@@ -4,7 +4,6 @@
 #include "pele/lbfgs.hpp"
 #include "pele/lowest_eig_potential.hpp"
 #include <Eigen/Dense>
-#include <Spectra/SymEigsSolver.h>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -13,18 +12,9 @@
 #include <vector>
 
 using namespace Eigen;
-using namespace Spectra;
 using namespace pele;
 
-void compute_eigvals(MatrixXd m) {
-  for (int i = 0; i < 500; i++) {
-    Spectra::DenseSymMatProd<double> op(m);
-    Spectra::SymEigsSolver<Spectra::DenseSymMatProd<double>> eigs(op, 1, 20);
-    eigs.init();
-    int nconv = eigs.compute(Spectra::SortRule::SmallestAlge);
-    Eigen::VectorXd evals = eigs.eigenvalues();
-  }
-}
+
 void compute_lowest_eigenvalue(MatrixXd m) {
   // check whether the lowest eigenvalue is negative
 }

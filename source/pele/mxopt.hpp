@@ -11,7 +11,6 @@
 #include "pele/lbfgs.hpp"
 #include "sundials/sundials_context.h"
 #include <Eigen/Dense>
-#include <Spectra/SymEigsSolver.h>
 
 // Lapack for cholesky
 extern "C" {

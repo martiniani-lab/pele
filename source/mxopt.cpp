@@ -18,7 +18,6 @@
 #include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h>
 
-using namespace Spectra;
 
 namespace pele {
 

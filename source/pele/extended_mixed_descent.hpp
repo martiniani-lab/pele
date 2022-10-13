@@ -11,7 +11,6 @@
 #include "pele/combine_potentials.hpp"
 #include "pele/lbfgs.hpp"
 #include <Eigen/Dense>
-#include <Spectra/SymEigsSolver.h>
 #include <array>
 #include <fstream>
 #include <memory>

@@ -21,8 +21,6 @@
 #include <sunnonlinsol/sunnonlinsol_newton.h> /* access to Newton SUNNonLinearSolver */
 #include <unistd.h>
 
-using namespace Spectra;
-
 namespace pele {
 
 ExtendedMixedOptimizer::ExtendedMixedOptimizer(

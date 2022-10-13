@@ -1,4 +1,4 @@
-#include "pele/atlj.hpp"
+
 #include "pele/cvode.hpp"
 #include "pele/gradient_descent.hpp"
 #include "pele/harmonic.hpp"
