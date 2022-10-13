@@ -20,7 +20,6 @@ extern "C" {
 }
 #include <Eigen/Core>
 
-using namespace autodiff;
 // using namespace Eigen;
 
 namespace pele {
