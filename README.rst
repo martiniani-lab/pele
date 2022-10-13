@@ -1,17 +1,8 @@
-.. image:: https://travis-ci.org/pele-python/pele.svg?branch=master
-    :target: https://travis-ci.org/pele-python/pele
-
-.. image:: https://coveralls.io/repos/pele-python/pele/badge.png?branch=master 
-    :target: https://coveralls.io/r/pele-python/pele?branch=master
-
-.. image:: https://landscape.io/github/pele-python/pele/master/landscape.svg
-   :target: https://landscape.io/github/pele-python/pele/master
-   :alt: Code Health
 
 pele : Python Energy Landscape Explorer
 +++++++++++++++++++++++++++++++++++++++
 
-Tools for global optimization and energy landscape exploration.
+Tools for global optimization, attractor finding and energy landscape exploration.
 
 Source code: https://github.com/pele-python/pele
 
@@ -25,9 +16,11 @@ Documentation: http://pele-python.github.io/pele/
   the right is a disconnectivity graph showing a visualization of the energy
   landscape.  The competing low energy basins are shown in color.
 
-pele is a python partial-rewriting of GMIN, OPTIM, and PATHSAMPLE: fortran
+pele started as a python partial-rewriting of GMIN, OPTIM, and PATHSAMPLE: fortran
 programs written by David Wales of Cambridge University and collaborators
-(http://www-wales.ch.cam.ac.uk/software.html).  
+(http://www-wales.ch.cam.ac.uk/software.html).
+
+The current version is being developed by the Martiniani group at New York University.
 
 Description
 ===========
@@ -35,29 +28,24 @@ pele has tools for energy minimization, global optimization, saddle point
 (transition state) search, data analysis, visualization and much more.  Some of
 the algorithms implemented are:
 
-1. Basinhopping global optimization
-
+#. Basinhopping global optimization
+#. Potentials (Lennard-Jones, Morse, Hertzian, etc.) 
 #. LBFGS minimization (plus other minimizers)
-
+#. Attractor identification (Mixed Descent, CVODE)
 #. Single ended saddle point search:
-
    - Hybrid Eigenvector Following
-
    - Dimer method
-
-4. Double ended saddle point search
-
+#. Double ended saddle point search
    - Nudged Elastic Band (NEB)
-
    - Doubly Nudged Elastic Band (DNEB)
 
-5. Disconnectivity Graph visualization
+#. Disconnectivity Graph visualization
 
-6. Structure alignment algorithms
+#. Structure alignment algorithms
 
-7. Thermodynamics (e.g. heat capacity) via the Harmonic Superposition Approximation
+#. Thermodynamics (e.g. heat capacity) via the Harmonic Superposition Approximation
 
-8. Transition rates analysis
+#. Transition rates analysis
 
 INSTALLATION
 ============
@@ -67,9 +55,13 @@ Required packages
 
 for compilation:
 
-1. fortran compiler
+#. fortran compiler
+#. c++ compiler (must support c++17)
 
-#. c++ compiler (must support c++11, GCC 4.6 or similar)
+C/C++ packages:
+#. Eigen (http://eigen.tuxfamily.org)
+#. SUNDIALS (https://computing.llnl.gov/projects/sundials)
+SUNDIALS and Eigen are automatically downloaded with :bash:`git submodule update --init --recursive`
 
 python packages:
 
