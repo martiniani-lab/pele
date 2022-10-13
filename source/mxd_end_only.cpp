@@ -14,6 +14,7 @@
 #include "pele/newton.hpp"
 #include "pele/optimizer.hpp"
 #include <Eigen/Dense>
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <pele/cvode.hpp>
@@ -66,7 +67,7 @@ bool MixedDescentEndOnly::stop_criterion_satisfied() {
   // }
   if (use_newton_step && _newton_optimizer.get_niter() > 0) {
     // std::cout << "are we actually here" << std::endl;
-    double _ndim = potential_->get_ndim();
+    size_t _ndim = potential_->get_ndim();
     int nparticles = _cvode_optimizer.get_x().size() / _ndim;
     Eigen::VectorXd _step = _newton_optimizer.get_step();
 
