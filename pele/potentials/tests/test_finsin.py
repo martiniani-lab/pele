@@ -22,7 +22,7 @@ _x = np.array([-3.1087118812, 2.0914934169, -7.6825567576,
                -4.9258592162, 0.3572823833, -6.5816495352])
 
 
-class TestFinSin(_base_test._TestConfiguration):
+class TestFinSin(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.pot = FinSin()
         self.x0 = _x.copy()

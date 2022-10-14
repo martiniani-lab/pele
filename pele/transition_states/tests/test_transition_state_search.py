@@ -53,14 +53,14 @@ def plot_pot():
     plt.show()
 
 
-class TestSimpleTSPot(_base_test._TestConfiguration):
+class TestSimpleTSPot(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.pot = SimpleTSPot()
         self.x0 = np.array([.1, 1])
         self.e0 = -0.27335478531821539
 
 
-class TestHarmonicPot(_base_test._TestConfiguration):
+class TestHarmonicPot(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.pot = HarmonicPot()
         self.x0 = np.array([.1, 1])

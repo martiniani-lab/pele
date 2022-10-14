@@ -48,7 +48,7 @@ class _ReturnBad2(BasePotential):
         return 1.
 
 
-class TestEonly(_base_test._BaseTest):
+class TestEonly(_base_test.BaseTestCases._BaseTest):
     def setUp(self, ndof=4):
         self.pot = _Eonly()
         self.xrandom = _xrand
@@ -56,7 +56,7 @@ class TestEonly(_base_test._BaseTest):
         self.Emin = _emin
 
 
-class TestEonlyWrapped(_base_test._BaseTest):
+class TestEonlyWrapped(_base_test.BaseTestCases._BaseTest):
     def setUp(self, ndof=4):
         self.pot = CppPotentialWrapper(_Eonly())
         self.xrandom = _xrand
@@ -64,7 +64,7 @@ class TestEonlyWrapped(_base_test._BaseTest):
         self.Emin = _emin
 
 
-class TestEG(_base_test._BaseTest):
+class TestEG(_base_test.BaseTestCases._BaseTest):
     def setUp(self, ndof=4):
         self.pot = _EG()
         self.xrandom = _xrand
@@ -72,7 +72,7 @@ class TestEG(_base_test._BaseTest):
         self.Emin = _emin
 
 
-class TestEGWrapped(_base_test._BaseTest):
+class TestEGWrapped(_base_test.BaseTestCases._BaseTest):
     def setUp(self, ndof=4):
         self.pot = CppPotentialWrapper(_EG())
         self.xrandom = _xrand
