@@ -1,6 +1,3 @@
-set(CMAKE_C_COMPILER "gcc-12")
-set(CMAKE_CXX_COMPILER "g++-12")
-
 # this file is meant to be parsed by python before being a proper CMakeLists.txt file
 # in particular, the following strings will be set to their proper values by python when
 # making CMakeLists.txt
@@ -26,7 +23,7 @@ set(SUNDIALS_INCLUDE_DIR
   ${EXT_INSTALL_PATH}/include
   CACHE PATH "Location of SUNDIALS header files")
 set(SUNDIALS_LIBRARY_DIR
-  ${EXT_INSTALL_PATH}/lib
+  "${EXT_INSTALL_PATH}/lib;${EXT_INSTALL_PATH}/lib64"
   CACHE PATH "Location of SUNDIALS libraries")
 
 # Find the SUNDIALS libraries
@@ -70,7 +67,7 @@ message("LAPACK include dir " ${LAPACKE_INCLUDE_DIR})
 
 # lapacke.h comes with Eigen
 set(LAPACKE_INCLUDE_DIR
-  /home/ps4586/bv_lib/pele/source/Eigen/src/misc
+${CMAKE_SOURCE_DIR}/extern/eigen/Eigen/src/misc
   CACHE PATH "Location of lapacke include")
 
 enable_language(CXX)
@@ -90,6 +87,7 @@ FILE(GLOB pele_sources ${pele_include}/*.c*)
 
 include_directories(BEFORE SYSTEM ${SUNDIALS_INCLUDE_DIR})
 include_directories(BEFORE SYSTEM ${pele_include})
+include_directories(BEFORE SYSTEM ${LAPACKE_INCLUDE_DIR})
 
 add_library(pele_lib SHARED ${pele_sources})
 
