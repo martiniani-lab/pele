@@ -47,7 +47,7 @@ struct InversePower_interaction : BaseInteraction {
   double const _cutoff_factor_2;
 
   InversePower_interaction(double pow, double eps, double cutoff_factor = 1)
-      : _eps(eps, cutoff_factor), _pow(pow), _cutoff_factor_2(cutoff_factor * cutoff_factor) {}
+      : _eps(eps), _pow(pow), _cutoff_factor_2(cutoff_factor * cutoff_factor) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij) const {
@@ -103,7 +103,7 @@ template <int POW> struct InverseIntPower_interaction : BaseInteraction {
   double const _cutoff_factor_2;
 
   InverseIntPower_interaction(double eps, double cutoff_factor = 1.0)
-      : _eps(eps, cutoff_factor), _pow(POW), _cutoff_factor_2(cutoff_factor * cutoff_factor) {}
+      : _eps(eps), _pow(POW), _cutoff_factor_2(cutoff_factor * cutoff_factor) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij) const {
@@ -156,7 +156,7 @@ template <int POW2> struct InverseHalfIntPower_interaction : BaseInteraction {
   double const _eps;
   double const _pow;
   double const _cutoff_factor_2;
-  InverseHalfIntPower_interaction(double eps, double cutoff_factor=1.0) : _eps(eps, cutoff_factor), _pow(0.5 * POW2), _cutoff_factor_2(cutoff_factor*cutoff_factor) {}
+  InverseHalfIntPower_interaction(double eps, double cutoff_factor=1.0) : _eps(eps), _pow(0.5 * POW2), _cutoff_factor_2(cutoff_factor*cutoff_factor) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij) const {
