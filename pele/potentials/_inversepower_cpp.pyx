@@ -55,7 +55,7 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
     cdef bool use_cell_lists
     cdef float ncellx_scale
     def __cinit__(self, pow, eps, radii, ndim=3, boxvec=None, boxl=None,
-                  bool use_cell_lists=False, ncellx_scale=1.0, bool exact_sum=False):
+                  bool use_cell_lists=False, ncellx_scale=1.0, bool exact_sum=False, double eps):
         
         # stored for pickling
         self.pow = pow
