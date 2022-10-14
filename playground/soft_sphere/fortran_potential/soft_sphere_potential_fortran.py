@@ -36,7 +36,7 @@ class MyPotFortran(BasePotential):
 
 from pele.potentials.tests import _base_test
 
-class TestPot(_base_test._TestConfiguration):
+class TestPot(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         natoms = 20
         radii = np.random.uniform(.9, 1.2, natoms)

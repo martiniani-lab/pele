@@ -5,7 +5,7 @@ from pele.potentials.test_functions import BoothSystem
 from . import _base_test
 
 
-class TestBooth(_base_test._BaseTest):
+class TestBooth(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         self.system = BoothSystem()
         self.pot = self.system.get_potential()

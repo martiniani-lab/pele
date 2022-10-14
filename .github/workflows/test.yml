@@ -52,14 +52,23 @@ jobs:
         cd extern
         cp -r eigen/Eigen install/include
 
-    - name: Build tests
+    - name: Build C++ tests
       # Build your program with the given configuration
       run: |
         cd cpp_tests/source 
         cmake -DCMAKE_BUILD_TYPE=Debug .
         make -j4
     
-    - name: Run tests
+    - name: Run C++ tests
       run: |
         cd cpp_tests/source
         ./test_main
+
+    #  Wait until all python tests for legacy code pass
+    # - name: Build Python Library
+    #   run: |
+    #     python setup_with_cmake.py build_ext -i -c gcc --build-type=Debug 
+
+    # - name: Run Python tests
+    #   run: |
+    #     pytest pele/

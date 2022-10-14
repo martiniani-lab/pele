@@ -56,7 +56,7 @@ _x0 = np.array([ 0.57688628,  1.63264454,  0.52232462, -0.59207205, -1.12241977,
                -0.56530919, -1.41129307,  1.24742765, -1.73101566,  1.10246955,
                 1.42829452, -1.65498697,  0.46503184,  1.76533541, -0.61524605])
 
-class TestBLJNeighborListFreeze(_base_test._TestConfiguration):
+class TestBLJNeighborListFreeze(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         self.x0 = _x0
         self.e0 = -87.46393381926839

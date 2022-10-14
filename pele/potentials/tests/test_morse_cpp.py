@@ -11,13 +11,13 @@ from pele.potentials.morse import Morse as PyMorse
 from pele.utils.xyz import read_xyz
 from . import _base_test
 
-# class TestMorse(_base_test._BaseTest):
+# class TestMorse(_base_test.BaseTestCases._BaseTest):
 # def setUp(self):
 # self.pot = PyMorse(rho=1.6047, r0=2.8970, A=0.7102)
 # self.natoms = 13
 # self.xrandom = np.random.uniform(-1,1,[3*self.natoms]) *5.
 
-class TestMorse(_base_test._BaseTest):
+class TestMorse(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
         xyz = read_xyz(open(current_dir + "/_morse13_min.xyz", "r"))
@@ -30,7 +30,7 @@ class TestMorse(_base_test._BaseTest):
         self.pot = PyMorse(rho=rho, r0=r0, A=A)
 
 
-class TestMorse_CPP(_base_test._BaseTest):
+class TestMorse_CPP(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
         xyz = read_xyz(open(current_dir + "/_morse13_min.xyz", "r"))

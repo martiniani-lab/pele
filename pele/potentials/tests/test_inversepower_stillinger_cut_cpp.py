@@ -35,7 +35,7 @@ def minimize(coords, pot):
     return result.coords, result.energy, result.grad, result.rms
 
 
-class TestInversePowerStillingerCut_CPP(_base_test._BaseTest):
+class TestInversePowerStillingerCut_CPP(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
         xyz, hs_radii, rattlers = read_xyzdr(current_dir + "/_hswca20_min2.xyzdr")

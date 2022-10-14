@@ -11,7 +11,7 @@ from pele.utils.xyz import read_xyz
 from . import _base_test
 
 
-class TestLJ_CPP(_base_test._BaseTest):
+class TestLJ_CPP(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         self.pot = _lj_cpp.LJ()
         self.natoms = 13
@@ -41,7 +41,7 @@ class TestErrorPotential(unittest.TestCase):
 # with self.assertRaises(NotImplementedError):
 # pot.getEnergyGradient(_xrand)
 
-class TestLJ_CPP_NeighborList(_base_test._BaseTest):
+class TestLJ_CPP_NeighborList(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         np.random.seed(0)
         self.natoms = 13
@@ -55,7 +55,7 @@ class TestLJ_CPP_NeighborList(_base_test._BaseTest):
         self.Emin = float(xyz.title)
 
 
-class TestLJCutCellLists(_base_test._TestConfiguration):
+class TestLJCutCellLists(_base_test.BaseTestCases._TestConfiguration):
     def setUp(self):
         boxv = np.array([10.] * 3)
         natoms = 30
