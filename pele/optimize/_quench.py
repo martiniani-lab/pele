@@ -12,15 +12,14 @@ from __future__ import print_function
 from builtins import str
 from builtins import range
 from past.utils import old_div
+
 import numpy as np
-from scipy.integrate.quadpack import quad_explain
+
 
 from pele.optimize import LBFGS, MYLBFGS, Fire, Result, LBFGS_CPP, ModifiedFireCPP
-from scipy.integrate import RK45, RK23
+
 from scipy.integrate import Radau
-from scipy.integrate import BDF
-from .rk import RK45_LS, RK23_LS
-from scipy.integrate import LSODA
+
 
 __all__ = ["lbfgs_scipy", "fire", "lbfgs_py", "mylbfgs", "cg",
            "steepest_descent", "bfgs_scipy", "lbfgs_cpp"]
