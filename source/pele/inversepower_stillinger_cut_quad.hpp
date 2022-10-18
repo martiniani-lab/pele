@@ -33,6 +33,8 @@ struct InversePowerStillingerQuadCutInteraction : BaseInteraction {
   const double c4;               // quartic term in cutoff contribution
   const double m_v0;             // overall energy scale for the full potential
   InversePowerStillingerQuadCutInteraction(const size_t pow, const double v0,
+                                           const double cutoff_factor,
+                                           const double v0,
                                            const double cutoff_factor)
       : m_pow(pow), m_pow_by_2(pow / 2), m_v0(v0),
         m_cutoff_factor(cutoff_factor),
