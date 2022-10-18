@@ -68,11 +68,12 @@ public:
 TEST_F(BasicIPSCutQuadTest, Pow_Works) {
   for (size_t power = 0; power < 129; ++power) {
     const double inp = 0.3;
+    if (power % 2 == 0) {
     pele::InversePowerStillingerQuadCutInteraction in(power, 1.0, 1.0);
+    const double e = pot->get_energy(x);
+    ASSERT_NEAR(etrue, e, 1e-10);
+    }
   }
-
-  const double e = pot->get_energy(x);
-  ASSERT_NEAR(etrue, e, 1e-10);
 }
 
 TEST_F(BasicIPSCutQuadTest, e0_works) {
