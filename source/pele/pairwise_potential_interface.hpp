@@ -31,7 +31,8 @@ protected:
     if (m_radii.size() == 0) {
       return 0;
     } else {
-      return m_radii[atom_i] + m_radii[atom_j]*(1 - 2*epsilon* abs(m_radii[atom_i] - m_radii[atom_j]));
+      // uses the diameters being twice the radii
+      return (m_radii[atom_i] + m_radii[atom_j])*(1 - 2*epsilon* abs(m_radii[atom_i] - m_radii[atom_j]));
     }
   }
 
