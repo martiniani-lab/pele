@@ -37,11 +37,11 @@ struct InversePowerStillingerQuadCutInteraction : BaseInteraction {
       : m_pow(pow), m_pow_by_2(pow / 2), m_v0(v0),
         m_cutoff_factor(cutoff_factor),
         m_cutoff_factor2(cutoff_factor * cutoff_factor),
-        c0((1.0 / 8.0) * std::pow(m_cutoff_factor, -pow) *
+        c0(-(1.0 / 8.0) *v0 * std::pow(m_cutoff_factor, -pow) *
            (8 + 6 * pow + pow * pow)),
-        c2((1.0 / 4.0) * std::pow(m_cutoff_factor, -pow - 2) *
+        c2((1.0 / 4.0) * v0*std::pow(m_cutoff_factor, -pow - 2) *
            (4 * pow + pow * pow)),
-        c4(-(1.0 / 8.0) * std::pow(m_cutoff_factor, -pow - 4) *
+        c4(-(1.0 / 8.0) * v0* std::pow(m_cutoff_factor, -pow - 4) *
            (pow * pow + 2 * pow)) {
     if (pow % 2 != 0) {
       // not implemented for odd powers
