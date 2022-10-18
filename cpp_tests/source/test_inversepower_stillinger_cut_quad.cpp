@@ -1,14 +1,12 @@
 #include <gtest/gtest.h>
 
-
+#include "pele/array.hpp"
+#include "pele/base_potential.hpp"
 #include "pele/inversepower_stillinger_cut_quad.hpp"
 #include "test_utils.hpp"
 
-
 #define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
   EXPECT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
-
-
 
 class BasicIPSCutQuadTest : public ::testing::Test {
 public:
@@ -34,8 +32,11 @@ public:
     etrue = get_test_energy(dr, rcut);
     std::cout << "test energy " << etrue << std::endl;
     e0 = get_test_energy(rcut - eps, rcut);
-    pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(exponent, radii,
-                                                               rcut);
+
+    double v0 = 1.0;
+    double cutoff_factor = 1.0;
+    pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(exponent, v0, cutoff_factor, 
+                                                                   radii);
   }
 
   double get_test_energy(double dr, double rcut) {
@@ -52,8 +53,7 @@ public:
 TEST_F(BasicIPSCutQuadTest, Pow_Works) {
   for (size_t power = 0; power < 129; ++power) {
     const double inp = 0.3;
-    pele::InversePowerStillinger_cut_interaction in(power, rcut);
-    EXPECT_NEAR_RELATIVE(std::pow(inp, power), in.power(inp, power), 1e-14);
+    pele::InversePowerStillingerQuadCutInteraction in(power, 1.0, 1.0);
   }
 
   const double e = pot->get_energy(x);
@@ -84,12 +84,15 @@ class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
     x = {1.1, 3, 1, 2};
     radii = {1.05, 1.05};
     a = radii[0] * 2;
-    exponent = 4;
+    exponent = 12;
     double dr = std::sqrt(std::pow(x[0] - x[2], 2) + std::pow(x[1] - x[3], 2));
     etrue = get_test_energy(dr, rcut);
     std::cout << "test energy " << etrue << std::endl;
-    pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(exponent, radii,
-                                                               rcut);
+    double v0 = 1.0;
+    double cutoff_factor = 1.0;
+
+    pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(
+        exponent, v0, cutoff_factor, radii);
   }
 
   double get_test_energy(double dr, double rcut) {
@@ -105,7 +108,8 @@ class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
 
 TEST_F(TestInversePowerStillingerCutQuadAuto, Energy_Works) { test_energy(); }
 
-TEST_F(TestInversePowerStillingerCutQuadAuto, EnergyGradient_AgreesWithNumerical) {
+TEST_F(TestInversePowerStillingerCutQuadAuto,
+       EnergyGradient_AgreesWithNumerical) {
   test_energy_gradient();
 }
 
