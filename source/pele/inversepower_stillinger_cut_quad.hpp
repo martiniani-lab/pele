@@ -49,14 +49,15 @@ struct InversePowerStillingerQuadCutInteraction : BaseInteraction {
                                "implemented for even powers");
     }
   }
-  double energy(double r2, const double dij) const {
+  double energy(const double r2, const double dij) const {
     if (r2 > dij * dij * m_cutoff_factor2) {
       return 0;
     }
-    const double r4 = r2 * r2;
-    const double r_pow = std::pow(r2, m_pow_by_2);
+    const double r2_scaled = r2/(dij*dij);
+    const double r4_scaled = r2_scaled * r2_scaled;
+    const double r_pow_scaled = std::pow(r2_scaled, m_pow_by_2);
 
-    return m_v0 / r_pow + c0 + c2 * r2 + c4 * r4;
+    return m_v0 / r_pow_scaled + c0 + c2 * r2_scaled + c4 * r4_scaled;
   }
   // calculate energy and gradient from distance squared, gradient is in
   // -(dv/drij)/|rij|
@@ -65,26 +66,30 @@ struct InversePowerStillingerQuadCutInteraction : BaseInteraction {
       *gij = 0;
       return 0.;
     }
-    const double r4 = r2 * r2;
-    const double r_pow = std::pow(r2, m_pow_by_2);
+    const double r2_scaled = r2/(dij*dij);
 
-    double e = m_v0 / r_pow + c0 + c2 * r2 + c4 * r4;
-    *gij = -m_pow * m_v0 / r_pow / r2 + 2 * c2 + 4 * c4 * r2;
+    const double r4 = r2_scaled * r2_scaled;
+    const double r_pow_scaled = std::pow(r2_scaled, m_pow_by_2);
+
+    double e = m_v0 / r_pow_scaled + c0 + c2 * r2_scaled + c4 * r4;
+    *gij = -m_pow * m_v0 / r_pow_scaled / r2_scaled + 2 * c2 + 4 * c4 * r2_scaled;
     return e;
   }
-  double energy_gradient_hessian(double r2, double *gij, double *hij,
+  double energy_gradient_hessian(const double r2, double *gij, double *hij,
                                  const double dij) const {
     if (r2 > dij * dij * m_cutoff_factor2) {
       *gij = 0;
       *hij = 0;
       return 0.;
     }
-    const double r4 = r2 * r2;
-    const double r_pow = std::pow(r2, m_pow_by_2);
+    const double r2_scaled = r2_scaled/(dij*dij);
 
-    double e = m_v0 / r_pow + c0 + c2 * r2 + c4 * r4;
-    *gij = -m_pow * m_v0 / r_pow / r2 + 2 * c2 + 4 * c4 * r2;
-    *hij = m_pow * (m_pow - 1) * m_v0 / r_pow / r4 - 2 * c2 - 12 * c4 * r2;
+    const double r4_scaled = r2_scaled * r2_scaled;
+    const double r_pow_scaled = std::pow(r2_scaled, m_pow_by_2);
+
+    double e = m_v0 / r_pow_scaled + c0 + c2 * r2_scaled + c4 * r4_scaled;
+    *gij = -m_pow * m_v0 / r_pow_scaled / r2_scaled + 2 * c2 + 4 * c4 * r2_scaled;
+    *hij = m_pow * (m_pow - 1) * m_v0 / r_pow_scaled / r4_scaled - 2 * c2 - 12 * c4 * r2_scaled;
     return e;
   }
 };
