@@ -33,8 +33,6 @@ struct InversePowerStillingerQuadCutInteraction : BaseInteraction {
   const double c4;               // quartic term in cutoff contribution
   const double m_v0;             // overall energy scale for the full potential
   InversePowerStillingerQuadCutInteraction(const size_t pow, const double v0,
-                                           const double cutoff_factor,
-                                           const double v0,
                                            const double cutoff_factor)
       : m_pow(pow), m_pow_by_2(pow / 2), m_v0(v0),
         m_cutoff_factor(cutoff_factor),
@@ -127,18 +125,18 @@ class InversePowerStillingerCutQuadPeriodicCellLists
     : public CellListPotential<InversePowerStillingerQuadCutInteraction,
                                periodic_distance<ndim>> {
 public:
-  InversePowerStillingerCutQuadPeriodicCellLists(const size_t pow, const double v0, const double cutoff_factor, 
-                                             const pele::Array<double> radii,
-                                             const pele::Array<double> boxvec,
-                                             double ncellx_scale)
+  InversePowerStillingerCutQuadPeriodicCellLists(
+      const size_t pow, const double v0, const double cutoff_factor,
+      const pele::Array<double> radii, const pele::Array<double> boxvec,
+      double ncellx_scale)
       : CellListPotential<InversePowerStillingerQuadCutInteraction,
                           periodic_distance<ndim>>(
-            std::make_shared<InversePowerStillingerQuadCutInteraction>(pow,
-                                                                       v0, cutoff_factor),
-            std::make_shared<periodic_distance<ndim>>(boxvec), boxvec, 2.0 * cutoff_factor *
+            std::make_shared<InversePowerStillingerQuadCutInteraction>(
+                pow, v0, cutoff_factor),
+            std::make_shared<periodic_distance<ndim>>(boxvec), boxvec,
+            2.0 * cutoff_factor *
                 (*std::max_element(radii.begin(), radii.end())),
-            ncellx_scale, radii) {
-            }
+            ncellx_scale, radii) {}
 };
 
 } // namespace pele
