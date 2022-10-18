@@ -36,11 +36,11 @@ public:
     pow = 4;
     v0 = 1.0;
     cutoff_factor = 1.0;
-
+    expected_cutoff = 2.0 * cutoff_factor * radii[0];
     double dr = std::sqrt(std::pow(x[0] - x[2], 2) + std::pow(x[1] - x[3], 2));
 
     etrue = get_test_energy(dr, cutoff_factor, v0, pow, radii);
-    double expected_cutoff = 2.0 * cutoff_factor * radii[0];
+    
     e0 = get_test_energy(expected_cutoff - eps, cutoff_factor, v0, pow, radii);
     pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(
         pow, v0, cutoff_factor, radii);
