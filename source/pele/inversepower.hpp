@@ -118,7 +118,7 @@ template <int POW> struct InverseIntPower_interaction : BaseInteraction {
   }
 
   /* calculate energy and gradient from distance squared, gradient is in
-   * -(dv/ddij)/|dij| */
+   * -(dv/drij)/|rij| */
   double energy_gradient(double r2, double *gij, const double dij) const {
     double E;
     if (r2 >= dij * dij * _cutoff_factor_2) {
@@ -171,7 +171,7 @@ template <int POW2> struct InverseHalfIntPower_interaction : BaseInteraction {
   }
 
   /* calculate energy and gradient from distance squared, gradient is in
-   * -(dv/ddij)/|dij| */
+   * -(dv/drij)/|rij| */
   double energy_gradient(double r2, double *gij, const double dij) const {
     double E;
     if (r2 >= dij * dij*_cutoff_factor_2) {
