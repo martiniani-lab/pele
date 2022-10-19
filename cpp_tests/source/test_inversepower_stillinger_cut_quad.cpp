@@ -92,20 +92,19 @@ TEST_F(BasicIPSCutQuadTest, zero_at_cutoff) {
 
   const double eh = pot->get_energy_gradient_hessian(x0, gh, h);
 
-  for (size_t i = 0; i < h.size(); ++i) {
-    ASSERT_NEAR(h[i], 0, 1e-10);
-  }
-
+  ASSERT_NEAR(e, 0, 1e-14);
+  ASSERT_NEAR(e, e0_test, 1e-14);
+  ASSERT_NEAR(eg, e, 1e-14);
+  ASSERT_NEAR(eh, e, 1e-14);
   for (size_t i = 0; i < g.size(); ++i) {
     ASSERT_NEAR(0, g[i], 1e-10);
   }
   for (size_t i = 0; i < gh.size(); ++i) {
     ASSERT_NEAR(0, gh[i], 1e-10);
-  }
-  ASSERT_NEAR(eg, e, 1e-14);
-  ASSERT_NEAR(eh, e, 1e-14);
-  ASSERT_NEAR(e, e0_test, 1e-14);
-  ASSERT_NEAR(e, 0, 1e-14);
+  for (size_t i = 0; i < h.size(); ++i) {
+    ASSERT_NEAR(h[i], 0, 1e-10);
+  }  }
+
 }
 
 class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
