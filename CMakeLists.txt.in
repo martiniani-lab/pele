@@ -22,9 +22,16 @@ set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/extern/install")
 set(SUNDIALS_INCLUDE_DIR
   ${EXT_INSTALL_PATH}/include
   CACHE PATH "Location of SUNDIALS header files")
-set(SUNDIALS_LIBRARY_DIR
-  "${EXT_INSTALL_PATH}/lib;${EXT_INSTALL_PATH}/lib64"
-  CACHE PATH "Location of SUNDIALS libraries")
+
+if(EXISTS "${EXT_INSTALL_PATH}/lib")
+  set(SUNDIALS_LIBRARY_DIR
+    ${EXT_INSTALL_PATH}/lib
+    CACHE PATH "Location of SUNDIALS libraries")
+else()
+  set(SUNDIALS_LIBRARY_DIR
+    ${EXT_INSTALL_PATH}/lib64
+    CACHE PATH "Location of SUNDIALS libraries")
+endif()
 
 # Find the SUNDIALS libraries
 find_library(SUNDIALS_SOLVER_LIB
