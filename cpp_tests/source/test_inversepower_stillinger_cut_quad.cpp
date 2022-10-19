@@ -58,7 +58,7 @@ public:
                 std::pow(cutoff_factor, -pow - 2) * v0;
     double c4 = -1 / 8.0 * (pow * pow + 2 * pow) *
                 std::pow(cutoff_factor, -pow - 4) * v0;
-    double etest = std::pow(v0 / dr_scaled, pow) + c0 +
+    double etest = v0*std::pow(1 / dr_scaled, pow) + c0 +
                    c2 * dr_scaled * dr_scaled +
                    c4 * dr_scaled * dr_scaled * dr_scaled * dr_scaled;
     return etest;
