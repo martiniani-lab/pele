@@ -105,12 +105,12 @@ class InversePowerStillingerCutQuad
 public:
   InversePowerStillingerCutQuad(const int pow, const double v0,
                                 const double cutoff_factor,
-                                const pele::Array<double> radii)
+                                const pele::Array<double> radii, double non_additivity =0.0)
       : SimplePairwisePotential<InversePowerStillingerQuadCutInteraction,
                                 cartesian_distance<ndim>>(
             std::make_shared<InversePowerStillingerQuadCutInteraction>(
                 pow, v0, cutoff_factor),
-            radii, std::make_shared<cartesian_distance<ndim>>()) {}
+            radii, std::make_shared<cartesian_distance<ndim>>(), 0.0, false,  non_additivity) {}
 };
 
 template <size_t ndim>
@@ -121,12 +121,12 @@ public:
   InversePowerStillingerCutQuadPeriodic(const int pow, const double v0,
                                         const double cutoff_factor,
                                         const pele::Array<double> radii,
-                                        const pele::Array<double> boxvec)
+                                        const pele::Array<double> boxvec, double non_additivity =0.0)
       : SimplePairwisePotential<InversePowerStillingerQuadCutInteraction,
                                 periodic_distance<ndim>>(
             std::make_shared<InversePowerStillingerQuadCutInteraction>(
                 pow, v0, cutoff_factor),
-            radii, std::make_shared<periodic_distance<ndim>>(boxvec)) {}
+            radii, std::make_shared<periodic_distance<ndim>>(boxvec), 0.0, false, non_additivity) {}
 };
 
 template <size_t ndim>
@@ -137,7 +137,7 @@ public:
   InversePowerStillingerCutQuadPeriodicCellLists(
       const int pow, const double v0, const double cutoff_factor,
       const pele::Array<double> radii, const pele::Array<double> boxvec,
-      double ncellx_scale)
+      double ncellx_scale, double non_additivity =0.0)
       : CellListPotential<InversePowerStillingerQuadCutInteraction,
                           periodic_distance<ndim>>(
             std::make_shared<InversePowerStillingerQuadCutInteraction>(
@@ -145,7 +145,7 @@ public:
             std::make_shared<periodic_distance<ndim>>(boxvec), boxvec,
             2.0 * cutoff_factor *
                 (*std::max_element(radii.begin(), radii.end())),
-            ncellx_scale, radii) {}
+            ncellx_scale, radii, 0.0, true, false, non_additivity) {}
 };
 
 } // namespace pele
