@@ -76,11 +76,33 @@ TEST_F(BasicIPSCutQuadTest, Pow_Works) {
   }
 }
 
-TEST_F(BasicIPSCutQuadTest, e0_works) {
+
+// Checks that pairwise energy, gradient and hessian are zero at cutoff
+TEST_F(BasicIPSCutQuadTest, zero_at_cutoff) {
   double dr0 = expected_cutoff - eps;
   pele::Array<double> x0 = {0, 0, dr0, 0};
   const double e = pot->get_energy(x0);
-  ASSERT_NEAR(e, e0, 1e-14);
+  Array<double> g(x0.size());
+  Array<double> gh(x0.size());
+  Array<double> h(x0.size() * x0.size());
+
+  const double eg = pot->get_energy_gradient(x0, g);
+
+  const double eh = pot->get_energy_gradient_hessian(x0, gh, h);
+
+  for (size_t i = 0; i < h.size(); ++i) {
+    ASSERT_NEAR(h[i], 0, 1e-10);
+  }
+
+  for (size_t i = 0; i < g.size(); ++i) {
+    ASSERT_NEAR(0, g[i], 1e-10);
+  }
+  for (size_t i = 0; i < gh.size(); ++i) {
+    ASSERT_NEAR(0, gh[i], 1e-10);
+  }
+  ASSERT_NEAR(eg, e, 1e-14);
+  ASSERT_NEAR(eh, e, 1e-14);
+  ASSERT_NEAR(e, e0_test, 1e-14);
   ASSERT_NEAR(e, 0, 1e-14);
 }
 
