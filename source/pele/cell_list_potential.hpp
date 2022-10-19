@@ -849,8 +849,8 @@ public:
                     pele::Array<double> const &boxvec, double rcut,
                     double ncellx_scale, const pele::Array<double> radii,
                     const double radii_sca = 0.0, const bool balance_omp = true,
-                    const bool exact_sum = false, const double eps_r = 0.0)
-      : PairwisePotentialInterface(radii, eps_r),
+                    const bool exact_sum = false, const double non_additivity = 0.0)
+      : PairwisePotentialInterface(radii, non_additivity),
         m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
         m_interaction(interaction), m_dist(dist), m_radii_sca(radii_sca),
         exact_gradient_initialized(false), exact_sum(exact_sum) {
