@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstddef>
 #include <gtest/gtest.h>
 
@@ -15,10 +16,10 @@ public:
   size_t ndof;
   size_t npart;
   pele::Array<double> x, radii;
-  size_t pow;
+  int pow;
   std::shared_ptr<pele::InversePowerStillingerCutQuad<2>> pot;
   double a, eps;
-  double etrue, e0;
+  double etrue, e0_test;
   double expected_cutoff;
   double cutoff_factor;
   double v0;
@@ -31,23 +32,24 @@ public:
     x = {1.1, 3, 1, 2};
     radii = {1.05, 1.05};
     a = radii[0] * 2.;
-
+    
     // Potential parameters
+    // Set non obvious parameters to avoid running test for a trivial case
     pow = 4;
-    v0 = 1.0;
-    cutoff_factor = 1.0;
+    v0 = 1.5;
+    cutoff_factor = 1.25;
     expected_cutoff = 2.0 * cutoff_factor * radii[0];
     double dr = std::sqrt(std::pow(x[0] - x[2], 2) + std::pow(x[1] - x[3], 2));
 
     etrue = get_test_energy(dr, cutoff_factor, v0, pow, radii);
     
-    e0 = get_test_energy(expected_cutoff - eps, cutoff_factor, v0, pow, radii);
+    e0_test = get_test_energy(expected_cutoff - eps, cutoff_factor, v0, pow, radii);
     pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(
         pow, v0, cutoff_factor, radii);
   }
 
   // Expected energy for a pair of particles with distance dr
-  double get_test_energy(double dr, double cutoff_factor, double v0, size_t pow,
+  double get_test_energy(double dr, double cutoff_factor, double v0, int pow,
                          Array<double> radii) {
     double dij = (radii[0] + radii[1]) *
                  (1 - 2 * cutoff_factor * abs(radii[0] - radii[1]));
@@ -121,7 +123,7 @@ class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
     ndim = 2;
     npart = 2;
     ndof = ndim * npart;
-    x = {1.1, 3, 1, 2};
+    x = {1.1, 3, 1, 1.5};
     radii = {1.05, 1.05};
     diameters = radii[0] * 2;
     exponent = 12;
@@ -133,7 +135,6 @@ class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
 
     double dr = std::sqrt(std::pow(x[0] - x[2], 2) + std::pow(x[1] - x[3], 2));
     etrue = get_test_energy(dr, cutoff_factor, v0, exponent, radii);
-    std::cout << "test energy " << etrue << std::endl;
 
     pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(
         exponent, v0, cutoff_factor, radii);
