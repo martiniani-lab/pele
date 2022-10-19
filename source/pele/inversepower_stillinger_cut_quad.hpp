@@ -24,8 +24,8 @@ namespace pele {
 // the cutoff is going to be rcutoff = cutoff_factor * dij
 struct InversePowerStillingerQuadCutInteraction : BaseInteraction {
 
-  const size_t m_pow;            // potential goes as r^{-m_pow}'
-  const size_t m_pow_by_2;       // m_pow/2
+  const int m_pow;            // potential goes as r^{-m_pow}'
+  const int m_pow_by_2;       // m_pow/2
   const double m_cutoff_factor;  // cutoff factor rcut = m_cutoff_factor * dij
   const double m_cutoff_factor2; // cutoff factor2 = cutoff_factor^2
   const double c0;               // constant term in cutoff contribution
