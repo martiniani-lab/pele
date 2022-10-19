@@ -23,6 +23,7 @@ public:
   double expected_cutoff;
   double cutoff_factor;
   double v0;
+  double non_additivity;
 
   virtual void SetUp() {
     ndim = 2;
@@ -30,29 +31,33 @@ public:
     eps = 1e-15;
     ndof = ndim * npart;
     x = {1.1, 3, 1, 2};
-    radii = {1.05, 1.05};
+    radii = {1.05, 1.15};
     a = radii[0] * 2.;
-    
+    non_additivity = 0.2;
+
     // Potential parameters
     // Set non obvious parameters to avoid running test for a trivial case
     pow = 4;
     v0 = 1.5;
     cutoff_factor = 1.25;
-    expected_cutoff = 2.0 * cutoff_factor * radii[0];
+    double dij = (radii[0] + radii[1]) *
+                 (1 - 2 * non_additivity * abs(radii[0] - radii[1]));
+    expected_cutoff = cutoff_factor * dij;
     double dr = std::sqrt(std::pow(x[0] - x[2], 2) + std::pow(x[1] - x[3], 2));
 
     etrue = get_test_energy(dr, cutoff_factor, v0, pow, radii);
-    
-    e0_test = get_test_energy(expected_cutoff - eps, cutoff_factor, v0, pow, radii);
+
+    e0_test =
+        get_test_energy(expected_cutoff - eps, cutoff_factor, v0, pow, radii);
     pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(
-        pow, v0, cutoff_factor, radii);
+        pow, v0, cutoff_factor, radii, non_additivity);
   }
 
   // Expected energy for a pair of particles with distance dr
   double get_test_energy(double dr, double cutoff_factor, double v0, int pow,
                          Array<double> radii) {
     double dij = (radii[0] + radii[1]) *
-                 (1 - 2 * cutoff_factor * abs(radii[0] - radii[1]));
+                 (1 - 2 * non_additivity * abs(radii[0] - radii[1]));
     double dr_scaled = dr / dij;
     double c0 = (-1.0 / 8.0) * (8 + 6 * pow + pow * pow) *
                 std::pow(cutoff_factor, -pow) * v0;
@@ -60,7 +65,7 @@ public:
                 std::pow(cutoff_factor, -pow - 2) * v0;
     double c4 = -1 / 8.0 * (pow * pow + 2 * pow) *
                 std::pow(cutoff_factor, -pow - 4) * v0;
-    double etest = v0*std::pow(1 / dr_scaled, pow) + c0 +
+    double etest = v0 * std::pow(1 / dr_scaled, pow) + c0 +
                    c2 * dr_scaled * dr_scaled +
                    c4 * dr_scaled * dr_scaled * dr_scaled * dr_scaled;
     return etest;
@@ -71,13 +76,12 @@ TEST_F(BasicIPSCutQuadTest, Pow_Works) {
   for (size_t power = 0; power < 129; ++power) {
     const double inp = 0.3;
     if (power % 2 == 0) {
-    pele::InversePowerStillingerQuadCutInteraction in(power, 1.0, 1.0);
-    const double e = pot->get_energy(x);
-    ASSERT_NEAR(etrue, e, 1e-10);
+      pele::InversePowerStillingerQuadCutInteraction in(power, 1.0, 1.0);
+      const double e = pot->get_energy(x);
+      ASSERT_NEAR(etrue, e, 1e-10);
     }
   }
 }
-
 
 // Checks that pairwise energy, gradient and hessian are zero at cutoff
 TEST_F(BasicIPSCutQuadTest, zero_at_cutoff) {
@@ -92,8 +96,8 @@ TEST_F(BasicIPSCutQuadTest, zero_at_cutoff) {
 
   const double eh = pot->get_energy_gradient_hessian(x0, gh, h);
 
-  ASSERT_NEAR(e, 0, 1e-14);
   ASSERT_NEAR(e, e0_test, 1e-14);
+  ASSERT_NEAR(e, 0, 1e-14);
   ASSERT_NEAR(eg, e, 1e-14);
   ASSERT_NEAR(eh, e, 1e-14);
   for (size_t i = 0; i < g.size(); ++i) {
@@ -101,10 +105,10 @@ TEST_F(BasicIPSCutQuadTest, zero_at_cutoff) {
   }
   for (size_t i = 0; i < gh.size(); ++i) {
     ASSERT_NEAR(0, gh[i], 1e-10);
-  for (size_t i = 0; i < h.size(); ++i) {
-    ASSERT_NEAR(h[i], 0, 1e-10);
-  }  }
-
+    for (size_t i = 0; i < h.size(); ++i) {
+      ASSERT_NEAR(h[i], 0, 1e-10);
+    }
+  }
 }
 
 class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
@@ -115,6 +119,7 @@ class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
   double diameters, rcut;
   // do not declare etrue here
   pele::Array<double> radii;
+  double non_additivity;
 
   double v0, cutoff_factor, expected_cutoff;
 
@@ -123,11 +128,12 @@ class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
     npart = 2;
     ndof = ndim * npart;
     x = {1.1, 3, 1, 1.5};
-    radii = {1.05, 1.05};
+    radii = {1.05, 1.15};
     diameters = radii[0] * 2;
     exponent = 12;
-    v0 = 1.0;
-    cutoff_factor = 1.0;
+    v0 = 1.5;
+    cutoff_factor = 1.25;
+    non_additivity = 0.0;
 
     // cuts off when distance is greater than two radii and a factor
     expected_cutoff = cutoff_factor * 2 * radii[0];
@@ -139,10 +145,11 @@ class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
         exponent, v0, cutoff_factor, radii);
   }
   // Expected energy for a pair of particles with distance dr
-  double get_test_energy(double dr, double cutoff_factor, double v0, size_t pow,
+  // Expected energy for a pair of particles with distance dr
+  double get_test_energy(double dr, double cutoff_factor, double v0, int pow,
                          Array<double> radii) {
     double dij = (radii[0] + radii[1]) *
-                 (1 - 2 * cutoff_factor * abs(radii[0] - radii[1]));
+                 (1 - 2 * non_additivity * abs(radii[0] - radii[1]));
     double dr_scaled = dr / dij;
     double c0 = (-1.0 / 8.0) * (8 + 6 * pow + pow * pow) *
                 std::pow(cutoff_factor, -pow) * v0;
@@ -150,7 +157,7 @@ class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
                 std::pow(cutoff_factor, -pow - 2) * v0;
     double c4 = -1 / 8.0 * (pow * pow + 2 * pow) *
                 std::pow(cutoff_factor, -pow - 4) * v0;
-    double etest = std::pow(v0 / dr_scaled, pow) + c0 +
+    double etest = v0 * std::pow(1 / dr_scaled, pow) + c0 +
                    c2 * dr_scaled * dr_scaled +
                    c4 * dr_scaled * dr_scaled * dr_scaled * dr_scaled;
     return etest;
