@@ -30,7 +30,12 @@ public:
     EXPECT_NEAR(e, etrue, 1e-10);
     pot->numerical_gradient(x, gnum, 1e-6);
     for (size_t k = 0; k < g.size(); ++k) {
-      EXPECT_NEAR(g[k], gnum[k], 1e-6);
+      if (std::abs(g[k]) < 1e-10) {
+        EXPECT_NEAR(g[k], gnum[k], 1e-6);
+      }
+      else  {
+      EXPECT_NEAR(g[k]/norm(g), gnum[k]/norm(gnum), 1e-6);
+    }
     }
   }
 
@@ -46,10 +51,20 @@ public:
 
     EXPECT_NEAR(e, ecomp, 1e-10);
     for (size_t i = 0; i < g.size(); ++i) {
-      ASSERT_NEAR(g[i], gnum[i], 1e-6);
+      if (std::abs(g[i]) < 1e-10) {
+        EXPECT_NEAR(g[i], gnum[i], 1e-6);
+      }
+      else {
+        EXPECT_NEAR(g[i]/norm(g), gnum[i]/norm(gnum), 1e-6);
+      }
     }
     for (size_t i = 0; i < h.size(); ++i) {
-      ASSERT_NEAR(h[i], hnum[i], 1e-3);
+      if (std::abs(h[i]) < 1e-10) {
+        EXPECT_NEAR(h[i], hnum[i], 1e-3);
+      }
+      else {
+        EXPECT_NEAR(h[i]/norm(h), hnum[i]/norm(hnum), 1e-3);
+      }
     }
   }
 };

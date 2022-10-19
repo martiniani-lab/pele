@@ -18,7 +18,7 @@ namespace pele {
 class PairwisePotentialInterface : public BasePotential {
 protected:
   const Array<double> m_radii;
-  const double epsilon;
+  const double non_additivity;
 
   // Data members for finding rattlers close to minima
 
@@ -27,18 +27,21 @@ protected:
    * radii[i] + radii[j] when epsilon is zero
    */
   inline double get_dij(const std::size_t atom_i,
-                                const std::size_t atom_j) const {
+                        const std::size_t atom_j) const {
     if (m_radii.size() == 0) {
       return 0;
     } else {
-      return m_radii[atom_i] + m_radii[atom_j]*(1 - 2*epsilon* abs(m_radii[atom_i] - m_radii[atom_j]));
+      // uses the diameters being twice the radii
+      return (m_radii[atom_i] + m_radii[atom_j]) *
+             (1 - 2 * non_additivity * abs(m_radii[atom_i] - m_radii[atom_j]));
     }
   }
 
 public:
-  PairwisePotentialInterface() : m_radii(0), epsilon(0) {}
-  PairwisePotentialInterface(pele::Array<double> const &radii, double epsilon = 0)
-      : m_radii(radii.copy()), epsilon(epsilon) {
+  PairwisePotentialInterface() : m_radii(0), non_additivity(0) {}
+  PairwisePotentialInterface(pele::Array<double> const &radii,
+                             double non_addivity = 0)
+      : m_radii(radii.copy()), non_additivity(non_addivity) {
     if (radii.size() == 0) {
       throw std::runtime_error(
           "PairwisePotentialInterface: illegal input: radii");
