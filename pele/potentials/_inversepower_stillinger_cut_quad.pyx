@@ -17,11 +17,11 @@ cdef extern from *:
 
 cdef extern from "pele/inversepower_stillinger_cut_quad.hpp" namespace "pele":
     cdef cppclass cInversePowerStillingerCutQuad "pele::InversePowerStillingerCutQuad"[ndim]:
-        cInversePowerStillingerCutQuad(size_t pow, _pele.Array[double] radii, double rcut) except +
+        cInversePowerStillingerCutQuad(int power, double v0, double cutoff_factor, _pele.Array[double] radii, double non_additivity) except +
     cdef cppclass cInversePowerStillingerCutQuadPeriodic "pele::InversePowerStillingerCutQuadPeriodic"[ndim]:
-        cInversePowerStillingerCutQuadPeriodic(size_t pow, _pele.Array[double] radii, double rcut, _pele.Array[double] boxvec) except +
+        cInversePowerStillingerCutQuadPeriodic(int power, double v0, double cutoff_factor, _pele.Array[double] radii, _pele.Array[double] boxvec, double non_additivity) except +
     cdef cppclass cInversePowerStillingerCutQuadPeriodicCellLists "pele::InversePowerStillingerCutQuadPeriodicCellLists"[ndim]:
-        cInversePowerStillingerCutQuadPeriodicCellLists(size_t pow, _pele.Array[double] radii, double rcut, _pele.Array[double] boxvec, double ncellx_scale) except +
+        cInversePowerStillingerCutQuadPeriodicCellLists(int power, double v0, double cutoff_factor, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale, double non_additivity) except +
 
 
 cdef class InversePowerStillingerCutQuad(_pele.BasePotential):
@@ -52,8 +52,8 @@ cdef class InversePowerStillingerCutQuad(_pele.BasePotential):
     """
     cpdef bool periodic
     cdef _pele.Array[double] bv_, radii_
-    def __cinit__(self, pow, radii, ndim=3, boxvec=None, boxl=None, rcut=1.5,
-                  ncellx_scale=1., use_cell_lists=False):
+    def __cinit__(self, power, v0, cutoff_factor, radii, ndim=3, boxvec=None, boxl=None,
+                  ncellx_scale=1., use_cell_lists=False, non_additivity=0.):
         assert(ndim == 2 or ndim == 3)
         assert not (boxvec is not None and boxl is not None)
         if boxl is not None:
@@ -68,32 +68,32 @@ cdef class InversePowerStillingerCutQuad(_pele.BasePotential):
                     # no cell lists, periodic, 2d
                     self.thisptr = shared_ptr[_pele.cBasePotential](
                         <_pele.cBasePotential*> new cInversePowerStillingerCutQuadPeriodicCellLists[INT2](
-                            pow, radii_, rcut, bv_, ncellx_scale
+                            power, v0, cutoff_factor, radii_, bv_, ncellx_scale, non_additivity
                             )
                         )
                 else:
                     # no cell lists, periodic, 3d
                     self.thisptr = shared_ptr[_pele.cBasePotential](
                         <_pele.cBasePotential*> new cInversePowerStillingerCutQuadPeriodicCellLists[INT3](
-                            pow, radii_, rcut, bv_, ncellx_scale
+                            power, v0, cutoff_factor, radii_, bv_, ncellx_scale, non_additivity
                             )
                         )
             else:
                 if ndim == 2:
                     # no cell lists, periodic, 2d
                     self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*> new
-                                                                                        cInversePowerStillingerCutQuadPeriodic[INT2](pow, radii_, rcut, bv_))
+                                                                                        cInversePowerStillingerCutQuadPeriodic[INT2](power, v0, cutoff_factor, radii_, bv_, non_additivity))
                 else:
                     # no cell lists, periodic, 3d
                     self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*> new
-                                                                                        cInversePowerStillingerCutQuadPeriodic[INT3](pow, radii_, rcut, bv_))
+                                                                                        cInversePowerStillingerCutQuadPeriodic[INT3](power, v0, cutoff_factor, radii_, bv_, non_additivity))
         else:
             assert use_cell_lists is False, "InversePowerStillingerCutQuad, not implemented for cartesian distance"
             if ndim == 2:
                 # no cell lists, non-periodic, 2d
                 self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*> new
-                                                                                    cInversePowerStillingerCutQuad[INT2](pow, radii_, rcut))
+                                                                                    cInversePowerStillingerCutQuad[INT2](power, v0, cutoff_factor, radii_, non_additivity))
             else:
                 # no cell lists, non-periodic, 3d
                 self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*> new
-                                                                                    cInversePowerStillingerCutQuad[INT3](pow, radii_, rcut))
+                                                                                    cInversePowerStillingerCutQuad[INT3](power, v0, cutoff_factor, radii_, non_additivity))
