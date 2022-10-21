@@ -300,6 +300,13 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
     // For some reason clang throws an error here, but gcc compiles properly
     initialize_func_gradient();
   }
+  if (x.norm() > 1e10) {
+    // do a safe exit
+    // succeeded is false, so the optimizer will
+    // have passed that the run has failed
+    return true;
+  }
+
   if (rms_ < tol_) {
     if (use_newton_stop_criterion_) {
       if (iter_number_ % 100 == 0) {
