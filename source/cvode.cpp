@@ -162,7 +162,7 @@ void CVODEBDFOptimizer::setup_cvode() {
   step_file.open("step_cvode.txt");
   newton_step_file.open("newton_step_cvode.txt");
   lbfgs_m_1_step_file.open("lbfgs_m_1_step_cvode.txt");
-  g_old = Array<double>(x0.size(), 0);
+  g_old = Array<double>(x_.size(), 0);
 #endif
 }
 
