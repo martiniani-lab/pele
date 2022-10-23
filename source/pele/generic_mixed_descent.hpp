@@ -38,13 +38,13 @@ public:
                       std::shared_ptr<GradientOptimizer> opt_convex,
                       double translation_offset, int steps_before_convex_check,
                       std::shared_ptr<BasePotential> pot_extension = nullptr)
-      : opt_non_convex_(opt_non_convex), opt_convex_(opt_convex),
-        translation_offset_(translation_offset), hessian_(x.size(), x.size()),
+      : GradientOptimizer(pot, x, tol), opt_non_convex_(opt_non_convex),
+        opt_convex_(opt_convex), hessian_(x.size(), x.size()),
         hessian_copy_for_cholesky_(x.size(), x.size()), hessian_evaluations_(0),
-        steps_before_convex_check_(steps_before_convex_check),
-        not_in_convex_region_(true), hessian_calculated_(false),
-        last_non_convex_x_(x.size()), use_non_convex_method_(true),
-        n_phase_1_steps(0), GradientOptimizer(pot, x, tol) {
+        translation_offset_(translation_offset),
+        steps_before_convex_check_(steps_before_convex_check), in_convex_region_(false),
+        use_non_convex_method_(true), last_non_convex_x_(x.size()),
+        hessian_calculated_(false), n_phase_1_steps(0) {
     // Ensure that both optimizers have the same potential
     // There is redundancy because we add the potential to each optimizer
     // but this overrides the potential in the optimizer.
@@ -149,7 +149,7 @@ private:
 
   size_t steps_before_convex_check_;
 
-  bool not_in_convex_region_;
+  bool in_convex_region_;
 
   // you would also use this method if you're in a convex
   // region but not close to the minima just to make sure
