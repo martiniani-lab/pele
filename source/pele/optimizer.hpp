@@ -94,9 +94,6 @@ protected:
   Array<double> g_; /**< The current gradient */
   double rms_;      /**< The root mean square of the gradient */
 
-  bool last_step_failed_; /**< Whether the last step failed
-   helpful for newton, when combining in mixed descent */
-
   /**
    * This flag keeps track of whether the function and gradient have been
    * initialized.This allows the initial function and gradient to be computed
@@ -107,10 +104,10 @@ protected:
    */
   bool func_initialized_;
 
-  /**
-   * Declares LineSearch to be a friend of this class since it requires access
-   * to the potential and gradient
-   */
+  bool last_step_failed_; /**< Whether the last step failed
+  helpful for newton, when combining in mixed descent */
+
+  bool succeeded_; /**< Whether the optimization succeeded */
 
 public:
   GradientOptimizer(std::shared_ptr<pele::BasePotential> potential,
@@ -118,7 +115,7 @@ public:
       : potential_(potential), tol_(tol), maxstep_(0.1), maxiter_(1000),
         iprint_(-1), verbosity_(0), iter_number_(0), nfev_(0), nhev_(0),
         x_(x0.copy()), f_(0.), g_(x0.size()), rms_(1e10),
-        func_initialized_(false), last_step_failed_(false) {}
+        func_initialized_(false), last_step_failed_(false), succeeded_(false) {}
 
   virtual ~GradientOptimizer() {}
 
@@ -157,7 +154,6 @@ public:
       one_iteration();
     }
   }
-
 
   void print_stats() {
     std::cout << "iter: " << iter_number_ << std::endl;
@@ -223,7 +219,7 @@ public:
   inline int get_maxiter() const { return maxiter_; }
   inline double get_maxstep() { return maxstep_; }
   inline double get_tol() const { return tol_; }
-  inline bool success() { return stop_criterion_satisfied(); }
+  inline bool success() { return succeeded_; }
   inline int get_verbosity_() { return verbosity_; }
   inline bool get_last_step_failed() { return last_step_failed_; }
   inline std::shared_ptr<pele::BasePotential> get_potential() {
@@ -237,7 +233,11 @@ public:
     if (!func_initialized_) {
       initialize_func_gradient();
     }
-    return rms_ <= tol_;
+    if (rms_ <= tol_) {
+      succeeded_ = true;
+      return true;
+    };
+    return false;
   }
 
 protected:

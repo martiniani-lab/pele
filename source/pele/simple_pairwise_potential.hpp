@@ -166,7 +166,7 @@ public:
     double max_x = 0;
     for (size_t atom_i = 0; atom_i < natoms; ++atom_i) {
       double atom_x = 0;
-#pragma unroll
+#pragma GCC unroll 3
       for (size_t j = 0; j < m_ndim; ++j) {
         size_t ind = atom_i * m_ndim + j;
         atom_x += x[ind] * x[ind];
@@ -212,14 +212,14 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 
         _dist->get_rij(dr, &x[i1], &x[j1]);
         double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
         for (size_t k = 0; k < m_ndim; ++k) {
           r2 += dr[k] * dr[k];
         }
         xsum_large_add1(&esum, _interaction->energy_gradient(
                                    r2, &gij, get_dij(atom_i, atom_j)));
         if (gij != 0) {
-#pragma unroll
+#pragma GCC unroll 3
           for (size_t k = 0; k < m_ndim; ++k) {
             dr[k] *= gij;
             xsum_small_add1(&((*exact_gradient)[i1 + k]), -dr[k]);
@@ -251,14 +251,14 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 
         _dist->get_rij(dr, &x[i1], &x[j1]);
         double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
         for (size_t k = 0; k < m_ndim; ++k) {
           r2 += dr[k] * dr[k];
         }
 
         e += _interaction->energy_gradient(r2, &gij, get_dij(atom_i, atom_j));
         if (gij != 0) {
-#pragma unroll
+#pragma GCC unroll 3
           for (size_t k = 0; k < m_ndim; ++k) {
             dr[k] *= gij;
             grad[i1 + k] -= dr[k];
@@ -307,7 +307,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 
         _dist->get_rij(dr, &x[i1], &x[j1]);
         double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
         for (size_t k = 0; k < m_ndim; ++k) {
           r2 += dr[k] * dr[k];
         }
@@ -318,7 +318,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
           gij = 0;
         }
         if (gij != 0) {
-#pragma unroll
+#pragma GCC unroll 3
           for (size_t k = 0; k < m_ndim; ++k) {
             dr[k] *= gij;
             xsum_small_add1(&((*exact_gradient)[i1 + k]), -dr[k]);
@@ -350,7 +350,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 
         _dist->get_rij(dr, &x[i1], &x[j1]);
         double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
         for (size_t k = 0; k < m_ndim; ++k) {
           r2 += dr[k] * dr[k];
         }
@@ -361,7 +361,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
           gij = 0;
         }
         if (gij != 0) {
-#pragma unroll
+#pragma GCC unroll 3
           for (size_t k = 0; k < m_ndim; ++k) {
             dr[k] *= gij;
             grad[i1 + k] -= dr[k];
@@ -410,14 +410,14 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 
       _dist->get_rij(dr, &x[i1], &x[j1]);
       double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
       for (size_t k = 0; k < m_ndim; ++k) {
         r2 += dr[k] * dr[k];
       }
       xsum_large_add1(&esum, _interaction->energy_gradient(
                                  r2, &gij, get_dij(atom_i, atom_j)));
       if (gij != 0) {
-#pragma unroll
+#pragma GCC unroll 3
         for (size_t k = 0; k < m_ndim; ++k) {
           dr[k] *= gij;
           xsum_small_add1(&((*exact_gradient)[i1 + k]), -dr[k]);
@@ -468,7 +468,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 
       _dist->get_rij(dr, &x[i1], &x[j1]);
       double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
       for (size_t k = 0; k < m_ndim; ++k) {
         r2 += dr[k] * dr[k];
       }
@@ -477,7 +477,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
                                                  get_dij(atom_i, atom_j));
 
       if (gij != 0) {
-#pragma unroll
+#pragma GCC unroll 3
         for (size_t k = 0; k < m_ndim; ++k) {
           grad[i1 + k] -= gij * dr[k];
           grad[j1 + k] += gij * dr[k];
@@ -485,7 +485,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
       }
 
       if (hij != 0) {
-#pragma unroll
+#pragma GCC unroll 3
         for (size_t k = 0; k < m_ndim; ++k) {
           // diagonal block - diagonal terms
           double Hii_diag = (hij + gij) * dr[k] * dr[k] / r2 - gij;
@@ -495,7 +495,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
           double Hij_diag = -Hii_diag;
           hess[N * (i1 + k) + j1 + k] += Hij_diag;
           hess[N * (j1 + k) + i1 + k] += Hij_diag;
-#pragma unroll
+#pragma GCC unroll 3
           for (size_t l = k + 1; l < m_ndim; ++l) {
             // diagonal block - off diagonal terms
             double Hii_off = (hij + gij) * dr[k] * dr[l] / r2;
@@ -544,7 +544,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
 
       _dist->get_rij(dr, &x[i1], &x[j1]);
       double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
       for (size_t k = 0; k < m_ndim; ++k) {
         r2 += dr[k] * dr[k];
       }
@@ -556,7 +556,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
         hij = 0;
       }
       if (gij != 0) {
-#pragma unroll
+#pragma GCC unroll 3
         for (size_t k = 0; k < m_ndim; ++k) {
           grad[i1 + k] -= gij * dr[k];
           grad[j1 + k] += gij * dr[k];
@@ -564,7 +564,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
       }
 
       if (hij != 0) {
-#pragma unroll
+#pragma GCC unroll 3
         for (size_t k = 0; k < m_ndim; ++k) {
           // diagonal block - diagonal terms
           double Hii_diag = (hij + gij) * dr[k] * dr[k] / r2 - gij;
@@ -574,7 +574,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
           double Hij_diag = -Hii_diag;
           hess[N * (i1 + k) + j1 + k] = Hij_diag;
           hess[N * (j1 + k) + i1 + k] = Hij_diag;
-#pragma unroll
+#pragma GCC unroll 3
           for (size_t l = k + 1; l < m_ndim; ++l) {
             // diagonal block - off diagonal terms
             double Hii_off = (hij + gij) * dr[k] * dr[l] / r2;
@@ -619,7 +619,7 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian(
 
       _dist->get_rij(dr, &x[i1], &x[j1]);
       double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
       for (size_t k = 0; k < m_ndim; ++k) {
         r2 += dr[k] * dr[k];
       }
@@ -628,7 +628,7 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian(
                                                  get_dij(atom_i, atom_j));
 
       if (hij != 0) {
-#pragma unroll
+#pragma GCC unroll 3
         for (size_t k = 0; k < m_ndim; ++k) {
           // diagonal block - diagonal terms
           double Hii_diag = (hij + gij) * dr[k] * dr[k] / r2 - gij;
@@ -638,7 +638,7 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian(
           double Hij_diag = -Hii_diag;
           hess[N * (i1 + k) + j1 + k] += Hij_diag;
           hess[N * (j1 + k) + i1 + k] += Hij_diag;
-#pragma unroll
+#pragma GCC unroll 3
           for (size_t l = k + 1; l < m_ndim; ++l) {
             // diagonal block - off diagonal terms
             double Hii_off = (hij + gij) * dr[k] * dr[l] / r2;
@@ -678,7 +678,7 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::get_energy(
 
       _dist->get_rij(dr, &x[i1], &x[j1]);
       double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
       for (size_t k = 0; k < m_ndim; ++k) {
         r2 += dr[k] * dr[k];
       }
@@ -738,7 +738,7 @@ void SimplePairwisePotential<pairwise_interaction, distance_policy>::
 
           _dist->get_rij(dr.data(), &coords[i1], &coords[j1]);
           double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
           for (size_t k = 0; k < m_ndim; ++k) {
             r2 += dr[k] * dr[k];
             neg_dr[k] = -dr[k];
@@ -782,7 +782,7 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::get_overlaps(
 
       _dist->get_rij(dr.data(), &coords[i1], &coords[j1]);
       double r2 = 0;
-#pragma unroll
+#pragma GCC unroll 3
       for (size_t k = 0; k < m_ndim; ++k) {
         r2 += dr[k] * dr[k];
       }

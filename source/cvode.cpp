@@ -162,7 +162,7 @@ void CVODEBDFOptimizer::setup_cvode() {
   step_file.open("step_cvode.txt");
   newton_step_file.open("newton_step_cvode.txt");
   lbfgs_m_1_step_file.open("lbfgs_m_1_step_cvode.txt");
-  g_old = Array<double>(x0.size(), 0);
+  g_old = Array<double>(x_.size(), 0);
 #endif
 }
 
@@ -300,6 +300,13 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
     // For some reason clang throws an error here, but gcc compiles properly
     initialize_func_gradient();
   }
+  if (norm(x_) > 1e10) {
+    // do a safe exit
+    // succeeded is false, so the optimizer will
+    // have passed that the run has failed
+    return true;
+  }
+
   if (rms_ < tol_) {
     if (use_newton_stop_criterion_) {
       if (iter_number_ % 100 == 0) {

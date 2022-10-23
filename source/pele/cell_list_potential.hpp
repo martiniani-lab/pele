@@ -1242,7 +1242,7 @@ public:
     double max_x = 0;
     for (size_t atom_i = 0; atom_i < natoms; ++atom_i) {
       double atom_x = 0;
-#pragma unroll
+#pragma GCC unroll 3
       for (size_t j = 0; j < m_ndim; ++j) {
         atom_x += x[atom_i * m_ndim + j] * x[atom_i * m_ndim + j];
       }

@@ -87,11 +87,11 @@ bool MixedDescentEndOnly::stop_criterion_satisfied() {
     if (max_disp < _newton_step_tol) {
       // std::cout << "max_disp: " << max_disp << std::endl;
       x_ = _newton_optimizer.get_x();
+      succeeded_ = true;
       return true;
     } else {
       return false;
     }
-
   } else {
     return false;
   }
