@@ -74,7 +74,7 @@ message("LAPACK include dir " ${LAPACKE_INCLUDE_DIR})
 
 # lapacke.h comes with Eigen
 set(LAPACKE_INCLUDE_DIR
-${CMAKE_SOURCE_DIR}/extern/eigen/Eigen/src/misc
+${CMAKE_SOURCE_DIR}/extern/install/include/Eigen/src/misc
   CACHE PATH "Location of lapacke include")
 
 enable_language(CXX)
