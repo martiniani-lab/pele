@@ -304,6 +304,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
     // do a safe exit
     // succeeded is false, so the optimizer will
     // have passed that the run has failed
+    std::cout << "x is too large, exiting" << std::endl;
     return true;
   }
 
@@ -356,6 +357,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
           std::cout << "converged in " << iter_number_ << " iterations\n";
           std::cout << "rms = " << rms_ << "\n";
           std::cout << "tol = " << tol_ << "\n";
+          succeeded_ = true;
           return true;
         } else {
           return false;
@@ -367,6 +369,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
       std::cout << "converged in " << iter_number_ << " iterations\n";
       std::cout << "rms = " << rms_ << "\n";
       std::cout << "tol = " << tol_ << "\n";
+      succeeded_ = true;
       return true;
     }
 
