@@ -238,7 +238,7 @@ inline void MODIFIED_FIRE::one_iteration() {
               << " nfev " << nfev_ << "\n";
   }
 #if PRINT_TO_FILE == 1
-  trajectory_file << x_;
+  trajectory_file << std::setprecision(17) << x_;
 #endif
 }
 
