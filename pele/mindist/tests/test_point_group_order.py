@@ -100,7 +100,10 @@ class TestPgorderLj75Database(unittest.TestCase):
         from pele.systems import LJCluster
         natoms = 75
         system = LJCluster(natoms)
-        db = system.create_database(dbfname, createdb=False)
+        
+        # create the database if it doesn't exist
+        create_database = not os.path.exists(dbfname)
+        db = system.create_database(dbfname, createdb=create_database)
 
         permlist = [list(range(natoms))]
         
