@@ -36,14 +36,14 @@ class BaseTestCases:
 
         def test_hess_min(self):
             log = logging.getLogger("BaseTest.test_hess_min")
-            h = self.pot.getHessian(self.xmin)
+            e, g, h = self.pot.getEnergyGradientHessian(self.xmin)
             eigenvals = np.linalg.eigvals(h)
             log.debug("e= %r", eigenvals)
             self.assertGreater(np.min(eigenvals), -1e-4)
 
         def test_hess_analytical_against_numerical(self):
             log = logging.getLogger("BaseTest.test_hess_analytical_against_numerical")
-            h = self.pot.getHessian(self.xmin)
+            e, g, h = self.pot.getEnergyGradientHessian(self.xmin)
             h_num = self.pot.NumericalHessian(self.xmin)
             h = h.reshape(-1).copy()
             h_num = h_num.reshape(-1).copy()
