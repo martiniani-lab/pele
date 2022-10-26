@@ -126,14 +126,6 @@ class TestLBFGS_State(unittest.TestCase):
         arrays_nearly_equal(self, res1.coords, res2.coords)
 
 
-class TestLBFGS_discontinous(unittest.TestCase):
-    def test1(self):
-        pot = DiscontinuousHarmonic()
-        x0 = np.array([-10, 1])
-        opt = LBFGS(x0, pot, debug=True)
-        print('this runnnns')
-        res = opt.run()
-        self.assertFalse(res.success)
 
 
 class TestLBFGS_wolfe(unittest.TestCase):
