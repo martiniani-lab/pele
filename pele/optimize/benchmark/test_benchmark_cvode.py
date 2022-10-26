@@ -44,12 +44,6 @@ def generate_initial_conditions_and_potential(n_part, seed=0):
     return initial_coords, potential
 
 
-def test_bench_cvode(N, n_ensemble, cvode_params=None):
-    for i in range(n_ensemble):
-        initial_coords, potential = generate_initial_conditions_and_potential(N, seed=i)
-        opt_cvode = CVODEBDFOptimizer(potential, initial_coords, **cvode_params)
-        res = opt_cvode.run(10000)
-    return
         
         
         
@@ -67,16 +61,6 @@ if __name__=="__main__":
         "hessian_type" : HessianType.ITERATIVE,
     }
     args = parser.parse_args()
-    
-    test_bench_cvode(args.n_particles, args.n_ensemble, cvode_params=cvode_args)
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     
