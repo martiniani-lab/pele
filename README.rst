@@ -142,93 +142,7 @@ is:
   $ python setup_with_cmake.py build_ext -i --fcompiler=gfortran
 
 make sure to add the install directory to your
-PYTHONPATH environment variable.  This is not necessary if you install to a
-standard location.
-
-
-Installing on OS X
-------------------
-Most things installed very easily on my Macbook Air OS X Version 10.9 but it
-turns out that python distutils doesn't play very nicely with clang, the osx c
-compiler.  
-
-I was seeing errors of the type:
-
-    error: no type named 'shared_ptr' in namespace 'std'
-
-This is a strange error because I'm using clang version 5.1 and the c++11 class
-shared_ptr has been part of clang since 3.2.  Some googling suggested I try
-using the flag '-stdlib=libc++', which gave me the error:
-
-    clang: error: invalid deployment target for -stdlib=libc++ (requires OS X 10.7 or later)
-
-Again, very strange becuase I have OS X version 10.9.  But this error message
-eventually led me to figure out how to get past this.  It appears that
-distutils is setting the environment variable MACOSX_DEPLOYMENT_TARGET to have
-the wrong value.  I'm still not sure why, but setting the environment variable
-correctly before running setup.py fixes the problem.  So, for an in-place build
-I would run
-
-    MACOSX_DEPLOYMENT_TARGET=10.9 python setup.py build_ext -i
-
-
-Installing GUI on OS X
-----------------------
-
-If you want to use the gui you have to install PyQt4 and its dependencies.
-This is not as simple as it should be, but is actually not too hard.  There is a good guide at
-http://www.pythonschool.net/mac_pyqt/. I had to install from source.
-This method is also detailed at
-http://sharewebegin.blogspot.co.uk/2013/06/install-pyqt-on-mac-osx-lion1084.html.
-This worked even though I'm using osx Mavericks
-
-1. Ensure you're using a decent python installation, the osx pre-packaged one won't suffice.
-   I use the Enthought Canopy python distribution https://www.enthought.com/products/canopy/
-
-2. Install Qt4.8 using the pre-compiled binary http://qt-project.org/downloads
-
-3. Install SIP from source.
-   http://www.riverbankcomputing.co.uk/software/sip/download
-
-   In the directory you unpack the tar.gz file run the following commands
-   ::
-
-     python configure.py --arch=x86_64
-     make
-     sudo make install
-
-   You may need to use the -d flag to specify the install directory, but for me
-   it selected the correct location. If you get the error "SIP requires Python to be built as a framework",
-   don't worry, you can ignore this (http://python.6.x6.nabble.com/installing-sip-on-os-x-with-canopy-td5037076.html).
-   Simply comment out the following lines in sipconfig.py. They were at roughly line number 1675 for me.
-   ::
-
-    if "Python.framework" not in dl:
-        error("SIP requires Python to be built as a framework")
-   
-4. Install PyQt4 from source
-   http://www.riverbankcomputing.co.uk/software/pyqt/download .
-
-   In the directory you unpack the tar.gz file run the following commands
-   ::
-
-     python configure-ng.py
-     make -j8
-     sudo make install
-
-   The -j8 flag specifies parallel compilation.  You may need to use the -q flag
-   to specify the location of the qmake program.  Pass the location of the
-   qmake file that is in the directory of Qt, which you installed in step 2.
- 
-5. You're done!  Test if it works by running examples/gui/ljsystem.py
-
-If you have updates or more complete installation instructions please email or
-submit a pull request.
-
-
-Notes
-=====
-pele has recently been renamed from pygmin
+PYTHONPATH environment variable.
 
 Tests
 =====
@@ -245,4 +159,4 @@ To run the tests, run::
 
   $ pytest pele/
 
-from the base directory. However the tests are being rewritten, so expect to see some failures.
+from the base directory.
