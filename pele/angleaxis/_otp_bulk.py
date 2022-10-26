@@ -4,7 +4,7 @@ from builtins import range
 from past.utils import old_div
 import numpy as np
 from numpy import cos, sin, pi
-
+np.random.seed(0)
 #import gmin_ as GMIN
 
 #from pele.potentials import LJ

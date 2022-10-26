@@ -6,13 +6,14 @@ import networkx as nx
 from pele.landscape import TSGraph
 
 
+
 def create_random_database(nmin=20, nts=None, natoms=2):
     """
     create a database for test purposes
     """
     from pele.storage import Database
     import numpy as np
-
+    np.random.seed(0)
     if nts is None:
         nts = nmin
     db = Database()
