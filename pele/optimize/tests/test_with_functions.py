@@ -16,7 +16,7 @@ class TestOptimizersBeale(unittest.TestCase):
         self.x += np.random.uniform(-0.2, 0.2, self.x.shape)
 
     def do_check(self, minimizer, **kwargs):
-        ret = minimizer(self.x, self.pot, **kwargs)
+        ret = minimizer(self.x, self.pot, tol=1e-7, **kwargs)
         self.assertTrue(ret.success)
         self.assertAlmostEqual(ret.energy, self.pot.target_E, 3)
         self.assertLess(np.max(np.abs(ret.coords - self.pot.target_coords)), 1e-3)
