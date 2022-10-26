@@ -7,8 +7,7 @@ import numpy as np
 import itertools
 
 __all__ = ["find_best_permutation", "optimize_permutations",
-           "find_permutations_OPTIM", "find_permutations_munkres",
-           "find_permutations_hungarian"] 
+           "find_permutations_OPTIM", "find_permutations_munkres"] 
 
 have_minperm = False
 have_hungarian = False
@@ -35,10 +34,6 @@ _findBestPermutationList = None
 if have_minperm:
     def _find_permutations(*args, **kwargs):
         return find_permutations_OPTIM(*args, **kwargs)
-
-elif have_hungarian:
-    def _find_permutations(*args, **kwargs):
-        return find_permutations_hungarian(*args, **kwargs)
 elif have_munkres:
     def _find_permutations(*args, **kwargs):
         return find_permutations_munkres(*args, **kwargs)
@@ -214,8 +209,6 @@ def find_best_permutation(X1, X2, permlist=None, user_algorithm=None,
             continue
         if user_algorithm is not None:
             dist, perm = user_algorithm(X1[atomlist], X2[atomlist], make_cost_matrix=user_cost_matrix, **kwargs)
-        elif user_cost_matrix is not _make_cost_matrix:
-            dist, perm = find_permutations_hungarian(X1[atomlist], X2[atomlist], make_cost_matrix=user_cost_matrix, **kwargs)
         else:
             dist, perm = _find_permutations(X1[atomlist], X2[atomlist], **kwargs)
         

@@ -26,7 +26,7 @@ from builtins import range
 from past.utils import old_div
 from builtins import object
 from pele.mindist._minpermdist_policies import MeasureAtomicCluster, TransformAtomicCluster
-from pele.mindist.permutational_alignment import _make_cost_matrix, _find_permutations, find_permutations_hungarian
+from pele.mindist.permutational_alignment import _make_cost_matrix, _find_permutations
 from pele.mindist import MinPermDistCluster, ExactMatchCluster
 from pele.systems import AtomicCluster
 from copy import deepcopy
@@ -145,8 +145,6 @@ def find_best_permutation_molecular(X1, X2, permlist=None, user_algorithm=None,
         atomlist2=[newperm[a] for a in atomlist]
         if user_algorithm is not None:
             dist, perm=user_algorithm(X1[atomlist], X2[atomlist2], make_cost_matrix=user_cost_matrix, **kwargs)
-        elif user_cost_matrix is not _make_cost_matrix:
-            dist, perm=find_permutations_hungarian(X1[atomlist], X2[atomlist2], make_cost_matrix=user_cost_matrix, **kwargs)
         else:
             dist, perm=_find_permutations(X1[atomlist], X2[atomlist2], **kwargs)
 
