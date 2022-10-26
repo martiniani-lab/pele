@@ -111,51 +111,6 @@ def find_permutations_munkres( X1, X2, make_cost_matrix=_make_cost_matrix ):
     dist = np.sqrt(costnew)
     return dist, new_indices
 
-def find_permutations_hungarian( X1, X2, make_cost_matrix=_make_cost_matrix ):
-    """
-    For a given set of positions X1 and X2, find the best permutation of the
-    atoms in X2.
-
-    The positions must already be reshaped to reflect the dimensionality of the system!
-
-    Use an implementation of the Hungarian Algorithm in the Python package
-    index (PyPi) called munkres (another name for the algorithm).  The
-    hungarian algorithm time scales as O(n^3), much faster than the O(n!) from
-    looping through all permutations.
-
-    http://en.wikipedia.org/wiki/Hungarian_algorithm
-    http://pypi.python.org/pypi/munkres/1.0.5.2
-    
-    another package, hungarian, implements the same routine in comiled C
-    http://pypi.python.org/pypi/hungarian/
-    When I first downloaded this package I got segfaults.  The problem for me
-    was casing an integer pointer as (npy_intp *).  I may add the corrected 
-    version to pele at some point
-    """
-    #########################################
-    # create the cost matrix
-    # cost[j,i] = (X1(i,:) - X2(j,:))**2
-    #########################################
-    cost = make_cost_matrix(X1, X2)
-
-    #########################################
-    # run the hungarian algorithm
-    #########################################
-    newind1 = hungarian.lap(cost)
-    perm = newind1[1]
-
-    # note: the hungarian algorithm changes
-    # the cost matrix.  I'm not sure why, and it may be a bug, 
-    # but the indices it returns are still correct
-    
-    
-    #########################################
-    # apply the permutation
-    #########################################
-    # TODO: how to get new distance?
-    dist = -1
-    return dist, perm
-
 def find_permutations_OPTIM(X1, X2, box_lengths=None, make_cost_matrix=None):
     """
     use OPTIM's minperm() routine to calculate the optimum permutation
@@ -235,7 +190,7 @@ def find_best_permutation(X1, X2, permlist=None, user_algorithm=None,
 
     there are several packages in pypi which solve the linear assignment problem
     
-    hungarian : c++ code wrapped in python.  scales roughly like natoms**2.5
+    use of hungarian here is deprecated, replace with scipy.optimize.linear_sum_assignment
     
     munkres : completely in python. scales roughly like natoms**3.  very slow for natoms > 10
     
