@@ -57,8 +57,19 @@ for compilation
 ^^^^^^^^^^^^^^^
 
 #. fortran compiler
-#. c++ compiler (must support c++17, preferably gcc)
+#. c compiler (gcc preferably)
+#. c++ compiler (g++ preferably)
 #. CMake (version 3.5 or higher)
+
+On Ubuntu this can be installed with :code:`sudo apt-get install gfortran gcc g++ cmake`
+on older versions of Ubuntu you may need to provide a version number, and set the version used
+
+commands::
+     sudo apt install -y gcc-10 g++-10 gfortran-10 cmake # any gcc>5
+     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+     sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-10 100
+
 
 C/C++ packages:
 ^^^^^^^^^^^^^^^^^
