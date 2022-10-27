@@ -31,8 +31,7 @@ jobs:
           auto-activate-base: false
       - name: Install python dependencies
         run: |
-          conda activate test
-          conda install -y numpy scipy matplotlib cython
+          conda install -y numpy scipy matplotlib networkx cython
           conda install -y -c conda-forge sqlalchemy munkres pyro4 scikit-sparse
           pip install pytest future
 
@@ -78,10 +77,8 @@ jobs:
           ./test_main
       - name: Compile python library
         run: |
-          conda activate test
           python setup_with_cmake.py build_ext -i
       - name: Run python tests
         run: |
-          conda activate test
           export OMP_NUM_THREADS=1
           pytest pele/
