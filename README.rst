@@ -96,6 +96,12 @@ pele requires python 3.8 or higher, and the following packages
 #. cython: 
      For calling C++ code from python for speed
 
+#. pyyaml:
+     For reading and writing yaml files
+
+#. future:
+     Used for upgrading from python 2 to python 3
+
 #. matplotlib:
      For making plots (e.g. disconnectivity graphs)
 
@@ -114,6 +120,8 @@ pele requires python 3.8 or higher, and the following packages
 #. pymol: optional
      For viewing molecular structures
 
+#. pytest: optional
+     For running tests
 
 We recommend installing all the above packages in a conda environment.
 
@@ -139,6 +147,7 @@ commands::
   $ conda install numpy scipy networkx matplotlib cython
   $ conda install -c conda-forge sqlalchemy munkres pyro4 scikit-sparse
   $ conda install -c conda-forge -c schrodinger pymol-bundle
+  $ pip install pyyaml
   $ pip install future # used for upgrading to python 3
   $ pip install pytest # in case you want to ensure library runs correctly (optional)
 
