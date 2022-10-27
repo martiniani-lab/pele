@@ -89,6 +89,7 @@ private:
   HessianType hessian_type_;
 #if PRINT_TO_FILE == 1
   std::ofstream trajectory_file;
+  std::ofstream time_file;
   std::ofstream hessian_eigvals_file;
   std::ofstream grad_file;
   std::ofstream step_file;

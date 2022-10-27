@@ -2,9 +2,9 @@ name: CMake
 
 on:
   push:
-    branches: [ "master", "dev"]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -16,66 +16,67 @@ jobs:
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          installer-url: https://repo.anaconda.com/miniconda/Miniconda3-py38_4.11.0-Linux-x86_64.sh
+          activate-environment: test
+          python-version: 3.9
+          channels: conda-forge
+          auto-activate-base: false
+      - name: Install python dependencies
+        run: |
+          conda install -y numpy scipy matplotlib cython
+          conda install -y -c conda-forge sqlalchemy munkres pyro4 scikit-sparse
 
-    - name: Update apt
-      run: sudo apt-get update
+      - name: Update apt
+        run: sudo apt-get update
 
-    # installing gcc-10 because it's the latest available on focal
-    - name: Use gcc-10/g++-10
-      run: |
-        sudo apt-get install -y gcc-10 g++-10
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+      # installing gcc-10 because it's the latest available on focal
+      - name: Use gcc-10/g++-10
+        run: |
+          sudo apt-get install -y gcc-10 g++-10
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
 
+      # gets gtest
+      - name: Get submodules
+        run: git submodule update --init --recursive
 
-    # gets gtest
-    - name: Get submodules
-      run: git submodule update --init --recursive
-
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get install -y libblas-dev liblapack-dev liblapacke-dev
-        sudo apt-get install -y cmake
-    # todo change this with only installing CVODE
-    - name: Install sundials
-      run: |
-        cd extern
-        chmod +x sun_inst.sh
-        ./sun_inst.sh Debug
-        cd ..
-    - name: Install Eigen
-      run: |
-        cd extern
-        cp -r eigen/Eigen install/include
-    - name: Build C++ tests
-      # Build your program with the given configuration
-      run: |
-        cd cpp_tests/source 
-        cmake -DCMAKE_BUILD_TYPE=Debug .
-        make -j4
-    - name: Run C++ tests
-      run: |
-        cd cpp_tests/source
-        ./test_main
-    - name: make conda environment
-      uses: conda-incubator/setup-miniconda@v2
-    - name: Install python dependencies
-      run: |
-        conda install numpy scipy matplotlib cython
-        conda install -c conda-forge sqlalchemy munkres pyro4 scikit-sparse
-        conda install -c conda-forge -c schrodinger pymol-bundle
-    - name: Compile python library
-      run: |
-        pythons setup_with_cmake.py build_ext -i
-    - name: Run python tests
-      run: |
-        export OMP_NUM_THREADS=1
-        pytest pele/
-    - name: "Complete"
-      run: echo "Done"
-
-        
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y libblas-dev liblapack-dev liblapacke-dev
+          sudo apt-get install -y cmake
+      # todo change this with only installing CVODE
+      - name: Install sundials
+        run: |
+          cd extern
+          chmod +x sun_inst.sh
+          ./sun_inst.sh Debug
+          cd ..
+      - name: Install Eigen
+        run: |
+          cd extern
+          cp -r eigen/Eigen install/include
+      - name: Build C++ tests
+        # Build your program with the given configuration
+        run: |
+          cd cpp_tests/source 
+          cmake -DCMAKE_BUILD_TYPE=Debug .
+          make -j4
+      - name: Run C++ tests
+        run: |
+          cd cpp_tests/source
+          ./test_main
+      - name: Compile python library
+        run: |
+          python setup_with_cmake.py build_ext -i
+      - name: Run python tests
+        run: |
+          export OMP_NUM_THREADS=1
+          pytest pele/
