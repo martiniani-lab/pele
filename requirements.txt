@@ -2,7 +2,11 @@ numpy
 scipy
 matplotlib
 networkx
+cython
 sqlalchemy
-hungarian
+munkres
 pyro4
 numpydoc
+pytest
+future
+omp-thread-count

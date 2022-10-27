@@ -155,14 +155,7 @@ void CVODEBDFOptimizer::setup_cvode() {
   }
 #if PRINT_TO_FILE == 1
   trajectory_file.open("trajectory_cvode.txt");
-  // Also saving hessian eigenvalues to understand what's happening
-  // along the run
-  hessian_eigvals_file.open("hessian_eigvals_cvode.txt");
-  grad_file.open("grad_cvode.txt");
-  step_file.open("step_cvode.txt");
-  newton_step_file.open("newton_step_cvode.txt");
-  lbfgs_m_1_step_file.open("lbfgs_m_1_step_cvode.txt");
-  g_old = Array<double>(x_.size(), 0);
+  time_file.open("time_cvode.txt");
 #endif
 }
 
@@ -210,70 +203,8 @@ void CVODEBDFOptimizer::one_iteration() {
   // stdout to file then plot them using python
 
 #if PRINT_TO_FILE == 1
-  // get hessian routine, useful for understanding conditioning near minimum
-  Array<double> hess(xold.size() * xold.size());
-  Array<double> grad(xold.size());
-  double e = potential_->get_energy_gradient_hessian(x_, grad, hess);
-  Eigen::MatrixXd hess_dense(xold.size(), xold.size());
-  udata.nhev += 1;
-  hess_dense.setZero();
-  for (size_t i = 0; i < xold.size(); ++i) {
-    for (size_t j = 0; j < xold.size(); ++j) {
-      hess_dense(i, j) = hess[i + grad.size() * j];
-    }
-  }
-
-  // calculate minimum and maximum eigenvalue
-  Eigen::VectorXd eigvals = hess_dense.eigenvalues().real();
-  add_translation_offset_2d(hess_dense, 1.0);
-  Eigen::VectorXd r(hess_dense.rows());
-  Eigen::VectorXd q(hess_dense.rows());
-  q.setZero();
-
-  eig_eq_pele(r, g_);
-
-  q = -hess_dense.householderQr().solve(r);
-
-  double minimum = eigvals.minCoeff();
-  double maximum = eigvals.maxCoeff();
-
-  Array<double> eigvals_pele = Array<double>(xold.size());
-  for (size_t i = 0; i < xold.size(); ++i) {
-    eigvals_pele[i] = eigvals(i);
-  }
-
-  Array<double> q_pele = Array<double>(xold.size());
-
-  for (size_t i = 0; i < xold.size(); ++i) {
-    q_pele[i] = q(i);
-  }
-  Array<double> dg_old = Array<double>(xold.size());
-  Array<double> dx_old = Array<double>(xold.size());
-  if (iter_number_ >= 0) {
-    dg_old = g_ - g_old;
-    dx_old = x_ - xold;
-  }
-  double dg_dot_dx;
-  double dg_dot_dg;
-  for (size_t i = 0; i < xold.size(); ++i) {
-    dg_dot_dx += dg_old[i] * dx_old[i];
-    dg_dot_dg += dg_old[i] * dg_old[i];
-  }
-
-  double H0 = dg_dot_dx / dg_dot_dg;
-
-  Array<double> H0_g = Array<double>(xold.size());
-
-  H0_g.assign(H0 * g_);
-
-  // write to file
   trajectory_file << std::setprecision(17) << x_;
-  hessian_eigvals_file << std::setprecision(17) << eigvals_pele;
-  grad_file << std::setprecision(17) << grad;
-  step_file << std::setprecision(17) << step;
-  newton_step_file << std::setprecision(17) << q_pele;
-  lbfgs_m_1_step_file << std::setprecision(17) << H0_g;
-  g_old.assign(g_);
+  time_file << std::setprecision(17) << t0 << std::endl;
 #endif
 }
 
@@ -304,6 +235,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
     // do a safe exit
     // succeeded is false, so the optimizer will
     // have passed that the run has failed
+    std::cout << "x is too large, exiting" << std::endl;
     return true;
   }
 
@@ -356,6 +288,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
           std::cout << "converged in " << iter_number_ << " iterations\n";
           std::cout << "rms = " << rms_ << "\n";
           std::cout << "tol = " << tol_ << "\n";
+          succeeded_ = true;
           return true;
         } else {
           return false;
@@ -367,6 +300,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
       std::cout << "converged in " << iter_number_ << " iterations\n";
       std::cout << "rms = " << rms_ << "\n";
       std::cout << "tol = " << tol_ << "\n";
+      succeeded_ = true;
       return true;
     }
 

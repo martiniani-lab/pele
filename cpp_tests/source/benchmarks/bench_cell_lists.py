@@ -21,7 +21,6 @@ rcut = 2.
 pot = LJCutCellLists(boxvec=boxvec, rcut=rcut, ncellx_scale=1.)
 
 
-#x = np.random.uniform(0, boxvec[0], natoms*3)
 
 
 if False:

@@ -6,7 +6,7 @@ import math
 import numpy as np
 import pele.exceptions as exc
 from pele.accept_tests.spherical_container import SphericalContainer as sphere
-
+np.random.seed(0)
 
 class TestSphericalContainer(unittest.TestCase):
     def setUp(self):

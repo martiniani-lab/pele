@@ -54,12 +54,17 @@ cdef class GradientOptimizer(object):
             # we need to call python events after each iteration.
             if niter is None:
                 niter = self.get_maxiter() - self.get_niter()
-    
+            success = False
+            if niter == 0:
+                # ensure that one iteration always runs
+                # so that res is set
+                niter = 1
             for i in xrange(niter):
-                if self.stop_criterion_satisfied():
-                    break
                 self.res = self.one_iteration()
-
+                success = self.stop_criterion_satisfied()
+                if success:
+                    break
+            self.res.success = success
         return copy.deepcopy(self.res)
             
     def reset(self, coords):

@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 
 from pele.mindist.permutational_alignment import  find_permutations_munkres, \
-    find_permutations_OPTIM, find_best_permutation, find_permutations_hungarian
+    find_permutations_OPTIM, find_best_permutation
 
 
 class PermutationTest(unittest.TestCase):
@@ -41,7 +41,7 @@ class PermutationTest(unittest.TestCase):
         dist1, perm_calc1 = find_best_permutation(coords1.copy(), 
                               coords2,
                               reshape=False,
-                              user_algorithm=find_permutations_hungarian)
+                              user_algorithm=find_permutations_OPTIM)
         dist2, perm_calc2 = find_best_permutation(coords1.copy(), 
                               coords2,
                               reshape=False,

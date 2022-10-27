@@ -74,16 +74,5 @@ class TestGetDistance(unittest.TestCase):
                     self.assertAlmostEqual(diff[i], diff_target[i])
 
 
-    def test_leesedwards(self):
-        dist_method = Distance.LEES_EDWARDS
-        shear = 0.1
-        for dim in [2, 3]:
-            for x1, x2 in zip(self.x1s, self.x2s):
-                diff = get_distance(x1, x2, dim, dist_method, self.boxv[:dim], shear)
-                diff_target = self._distance(x1, x2, dim, use_leesedwards=True, shear=shear)
-                for i in range(dim):
-                    self.assertAlmostEqual(diff[i], diff_target[i])
-
-
 if __name__ == "__main__":
     unittest.main()

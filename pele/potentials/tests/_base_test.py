@@ -11,11 +11,14 @@ class BaseTestCases:
 
         def grad_t(self, x):
             log = logging.getLogger("BaseTest.grad_t")
+            print("position", x)
             e, g = self.pot.getEnergyGradient(x)
             e1 = self.pot.getEnergy(x)
             numerical_g = self.pot.NumericalDerivative(x)
             log.debug("g= %r", g)
             log.debug("numerical_g= %r", numerical_g)
+            print("e", e)
+            print("e1", e1)
             self.assertLess(np.max(np.abs(g - numerical_g)), 1e-3)
             self.assertAlmostEqual(e, e1, 4)
 
@@ -36,14 +39,14 @@ class BaseTestCases:
 
         def test_hess_min(self):
             log = logging.getLogger("BaseTest.test_hess_min")
-            h = self.pot.getHessian(self.xmin)
+            e, g, h = self.pot.getEnergyGradientHessian(self.xmin)
             eigenvals = np.linalg.eigvals(h)
             log.debug("e= %r", eigenvals)
             self.assertGreater(np.min(eigenvals), -1e-4)
 
         def test_hess_analytical_against_numerical(self):
             log = logging.getLogger("BaseTest.test_hess_analytical_against_numerical")
-            h = self.pot.getHessian(self.xmin)
+            e, g, h = self.pot.getEnergyGradientHessian(self.xmin)
             h_num = self.pot.NumericalHessian(self.xmin)
             h = h.reshape(-1).copy()
             h_num = h_num.reshape(-1).copy()

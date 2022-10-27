@@ -130,39 +130,6 @@ def get_smallest_eig(hess, **kwargs):
     return evals[0], evecs[:, 0].flatten()
 
 
-def get_smallest_eig_arpack(hess, tol=1e-3, **kwargs):
-    """return the smallest eigenvalue and associated eigenvector of a Hessian
-    
-    use arpack 
-    """
-    import scipy.sparse
-    from scipy.sparse.linalg import eigsh
-    from scipy.sparse.linalg.eigen.arpack.arpack import ArpackNoConvergence
-    import sys
-
-    try:
-        e, v = eigsh(hess, which="SA", k=1, maxiter=1000, tol=tol)
-    except ArpackNoConvergence:
-        sys.stderr.write("ArpackNoConvergence raised\n")
-        if scipy.sparse.issparse(hess):
-            hess = hess.todense()
-        return get_smallest_eig(hess, **kwargs)
-    return e[0], v[:, 0].flatten()
-
-
-def get_smallest_eig_sparse(hess, cutoff=1e-1, **kwargs):
-    """return the smallest eigenvalue and associated eigenvector of a Hessian
-    
-    use arpack, and set all hessian values less than cutoff to zero
-    """
-    import scipy.sparse.linalg
-
-    newhess = np.where(np.abs(hess) < cutoff, 0., hess)
-    # i can't get it to work taking only the upper or lower triangular matrices
-    # sparsehess = scipy.sparse.tril(newhess, format="csr")
-    sparsehess = scipy.sparse.csr_matrix(newhess)
-    # print "dense len", len(hess.reshape(-1)), "sparse len", len(sparsehess.nonzero()[0])
-    return get_smallest_eig_arpack(sparsehess, **kwargs)
 
 
 def get_smallest_eig_nohess(coords, system, **kwargs):
@@ -229,9 +196,9 @@ def size_scaling_smallest_eig(natoms):  # pragma: no cover
         t0 = time.time()
         w1, v1 = get_smallest_eig(h)
         t1 = time.time()
-        w, v = get_smallest_eig_arpack(h)
+        w, v = get_smallest_eig(h)
         t2 = time.time()
-        w2, v2 = get_smallest_eig_sparse(h)
+        w2, v2 = get_smallest_eig(h)
         t3 = time.time()
         w3, v3 = get_smallest_eig_nohess(coords, system, tol=1e-3)
         t4 = time.time()
@@ -280,9 +247,9 @@ def test():  # pragma: no cover
     e, g, h = pot.getEnergyGradientHessian(coords)
     w1, v1 = get_smallest_eig(h)
     print(w1)
-    w, v = get_smallest_eig_arpack(h)
+    w, v = get_smallest_eig(h)
     print(w)
-    w2, v2 = get_smallest_eig_sparse(h)
+    w2, v2 = get_smallest_eig(h)
     print(w2, old_div(w2, w1))
     w3, v3 = get_smallest_eig_nohess(coords, system)
     print(w3, old_div(w3, w1))
