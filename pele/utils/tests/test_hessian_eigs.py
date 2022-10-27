@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from pele.utils.hessian import *
-from pele.utils.hessian import get_smallest_eig_nohess, get_smallest_eig_sparse, get_smallest_eig_arpack
+from pele.utils.hessian import get_smallest_eig_nohess
 
 class TestEig(unittest.TestCase):
     def setUp(self):
@@ -95,22 +95,6 @@ class TestEig(unittest.TestCase):
         dot = old_div(np.dot(v, vs), (np.linalg.norm(v) * np.linalg.norm(vs)))
         self.assertAlmostEqual(dot, 1., 5)
 
-    def test_smallest_eig1(self):
-        ws, vs = get_smallest_eig(self.h)
-        w, v = get_smallest_eig_arpack(self.h, tol=1e-9)
-        self.assertAlmostEqual(ws, w, 3)
-        dot = old_div(np.dot(v, vs), (np.linalg.norm(v) * np.linalg.norm(vs)))
-        dot = np.abs(dot)
-        self.assertAlmostEqual(dot, 1., 3)
-
-    def test_smallest_eig2(self):
-        ws, vs = get_smallest_eig(self.h)
-        w, v = get_smallest_eig_sparse(self.h, cutoff=1e-2, tol=1e-9)
-#        print vs.shape, v.shape
-        self.assertAlmostEqual(ws, w, 2)
-        dot = old_div(np.dot(v, vs), (np.linalg.norm(v) * np.linalg.norm(vs)))
-        dot = np.abs(dot)
-        self.assertAlmostEqual(dot, 1., 2)
 
     def test_smallest_eig_nohess(self):
         ws, vs = get_smallest_eig(self.h)
