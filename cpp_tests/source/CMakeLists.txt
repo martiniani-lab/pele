@@ -45,6 +45,7 @@ find_package(LAPACK REQUIRED)
 
 set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/../../extern/install")
 
+set(LAPACKE_INCLUDE_DIR ${EXT_INSTALL_PATH}/include/Eigen/src/misc)
 
 # set(SUNDIALS_EXTRA_LIBS  -lm /home/praharsh/anaconda3/x86_64-conda_cos6-linux-gnu/sysroot/usr/lib/librt.so CACHE STRING "Additional libraries")
 set(SUNDIALS_INCLUDE_DIR
@@ -90,6 +91,7 @@ include_directories(${PYTHON_INCLUDE_DIR})
 
 # set the pele include directory
 set(pele_include ../../source)
+include_directories(BEFORE SYSTEM ${LAPACKE_INCLUDE_DIR})
 include_directories(${pele_include})
 include_directories(${SUNDIALS_INCLUDE_DIR})
 

@@ -9,3 +9,4 @@ pyro4
 numpydoc
 pytest
 future
+omp-thread-count

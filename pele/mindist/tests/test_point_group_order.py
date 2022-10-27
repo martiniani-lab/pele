@@ -2,10 +2,8 @@ from __future__ import print_function
 from builtins import range
 import unittest
 import os
-import nose
 import sys
 
-import numpy as np
 from pele.mindist import PointGroupOrderCluster, ExactMatchAtomicCluster
 from pele.utils.xyz import read_xyz
 

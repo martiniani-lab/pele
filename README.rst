@@ -102,6 +102,9 @@ pele requires python 3.8 or higher, and the following packages
 #. future:
      Used for upgrading from python 2 to python 3
 
+#. omp-thread-count:
+     used to set the number of threads used by openmp
+
 #. matplotlib:
      For making plots (e.g. disconnectivity graphs)
 
@@ -148,9 +151,9 @@ commands::
   $ conda install -c conda-forge sqlalchemy munkres pyro4 scikit-sparse
   $ conda install -c conda-forge -c schrodinger pymol-bundle
   $ pip install pyyaml
+  $ pip install omp-thread-count # for multi-threading
   $ pip install future # used for upgrading to python 3
   $ pip install pytest # in case you want to ensure library runs correctly (optional)
-
 
 Compilation
 -----------
