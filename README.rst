@@ -128,6 +128,7 @@ commands::
   $ conda install numpy scipy networkx matplotlib cython
   $ conda install -c conda-forge sqlalchemy munkres pyro4 scikit-sparse
   $ conda install -c conda-forge -c schrodinger pymol-bundle
+  $ pip install future # used for upgrading to python 3
 
 
 Compilation
