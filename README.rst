@@ -140,6 +140,7 @@ commands::
   $ conda install -c conda-forge sqlalchemy munkres pyro4 scikit-sparse
   $ conda install -c conda-forge -c schrodinger pymol-bundle
   $ pip install future # used for upgrading to python 3
+  $ pip install pytest # in case you want to ensure library runs correctly (optional)
 
 
 Compilation
