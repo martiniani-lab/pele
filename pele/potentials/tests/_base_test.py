@@ -11,11 +11,14 @@ class BaseTestCases:
 
         def grad_t(self, x):
             log = logging.getLogger("BaseTest.grad_t")
+            print("position", x)
             e, g = self.pot.getEnergyGradient(x)
             e1 = self.pot.getEnergy(x)
             numerical_g = self.pot.NumericalDerivative(x)
             log.debug("g= %r", g)
             log.debug("numerical_g= %r", numerical_g)
+            print("e", e)
+            print("e1", e1)
             self.assertLess(np.max(np.abs(g - numerical_g)), 1e-3)
             self.assertAlmostEqual(e, e1, 4)
 
