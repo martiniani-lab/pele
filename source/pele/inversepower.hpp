@@ -46,13 +46,13 @@ struct InversePower_interaction : BaseInteraction {
   double const _pow;
   double const _cutoff_factor_2;
 
-  InversePower_interaction(double pow, double eps, double cutoff_factor = 1)
-      : _eps(eps), _pow(pow), _cutoff_factor_2(cutoff_factor * cutoff_factor) {}
+  InversePower_interaction(double pow, double eps)
+      : _eps(eps), _pow(pow) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij) const {
     double E;
-    if (r2 >= dij * dij * _cutoff_factor_2) {
+    if (r2 >= dij * dij) {
       E = 0.;
     } else {
       // Sqrt moved into else, based on previous comment by CPG.
@@ -66,7 +66,7 @@ struct InversePower_interaction : BaseInteraction {
    * -(dv/drij)/|rij| */
   double energy_gradient(double r2, double *gij, const double dij) const {
     double E;
-    if (r2 >= dij * dij * _cutoff_factor_2) {
+    if (r2 >= dij * dij) {
       E = 0.;
       *gij = 0.;
     } else {
@@ -81,7 +81,7 @@ struct InversePower_interaction : BaseInteraction {
   double inline energy_gradient_hessian(double r2, double *gij, double *hij,
                                         const double dij) const {
     double E;
-    if (r2 >= dij * dij * _cutoff_factor_2) {
+    if (r2 >= dij * dij) {
       E = 0.;
       *gij = 0;
       *hij = 0;
@@ -99,16 +99,16 @@ struct InversePower_interaction : BaseInteraction {
 
 template <int POW> struct InverseIntPower_interaction : BaseInteraction {
   double const _eps;
-  double const _pow;
-  double const _cutoff_factor_2;
+  double const _pow;  
 
-  InverseIntPower_interaction(double eps, double cutoff_factor = 1.0)
-      : _eps(eps), _pow(POW), _cutoff_factor_2(cutoff_factor * cutoff_factor) {}
+  InverseIntPower_interaction(double eps)
+      : _eps(eps), _pow(POW)
+      {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij) const {
     double E;
-    if (r2 >= dij * dij * _cutoff_factor_2) {
+    if (r2 >= dij * dij) {
       E = 0.;
     } else {
       const double r = std::sqrt(r2);
@@ -121,7 +121,7 @@ template <int POW> struct InverseIntPower_interaction : BaseInteraction {
    * -(dv/drij)/|rij| */
   double energy_gradient(double r2, double *gij, const double dij) const {
     double E;
-    if (r2 >= dij * dij * _cutoff_factor_2) {
+    if (r2 >= dij * dij) {
       E = 0.;
       *gij = 0;
     } else {
@@ -136,7 +136,7 @@ template <int POW> struct InverseIntPower_interaction : BaseInteraction {
   double inline energy_gradient_hessian(double r2, double *gij, double *hij,
                                         const double dij) const {
     double E;
-    if (r2 >= dij * dij * _cutoff_factor_2) {
+    if (r2 >= dij * dij) {
       E = 0.;
       *gij = 0;
       *hij = 0;
@@ -155,8 +155,7 @@ template <int POW> struct InverseIntPower_interaction : BaseInteraction {
 template <int POW2> struct InverseHalfIntPower_interaction : BaseInteraction {
   double const _eps;
   double const _pow;
-  double const _cutoff_factor_2;
-  InverseHalfIntPower_interaction(double eps, double cutoff_factor=1.0) : _eps(eps), _pow(0.5 * POW2), _cutoff_factor_2(cutoff_factor*cutoff_factor) {}
+  InverseHalfIntPower_interaction(double eps) : _eps(eps), _pow(0.5 * POW2) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij) const {
