@@ -20,22 +20,7 @@ protected:
   const Array<double> m_radii;
   const double non_additivity;
 
-  // Data members for finding rattlers close to minima
 
-  /*
-   * Finds the interaction distance between two particles, i and j. defaults to
-   * radii[i] + radii[j] when epsilon is zero
-   */
-  inline double get_dij(const std::size_t atom_i,
-                        const std::size_t atom_j) const {
-    if (m_radii.size() == 0) {
-      return 0;
-    } else {
-      // uses the diameters being twice the radii
-      return (m_radii[atom_i] + m_radii[atom_j]) *
-             (1 - 2 * non_additivity * abs(m_radii[atom_i] - m_radii[atom_j]));
-    }
-  }
 
 public:
   PairwisePotentialInterface() : m_radii(0), non_additivity(0) {}
@@ -54,6 +39,21 @@ public:
    * Return the radii (if the interaction potential actually uses radii).
    */
   virtual pele::Array<double> get_radii() { return m_radii.copy(); }
+
+  /*
+   * Finds the interaction distance between two particles, i and j. defaults to
+   * radii[i] + radii[j] when epsilon is zero
+   */
+  inline double get_dij(const std::size_t atom_i,
+                        const std::size_t atom_j) const {
+    if (m_radii.size() == 0) {
+      return 0;
+    } else {
+      // uses the diameters being twice the radii
+      return (m_radii[atom_i] + m_radii[atom_j]) *
+             (1 - 2 * non_additivity * abs(m_radii[atom_i] - m_radii[atom_j]));
+    }
+  }
 
   /**
    * Return the number of dimensions (box dimensions).
