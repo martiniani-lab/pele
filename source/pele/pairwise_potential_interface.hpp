@@ -67,8 +67,8 @@ public:
   /**
    * Return the distance as measured by the distance policy.
    */
-  virtual inline void get_rij(double *const r_ij, double const *const r1,
-                              double const *const r2) const {
+  virtual inline void get_rij(double *const, double const *const,
+                              double const *const) const {
     throw std::runtime_error(
         "PairwisePotentialInterface::get_rij must be overloaded");
   }
@@ -76,9 +76,9 @@ public:
   /**
    * Return energy_gradient of interaction.
    */
-  virtual inline double get_interaction_energy_gradient(double r2, double *gij,
-                                                        size_t atom_i,
-                                                        size_t atom_j) const {
+  virtual inline double get_interaction_energy_gradient(double, double *,
+                                                        size_t,
+                                                        size_t) const {
     throw std::runtime_error("PairwisePotentialInterface::get_interaction_"
                              "energy_gradient must be overloaded");
   }
@@ -87,8 +87,8 @@ public:
    * Return gradient and Hessian of interaction.
    */
   virtual inline double
-  get_interaction_energy_gradient_hessian(double r2, double *gij, double *hij,
-                                          size_t atom_i, size_t atom_j) const {
+  get_interaction_energy_gradient_hessian(double, double *, double *,
+                                          size_t, size_t) const {
     throw std::runtime_error("PairwisePotentialInterface::get_interaction_"
                              "energy_gradient_hessian must be overloaded");
   }
@@ -97,10 +97,10 @@ public:
    * Return lists of neighbors considering only certain atoms.
    */
   virtual void get_neighbors_picky(
-      pele::Array<double> const &coords,
-      pele::Array<std::vector<size_t>> &neighbor_indss,
-      pele::Array<std::vector<std::vector<double>>> &neighbor_distss,
-      pele::Array<short> const &include_atoms,
+      pele::Array<double> const &,
+      pele::Array<std::vector<size_t>> &,
+      pele::Array<std::vector<std::vector<double>>> &,
+      pele::Array<short> const &,
       const double cutoff_factor = 1.0) {
     throw std::runtime_error(
         "PairwisePotentialInterface::get_neighbors_picky must be overloaded");
