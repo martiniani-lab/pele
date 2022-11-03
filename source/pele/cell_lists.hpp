@@ -18,7 +18,7 @@
 #include "queue.hpp"
 #include "vecn.hpp"
 
-namespace {
+namespace pele {
 
 // Type of each cell inside the cell list
 using cell_t = std::vector<long>;
