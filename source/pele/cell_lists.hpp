@@ -133,11 +133,13 @@ public:
   }
 };
 
+
+
 /**
  * Gets the cell scale for tests in c++. NOTE: this needs to be tested for all
  * cases
  */
-double get_ncellx_scale(pele::Array<double> radii, pele::Array<double> boxv,
+inline double get_ncellx_scale(pele::Array<double> radii, pele::Array<double> boxv,
                         size_t omp_threads) {
   double ndim = boxv.size();
   double ncellsx_max =

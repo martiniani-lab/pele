@@ -71,7 +71,7 @@ void setup() {
        3.06882116, 4.39044511, 0.13896376, 2.18348037, 4.77982869, 2.10023757,
        4.47459298, 3.10439728, 0.98086758, 2.15964188, 4.12669469, 4.27807298};
 
-  double ncellsx_scale = get_ncellx_scale(radii, boxvec, 1);
+  double ncellsx_scale = pele::get_ncellx_scale(radii, boxvec, 1);
   std::shared_ptr<pele::InversePowerPeriodicCellLists<_ndim>> potcell =
       std::make_shared<pele::InversePowerPeriodicCellLists<_ndim>>(
           power, eps, radii, boxvec, ncellsx_scale);
