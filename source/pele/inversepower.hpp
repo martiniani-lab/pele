@@ -1,7 +1,6 @@
 #ifndef _PELE_INVERSEPOWER_H
 #define _PELE_INVERSEPOWER_H
 
-
 #include <iostream>
 #include <memory>
 
@@ -44,10 +43,8 @@ namespace pele {
 struct InversePower_interaction : BaseInteraction {
   double const _eps;
   double const _pow;
-  double const _cutoff_factor_2;
 
-  InversePower_interaction(double pow, double eps)
-      : _eps(eps), _pow(pow) {}
+  InversePower_interaction(double pow, double eps) : _eps(eps), _pow(pow) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij) const {
@@ -99,11 +96,9 @@ struct InversePower_interaction : BaseInteraction {
 
 template <int POW> struct InverseIntPower_interaction : BaseInteraction {
   double const _eps;
-  double const _pow;  
+  double const _pow;
 
-  InverseIntPower_interaction(double eps)
-      : _eps(eps), _pow(POW)
-      {}
+  InverseIntPower_interaction(double eps) : _eps(eps), _pow(POW) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij) const {
