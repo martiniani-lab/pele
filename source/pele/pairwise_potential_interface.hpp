@@ -20,7 +20,39 @@ protected:
   const Array<double> m_radii;
   const double non_additivity;
 
-  // Data members for finding rattlers close to minima
+
+
+public:
+  PairwisePotentialInterface() : m_radii(0), non_additivity(0) {}
+  PairwisePotentialInterface(pele::Array<double> const &radii,
+                             double non_addivity = 0)
+      : m_radii(radii.copy()), non_additivity(non_addivity) {
+    if (radii.size() == 0) {
+      throw std::runtime_error(
+          "PairwisePotentialInterface: illegal input: radii");
+    }
+    const auto [min_radius_address, max_radius_address] = std::minmax_element(radii.begin(),
+                                                            radii.end());
+    size_t min_radius_index  = std::distance(radii.begin(), min_radius_address);
+    size_t max_radius_index  = std::distance(radii.begin(), max_radius_address);
+
+    auto dij = get_dij(min_radius_index,max_radius_index);
+
+    if (dij < 0) {
+      std::cout << "dij = " << dij << std::endl;
+      std::cout << "min_radius = " << m_radii[min_radius_index] << std::endl;
+      std::cout << "max_radius = " << m_radii[max_radius_index] << std::endl;
+      throw std::runtime_error(
+          "cutoff(dij) is negative");
+    }
+  }
+
+  virtual ~PairwisePotentialInterface() {}
+
+  /**
+   * Return the radii (if the interaction potential actually uses radii).
+   */
+  virtual pele::Array<double> get_radii() { return m_radii.copy(); }
 
   /*
    * Finds the interaction distance between two particles, i and j. defaults to
@@ -37,24 +69,6 @@ protected:
     }
   }
 
-public:
-  PairwisePotentialInterface() : m_radii(0), non_additivity(0) {}
-  PairwisePotentialInterface(pele::Array<double> const &radii,
-                             double non_addivity = 0)
-      : m_radii(radii.copy()), non_additivity(non_addivity) {
-    if (radii.size() == 0) {
-      throw std::runtime_error(
-          "PairwisePotentialInterface: illegal input: radii");
-    }
-  }
-
-  virtual ~PairwisePotentialInterface() {}
-
-  /**
-   * Return the radii (if the interaction potential actually uses radii).
-   */
-  virtual pele::Array<double> get_radii() { return m_radii.copy(); }
-
   /**
    * Return the number of dimensions (box dimensions).
    * Ideally this should be overloaded.
@@ -67,8 +81,8 @@ public:
   /**
    * Return the distance as measured by the distance policy.
    */
-  virtual inline void get_rij(double *const r_ij, double const *const r1,
-                              double const *const r2) const {
+  virtual inline void get_rij(double *const, double const *const,
+                              double const *const) const {
     throw std::runtime_error(
         "PairwisePotentialInterface::get_rij must be overloaded");
   }
@@ -76,9 +90,9 @@ public:
   /**
    * Return energy_gradient of interaction.
    */
-  virtual inline double get_interaction_energy_gradient(double r2, double *gij,
-                                                        size_t atom_i,
-                                                        size_t atom_j) const {
+  virtual inline double get_interaction_energy_gradient(double, double *,
+                                                        size_t,
+                                                        size_t) const {
     throw std::runtime_error("PairwisePotentialInterface::get_interaction_"
                              "energy_gradient must be overloaded");
   }
@@ -87,8 +101,8 @@ public:
    * Return gradient and Hessian of interaction.
    */
   virtual inline double
-  get_interaction_energy_gradient_hessian(double r2, double *gij, double *hij,
-                                          size_t atom_i, size_t atom_j) const {
+  get_interaction_energy_gradient_hessian(double, double *, double *,
+                                          size_t, size_t) const {
     throw std::runtime_error("PairwisePotentialInterface::get_interaction_"
                              "energy_gradient_hessian must be overloaded");
   }
@@ -97,10 +111,10 @@ public:
    * Return lists of neighbors considering only certain atoms.
    */
   virtual void get_neighbors_picky(
-      pele::Array<double> const &coords,
-      pele::Array<std::vector<size_t>> &neighbor_indss,
-      pele::Array<std::vector<std::vector<double>>> &neighbor_distss,
-      pele::Array<short> const &include_atoms,
+      pele::Array<double> const &,
+      pele::Array<std::vector<size_t>> &,
+      pele::Array<std::vector<std::vector<double>>> &,
+      pele::Array<short> const &,
       const double cutoff_factor = 1.0) {
     throw std::runtime_error(
         "PairwisePotentialInterface::get_neighbors_picky must be overloaded");

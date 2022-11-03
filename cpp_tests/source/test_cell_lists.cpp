@@ -1,3 +1,4 @@
+#include <cmath>
 #include <gtest/gtest.h>
 
 #include "pele/array.hpp"
@@ -18,9 +19,7 @@
 #include <stdexcept>
 #include <vector>
 
-using pele::Array;
-using pele::InversePower_interaction;
-using pele::InversePowerPeriodic;
+using namespace pele;
 
 static double const EPS = std::numeric_limits<double>::min();
 #define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
@@ -782,22 +781,22 @@ TEST_F(LatticeNeighborsTest, LargeRcut_Works) {
   std::set<size_t> s(neibs.begin(), neibs.end());
   ASSERT_EQ(neibs.size(), s.size());
 
-  std::vector<std::vector<std::array<std::vector<long> *, 2>>> pairs_inner(
+  std::vector<std::vector<std::array<std::vector<size_t> *, 2>>> pairs_inner(
       lattice.m_nsubdoms);
-  std::vector<std::vector<std::array<std::vector<long> *, 2>>> pairs_boundary(
+  std::vector<std::vector<std::array<std::vector<size_t> *, 2>>> pairs_boundary(
       lattice.m_nsubdoms);
-  std::vector<std::vector<std::vector<long>>> cells(lattice.m_nsubdoms);
+  std::vector<std::vector<std::vector<size_t>>> cells(lattice.m_nsubdoms);
   for (size_t isubdom = 0; isubdom < lattice.m_nsubdoms; isubdom++) {
-    cells[isubdom] = std::vector<std::vector<long>>(
+    cells[isubdom] = std::vector<std::vector<size_t>>(
         lattice.cell_vec_to_global_ind(ncells_vec) / lattice.m_nsubdoms);
   }
   size_t total_cells = 0;
   for (size_t subdom_ncell : lattice.m_subdom_ncells) {
     total_cells += subdom_ncell;
   }
-  std::vector<std::vector<std::vector<long> *>> cell_neighbors(total_cells);
-  for (std::vector<std::vector<long> *> neighbors : cell_neighbors) {
-    neighbors = std::vector<std::vector<long> *>();
+  std::vector<std::vector<std::vector<size_t> *>> cell_neighbors(total_cells);
+  for (std::vector<std::vector<size_t> *> neighbors : cell_neighbors) {
+    neighbors = std::vector<std::vector<size_t> *>();
   }
   lattice.find_neighbor_pairs(pairs_inner, pairs_boundary, cell_neighbors,
                               cells);
@@ -834,22 +833,22 @@ TEST_F(LatticeNeighborsTest, SmallRcut_Works2) {
   std::set<size_t> s(neibs.begin(), neibs.end());
   ASSERT_EQ(neibs.size(), s.size());
 
-  std::vector<std::vector<std::array<std::vector<long> *, 2>>> pairs_inner(
+  std::vector<std::vector<std::array<std::vector<size_t> *, 2>>> pairs_inner(
       lattice.m_nsubdoms);
-  std::vector<std::vector<std::array<std::vector<long> *, 2>>> pairs_boundary(
+  std::vector<std::vector<std::array<std::vector<size_t> *, 2>>> pairs_boundary(
       lattice.m_nsubdoms);
-  std::vector<std::vector<std::vector<long>>> cells(lattice.m_nsubdoms);
+  std::vector<std::vector<std::vector<size_t>>> cells(lattice.m_nsubdoms);
   for (size_t isubdom = 0; isubdom < lattice.m_nsubdoms; isubdom++) {
-    cells[isubdom] = std::vector<std::vector<long>>(
+    cells[isubdom] = std::vector<std::vector<size_t>>(
         lattice.cell_vec_to_global_ind(ncells_vec) / lattice.m_nsubdoms);
   }
   size_t total_cells = 0;
   for (size_t subdom_ncell : lattice.m_subdom_ncells) {
     total_cells += subdom_ncell;
   }
-  std::vector<std::vector<std::vector<long> *>> cell_neighbors(total_cells);
-  for (std::vector<std::vector<long> *> neighbors : cell_neighbors) {
-    neighbors = std::vector<std::vector<long> *>();
+  std::vector<std::vector<std::vector<size_t> *>> cell_neighbors(total_cells);
+  for (std::vector<std::vector<size_t> *> neighbors : cell_neighbors) {
+    neighbors = std::vector<std::vector<size_t> *>();
   }
   lattice.find_neighbor_pairs(pairs_inner, pairs_boundary, cell_neighbors,
                               cells);
@@ -1242,7 +1241,7 @@ public:
 };
 
 template <typename distance_policy>
-size_t get_neighbors(Array<double> &coords, std::vector<long> &iatoms,
+size_t get_neighbors(Array<double> &coords, std::vector<size_t> &iatoms,
                      std::vector<double> &old_coords,
                      pele::CellLists<distance_policy> &cl) {
   stupid_counter<distance_policy::_ndim> counter;
@@ -1255,9 +1254,9 @@ size_t get_neighbors(Array<double> &coords, std::vector<long> &iatoms,
 TEST_F(CellListsSpecificTest, Number_of_neighbors) {
   pele::CellLists<pele::periodic_distance<2>> cell(
       std::make_shared<pele::periodic_distance<2>>(boxvec), boxvec, rcut);
-  std::vector<long> iatoms(0);
+  std::vector<size_t> iatoms(0);
   std::vector<double> old_coords(0);
-  for (long i = 0; i < nparticles; ++i) {
+  for (size_t i = 0; i < nparticles; ++i) {
     iatoms.push_back(i);
     for (size_t idim = 0; idim < ndim; ++idim) {
       old_coords.push_back(x[i * ndim + idim]);
@@ -1275,7 +1274,7 @@ TEST_F(CellListsSpecificTest, Number_of_neighbors) {
 
 template <typename distance_policy>
 size_t
-get_overlaps(Array<double> const &coords, std::vector<long> const &iatoms,
+get_overlaps(Array<double> const &coords, std::vector<size_t> const &iatoms,
              std::vector<double> const &old_coords, Array<double> const &radii,
              pele::CellLists<distance_policy> &cl,
              std::shared_ptr<distance_policy> const &dist) {
@@ -1289,14 +1288,63 @@ get_overlaps(Array<double> const &coords, std::vector<long> const &iatoms,
 TEST_F(CellListsSpecificTest, Number_of_overlaps) {
   auto dist = std::make_shared<pele::periodic_distance<2>>(boxvec);
   pele::CellLists<pele::periodic_distance<2>> cell(dist, boxvec, rcut);
-  std::vector<long> iatoms(0);
+  std::vector<size_t> iatoms(0);
   std::vector<double> old_coords(0);
-  for (long i = 10; i < 40; ++i) {
+  for (size_t i = 10; i < 40; ++i) {
     iatoms.push_back(i);
     for (size_t idim = 0; idim < ndim; ++idim) {
       old_coords.push_back(x[i * ndim + idim]);
     }
     ASSERT_EQ(4 * (i - 9),
               get_overlaps(x, iatoms, old_coords, radii, cell, dist));
+  }
+}
+
+
+// Tests for neighbors with non additive potentials
+TEST(CellLists, NeighborsWithNonAdditivity) {
+
+  Array<double> radii = {1.0, 2.0};
+  Array<double> boxvec = {20., 20.}; // Make sure the periodicity of the box doesn't matter
+  double non_additivity = 0.2;
+  double machine_epsilon = std::numeric_limits<double>::epsilon();
+
+  double cutoff = (radii[0] + radii[1]) * (1. - 2*non_additivity*std::abs(radii[0] - radii[1]));
+
+  Array<double> overlapping_coords = {0., 0., 0., cutoff-machine_epsilon};
+  Array<double> non_overlapping_coords = {0., 0., 0., cutoff+machine_epsilon};
+
+
+  int pow = 2;
+  double eps = 1.0;
+  InversePowerPeriodicCellLists<2> potential = InversePowerPeriodicCellLists<2>(pow, eps, radii, boxvec, 1.0, false, non_additivity);
+
+
+  pele::Array<std::vector<size_t>> neighbor_indexes;
+  pele::Array<std::vector<std::vector<double>>> neighbor_displacements;
+
+
+  potential.get_neighbors(overlapping_coords, neighbor_indexes, neighbor_displacements);
+  ASSERT_EQ(neighbor_indexes.size(), 2);
+  ASSERT_EQ(neighbor_displacements.size(), 2);
+  for (auto neighbors : neighbor_indexes) {
+    ASSERT_EQ(neighbors.size(), 1);
+  }
+
+  for (auto displacements : neighbor_displacements) {
+    ASSERT_EQ(displacements.size(), 1);
+  }
+
+  potential.get_neighbors(non_overlapping_coords, neighbor_indexes, neighbor_displacements);
+
+
+  ASSERT_EQ(neighbor_indexes.size(), 2);
+  ASSERT_EQ(neighbor_displacements.size(), 2);
+  for (auto neighbors : neighbor_indexes) {
+    ASSERT_EQ(neighbors.size(), 0);
+  }
+
+  for (auto displacements : neighbor_displacements) {
+    ASSERT_EQ(displacements.size(), 0);
   }
 }

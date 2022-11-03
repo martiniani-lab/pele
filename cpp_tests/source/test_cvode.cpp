@@ -70,7 +70,7 @@ TEST(CVODE, IterativeDenseCheck) {
   omp_set_num_threads(1);
 #endif
   bool exact_sum = false;
-  double ncellsx_scale = get_ncellx_scale(radii, boxvec, 1);
+  double ncellsx_scale = pele::get_ncellx_scale(radii, boxvec, 1);
   // std::shared_ptr<pele::InversePowerPeriodicCellLists<_ndim> > potcell =
   // std::make_shared<pele::InversePowerPeriodicCellLists<_ndim>>(power, eps,o
   // radii, boxvec, ncellsx_scale);

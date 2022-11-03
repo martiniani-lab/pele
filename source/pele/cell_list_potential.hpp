@@ -7,6 +7,7 @@
 #include <math.h>
 #include <memory>
 #include <omp.h>
+#include <pele/base_potential.hpp>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -159,8 +160,7 @@ public:
       dij = m_radii[atom_i] + m_radii[atom_j];
     }
 #ifdef _OPENMP
-    *m_energies[isubdom] +=
-        m_interaction->energy_gradient(r2, &gij, dij);
+    *m_energies[isubdom] += m_interaction->energy_gradient(r2, &gij, dij);
 #else
     *m_energies[0] += m_interaction->energy_gradient(r2, &gij, dij);
 #endif
@@ -475,8 +475,7 @@ public:
       dij = m_radii[atom_i] + m_radii[atom_j];
     }
 #ifdef _OPENMP
-    xsum_large_add1(&(m_energies[isubdom]),
-                    m_interaction->energy(r2, dij));
+    xsum_large_add1(&(m_energies[isubdom]), m_interaction->energy(r2, dij));
 #else
     xsum_large_add1(&(m_energies[0]), m_interaction->energy(r2, dij));
 #endif
@@ -707,6 +706,8 @@ public:
  */
 template <typename pairwise_interaction, typename distance_policy>
 class NeighborAccumulator {
+  // BasePotential
+  PairwisePotentialInterface *m_pot;
   const static size_t m_ndim = distance_policy::_ndim;
   std::shared_ptr<pairwise_interaction> m_interaction;
   std::shared_ptr<distance_policy> m_dist;
@@ -716,18 +717,19 @@ class NeighborAccumulator {
   const pele::Array<short> m_include_atoms;
 
 public:
-  pele::Array<std::vector<size_t>> m_neighbor_indss;
-  pele::Array<std::vector<std::vector<double>>> m_neighbor_distss;
+  pele::Array<std::vector<size_t>> m_neighbor_indexes;
+  pele::Array<std::vector<std::vector<double>>> m_neighbor_displacements;
 
-  NeighborAccumulator(std::shared_ptr<pairwise_interaction> &interaction,
+  NeighborAccumulator(PairwisePotentialInterface *pot,
+                      std::shared_ptr<pairwise_interaction> &interaction,
                       std::shared_ptr<distance_policy> &dist,
                       pele::Array<double> const &coords,
                       pele::Array<double> const &radii, const double cutoff_sca,
                       pele::Array<short> const &include_atoms)
-      : m_interaction(interaction), m_dist(dist), m_coords(coords),
+      : m_pot(pot), m_interaction(interaction), m_dist(dist), m_coords(coords),
         m_radii(radii), m_cutoff_sca(cutoff_sca),
-        m_include_atoms(include_atoms), m_neighbor_indss(radii.size()),
-        m_neighbor_distss(radii.size()) {}
+        m_include_atoms(include_atoms), m_neighbor_indexes(radii.size()),
+        m_neighbor_displacements(radii.size()) {}
 
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
                         const size_t isubdom) {
@@ -743,14 +745,14 @@ public:
         r2 += dr[k] * dr[k];
         neg_dr[k] = -dr[k];
       }
-      const double dij = m_radii[atom_i] + m_radii[atom_j];
+      const double dij = m_pot->get_dij(atom_i, atom_j);
       const double r_S = m_cutoff_sca * dij;
       const double r_S2 = r_S * r_S;
       if (r2 <= r_S2) {
-        m_neighbor_indss[atom_i].push_back(atom_j);
-        m_neighbor_indss[atom_j].push_back(atom_i);
-        m_neighbor_distss[atom_i].push_back(dr);
-        m_neighbor_distss[atom_j].push_back(neg_dr);
+        m_neighbor_indexes[atom_i].push_back(atom_j);
+        m_neighbor_indexes[atom_j].push_back(atom_i);
+        m_neighbor_displacements[atom_i].push_back(dr);
+        m_neighbor_displacements[atom_j].push_back(neg_dr);
       }
     }
   }
@@ -849,7 +851,8 @@ public:
                     pele::Array<double> const &boxvec, double rcut,
                     double ncellx_scale, const pele::Array<double> radii,
                     const double radii_sca = 0.0, const bool balance_omp = true,
-                    const bool exact_sum = false, const double non_additivity = 0.0)
+                    const bool exact_sum = false,
+                    const double non_additivity = 0.0)
       : PairwisePotentialInterface(radii, non_additivity),
         m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
         m_interaction(interaction), m_dist(dist), m_radii_sca(radii_sca),
@@ -1122,19 +1125,19 @@ public:
 
   virtual void
   get_neighbors(pele::Array<double> const &coords,
-                pele::Array<std::vector<size_t>> &neighbor_indss,
-                pele::Array<std::vector<std::vector<double>>> &neighbor_distss,
+                pele::Array<std::vector<size_t>> &neighbor_indexes,
+                pele::Array<std::vector<std::vector<double>>> &neighbor_displacements,
                 const double cutoff_factor = 1.0) {
     const size_t natoms = coords.size() / m_ndim;
     pele::Array<short> include_atoms(natoms, 1);
-    get_neighbors_picky(coords, neighbor_indss, neighbor_distss, include_atoms,
+    get_neighbors_picky(coords, neighbor_indexes, neighbor_displacements, include_atoms,
                         cutoff_factor);
   }
 
   virtual void get_neighbors_picky(
       pele::Array<double> const &coords,
-      pele::Array<std::vector<size_t>> &neighbor_indss,
-      pele::Array<std::vector<std::vector<double>>> &neighbor_distss,
+      pele::Array<std::vector<size_t>> &neighbor_indexes,
+      pele::Array<std::vector<std::vector<double>>> &neighbor_displacements,
       pele::Array<short> const &include_atoms,
       const double cutoff_factor = 1.0) {
     const size_t natoms = coords.size() / m_ndim;
@@ -1158,14 +1161,14 @@ public:
 
     update_iterator(coords);
     NeighborAccumulator<pairwise_interaction, distance_policy> accumulator(
-        m_interaction, m_dist, coords, m_radii,
+        this, m_interaction, m_dist, coords, m_radii,
         (1 + m_radii_sca) * cutoff_factor, include_atoms);
     auto looper = m_cell_lists.get_atom_pair_looper(accumulator);
 
     looper.loop_through_atom_pairs();
 
-    neighbor_indss = accumulator.m_neighbor_indss;
-    neighbor_distss = accumulator.m_neighbor_distss;
+    neighbor_indexes = accumulator.m_neighbor_indexes;
+    neighbor_displacements = accumulator.m_neighbor_displacements;
   }
 
   virtual std::vector<size_t> get_overlaps(Array<double> const &coords) {

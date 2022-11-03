@@ -52,8 +52,8 @@ TEST(CombinedPotential, TestEnergyGradientHessianWithoutCellLists) {
 
   boxvec = {box_length, box_length};
   bool exact_sum = false;
-  double ncellsx_scale_a = get_ncellx_scale(radii_a, boxvec, 1);
-  double ncellsx_scale_b = get_ncellx_scale(radii_a, boxvec, 1);
+  double ncellsx_scale_a = pele::get_ncellx_scale(radii_a, boxvec, 1);
+  double ncellsx_scale_b = pele::get_ncellx_scale(radii_a, boxvec, 1);
 
   x = pele::generate_random_coordinates(box_length, n_particles, dim);
 
@@ -143,8 +143,8 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
 
   boxvec = {box_length, box_length};
   bool exact_sum = false;
-  double ncellsx_scale_a = get_ncellx_scale(radii_a, boxvec, 1);
-  double ncellsx_scale_b = get_ncellx_scale(radii_a, boxvec, 1);
+  double ncellsx_scale_a = pele::get_ncellx_scale(radii_a, boxvec, 1);
+  double ncellsx_scale_b = pele::get_ncellx_scale(radii_a, boxvec, 1);
 
   x = pele::generate_random_coordinates(box_length, n_particles, dim);
 
@@ -278,8 +278,8 @@ TEST(ExtendedPotential, WithCellLists) {
 
   boxvec = {box_length, box_length};
   bool exact_sum = false;
-  double ncellsx_scale_a = get_ncellx_scale(radii_a, boxvec, 1);
-  double ncellsx_scale_b = get_ncellx_scale(radii_a, boxvec, 1);
+  double ncellsx_scale_a = pele::get_ncellx_scale(radii_a, boxvec, 1);
+  double ncellsx_scale_b = pele::get_ncellx_scale(radii_a, boxvec, 1);
 
   x = pele::generate_random_coordinates(box_length, n_particles, dim);
 

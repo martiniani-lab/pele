@@ -18,10 +18,10 @@
 #include "queue.hpp"
 #include "vecn.hpp"
 
-namespace {
+namespace pele {
 
 // Type of each cell inside the cell list
-using cell_t = std::vector<long>;
+using cell_t = std::vector<size_t>;
 
 /**
  * container for the cell lists
@@ -106,7 +106,7 @@ public:
   /**
    * add an atom to a cell
    */
-  inline void add_atom_to_cell(const long iatom, const size_t icell,
+  inline void add_atom_to_cell(const size_t iatom, const size_t icell,
                                const size_t isubdom) {
     m_cell_atoms[isubdom][icell].push_back(iatom);
   }
@@ -133,11 +133,13 @@ public:
   }
 };
 
+
+
 /**
  * Gets the cell scale for tests in c++. NOTE: this needs to be tested for all
  * cases
  */
-double get_ncellx_scale(pele::Array<double> radii, pele::Array<double> boxv,
+inline double get_ncellx_scale(pele::Array<double> radii, pele::Array<double> boxv,
                         size_t omp_threads) {
   double ndim = boxv.size();
   double ncellsx_max =
@@ -655,7 +657,7 @@ protected:
   }
 
   virtual void loop_cell_pairs_specific(std::vector<size_t> const &icells,
-                                        std::vector<long> const &iatoms) {
+                                        std::vector<size_t> const &iatoms) {
     for (size_t i = 0; i < icells.size(); ++i) {
       size_t isubdom = m_lattice_tool.get_subdomain(icells[i]);
       for (cell_t *jcell : m_container.m_cell_neighbors[icells[i]]) {
@@ -697,7 +699,7 @@ public:
   }
 
   void loop_through_atom_pairs_specific(pele::Array<double> const &coords,
-                                        std::vector<long> const &iatoms) {
+                                        std::vector<size_t> const &iatoms) {
     std::vector<size_t> icells = std::vector<size_t>(iatoms.size());
     for (size_t i = 0; i < iatoms.size(); ++i) {
       m_lattice_tool.position_to_global_ind(coords.data() + m_ndim * iatoms[i],
@@ -724,7 +726,7 @@ protected:
   bool m_initialized; // flag for whether the cell lists have been initialized
                       // with coordinates
   pele::LatticeNeighbors<distance_policy> m_lattice_tool;
-  std::vector<SafePushQueue<std::array<long, 2>>> add_atom_queue;
+  std::vector<SafePushQueue<std::array<size_t, 2>>> add_atom_queue;
 
   /**
    * m_container is the class which hold the actual cell lists
@@ -786,7 +788,7 @@ public:
    */
   void update(pele::Array<double> const &coords);
   void update_specific(pele::Array<double> const &coords,
-                       std::vector<long> const &iatoms,
+                       std::vector<size_t> const &iatoms,
                        std::vector<double> const &old_coords);
 
 protected:
@@ -795,7 +797,7 @@ protected:
   void reset_container(pele::Array<double> const &coords);
   void update_container(pele::Array<double> const &coords);
   void update_container_specific(pele::Array<double> const &coords,
-                                 std::vector<long> const &iatoms,
+                                 std::vector<size_t> const &iatoms,
                                  std::vector<double> const &old_coords);
 
 private:
@@ -920,7 +922,7 @@ void CellLists<distance_policy>::update(pele::Array<double> const &coords) {
  */
 template <typename distance_policy>
 void CellLists<distance_policy>::update_specific(
-    pele::Array<double> const &coords, std::vector<long> const &iatoms,
+    pele::Array<double> const &coords, std::vector<size_t> const &iatoms,
     std::vector<double> const &old_coords) {
   if (m_initialized) {
     update_container_specific(coords, iatoms, old_coords);
@@ -954,7 +956,7 @@ void CellLists<distance_policy>::reset_container(
   const size_t natoms = coords.size() / m_ndim;
   // std::cout << "CellLists: resetting container with " << natoms << "
   // atoms\n";
-  for (long iatom = 0; iatom < natoms; ++iatom) {
+  for (size_t iatom = 0; iatom < natoms; ++iatom) {
     const double *const x = coords.data() + m_ndim * iatom;
     size_t icell, isubdom;
     m_lattice_tool.position_to_local_ind(x, icell, isubdom);
@@ -976,7 +978,7 @@ void CellLists<distance_policy>::update_container(
          ++icell) {
       size_t atom_nr = 0;
       while (atom_nr < m_container.m_cell_atoms[isubdom][icell].size()) {
-        long iatom = m_container.m_cell_atoms[isubdom][icell][atom_nr];
+        size_t iatom = m_container.m_cell_atoms[isubdom][icell][atom_nr];
         const double *const new_x = coords.data() + m_ndim * iatom;
         size_t new_cell, new_subdom;
         m_lattice_tool.position_to_local_ind(new_x, new_cell, new_subdom);
@@ -985,7 +987,7 @@ void CellLists<distance_policy>::update_container(
           if (isubdom == new_subdom) {
             m_container.add_atom_to_cell(iatom, new_cell, isubdom);
           } else {
-            std::array<long, 2> add_info = {iatom, new_cell};
+            std::array<size_t, 2> add_info = {iatom, new_cell};
             add_atom_queue[new_subdom].push(add_info);
           }
         } else {
@@ -1008,7 +1010,7 @@ void CellLists<distance_policy>::update_container(
          ++icell) {
       size_t atom_nr = 0;
       while (atom_nr < m_container.m_cell_atoms[isubdom][icell].size()) {
-        long iatom = m_container.m_cell_atoms[isubdom][icell][atom_nr];
+        size_t iatom = m_container.m_cell_atoms[isubdom][icell][atom_nr];
         const double *const new_x = coords.data() + m_ndim * iatom;
         size_t new_cell, new_subdom;
         m_lattice_tool.position_to_local_ind(new_x, new_cell, new_subdom);
@@ -1029,7 +1031,7 @@ void CellLists<distance_policy>::update_container(
  */
 template <typename distance_policy>
 void CellLists<distance_policy>::update_container_specific(
-    pele::Array<double> const &coords, std::vector<long> const &iatoms,
+    pele::Array<double> const &coords, std::vector<size_t> const &iatoms,
     std::vector<double> const &old_coords) {
   for (size_t iatom = 0; iatom < iatoms.size(); iatom++) {
     size_t old_cell, old_subdom;

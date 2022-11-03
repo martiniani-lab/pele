@@ -101,7 +101,7 @@ TEST(EXTENDED_MXD, TEST_256_RUN_DENSE) {
   omp_set_num_threads(1);
 #endif
 
-  double ncellsx_scale = get_ncellx_scale(radii, boxvec, 1);
+  double ncellsx_scale = pele::get_ncellx_scale(radii, boxvec, 1);
   // std::shared_ptr<pele::InversePowerPeriodicCellLists<_ndim>> potcell =
   //     std::make_shared<pele::InversePowerPeriodicCellLists<_ndim>>(
   //         power, eps, radii, boxvec, ncellsx_scale);
@@ -210,7 +210,7 @@ TEST(EXTENDED_MXD, TEST_256_RUN_ITERATIVE) {
   omp_set_num_threads(1);
 #endif
 
-  double ncellsx_scale = get_ncellx_scale(radii, boxvec, 1);
+  double ncellsx_scale = pele::get_ncellx_scale(radii, boxvec, 1);
   // std::shared_ptr<pele::InversePowerPeriodicCellLists<_ndim>> potcell =
   //     std::make_shared<pele::InversePowerPeriodicCellLists<_ndim>>(
   //         power, eps, radii, boxvec, ncellsx_scale);
