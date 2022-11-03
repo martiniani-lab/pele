@@ -1,3 +1,4 @@
+#include <cmath>
 #include <gtest/gtest.h>
 
 #include "pele/array.hpp"
@@ -18,9 +19,7 @@
 #include <stdexcept>
 #include <vector>
 
-using pele::Array;
-using pele::InversePower_interaction;
-using pele::InversePowerPeriodic;
+using namespace pele;
 
 static double const EPS = std::numeric_limits<double>::min();
 #define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
@@ -1298,5 +1297,54 @@ TEST_F(CellListsSpecificTest, Number_of_overlaps) {
     }
     ASSERT_EQ(4 * (i - 9),
               get_overlaps(x, iatoms, old_coords, radii, cell, dist));
+  }
+}
+
+
+// Tests for neighbors with non additive potentials
+TEST(CellLists, NeighborsWithNonAdditivity) {
+
+  Array<double> radii = {1.0, 2.0};
+  Array<double> boxvec = {20., 20.}; // Make sure the periodicity of the box doesn't matter
+  double non_additivity = 0.2;
+  double machine_epsilon = std::numeric_limits<double>::epsilon();
+
+  double cutoff = (radii[0] + radii[1]) * (1. - 2*non_additivity*std::abs(radii[0] - radii[1]));
+
+  Array<double> overlapping_coords = {0., 0., 0., cutoff-machine_epsilon};
+  Array<double> non_overlapping_coords = {0., 0., 0., cutoff+machine_epsilon};
+
+
+  int pow = 2;
+  double eps = 1.0;
+  InversePowerPeriodicCellLists<2> potential = InversePowerPeriodicCellLists<2>(pow, eps, radii, boxvec, 1.0, false, non_additivity);
+
+
+  pele::Array<std::vector<size_t>> neighbor_indexes;
+  pele::Array<std::vector<std::vector<double>>> neighbor_displacements;
+
+
+  potential.get_neighbors(overlapping_coords, neighbor_indexes, neighbor_displacements);
+  ASSERT_EQ(neighbor_indexes.size(), 2);
+  ASSERT_EQ(neighbor_displacements.size(), 2);
+  for (auto neighbors : neighbor_indexes) {
+    ASSERT_EQ(neighbors.size(), 1);
+  }
+
+  for (auto displacements : neighbor_displacements) {
+    ASSERT_EQ(displacements.size(), 1);
+  }
+
+  potential.get_neighbors(non_overlapping_coords, neighbor_indexes, neighbor_displacements);
+
+
+  ASSERT_EQ(neighbor_indexes.size(), 2);
+  ASSERT_EQ(neighbor_displacements.size(), 2);
+  for (auto neighbors : neighbor_indexes) {
+    ASSERT_EQ(neighbors.size(), 0);
+  }
+
+  for (auto displacements : neighbor_displacements) {
+    ASSERT_EQ(displacements.size(), 0);
   }
 }
