@@ -31,6 +31,20 @@ public:
       throw std::runtime_error(
           "PairwisePotentialInterface: illegal input: radii");
     }
+    const auto [min_radius_address, max_radius_address] = std::minmax_element(radii.begin(),
+                                                            radii.end());
+    size_t min_radius_index  = std::distance(radii.begin(), min_radius_address);
+    size_t max_radius_index  = std::distance(radii.begin(), max_radius_address);
+
+    auto dij = get_dij(min_radius_index,max_radius_index);
+
+    if (dij < 0) {
+      std::cout << "dij = " << dij << std::endl;
+      std::cout << "min_radius = " << m_radii[min_radius_index] << std::endl;
+      std::cout << "max_radius = " << m_radii[max_radius_index] << std::endl;
+      throw std::runtime_error(
+          "cutoff(dij) is negative");
+    }
   }
 
   virtual ~PairwisePotentialInterface() {}
