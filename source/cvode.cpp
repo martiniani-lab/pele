@@ -35,7 +35,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     HessianType hessian_type, bool use_newton_stop_criterion)
     : GradientOptimizer(potential, x0, tol), N_size(x0.size()), rtol_(rtol),
       atol_(atol), hessian_type_(hessian_type), hessian(x0.size(), x0.size()),
-      t0(0), tN(10000000.0), ret(0),
+      t0(0), tN(1.0), ret(0),
       use_newton_stop_criterion_(use_newton_stop_criterion) {
   setup_cvode();
 };
