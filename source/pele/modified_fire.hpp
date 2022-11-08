@@ -5,6 +5,7 @@
 #include "base_potential.hpp"
 #include "optimizer.hpp"
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <ostream>
 #include <stdexcept>
@@ -58,6 +59,7 @@ private:
 #if PRINT_TO_FILE == 1
   std::ofstream trajectory_file;
   std::ofstream time_file;
+  std::ofstream gradient_file;
 #endif
 
 public:
@@ -119,7 +121,7 @@ inline void MODIFIED_FIRE::reset(Array<double> &x0) {
   }
   _ifnorm = 1. / norm(g_);
   _vnorm = norm(_v);
-  rms_ = 1. / (_ifnorm * sqrt(_N));
+  gradient_norm_ = 1. / (_ifnorm * sqrt(_N));
 }
 
 inline void MODIFIED_FIRE::_VelocityVerlet_integration() {
@@ -212,7 +214,7 @@ inline void MODIFIED_FIRE::one_iteration() {
 
     _ifnorm = 1. / norm(g_);
     _vnorm = norm(_v);
-    rms_ = 1. / (_ifnorm * sqrt(_N)); // update rms
+    gradient_norm_ = 1. / (_ifnorm * sqrt(_N)); // update rms
   } else {
     _dt *= _fdec;
     _a = _astart;
@@ -237,12 +239,13 @@ inline void MODIFIED_FIRE::one_iteration() {
   if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {
     std::cout << "fire: " << iter_number_ << " fire_iter_number "
               << _fire_iter_number << " dt " << _dt << " a " << _a << " P " << P
-              << " vnorm " << _vnorm << " E " << f_ << " rms " << rms_
+              << " vnorm " << _vnorm << " E " << f_ << " rms " << gradient_norm_
               << " nfev " << nfev_ << "\n";
   }
 #if PRINT_TO_FILE == 1
   trajectory_file << std::setprecision(17) << x_;
   time_file << std::setprecision(17) << t << std::endl;
+  gradient_file << std::setprecision(17) << g_;
 #endif
 }
 

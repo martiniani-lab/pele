@@ -91,7 +91,7 @@ private:
   std::ofstream trajectory_file;
   std::ofstream time_file;
   std::ofstream hessian_eigvals_file;
-  std::ofstream grad_file;
+  std::ofstream gradient_file;
   std::ofstream step_file;
   std::ofstream newton_step_file;
   std::ofstream lbfgs_m_1_step_file;

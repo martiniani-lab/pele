@@ -155,6 +155,7 @@ void CVODEBDFOptimizer::setup_cvode() {
   }
 #if PRINT_TO_FILE == 1
   trajectory_file.open("trajectory_cvode.txt");
+  gradient_file.open("gradient_cvode.txt");
   time_file.open("time_cvode.txt");
 #endif
 }
@@ -204,7 +205,8 @@ void CVODEBDFOptimizer::one_iteration() {
 
 #if PRINT_TO_FILE == 1
   trajectory_file << std::setprecision(17) << x_;
-  time_file << std::setprecision(17) << t0 << std::endl;
+  time_file << std::setprecision(17) << t0 << std::endl;\
+  gradient_file << std::setprecision(17) << g_;
 #endif
 }
 
@@ -239,7 +241,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
     return true;
   }
 
-  if (rms_ < tol_) {
+  if (gradient_norm_ < tol_) {
     if (use_newton_stop_criterion_) {
       if (iter_number_ % 100 == 0) {
         // Check with a more stringent hessian condition
@@ -286,7 +288,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
                 .matrix();
         if (newton_step.norm() < NEWTON_TOL) {
           std::cout << "converged in " << iter_number_ << " iterations\n";
-          std::cout << "rms = " << rms_ << "\n";
+          std::cout << "rms = " << gradient_norm_ << "\n";
           std::cout << "tol = " << tol_ << "\n";
           succeeded_ = true;
           return true;
@@ -298,7 +300,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
       }
     } else {
       std::cout << "converged in " << iter_number_ << " iterations\n";
-      std::cout << "rms = " << rms_ << "\n";
+      std::cout << "rms = " << gradient_norm_ << "\n";
       std::cout << "tol = " << tol_ << "\n";
       succeeded_ = true;
       return true;

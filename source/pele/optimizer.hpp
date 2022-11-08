@@ -92,7 +92,7 @@ protected:
   Array<double> x_; /**< The current coordinates */
   double f_;        /**< The current function value */
   Array<double> g_; /**< The current gradient */
-  double rms_;      /**< The root mean square of the gradient */
+  double gradient_norm_;      /**< The root mean square of the gradient */
 
   /**
    * This flag keeps track of whether the function and gradient have been
@@ -114,8 +114,8 @@ public:
                     const pele::Array<double> x0, double tol = 1e-4)
       : potential_(potential), tol_(tol), maxstep_(0.1), maxiter_(1000),
         iprint_(-1), verbosity_(0), iter_number_(0), nfev_(0), nhev_(0),
-        x_(x0.copy()), f_(0.), g_(x0.size()), rms_(1e10),
-        func_initialized_(false), last_step_failed_(false), succeeded_(false) {}
+        x_(x0.copy()), f_(0.), g_(x0.size()), gradient_norm_(1e10),
+        func_initialized_(false), last_step_failed_(false), succeeded_(false)  {}
 
   virtual ~GradientOptimizer() {}
 
@@ -157,7 +157,7 @@ public:
 
   void print_stats() {
     std::cout << "iter: " << iter_number_ << std::endl;
-    std::cout << " rms: " << rms_ << std::endl;
+    std::cout << " rms: " << gradient_norm_ << std::endl;
     std::cout << " nfev: " << nfev_ << std::endl;
     std::cout << " nhev: " << nhev_ << std::endl;
   }
@@ -182,7 +182,7 @@ public:
     // copy the function and gradient
     f_ = f;
     g_.assign(grad);
-    rms_ = norm(g_) / sqrt(g_.size());
+    gradient_norm_ = norm(g_) / sqrt(g_.size());
     func_initialized_ = true;
   }
 
@@ -198,7 +198,7 @@ public:
   inline void set_verbosity(int verbosity) { verbosity_ = verbosity; }
   // functions for accessing the internals for linesearches
   inline void set_f(double f_in) { f_ = f_in; }
-  inline void set_rms(double rms_in) { rms_ = rms_in; }
+  inline void set_rms(double rms_in) { gradient_norm_ = rms_in; }
   inline void set_potential(std::shared_ptr<pele::BasePotential> potential) {
     potential_ = potential;
   }
@@ -212,7 +212,7 @@ public:
   virtual inline Array<double> get_x() const { return x_; }
   inline Array<double> get_g() const { return g_; }
   inline double get_f() const { return f_; }
-  inline double get_rms() const { return rms_; }
+  inline double get_rms() const { return gradient_norm_; }
   inline int get_nfev() const { return nfev_; }
   inline int get_nhev() const { return nhev_; }
   inline int get_niter() const { return iter_number_; }
@@ -233,7 +233,7 @@ public:
     if (!func_initialized_) {
       initialize_func_gradient();
     }
-    if (rms_ <= tol_) {
+    if (gradient_norm_ <= tol_) {
       succeeded_ = true;
       return true;
     };
@@ -268,7 +268,7 @@ protected:
     // compute the func and gradient at the current locations
     // and store them
     compute_func_gradient(x_, f_, g_);
-    rms_ = norm(g_) / sqrt(x_.size());
+    gradient_norm_ = norm(g_) / sqrt(x_.size());
     func_initialized_ = true;
   }
 
@@ -291,6 +291,48 @@ public:
     return potential_->compute_norm(x);
   }
 };
+
+
+class ODEBasedOptimizer : public GradientOptimizer {
+
+private:
+
+bool save_trajectory_;
+double time_;
+
+// Need to include others
+std::vector<double> time_trajectory_;
+std::vector<double> gradient_norm_trajectory_;
+
+
+void update_trajectory() {
+    if (save_trajectory_) {
+        time_trajectory_.push_back(time_);
+        gradient_norm_trajectory_.push_back(gradient_norm_);
+    }
+}
+
+
+public:
+
+  ODEBasedOptimizer(std::shared_ptr<pele::BasePotential> potential,
+                    const pele::Array<double> x0, double tol = 1e-4, bool save_trajectory = false)
+      : GradientOptimizer(potential, x0, tol), save_trajectory_(save_trajectory), time_(0) {}
+
+
+  
+    
+  
+
+
+
+
+
+
+
+};
 } // namespace pele
+
+
 
 #endif

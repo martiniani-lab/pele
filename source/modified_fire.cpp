@@ -55,6 +55,7 @@ MODIFIED_FIRE::MODIFIED_FIRE(std::shared_ptr<pele::BasePotential> potential,
 #if PRINT_TO_FILE == 1
   trajectory_file.open("trajectory_modified_fire.txt");
   time_file.open("time_modified_fire.txt");
+  gradient_file.open("gradient_modified_fire.txt");
 #endif
 #if OPTIMIZER_DEBUG_LEVEL > 0
   std::cout << "MODIFIED_FIRE Constructed with parameters:\n";
@@ -85,7 +86,7 @@ void MODIFIED_FIRE::initialize_func_gradient() {
   }
   _ifnorm = 1. / norm(g_);
   _vnorm = norm(_v);
-  rms_ = 1. / (_ifnorm * sqrt(_N));
+  gradient_norm_ = 1. / (_ifnorm * sqrt(_N));
   func_initialized_ = true;
 }
 
@@ -108,7 +109,7 @@ void MODIFIED_FIRE::set_func_gradient(double f, Array<double> grad) {
   }
   _ifnorm = 1. / norm(g_);
   _vnorm = norm(_v);
-  rms_ = 1. / (_ifnorm * sqrt(_N));
+  gradient_norm_ = 1. / (_ifnorm * sqrt(_N));
   func_initialized_ = true;
 }
 } // namespace pele
