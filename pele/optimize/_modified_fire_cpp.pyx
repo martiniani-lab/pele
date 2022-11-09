@@ -74,6 +74,14 @@ cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
         self.events = events
         if self.events is None: 
             self.events = []
+        
+    def get_result(self):
+        cdef cppMODIFIED_FIRE* cppfire = <cppMODIFIED_FIRE*> self.thisptr.get()
+        result = super(_Cdef_MODIFIED_FIRE_CPP, self).get_result()
+        if self.save_trajectory:
+            result["time_trajectory"] = np.array(cppfire.get_time_trajectory())
+            result["gradient_norm_trajectory"] = np.array(cppfire.get_gradient_norm_trajectory())
+        return result
             
     def __reduce__(self):
         # energy, gradient and events are set to None, change if necessary later

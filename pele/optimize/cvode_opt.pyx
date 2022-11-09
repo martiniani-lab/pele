@@ -18,6 +18,8 @@ cimport cython
 from cpython cimport bool as cbool
 
 from libcpp cimport bool
+from libcpp.vector cimport vector
+
 
 cdef extern from "pele/cvode.hpp" namespace "pele":
     cpdef enum HessianType:
@@ -29,7 +31,8 @@ cdef extern from "pele/cvode.hpp" namespace "pele":
         cppCVODEBDFOptimizer(shared_ptr[_pele.cBasePotential], _pele.Array[double],
                              double, double, double, HessianType, bool, bool) except +
         double get_nhev() except +
-
+        vector[double] get_time_trajectory() except +
+        vector[double] get_gradient_norm_trajectory() except +
 
 cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
     """This class is the python interface for the c++ CVODEBDFOptimizer implementation
@@ -39,22 +42,26 @@ cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
     """
     cdef _pele.BasePotential pot
     cdef HessianType hess_type
+    cdef bool save_trajectory
     def __cinit__(self, potential, x0,  double tol=1e-4, double rtol = 1e-4, double atol = 1e-4, int nsteps=10000, HessianType hessian_type=HessianType.DENSE, bool use_newton_stop_criterion=False, bool save_trajectory=False):
         potential = as_cpp_potential(potential, verbose=True)
 
         self.pot = potential
+        self.save_trajectory = save_trajectory
         cdef np.ndarray[double, ndim=1] x0c = np.array(x0, dtype=float)
         hess_type = hessian_type
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppCVODEBDFOptimizer(self.pot.thisptr,
                              _pele.Array[double](<double*> x0c.data, x0c.size),
                                 tol, rtol, atol, hess_type, use_newton_stop_criterion, save_trajectory))
-        cdef cppCVODEBDFOptimizer* mxopt_ptr = <cppCVODEBDFOptimizer*> self.thisptr.get()
     
     def get_result(self):
-        cdef cppCVODEBDFOptimizer* mxopt_ptr = <cppCVODEBDFOptimizer*> self.thisptr.get()
+        cdef cppCVODEBDFOptimizer* cvode_ptr = <cppCVODEBDFOptimizer*> self.thisptr.get()
         res = super(_Cdef_CVODEBDFOptimizer_CPP, self).get_result()
-        res["nhev"] = float(mxopt_ptr.get_nhev())
+        res["nhev"] = float(cvode_ptr.get_nhev())
+        if self.save_trajectory:
+            res["time_trajectory"] = np.array(cvode_ptr.get_time_trajectory())
+            res["gradient_norm_trajectory"] = np.array(cvode_ptr.get_gradient_norm_trajectory())
         return res
     
     def __reduce__(self):
