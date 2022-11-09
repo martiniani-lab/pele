@@ -9,4 +9,4 @@ cdef extern from "pele/modified_fire.hpp" namespace "pele":
     cdef cppclass cppMODIFIED_FIRE "pele::MODIFIED_FIRE":
         cppMODIFIED_FIRE(shared_ptr[_pele.cBasePotential] , _pele.Array[double], 
                          double, double, double, size_t , double, double, 
-                         double, double, double, cbool) except +
+                         double, double, double, cbool, cbool) except +

@@ -325,6 +325,11 @@ protected:
     }
   }
 
+  std::vector<double> get_time_trajectory() { return time_trajectory_; }
+  std::vector<double> get_gradient_norm_trajectory() {
+    return gradient_norm_trajectory_;
+  }
+
 public:
   ODEBasedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                     const pele::Array<double> x0, double tol = 1e-4,

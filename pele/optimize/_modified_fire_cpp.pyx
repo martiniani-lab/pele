@@ -30,12 +30,13 @@ cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
     cdef int iprint
     cdef int nsteps
     cdef int verbosity
+    cdef bool save_trajectory
     
     
     
     def __cinit__(self, x0, potential, double dtstart = 0.1, double dtmax = 1, double maxstep=0.5, size_t Nmin=5, double finc=1.1, 
                    double fdec=0.5, double fa=0.99, double astart=0.1, double tol=1e-3, bool stepback = True, 
-                   int iprint=-1, energy=None, gradient=None, int nsteps=10000, int verbosity=0, events = None):
+                   int iprint=-1, energy=None, gradient=None, int nsteps=10000, int verbosity=0, events = None, save_trajectory=False):
         
         self.dtstart = dtstart
         self.dtmax = dtmax
@@ -50,6 +51,8 @@ cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
         self.iprint = iprint
         self.nsteps = nsteps
         self.verbosity = verbosity
+        self.save_trajectory = save_trajectory
+        
         potential = as_cpp_potential(potential, verbose=verbosity>0)
         
         cdef _pele.BasePotential pot = potential
@@ -57,7 +60,7 @@ cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
         self.x0 = x0c
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                         new cppMODIFIED_FIRE(pot.thisptr, _pele.Array[double](<double*> x0c.data, x0c.size),
-                                             dtstart, dtmax, maxstep, Nmin, finc, fdec, fa, astart, tol, stepback) )
+                                             dtstart, dtmax, maxstep, Nmin, finc, fdec, fa, astart, tol, stepback, save_trajectory))
         
         self.thisptr.get().set_max_iter(nsteps)
         self.thisptr.get().set_verbosity(verbosity)
