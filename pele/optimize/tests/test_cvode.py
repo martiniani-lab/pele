@@ -37,7 +37,7 @@ def test_cvode_compare_with_cpp(potential_initial_and_final_conditions):
     # check whether right minima is reached
     assert np.allclose(final_coords, expected_final_coordinates)
     # Expect steps to match with C++ results from test_cvode.cpp
-    assert res.nsteps == 363
+    assert res.nsteps == 387
     return True
 
 
