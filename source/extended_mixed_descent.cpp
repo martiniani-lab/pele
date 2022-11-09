@@ -228,7 +228,7 @@ void ExtendedMixedOptimizer::one_iteration() {
 
 #if OPTIMIZER_DEBUG_LEVEL >= 3
   std::cout << "mixed optimizer: " << iter_number_ << " E " << f_ << " n "
-            << rms_ << " nfev " << nfev_ << " nhev " << udata.nhev << std::endl;
+            << gradient_norm_ << " nfev " << nfev_ << " nhev " << udata.nhev << std::endl;
   std::cout << "optimizer position \n" << x_ << "\n";
   std::cout << "optimizer step \n" << step << "\n";
 #endif
@@ -358,7 +358,7 @@ void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
   // here we have to translate from ODE solver language to optimizer language.
   // this is because CVODE calculates the negative of the gradient.
   g_ = -udata.stored_grad;
-  rms_ = (norm(g_) / sqrt(x_.size()));
+  gradient_norm_ = (norm(g_) / sqrt(x_.size()));
   f_ = udata.stored_energy;
   step = xold - x_;
   n_phase_1_steps += 1;

@@ -194,7 +194,7 @@ void CVODEBDFOptimizer::one_iteration() {
   assert(N_VGetLength_Serial(x0_N) == x_.size());
   x_.assign(pele_eq_N_Vector(x0_N));
   g_.assign(udata.stored_grad);
-  rms_ = (norm(g_) / sqrt(x_.size()));
+  gradient_norm_ = (norm(g_) / sqrt(x_.size()));
   f_ = udata.stored_energy;
   nfev_ = udata.nfev;
   Array<double> step = xold - x_;

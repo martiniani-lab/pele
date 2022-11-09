@@ -43,7 +43,7 @@ void MixedDescentEndOnly::one_iteration() {
     _cvode_optimizer.one_iteration();
     Array<double> gradient = _cvode_optimizer.get_g();
     // use standard stopping criteria to figure out when to refine the step
-    rms_ = norm(gradient) / sqrt(gradient.size());
+    gradient_norm_ = norm(gradient) / sqrt(gradient.size());
     if (gradient_norm_ < _tol) {
       use_newton_step = true;
       _newton_optimizer.reset(_cvode_optimizer.get_x());

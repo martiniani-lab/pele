@@ -81,7 +81,7 @@ public:
     // print some status information
     if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {
       std::cout << "steepest descent: " << iter_number_ << " E " << f_
-                << " rms " << rms_ << " nfev " << nfev_ << " step norm "
+                << " rms " << gradient_norm_ << " nfev " << nfev_ << " step norm "
                 << stepnorm << std::endl;
     }
     iter_number_ += 1;

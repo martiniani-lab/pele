@@ -307,6 +307,8 @@ std::vector<double> gradient_norm_trajectory_;
 
 void update_trajectory() {
     if (save_trajectory_) {
+        // Basics for what we need at this point
+        // Maybe an optional saving mechanism for the trajectory helps
         time_trajectory_.push_back(time_);
         gradient_norm_trajectory_.push_back(gradient_norm_);
     }
@@ -314,21 +316,11 @@ void update_trajectory() {
 
 
 public:
-
   ODEBasedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                     const pele::Array<double> x0, double tol = 1e-4, bool save_trajectory = false)
       : GradientOptimizer(potential, x0, tol), save_trajectory_(save_trajectory), time_(0) {}
 
-
-  
-    
-  
-
-
-
-
-
-
+  virtual ~ODEBasedOptimizer() {}
 
 };
 } // namespace pele
