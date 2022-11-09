@@ -50,7 +50,7 @@ MODIFIED_FIRE::MODIFIED_FIRE(std::shared_ptr<pele::BasePotential> potential,
                         tol), // call GradientOptimizer constructor
       _dtstart(dtstart), _dt(dtstart), _dtmax(dtmax), _maxstep(maxstep),
       _Nmin(Nmin), _finc(finc), _fdec(fdec), _fa(fa), _astart(astart),
-      _a(astart), _fold(f_), _ifnorm(0), _vnorm(0), t(0), _v(x0.size(), 0),
+      _a(astart), _fold(f_), _ifnorm(0), _vnorm(0), _v(x0.size(), 0),
       _dx(x0.size()), _xold(x0.copy()), _gold(g_.copy()), _fire_iter_number(0),
       _N(x_.size()), _stepback(stepback) {
 #if PRINT_TO_FILE == 1

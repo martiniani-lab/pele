@@ -303,12 +303,13 @@ class ODEBasedOptimizer : public GradientOptimizer {
 private:
 
 bool save_trajectory_;
-double time_;
 
 // Need to include others
 std::vector<double> time_trajectory_;
 std::vector<double> gradient_norm_trajectory_;
 
+protected:
+double time_;
 
 void update_trajectory() {
     if (save_trajectory_) {

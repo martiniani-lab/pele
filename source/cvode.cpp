@@ -33,7 +33,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0, double tol, double rtol, double atol,
     HessianType hessian_type, bool use_newton_stop_criterion)
-    : ODEBasedOptimizer(potential, x0, tol), N_size(x0.size()), t0(0),
+    : ODEBasedOptimizer(potential, x0, tol), N_size(x0.size()),
       tN(1.0), ret(0), hessian(x0.size(), x0.size()),
       rtol_(rtol), atol_(atol), hessian_type_(hessian_type),
       use_newton_stop_criterion_(use_newton_stop_criterion) {
@@ -83,13 +83,12 @@ void CVODEBDFOptimizer::setup_cvode() {
     exit(1);
   }
 
-  // dummy t0
-  double t0 = 0;
+  time_ = 0;
   Array<double> x0copy = x_.copy();
   x0_N = N_Vector_eq_pele(x0copy, sunctx);
 
   // initialization of everything CVODE needs
-  ret = CVodeInit(cvode_mem, f, t0, x0_N);
+  ret = CVodeInit(cvode_mem, f, time_, x0_N);
   if (check_sundials_retval(&ret, "CVodeInit", 1)) {
     throw std::runtime_error("CVODE initialization failed");
   }
@@ -183,7 +182,7 @@ void CVODEBDFOptimizer::one_iteration() {
   /* advance solver just one internal step */
   Array<double> xold = x_.copy();
 
-  ret = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
+  ret = CVode(cvode_mem, tN, x0_N, &time_, CV_ONE_STEP);
 
   // if (check_sundials_retval(&ret, "CVode", 1)) {
   //   throw std::runtime_error("CVODE single step failed");
@@ -205,7 +204,7 @@ void CVODEBDFOptimizer::one_iteration() {
 
 #if PRINT_TO_FILE == 1
   trajectory_file << std::setprecision(17) << x_;
-  time_file << std::setprecision(17) << t0 << std::endl;\
+  time_file << std::setprecision(17) << time_ << std::endl;\
   gradient_file << std::setprecision(17) << g_;
 #endif
 }

@@ -78,7 +78,6 @@ private:
   size_t N_size;
   SUNMatrix A;
   SUNLinearSolver LS;
-  double t0;
   double tN;
   int ret;
   SUNContext sunctx; // SUNDIALS context

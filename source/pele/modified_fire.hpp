@@ -50,7 +50,7 @@ namespace pele {
 class MODIFIED_FIRE : public ODEBasedOptimizer {
 private:
   double _dtstart, _dt, _dtmax, _maxstep, _Nmin, _finc, _fdec, _fa, _astart, _a,
-      _fold, _ifnorm, _vnorm, t;
+      _fold, _ifnorm, _vnorm;
   pele::Array<double> _v, _dx, _xold, _gold;
   size_t _fire_iter_number, _N;
   bool _stepback;
@@ -110,7 +110,6 @@ inline void MODIFIED_FIRE::reset(Array<double> &x0) {
   nfev_ = 1;
   // fire specific
   _fire_iter_number = 0;
-  t = 0;
   _dt = _dtstart;
   _a = _astart;
   _fold = f_;
@@ -179,7 +178,7 @@ inline void MODIFIED_FIRE::one_iteration() {
 #if OPTIMIZER_DEBUG_LEVEL > 2
   std::cout << "func initialized" << func_initialized_ << std::endl;
 #endif
-  t += _dt;
+  time_ += _dt;
   if (!func_initialized_) {
     initialize_func_gradient();
   }
@@ -244,7 +243,7 @@ inline void MODIFIED_FIRE::one_iteration() {
   }
 #if PRINT_TO_FILE == 1
   trajectory_file << std::setprecision(17) << x_;
-  time_file << std::setprecision(17) << t << std::endl;
+  time_file << std::setprecision(17) << time_ << std::endl;
   gradient_file << std::setprecision(17) << g_;
 #endif
 }
