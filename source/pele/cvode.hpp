@@ -115,7 +115,7 @@ public:
                     const pele::Array<double> x0, double tol = 1e-5,
                     double rtol = 1e-5, double atol = 1e-5,
                     HessianType hessian_type = DENSE,
-                    bool use_newton_stop_criterion = false);
+                    bool use_newton_stop_criterion = false, bool save_trajectory=false);
 
   ~CVODEBDFOptimizer();
 

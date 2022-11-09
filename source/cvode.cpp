@@ -32,8 +32,8 @@ namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0, double tol, double rtol, double atol,
-    HessianType hessian_type, bool use_newton_stop_criterion)
-    : ODEBasedOptimizer(potential, x0, tol), N_size(x0.size()),
+    HessianType hessian_type, bool use_newton_stop_criterion, bool save_trajectory)
+    : ODEBasedOptimizer(potential, x0, tol, save_trajectory), N_size(x0.size()),
       tN(1.0), ret(0), hessian(x0.size(), x0.size()),
       rtol_(rtol), atol_(atol), hessian_type_(hessian_type),
       use_newton_stop_criterion_(use_newton_stop_criterion) {

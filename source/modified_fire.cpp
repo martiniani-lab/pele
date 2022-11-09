@@ -45,9 +45,9 @@ MODIFIED_FIRE::MODIFIED_FIRE(std::shared_ptr<pele::BasePotential> potential,
                              pele::Array<double> &x0, double dtstart,
                              double dtmax, double maxstep, size_t Nmin,
                              double finc, double fdec, double fa, double astart,
-                             double tol, bool stepback)
+                             double tol, bool stepback, bool save_trajectory)
     : ODEBasedOptimizer(potential, x0,
-                        tol), // call GradientOptimizer constructor
+                        tol, save_trajectory),
       _dtstart(dtstart), _dt(dtstart), _dtmax(dtmax), _maxstep(maxstep),
       _Nmin(Nmin), _finc(finc), _fdec(fdec), _fa(fa), _astart(astart),
       _a(astart), _fold(f_), _ifnorm(0), _vnorm(0), _v(x0.size(), 0),

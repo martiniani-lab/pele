@@ -70,7 +70,7 @@ public:
                 pele::Array<double> &x0, double dtstart, double dtmax,
                 double maxstep, size_t Nmin = 5, double finc = 1.1,
                 double fdec = 0.5, double fa = 0.99, double astart = 0.1,
-                double tol = 1e-4, bool stepback = true);
+                double tol = 1e-4, bool stepback = true, bool save_trajectory = false);
   /**
    * Destructor
    */
