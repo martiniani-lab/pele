@@ -11,6 +11,7 @@
 #include <math.h>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <vector>
 
 namespace pele {
@@ -89,10 +90,10 @@ protected:
   int nhev_;
 
   // variables representing the state of the system
-  Array<double> x_; /**< The current coordinates */
-  double f_;        /**< The current function value */
-  Array<double> g_; /**< The current gradient */
-  double gradient_norm_;      /**< The root mean square of the gradient */
+  Array<double> x_;      /**< The current coordinates */
+  double f_;             /**< The current function value */
+  Array<double> g_;      /**< The current gradient */
+  double gradient_norm_; /**< The root mean square of the gradient */
 
   /**
    * This flag keeps track of whether the function and gradient have been
@@ -109,13 +110,17 @@ protected:
 
   bool succeeded_; /**< Whether the optimization succeeded */
 
+  bool save_trajectory_; /**< Whether to save the trajectory */
+
 public:
   GradientOptimizer(std::shared_ptr<pele::BasePotential> potential,
-                    const pele::Array<double> x0, double tol = 1e-4)
+                    const pele::Array<double> x0, double tol = 1e-4,
+                    bool save_trajectory = false)
       : potential_(potential), tol_(tol), maxstep_(0.1), maxiter_(1000),
         iprint_(-1), verbosity_(0), iter_number_(0), nfev_(0), nhev_(0),
         x_(x0.copy()), f_(0.), g_(x0.size()), gradient_norm_(1e10),
-        func_initialized_(false), last_step_failed_(false), succeeded_(false)  {}
+        func_initialized_(false), last_step_failed_(false), succeeded_(false),
+        save_trajectory_(save_trajectory) {}
 
   virtual ~GradientOptimizer() {}
 
@@ -139,7 +144,7 @@ public:
    * Run the optimization algorithm until the stop criterion is satisfied or
    * until the maximum number of iterations is reached
    */
-  void run(int const niter) {
+  virtual void run(int const niter) {
     if (!func_initialized_) {
       // note: this needs to be both here and in one_iteration
       initialize_func_gradient();
@@ -148,10 +153,11 @@ public:
     // iterate until the stop criterion is satisfied or maximum number of
     // iterations is reached
     for (int i = 0; i < niter; ++i) {
-      if (stop_criterion_satisfied()) {
+      if (stop_criterion_satisfied())
         break;
-      }
       one_iteration();
+      if (save_trajectory_)
+        update_trajectory();
     }
   }
 
@@ -166,7 +172,7 @@ public:
    * Run the optimzation algorithm for niter iterations or until the
    * stop criterion is satisfied
    */
-  void run() { run(maxiter_ - iter_number_); }
+  virtual void run() { run(maxiter_ - iter_number_); }
   /**
    * Set the initial func and gradient.  This can be used
    * to avoid one potential call
@@ -272,6 +278,11 @@ protected:
     func_initialized_ = true;
   }
 
+  virtual void update_trajectory() {
+    throw std::runtime_error(
+        "GradientOptimizer::update_trajectory must be overloaded");
+  }
+
 public:
   /**
    * functions for LineSearch
@@ -292,44 +303,37 @@ public:
   }
 };
 
-
-
-
 /**
  * @brief Abstract base class for optimizers with a concept of time.
  */
 class ODEBasedOptimizer : public GradientOptimizer {
 
 private:
-
-bool save_trajectory_;
-
-// Need to include others
-std::vector<double> time_trajectory_;
-std::vector<double> gradient_norm_trajectory_;
+  // Need to include others
+  std::vector<double> time_trajectory_;
+  std::vector<double> gradient_norm_trajectory_;
 
 protected:
-double time_;
+  double time_;
 
-void update_trajectory() {
+  void update_trajectory() {
     if (save_trajectory_) {
-        // Basics for what we need at this point
-        // Maybe an optional saving mechanism for the trajectory helps
-        time_trajectory_.push_back(time_);
-        gradient_norm_trajectory_.push_back(gradient_norm_);
+      // Basics for what we need at this point
+      // Maybe an optional saving mechanism for the trajectory helps
+      time_trajectory_.push_back(time_);
+      gradient_norm_trajectory_.push_back(gradient_norm_);
     }
-}
-
+  }
 
 public:
   ODEBasedOptimizer(std::shared_ptr<pele::BasePotential> potential,
-                    const pele::Array<double> x0, double tol = 1e-4, bool save_trajectory = false)
-      : GradientOptimizer(potential, x0, tol), save_trajectory_(save_trajectory), time_(0) {}
+                    const pele::Array<double> x0, double tol = 1e-4,
+                    bool save_trajectory = false)
+      : GradientOptimizer(potential, x0, tol, save_trajectory), time_(0) {}
 
   virtual ~ODEBasedOptimizer() {}
 
-
-    // copy constructor raises exception that it's not implemented
+  // copy constructor raises exception that it's not implemented
   ODEBasedOptimizer(const ODEBasedOptimizer &) : GradientOptimizer() {
     throw std::runtime_error(
         "ODEBasedOptimizer copy constructor not implemented");
@@ -339,11 +343,7 @@ public:
     throw std::runtime_error("ODEBasedOptimizer default constructor not "
                              "implemented. Check derived class function calls");
   }
-
-
 };
 } // namespace pele
-
-
 
 #endif
