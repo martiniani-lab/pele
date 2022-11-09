@@ -52,6 +52,8 @@ cdef class GradientOptimizer(object):
             self.res = self.get_result()
         else:
             # we need to call python events after each iteration.
+            print("WARNING: Events called from python, \
+                this doesn't use the C++ run so there maybe missing functionality ")
             if niter is None:
                 niter = self.get_maxiter() - self.get_niter()
             success = False
@@ -59,7 +61,7 @@ cdef class GradientOptimizer(object):
                 # ensure that one iteration always runs
                 # so that res is set
                 niter = 1
-            for i in xrange(niter):
+            for i in range(niter):
                 self.res = self.one_iteration()
                 success = self.stop_criterion_satisfied()
                 if success:
