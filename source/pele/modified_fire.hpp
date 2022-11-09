@@ -47,7 +47,7 @@ namespace pele {
  *
  */
 
-class MODIFIED_FIRE : public GradientOptimizer {
+class MODIFIED_FIRE : public ODEBasedOptimizer {
 private:
   double _dtstart, _dt, _dtmax, _maxstep, _Nmin, _finc, _fdec, _fa, _astart, _a,
       _fold, _ifnorm, _vnorm, t;

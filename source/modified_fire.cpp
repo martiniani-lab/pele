@@ -1,4 +1,5 @@
 #include "pele/modified_fire.hpp"
+#include <pele/optimizer.hpp>
 
 using std::cout;
 using std::vector;
@@ -45,7 +46,7 @@ MODIFIED_FIRE::MODIFIED_FIRE(std::shared_ptr<pele::BasePotential> potential,
                              double dtmax, double maxstep, size_t Nmin,
                              double finc, double fdec, double fa, double astart,
                              double tol, bool stepback)
-    : GradientOptimizer(potential, x0,
+    : ODEBasedOptimizer(potential, x0,
                         tol), // call GradientOptimizer constructor
       _dtstart(dtstart), _dt(dtstart), _dtmax(dtmax), _maxstep(maxstep),
       _Nmin(Nmin), _finc(finc), _fdec(fdec), _fa(fa), _astart(astart),

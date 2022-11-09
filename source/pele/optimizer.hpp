@@ -293,6 +293,11 @@ public:
 };
 
 
+
+
+/**
+ * @brief Abstract base class for optimizers with a concept of time.
+ */
 class ODEBasedOptimizer : public GradientOptimizer {
 
 private:
@@ -321,6 +326,19 @@ public:
       : GradientOptimizer(potential, x0, tol), save_trajectory_(save_trajectory), time_(0) {}
 
   virtual ~ODEBasedOptimizer() {}
+
+
+    // copy constructor raises exception that it's not implemented
+  ODEBasedOptimizer(const ODEBasedOptimizer &) : GradientOptimizer() {
+    throw std::runtime_error(
+        "ODEBasedOptimizer copy constructor not implemented");
+  }
+
+  ODEBasedOptimizer() : GradientOptimizer() {
+    throw std::runtime_error("ODEBasedOptimizer default constructor not "
+                             "implemented. Check derived class function calls");
+  }
+
 
 };
 } // namespace pele

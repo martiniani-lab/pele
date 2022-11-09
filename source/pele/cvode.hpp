@@ -71,7 +71,7 @@ typedef struct UserData_ {
  * Not exactly an optimizer but solves for the differential equation $ dx/dt = -
  * \grad{V(x)} $ to arrive at the trajectory to the corresponding minimum
  */
-class CVODEBDFOptimizer : public GradientOptimizer {
+class CVODEBDFOptimizer : public ODEBasedOptimizer {
 private:
   UserData_ udata;
   void *cvode_mem; /* CVODE memory         */
@@ -121,7 +121,7 @@ public:
   ~CVODEBDFOptimizer();
 
   // Copy Constructor (raises a not implemented exception)
-  CVODEBDFOptimizer(const CVODEBDFOptimizer &other) : GradientOptimizer() {
+  CVODEBDFOptimizer(const CVODEBDFOptimizer &) : ODEBasedOptimizer() {
     throw std::runtime_error("CVODEBDFOptimizer is not implemented");
   };
 
