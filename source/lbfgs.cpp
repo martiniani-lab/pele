@@ -46,7 +46,7 @@ void LBFGS::one_iteration() {
 
   // print some status information
   if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {
-    std::cout << "lbgs: " << iter_number_ << " E " << f_ << " rms " << rms_
+    std::cout << "lbgs: " << iter_number_ << " E " << f_ << " rms " << gradient_norm_
               << " nfev " << nfev_ << " step norm " << stepnorm << std::endl;
   }
   iter_number_ += 1;
@@ -214,7 +214,7 @@ double LBFGS::backtracking_linesearch(Array<double> step) {
   }
 
   f_ = fnew;
-  rms_ = norm(g_) * inv_sqrt_size;
+  gradient_norm_ = norm(g_) * inv_sqrt_size;
   return stepnorm * factor;
 }
 

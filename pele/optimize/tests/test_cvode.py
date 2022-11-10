@@ -30,6 +30,7 @@ def test_cvode_compare_with_cpp(potential_initial_and_final_conditions):
         tol=1e-9,
         hessian_type=HessianType.DENSE,
         use_newton_stop_criterion=False,
+        save_trajectory=True,
     )
     res = cvode_optimizer.run(10000)
     final_coords = res.coords
@@ -37,7 +38,10 @@ def test_cvode_compare_with_cpp(potential_initial_and_final_conditions):
     # check whether right minima is reached
     assert np.allclose(final_coords, expected_final_coordinates)
     # Expect steps to match with C++ results from test_cvode.cpp
-    assert res.nsteps == 363
+    N_CVODE_CPP_STEPS = 387
+    assert res.nsteps == N_CVODE_CPP_STEPS
+    assert len(res.time_trajectory) == res.nsteps
+    assert len(res.gradient_norm_trajectory) == res.nsteps
     return True
 
 
@@ -59,6 +63,7 @@ def test_iterative_works_cvode(potential_initial_and_final_conditions):
         tol=1e-9,
         hessian_type=HessianType.ITERATIVE,
         use_newton_stop_criterion=True,
+        save_trajectory=True,
     )
     res = cvode_optimizer.run(10000)
     print(res)
@@ -67,4 +72,6 @@ def test_iterative_works_cvode(potential_initial_and_final_conditions):
     # check whether right minima is reached
     assert np.allclose(final_coords, expected_final_coordinates)
     # Expect steps to match with C++ results from test_cvode.cpp
+    assert len(res.time_trajectory) == res.nsteps
+    assert len(res.gradient_norm_trajectory) == res.nsteps
     return True

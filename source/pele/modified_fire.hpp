@@ -5,6 +5,7 @@
 #include "base_potential.hpp"
 #include "optimizer.hpp"
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <ostream>
 #include <stdexcept>
@@ -46,7 +47,7 @@ namespace pele {
  *
  */
 
-class MODIFIED_FIRE : public GradientOptimizer {
+class MODIFIED_FIRE : public ODEBasedOptimizer {
 private:
   double _dtstart, _dt, _dtmax, _maxstep, _Nmin, _finc, _fdec, _fa, _astart, _a,
       _fold, _ifnorm, _vnorm;
@@ -57,6 +58,8 @@ private:
   inline void _VelocityVerlet_integration();
 #if PRINT_TO_FILE == 1
   std::ofstream trajectory_file;
+  std::ofstream time_file;
+  std::ofstream gradient_file;
 #endif
 
 public:
@@ -67,7 +70,7 @@ public:
                 pele::Array<double> &x0, double dtstart, double dtmax,
                 double maxstep, size_t Nmin = 5, double finc = 1.1,
                 double fdec = 0.5, double fa = 0.99, double astart = 0.1,
-                double tol = 1e-4, bool stepback = true);
+                double tol = 1e-4, bool stepback = true, bool save_trajectory = false);
   /**
    * Destructor
    */
@@ -117,7 +120,7 @@ inline void MODIFIED_FIRE::reset(Array<double> &x0) {
   }
   _ifnorm = 1. / norm(g_);
   _vnorm = norm(_v);
-  rms_ = 1. / (_ifnorm * sqrt(_N));
+  gradient_norm_ = 1. / (_ifnorm * sqrt(_N));
 }
 
 inline void MODIFIED_FIRE::_VelocityVerlet_integration() {
@@ -175,6 +178,7 @@ inline void MODIFIED_FIRE::one_iteration() {
 #if OPTIMIZER_DEBUG_LEVEL > 2
   std::cout << "func initialized" << func_initialized_ << std::endl;
 #endif
+  time_ += _dt;
   if (!func_initialized_) {
     initialize_func_gradient();
   }
@@ -209,7 +213,7 @@ inline void MODIFIED_FIRE::one_iteration() {
 
     _ifnorm = 1. / norm(g_);
     _vnorm = norm(_v);
-    rms_ = 1. / (_ifnorm * sqrt(_N)); // update rms
+    gradient_norm_ = 1. / (_ifnorm * sqrt(_N)); // update rms
   } else {
     _dt *= _fdec;
     _a = _astart;
@@ -234,11 +238,13 @@ inline void MODIFIED_FIRE::one_iteration() {
   if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {
     std::cout << "fire: " << iter_number_ << " fire_iter_number "
               << _fire_iter_number << " dt " << _dt << " a " << _a << " P " << P
-              << " vnorm " << _vnorm << " E " << f_ << " rms " << rms_
+              << " vnorm " << _vnorm << " E " << f_ << " rms " << gradient_norm_
               << " nfev " << nfev_ << "\n";
   }
 #if PRINT_TO_FILE == 1
   trajectory_file << std::setprecision(17) << x_;
+  time_file << std::setprecision(17) << time_ << std::endl;
+  gradient_file << std::setprecision(17) << g_;
 #endif
 }
 

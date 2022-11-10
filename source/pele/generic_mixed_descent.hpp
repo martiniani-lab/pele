@@ -93,7 +93,7 @@ public:
       x_.assign(opt_convex_->get_x());
       g_.assign(opt_convex_->get_g());
     }
-    if (rms_ <= tol_) {
+    if (gradient_norm_ <= tol_) {
       return true;
     }
     return false;

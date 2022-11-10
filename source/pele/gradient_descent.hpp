@@ -21,8 +21,11 @@ namespace pele {
  * An implementation of the standard gradient descent optimization algorithm in
  * c++. The learning rate (step size) is set via initial_step. defaults to
  * backtracking line search
+ * This optimizer can also be viewed as a Forward Euler Integrator with the backtracking
+ * line search as a time step controller. Hence this derives from ODEBasedOptimizer
+ * which allows for storing the trajectory as a function of the time in the ODE.
  */
-class GradientDescent : public GradientOptimizer {
+class GradientDescent : public ODEBasedOptimizer {
 private:
   Array<double> xold; //!< Coordinates before taking a step
   Array<double> step; //!< Step direction
@@ -35,12 +38,11 @@ public:
    */
   GradientDescent(std::shared_ptr<pele::BasePotential> potential,
                   const pele::Array<double> x0, double tol = 1e-4,
-                  double stepsize = 1e-4)
-      : GradientOptimizer(potential, x0, tol), xold(x_.size()), step(x_.size()),
+                  double stepsize = 1e-4, bool save_trajectory = true)
+      : ODEBasedOptimizer(potential, x0, tol, save_trajectory), xold(x_.size()), step(x_.size()),
         line_search_method(this, stepsize) {
     // set precision of printing
     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
-
     inv_sqrt_size = 1 / sqrt(x_.size());
   }
 
@@ -81,7 +83,7 @@ public:
     // print some status information
     if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {
       std::cout << "steepest descent: " << iter_number_ << " E " << f_
-                << " rms " << rms_ << " nfev " << nfev_ << " step norm "
+                << " rms " << gradient_norm_ << " nfev " << nfev_ << " step norm "
                 << stepnorm << std::endl;
     }
     iter_number_ += 1;

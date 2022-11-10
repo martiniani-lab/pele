@@ -41,7 +41,7 @@ def test_mixed_descent(potential_initial_and_final_conditions):
     # res = optimizer_non_convex.run(10000)
     print(res)
     # check that the number of steps is the same as the C++ version
-    assert res.nsteps == 466
+    assert res.nsteps == 494
     assert np.allclose(res.coords, expected_final_coordinates)
 
 
@@ -84,5 +84,5 @@ def test_mixed_descent_with_extension(potential_initial_and_final_conditions):
     # res = optimizer_non_convex.run(10000)
     print(res)
     # check that the number of steps is the same as the C++ version
-    assert res.nsteps == 466
+    assert res.nsteps == 494
     assert np.allclose(res.coords, expected_final_coordinates)

@@ -71,14 +71,13 @@ typedef struct UserData_ {
  * Not exactly an optimizer but solves for the differential equation $ dx/dt = -
  * \grad{V(x)} $ to arrive at the trajectory to the corresponding minimum
  */
-class CVODEBDFOptimizer : public GradientOptimizer {
+class CVODEBDFOptimizer : public ODEBasedOptimizer {
 private:
   UserData_ udata;
   void *cvode_mem; /* CVODE memory         */
   size_t N_size;
   SUNMatrix A;
   SUNLinearSolver LS;
-  double t0;
   double tN;
   int ret;
   SUNContext sunctx; // SUNDIALS context
@@ -91,7 +90,7 @@ private:
   std::ofstream trajectory_file;
   std::ofstream time_file;
   std::ofstream hessian_eigvals_file;
-  std::ofstream grad_file;
+  std::ofstream gradient_file;
   std::ofstream step_file;
   std::ofstream newton_step_file;
   std::ofstream lbfgs_m_1_step_file;
@@ -116,12 +115,12 @@ public:
                     const pele::Array<double> x0, double tol = 1e-5,
                     double rtol = 1e-5, double atol = 1e-5,
                     HessianType hessian_type = DENSE,
-                    bool use_newton_stop_criterion = false);
+                    bool use_newton_stop_criterion = false, bool save_trajectory=false);
 
   ~CVODEBDFOptimizer();
 
   // Copy Constructor (raises a not implemented exception)
-  CVODEBDFOptimizer(const CVODEBDFOptimizer &other) : GradientOptimizer() {
+  CVODEBDFOptimizer(const CVODEBDFOptimizer &) : ODEBasedOptimizer() {
     throw std::runtime_error("CVODEBDFOptimizer is not implemented");
   };
 
