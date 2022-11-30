@@ -58,6 +58,7 @@ cdef class InversePowerStillingerCutQuad(_pele.BasePotential):
         assert not (boxvec is not None and boxl is not None)
         if boxl is not None:
             boxvec = [boxl] * ndim
+        boxvec = np.array(boxvec, dtype=np.float64)
         radii_ = array_wrap_np(radii)
         if boxvec is not None:
             if len(boxvec) != ndim:
