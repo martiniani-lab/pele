@@ -12,9 +12,9 @@ db = system.create_database(db="tip4p_8.sqlite")
 pot = system.get_potential()
 transform = TransformAngleAxisCluster(system.aasystem)
 coords = db.minima()[0].coords
-#coords = db.transition_states()[0].coords
+# coords = db.transition_states()[0].coords
 energy = pot.getEnergy(coords)
-#coords = np.loadtxt("2.txt").flatten()
+# coords = np.loadtxt("2.txt").flatten()
 print(energy)
 
 match = ExactMatchAACluster(system.aasystem)
@@ -30,17 +30,17 @@ print(frq)
 fvib = logproduct_freq2(frq, 6)[1]
 print(fvib)
 
-beta = 1./2.479
+beta = 1.0 / 2.479
 for m in db.minima():
     hess = pot.NumericalHessian(m.coords, eps=1e-5)
     metric = system.aasystem.metric_tensor(m.coords)
 
-    pgorder =  get_pgorder(m.coords)
+    pgorder = get_pgorder(m.coords)
     frq = normalmode_frequencies(hess, metric, eps=1e-3)
     fvib = logproduct_freq2(frq, 6, eps=1e-3)[1]
-    print(fvib, 0.5*fvib /beta) 
+    print(fvib, 0.5 * fvib / beta)
     m.pgorder = pgorder
-    m.fvib = fvib 
+    m.fvib = fvib
 
 for ts in db.transition_states():
     hess = pot.NumericalHessian(ts.coords, eps=1e-5)
@@ -49,8 +49,8 @@ for ts in db.transition_states():
     pgorder = get_pgorder(ts.coords)
     frq = normalmode_frequencies(hess, metric, eps=1e-3)
     fvib = logproduct_freq2(frq, 6, nnegative=1, eps=1e-3)[1]
-    print(fvib, 0.5*fvib /beta)
+    print(fvib, 0.5 * fvib / beta)
     ts.pgorder = pgorder
-    ts.fvib = fvib 
+    ts.fvib = fvib
 
 db.session.commit()

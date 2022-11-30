@@ -8,11 +8,11 @@ from pele.potentials.fortran.morse import morse as fmorse
 class Morse(BasePotential):
     """
     the morse potential
-    
+
     R0 is the position of the bottom of the well.
     rho is the width of the well and has units of inverse length.
     A is the energy scale.
-    
+
     ## Danger:
     I added a few print statements that somehow caused the tests to pass
     In the future this potential will need to be removed because
@@ -20,7 +20,9 @@ class Morse(BasePotential):
     """
 
     def __init__(self, rho=1.6047, r0=2.8970, A=0.7102, boxvec=None, rcut=None):
-        print("WARNING: Calling FORTRAN Morse potential. This is not being maintained currently, and we suspect it leaks memory.")
+        print(
+            "WARNING: Calling FORTRAN Morse potential. This is not being maintained currently, and we suspect it leaks memory."
+        )
         self.rho = rho
         self.r0 = r0
         self.A = A
@@ -33,22 +35,44 @@ class Morse(BasePotential):
 
         if rcut is None:
             self.use_cutoff = False
-            self.rcut = 0.
+            self.rcut = 0.0
         else:
             self.use_cutoff = True
             self.rcut = rcut
 
     def getEnergy(self, x):
-        v, emorse = fmorse(x, False, self.rho, self.r0, self.A, self.periodic,
-                           self.boxvec, self.use_cutoff, self.rcut)
-        print("WARNING: Calling FORTRAN Morse potential. This is not being maintained currently, and we suspect it leaks memory.")
+        v, emorse = fmorse(
+            x,
+            False,
+            self.rho,
+            self.r0,
+            self.A,
+            self.periodic,
+            self.boxvec,
+            self.use_cutoff,
+            self.rcut,
+        )
+        print(
+            "WARNING: Calling FORTRAN Morse potential. This is not being maintained currently, and we suspect it leaks memory."
+        )
         print("emorse", emorse)
         return emorse
 
     def getEnergyGradient(self, x):
-        v, emorse = fmorse(x, True, self.rho, self.r0, self.A, self.periodic,
-                           self.boxvec, self.use_cutoff, self.rcut)
-        print("WARNING: Calling FORTRAN Morse potential. This is not being maintained currently, and we suspect it leaks memory.")
+        v, emorse = fmorse(
+            x,
+            True,
+            self.rho,
+            self.r0,
+            self.A,
+            self.periodic,
+            self.boxvec,
+            self.use_cutoff,
+            self.rcut,
+        )
+        print(
+            "WARNING: Calling FORTRAN Morse potential. This is not being maintained currently, and we suspect it leaks memory."
+        )
         print("emorse", emorse)
         return emorse, v
 

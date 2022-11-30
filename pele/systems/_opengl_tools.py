@@ -38,14 +38,14 @@ def draw_atoms(coords, atomlist, color=None, radius=0.5):
 def draw_atomic_single_atomtype(coords, index, subtract_com=False, radius=0.5):
     """
     tell the gui how to represent your system using openGL objects
-    
+
     Parameters
     ----------
     coords : array
     index : int
         we can have more than one molecule on the screen at one time.  index tells
         which one to draw.  They are viewed at the same time, so they should be
-        visually distinct, e.g. different colors.  accepted values are 1 or 2        
+        visually distinct, e.g. different colors.  accepted values are 1 or 2
     """
     coords = coords.reshape(-1, 3)
     if subtract_com:
@@ -55,18 +55,19 @@ def draw_atomic_single_atomtype(coords, index, subtract_com=False, radius=0.5):
         draw_sphere(x, radius=radius)
 
 
-def draw_atomic_binary(coordslinear, index, Aatoms, Batoms, subtract_com=False,
-                       rA=0.5, rB=0.44):
+def draw_atomic_binary(
+    coordslinear, index, Aatoms, Batoms, subtract_com=False, rA=0.5, rB=0.44
+):
     """
     tell the gui how to represent your system using openGL objects
-    
+
     Parameters
     ----------
     coords : array
     index : int
         we can have more than one molecule on the screen at one time.  index tells
         which one to draw.  They are viewed at the same time, so they should be
-        visually distinct, e.g. different colors.  accepted values are 1 or 2        
+        visually distinct, e.g. different colors.  accepted values are 1 or 2
     """
     coords = coordslinear.reshape(-1, 3)
     if subtract_com:
@@ -74,23 +75,25 @@ def draw_atomic_binary(coordslinear, index, Aatoms, Batoms, subtract_com=False,
         coords = coords - com[np.newaxis, :]
 
     if index == 1:
-        color = [0.65, 0.0, 0.0, 1.]
+        color = [0.65, 0.0, 0.0, 1.0]
     else:
-        color = [0.00, 0.65, 0., 1.]
+        color = [0.00, 0.65, 0.0, 1.0]
     draw_atoms(coords, Aatoms, color, radius=rA)
 
     if index == 1:
-        color = [0.25, 0.00, 0., 1.]
+        color = [0.25, 0.00, 0.0, 1.0]
     else:
-        color = [0.00, 0.25, 0., 1.]
+        color = [0.00, 0.25, 0.0, 1.0]
 
     draw_atoms(coords, Batoms, color, radius=rB)
 
 
-def draw_atomic_binary_polydisperse(coordslinear, index, bdim=3, subtract_com=False, radii=None, Batoms=None):
+def draw_atomic_binary_polydisperse(
+    coordslinear, index, bdim=3, subtract_com=False, radii=None, Batoms=None
+):
     """
     tell the gui how to represent your system using openGL objects
-    
+
     Parameters
     ----------
     coords : array
@@ -99,9 +102,9 @@ def draw_atomic_binary_polydisperse(coordslinear, index, bdim=3, subtract_com=Fa
         we can have more than one molecule on the screen at one time.  index tells
         which one to draw.  They are viewed at the same time, so they should be
         visually distinct, e.g. different colors.  accepted values are 1 or 2
-    Batoms: list of atoms of type B        
+    Batoms: list of atoms of type B
     """
-    assert (radii is not None)
+    assert radii is not None
     if Batoms is None:
         Batoms = np.ones(old_div(len(coordslinear), bdim))
 
@@ -123,14 +126,14 @@ def draw_atomic_binary_polydisperse(coordslinear, index, bdim=3, subtract_com=Fa
     for i, _ in enumerate(coords):
         if Batoms[i] == 1:
             if index == 1:
-                color = [0.65, 0.0, 0.0, 1.]
+                color = [0.65, 0.0, 0.0, 1.0]
             else:
-                color = [0.00, 0.65, 0., 1.]
+                color = [0.00, 0.65, 0.0, 1.0]
         else:
             if index == 1:
-                color = [0.25, 0.00, 1., 1.]
+                color = [0.25, 0.00, 1.0, 1.0]
             else:
-                color = [0.00, 0.25, 1., 1.]
+                color = [0.00, 0.25, 1.0, 1.0]
 
         draw_atoms(coords, [i], color, radius=radii[i])
 
@@ -141,40 +144,42 @@ def draw_cone(X1, X2, rbase=0.1, rtop=0.0, color=None):
         change_color(color)
     from OpenGL import GL, GLU
 
-    z = np.array([0., 0., 1.])  # default cylinder orientation
+    z = np.array([0.0, 0.0, 1.0])  # default cylinder orientation
     p = X2 - X1  # desired cylinder orientation
     r = np.linalg.norm(p)
     t = np.cross(z, p)  # angle about which to rotate
     a = np.arccos(old_div(np.dot(z, p), r))  # rotation angle
-    a *= (180. / np.pi)  # change units to angles
+    a *= 180.0 / np.pi  # change units to angles
     GL.glPushMatrix()
     GL.glTranslate(X1[0], X1[1], X1[2])
     GL.glRotate(a, t[0], t[1], t[2])
     g = GLU.gluNewQuadric()
-    GLU.gluCylinder(g, rbase, rtop, r, 30, 30)  # I can't seem to draw a cylinder
+    GLU.gluCylinder(
+        g, rbase, rtop, r, 30, 30
+    )  # I can't seem to draw a cylinder
     GL.glPopMatrix()
 
 
-def draw_cylinder(X1, X2, radius=.1, color=None):
+def draw_cylinder(X1, X2, radius=0.1, color=None):
     draw_cone(X1, X2, rbase=radius, rtop=radius, color=color)
+
 
 def draw_box(boxvec, radius=0.05):
     """draw the edges of a box with center at the origin"""
     e = np.eye(3)
-    e[0,0] = boxvec[0]
-    e[1,1] = boxvec[1]
-    e[2,2] = boxvec[2]
-    
+    e[0, 0] = boxvec[0]
+    e[1, 1] = boxvec[1]
+    e[2, 2] = boxvec[2]
+
     from itertools import product
-    corners = [np.array(x) for x in product([0,1], repeat=3)]
-    
-    x0 = old_div(- boxvec, 2)
+
+    corners = [np.array(x) for x in product([0, 1], repeat=3)]
+
+    x0 = old_div(-boxvec, 2)
     for i, c1 in enumerate(corners):
         for c2 in corners[:i]:
-            if np.sum(np.abs(c1-c2)) == 1:
+            if np.sum(np.abs(c1 - c2)) == 1:
                 # these corners are adjacent, i.e not diagonal
                 x1 = x0 + np.dot(e, c1)
                 x2 = x0 + np.dot(e, c2)
                 draw_cylinder(x1, x2, radius=radius)
-
-    

@@ -114,6 +114,13 @@ from .exact_match import StandardClusterAlignment, ExactMatchCluster
 from .minpermdist_stochastic import MinPermDistCluster
 from .rmsfit import *
 from ._minpermdist_policies import *
-from .periodic_exact_match import ExactMatchPeriodic, MeasurePeriodic, TransformPeriodic
+from .periodic_exact_match import (
+    ExactMatchPeriodic,
+    MeasurePeriodic,
+    TransformPeriodic,
+)
 from ._pointgrouporder import PointGroupOrderCluster
-from ._wrapper_atomiccluster import MinPermDistAtomicCluster, ExactMatchAtomicCluster
+from ._wrapper_atomiccluster import (
+    MinPermDistAtomicCluster,
+    ExactMatchAtomicCluster,
+)

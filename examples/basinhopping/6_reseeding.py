@@ -10,7 +10,7 @@ from pele.mc import MonteCarlo
 
 
 class TakeStepMonteCarlo(object):
-    def __init__(self, pot, T=10., nsteps=100, stepsize=0.1):
+    def __init__(self, pot, T=10.0, nsteps=100, stepsize=0.1):
         self.potential = pot
         self.T = T
         self.nsteps = nsteps
@@ -19,8 +19,13 @@ class TakeStepMonteCarlo(object):
 
     def takeStep(self, coords, **kwargs):
         # ake a new monte carlo class
-        mc = MonteCarlo(coords, self.potential, self.mcstep,
-                        temperature=self.T, outstream=None)
+        mc = MonteCarlo(
+            coords,
+            self.potential,
+            self.mcstep,
+            temperature=self.T,
+            outstream=None,
+        )
         mc.run(self.nsteps)
         coords[:] = mc.coords[:]
 
@@ -41,7 +46,10 @@ stepGroup = Reseeding(takestep, reseed, maxnoimprove=20)
 db = system.create_database()
 bh = system.get_basinhopping(database=db, takestep=stepGroup)
 bh.run(niter)
-print("the lowest energy found after", niter, " basinhopping steps is", db.minima()[0].energy)
+print(
+    "the lowest energy found after",
+    niter,
+    " basinhopping steps is",
+    db.minima()[0].energy,
+)
 print("")
-
-

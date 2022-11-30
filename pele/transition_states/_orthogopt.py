@@ -12,7 +12,7 @@ __all__ = ["orthogopt", "orthogopt_translation_only"]
 
 def orthogopt(v, coords, norm=False, translation_only=False):
     """
-    make a vector orthogonal to eigenvectors of the Hessian corresponding to overall 
+    make a vector orthogonal to eigenvectors of the Hessian corresponding to overall
     translations and rotations.
 
     Parameters
@@ -25,10 +25,10 @@ def orthogopt(v, coords, norm=False, translation_only=False):
         normalize v before returning?
     translation_only : bool
         if True, orthogonalize to translations but not rotations
-    
+
     Returns
     -------
-    v : 
+    v :
         the orthogonalized vector
     """
     orthogoptf(v, coords, norm, translation_only)
@@ -56,10 +56,12 @@ def _subcross(vec3, redcoords, n):
         pm = 1.0
         i = 0
         j = 1
-    dummy1 = pm * np.sum(vec3[:, i] * redcoords[:, j] - vec3[:, j] * redcoords[:, i])
+    dummy1 = pm * np.sum(
+        vec3[:, i] * redcoords[:, j] - vec3[:, j] * redcoords[:, i]
+    )
     dummy2 = np.sum((redcoords[:, i]) ** 2 + (redcoords[:, j]) ** 2)
-    vdot = 0.
-    if dummy2 > 0.:
+    vdot = 0.0
+    if dummy2 > 0.0:
         vdot = old_div(np.abs(dummy1), np.sqrt(dummy2))
         dummy3 = old_div(dummy1, dummy2)
         # print "dummy1, dummy2", dummy1, dummy2, dummy3
@@ -70,9 +72,9 @@ def _subcross(vec3, redcoords, n):
 
 def orthogopt_slow(vec, coords, otest=False):
     """
-    make vec orthogonal to eigenvectors of the Hessian corresponding to overall 
+    make vec orthogonal to eigenvectors of the Hessian corresponding to overall
     translations and rotations.
-    
+
     this is a really ugly recoding in python of the fortran othogopt
     """
 
@@ -87,7 +89,7 @@ def orthogopt_slow(vec, coords, otest=False):
     vdottol = 1e-6
 
     for ncheck in range(100):
-        vdot[:] = 0.
+        vdot[:] = 0.0
         ncheck += 1
 
         for i in range(3):
@@ -95,7 +97,8 @@ def orthogopt_slow(vec, coords, otest=False):
             vdot[i] = veccom * np.sqrt(float(natoms))
             # print "vdot translation", vdot[i], i
             vec3[:, i] -= veccom
-            if otest: vec3 /= np.linalg.norm(vec3)
+            if otest:
+                vec3 /= np.linalg.norm(vec3)
 
         if False:
             if np.max(vdot) > vdottol:
@@ -104,13 +107,16 @@ def orthogopt_slow(vec, coords, otest=False):
         for i in range(3):
             vdot[i] = _subcross(vec3, redcoords, i)
             # print "vdot rotation   ", vdot[i], i
-            if otest: vec3 /= np.linalg.norm(vec3)
+            if otest:
+                vec3 /= np.linalg.norm(vec3)
 
         if np.max(vdot) <= vdottol:
             break
 
     if np.max(vdot) > vdottol:
-        print("WARNING, cannot orthogonalise to known eigenvectors in ORTHOGOPT")
+        print(
+            "WARNING, cannot orthogonalise to known eigenvectors in ORTHOGOPT"
+        )
         print("         max(vdot)", np.max(vdot))
 
     vec = np.reshape(vec3, [-1])
@@ -127,4 +133,3 @@ if __name__ == "__main__":
     v2 = orthogopt_slow(vold, x, True)
     print(v1 - v2)
     print("max difference between two methods", np.max(np.abs(v1 - v2)))
-    

@@ -12,13 +12,16 @@ __all__ = ["minima_from_ts"]
 logger = logging.getLogger("pele.connect")
 
 
-def determine_pushoff(
-        pot, coords, vec, stepmin=.01, **unused_kwargs):
-    """apply the pushoff along the direction vec
-    """
+def determine_pushoff(pot, coords, vec, stepmin=0.01, **unused_kwargs):
+    """apply the pushoff along the direction vec"""
     if unused_kwargs:
-        print("keywords:", list(unused_kwargs.keys()), "are obsolete and ignored in determine_pushoff")
+        print(
+            "keywords:",
+            list(unused_kwargs.keys()),
+            "are obsolete and ignored in determine_pushoff",
+        )
     return coords + old_div(stepmin * vec, np.linalg.norm(vec))
+
 
 #    if grad is None:
 #        _, grad = pot.getEnergyGradient(coords)
@@ -46,7 +49,7 @@ def determine_pushoff(
 def minima_from_ts(pot, xt, n=None, quench=None, stepmin=0.01, **kwargs):
     """
     step off either side of a transition state and quench to find the minima
-    
+
     Parameters
     ----------
     pot : potential object
@@ -73,5 +76,5 @@ def minima_from_ts(pot, xt, n=None, quench=None, stepmin=0.01, **kwargs):
     return minimum1, minimum2
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

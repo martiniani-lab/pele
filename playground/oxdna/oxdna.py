@@ -11,10 +11,10 @@ GMIN.initialize()
 # create a potential which calls GMIN
 potential = GMINPotential(GMIN)
 # get the initial coorinates
-coords=potential.getCoords()
-coords=np.random.random(coords.shape)
+coords = potential.getCoords()
+coords = np.random.random(coords.shape)
 # create takestep routine
-step = displace.RandomDisplacement(stepsize=1.)
+step = displace.RandomDisplacement(stepsize=1.0)
 
 # store all minima in a database
 db = Database(db="storage.sqlite", accuracy=1e-2)
@@ -26,7 +26,7 @@ opt = bh.BasinHopping(coords, potential, step, db.minimum_adder())
 opt.run(1000)
 
 # now dump all the minima
-i=0
+i = 0
 for m in db.minima():
-    i+=1
-    GMIN.userpot_dump("lowest_%03d.dat"%(i), m.coords)
+    i += 1
+    GMIN.userpot_dump("lowest_%03d.dat" % (i), m.coords)

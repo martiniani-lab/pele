@@ -5,8 +5,8 @@ import pele.amber.read_amber as ra
 
 
 def cart_to_internal(molecule):
-    """ Converts the coordinates of the molecule from cartesian to internal
-    coordinates. """
+    """Converts the coordinates of the molecule from cartesian to internal
+    coordinates."""
     # First decide on a starting atom
     source_node = molecule.atoms.nodes()[0]
     # Argh, dictionaries aren't sorted...
@@ -19,10 +19,10 @@ def cart_to_internal(molecule):
     for entry in completed_bonds:
         print(entry, completed_bonds[entry])
         # completed.append(completed[-1] + [search_tree.neighbors(source_node)[0]])
-        #completed.append(completed[-1] + [[x for x in search_tree.neighbors(completed[-1][-1]) if x not in completed[-1]][0]])
-        #completed.append(completed[-1] + [[x for x in search_tree.neighbors(completed[-1][-1]) if x not in completed[-1]][0]])
+        # completed.append(completed[-1] + [[x for x in search_tree.neighbors(completed[-1][-1]) if x not in completed[-1]][0]])
+        # completed.append(completed[-1] + [[x for x in search_tree.neighbors(completed[-1][-1]) if x not in completed[-1]][0]])
 
-        #print nx.single_source_shortest_path(molecule.atoms, source_node)
+        # print nx.single_source_shortest_path(molecule.atoms, source_node)
 
 
 if __name__ == "__main__":

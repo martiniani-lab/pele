@@ -15,6 +15,7 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
+
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
@@ -28,10 +29,14 @@ class Ui_Form(object):
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.canvas = MPLWidgetWithToolbar(Form)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.canvas.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.canvas.sizePolicy().hasHeightForWidth()
+        )
         self.canvas.setSizePolicy(sizePolicy)
         self.canvas.setObjectName(_fromUtf8("canvas"))
         self.horizontalLayout.addWidget(self.canvas)
@@ -42,10 +47,14 @@ class Ui_Form(object):
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
         self.btn_show_all = QtGui.QPushButton(Form)
         self.btn_show_all.setObjectName(_fromUtf8("btn_show_all"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.btn_show_all)
+        self.formLayout.setWidget(
+            0, QtGui.QFormLayout.LabelRole, self.btn_show_all
+        )
         self.checkBox_zoom = QtGui.QCheckBox(Form)
         self.checkBox_zoom.setObjectName(_fromUtf8("checkBox_zoom"))
-        self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.checkBox_zoom)
+        self.formLayout.setWidget(
+            1, QtGui.QFormLayout.LabelRole, self.checkBox_zoom
+        )
         self.verticalLayout_2.addLayout(self.formLayout)
         self.horizontalLayout.addLayout(self.verticalLayout_2)
         self.verticalLayout_3.addLayout(self.horizontalLayout)
@@ -54,8 +63,21 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_show_all.setText(QtGui.QApplication.translate("Form", "show all", None, QtGui.QApplication.UnicodeUTF8))
-        self.checkBox_zoom.setText(QtGui.QApplication.translate("Form", "zoom on click", None, QtGui.QApplication.UnicodeUTF8))
+        Form.setWindowTitle(
+            QtGui.QApplication.translate(
+                "Form", "Form", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.btn_show_all.setText(
+            QtGui.QApplication.translate(
+                "Form", "show all", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.checkBox_zoom.setText(
+            QtGui.QApplication.translate(
+                "Form", "zoom on click", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+
 
 from pele.gui.ui.mplwidget import MPLWidgetWithToolbar

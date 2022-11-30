@@ -45,7 +45,7 @@ else:
     print("plotting energies along the path")
     import pylab as pl
 
-    pl.plot(S, energies, '-')
+    pl.plot(S, energies, "-")
     pl.xlabel("distance along path")
     pl.ylabel("energy")
     pl.show()

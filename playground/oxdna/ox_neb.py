@@ -7,6 +7,7 @@ import pickle
 glutInit()
 app = QApplication(sys.argv)
 from pele.gui.neb_explorer import NEBExplorer
+
 system = OXDNASystem()
 
 wnd = NEBExplorer(None, system, app)

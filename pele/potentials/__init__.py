@@ -52,12 +52,13 @@ other external potentials
 -------------------------
 to be written
 
-""" 
+"""
 from __future__ import absolute_import
 
 
 from .potential import *
 from ._frozen_dof import FrozenPotentialWrapper
+
 # from lj import *
 from ._lj_cpp import LJ, BLJCut
 from ._frenkel import Frenkel
@@ -78,10 +79,11 @@ from .heisenberg_spin import *
 from .heisenberg_spin_RA import *
 from .ljpshiftfast import *
 from .ljcut import *
-#from potential import *
-#from salt import *
-#from soft_sphere import *
-#from stockmeyer import *
+
+# from potential import *
+# from salt import *
+# from soft_sphere import *
+# from stockmeyer import *
 from .xyspin import *
 from .morse import Morse
 from .ml import MLCost

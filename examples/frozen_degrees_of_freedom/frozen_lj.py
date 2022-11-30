@@ -29,7 +29,12 @@ def main():
     print(fpot.getEnergy(reduced_coords))
 
     ret = mylbfgs(reduced_coords, fpot)
-    print("after a minimization the energy is ", ret.energy, "and the rms gradient is", ret.rms)
+    print(
+        "after a minimization the energy is ",
+        ret.energy,
+        "and the rms gradient is",
+        ret.rms,
+    )
     print("the coordinates of the frozen degrees of freedom are unchanged")
     print("starting coords:", reference_coords)
     print("minimized coords:", fpot.get_full_coords(ret.coords))

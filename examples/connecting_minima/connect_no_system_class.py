@@ -28,7 +28,7 @@ np.random.seed(0)
 # set up the potential
 pot = LJ()
 
-# import the starting and ending points and quench them, 
+# import the starting and ending points and quench them,
 coords1 = np.genfromtxt("coords.A")
 coords2 = np.genfromtxt("coords.B")
 res1 = lbfgs_py(coords1.reshape(-1), pot)
@@ -46,8 +46,6 @@ database.addMinimum(E1, coords1)
 database.addMinimum(E2, coords2)
 min1 = database.minima()[0]
 min2 = database.minima()[1]
-
-
 
 
 # set up the structural alignment routine.
@@ -78,7 +76,7 @@ if True:
     NEBquenchParams["iprint"] = 100
 
     NEBparams = dict()
-    NEBparams["k"] = 5.
+    NEBparams["k"] = 5.0
     NEBparams["image_density"] = 15
     NEBparams["NEBquenchParams"] = NEBquenchParams
 
@@ -86,12 +84,19 @@ if True:
     local_connect_params["tsSearchParams"] = tsSearchParams
     local_connect_params["NEBparams"] = NEBparams
 
-myconnect = DoubleEndedConnect(min1, min2, pot, mindist, database,
-                               local_connect_params=local_connect_params,
+myconnect = DoubleEndedConnect(
+    min1,
+    min2,
+    pot,
+    mindist,
+    database,
+    local_connect_params=local_connect_params,
 )
 
-if (myconnect.graph.areConnected(min1, min2)):
-    print("ALERT: The minima are already connected in the database file", dbfile)
+if myconnect.graph.areConnected(min1, min2):
+    print(
+        "ALERT: The minima are already connected in the database file", dbfile
+    )
     print("       Delete it for a fresh run.")
 
 myconnect.connect()
@@ -99,8 +104,7 @@ print("")
 print("found a path!")
 
 
-
-# the path is now saved in the database.  Lets retrieve it and 
+# the path is now saved in the database.  Lets retrieve it and
 # print it in a more visual format
 # now retrieve the path for printing
 print("")

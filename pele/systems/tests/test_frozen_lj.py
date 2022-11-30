@@ -10,14 +10,17 @@ class TestLJCluster(unittest.TestCase):
         self.prepare_system(frozen_atoms=[0, 2, 4, 6])
 
     def prepare_system(self, frozen_atoms=None):
-        if not frozen_atoms: frozen_atoms = [0, 2, 4]
+        if not frozen_atoms:
+            frozen_atoms = [0, 2, 4]
         self.natoms = 13
 
         fsys = LJCluster(self.natoms)
 
         self.reference_coords = fsys.get_random_configuration()
 
-        self.system = LJClusterFrozen(self.natoms, frozen_atoms, self.reference_coords)
+        self.system = LJClusterFrozen(
+            self.natoms, frozen_atoms, self.reference_coords
+        )
 
     def make_database(self, nminima=2):
         db = self.system.create_database()
@@ -28,16 +31,23 @@ class TestLJCluster(unittest.TestCase):
         return db
 
     def test1(self):
-        coords = self.system.coords_converter.get_reduced_coords(self.reference_coords)
+        coords = self.system.coords_converter.get_reduced_coords(
+            self.reference_coords
+        )
         pot = self.system.get_potential()
         pot.getEnergy(coords)
 
     def test_mobile(self):
-        self.assertEqual(3 * self.system.nmobile, self.system.coords_converter.get_mobile_dof().size)
+        self.assertEqual(
+            3 * self.system.nmobile,
+            self.system.coords_converter.get_mobile_dof().size,
+        )
 
     def testpermlist(self):
         permlist = self.system.get_permlist()
-        self.assertEqual(len(permlist[0]), self.natoms - len(self.system.frozen_atoms))
+        self.assertEqual(
+            len(permlist[0]), self.natoms - len(self.system.frozen_atoms)
+        )
 
     def test_basinhopping(self):
         db = self.system.create_database()
@@ -57,6 +67,7 @@ class TestLJCluster(unittest.TestCase):
         db = self.make_database()
         get_thermodynamic_information(self.system, db, nproc=1)
 
+
 # class TestLJCluster2(TestLJCluster):
 # def setUp(self):
 # self.prepare_system(frozen_atoms=[0,2])
@@ -66,4 +77,4 @@ class TestLJCluster(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()

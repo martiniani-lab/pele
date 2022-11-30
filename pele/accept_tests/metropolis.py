@@ -8,7 +8,7 @@ __all__ = ["Metropolis"]
 
 class Metropolis(object):
     """Accept steps based on the metropolis criterion
-    
+
     Parameters
     ----------
     temperature : float
@@ -26,23 +26,25 @@ class Metropolis(object):
         if self._accept_next:
             self._accept_next = False
             return True
-        if Enew < Eold: return True
+        if Enew < Eold:
+            return True
         acceptstep = True
         wcomp = old_div((Enew - Eold), self.temperature)
         w = min(1.0, np.exp(-wcomp))
         rand = self.random()
-        if rand > w: acceptstep = False
+        if rand > w:
+            acceptstep = False
 
         return acceptstep
 
     def forceAccept(self):
-        """Force acceptance of the next step. This is useful for reseeding.
-        """
+        """Force acceptance of the next step. This is useful for reseeding."""
         self._accept_next = True
 
     def __call__(self, Eold, Enew, qcoords, coords):
         """wrapper for acceptRejectE"""
         return self.acceptRejectE(Eold, Enew)
+
 
 # class MetropolisNonQuench(object):
 # """
@@ -60,7 +62,7 @@ class Metropolis(object):
 # except AttributeError:
 #            self.Eold = self.Enew
 #        return self.metropolis.acceptReject(self.Eold, self.Enew)
-#    
+#
 #    def checkAccepted(self, quenchedE, quenched_coords, accepted):
 #        """if the step was accepted, update self.Eold
 #        """
@@ -70,6 +72,3 @@ class Metropolis(object):
 
 if __name__ == "__main__":
     met = Metropolis(1.0)
-    
-    
-    

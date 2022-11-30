@@ -13,21 +13,27 @@ class LJ(BasePotential):
     """
 
     def __init__(self, eps=1.0, sig=1.0):
-        """ simple lennard jones potential"""
+        """simple lennard jones potential"""
         self.sig = sig
         self.eps = eps
 
     def vij(self, r):
-        return 4. * self.eps * ( (self.sig / r) ** 12 - (self.sig / r) ** 6 )
+        return 4.0 * self.eps * ((self.sig / r) ** 12 - (self.sig / r) ** 6)
 
     def dvij(self, r):
-        return 4. * self.eps * ( -12. / self.sig * (self.sig / r) ** 13 + 6. / self.sig * (self.sig / r) ** 7 )
-
+        return (
+            4.0
+            * self.eps
+            * (
+                -12.0 / self.sig * (self.sig / r) ** 13
+                + 6.0 / self.sig * (self.sig / r) ** 7
+            )
+        )
 
     def getEnergy(self, coords):
         natoms = old_div(coords.size, 3)
         coords = np.reshape(coords, [natoms, 3])
-        energy = 0.
+        energy = 0.0
         for i in range(natoms):
             for j in range(i + 1, natoms):
                 dr = coords[j, :] - coords[i, :]
@@ -38,7 +44,7 @@ class LJ(BasePotential):
     def getEnergyGradient(self, coords):
         natoms = old_div(coords.size, 3)
         coords = np.reshape(coords, [natoms, 3])
-        energy = 0.
+        energy = 0.0
         V = np.zeros([natoms, 3])
         for i in range(natoms):
             for j in range(i + 1, natoms):
@@ -55,6 +61,7 @@ class LJ(BasePotential):
 #
 # testing only below here
 #
+
 
 def main():  # pragma: no cover
     # test class
@@ -73,7 +80,7 @@ def main():  # pragma: no cover
     from pele.optimize import mylbfgs as quench
 
     ret = quench(coords, lj, iprint=-1)
-    #quench( coords, lj.getEnergyGradientNumerical, iprint=1 )
+    # quench( coords, lj.getEnergyGradientNumerical, iprint=1 )
     print("energy ", ret.energy)
     print("rms gradient", ret.rms)
     print("number of function calls", ret.nfev)

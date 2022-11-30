@@ -39,10 +39,14 @@ def test_check_cell_lists_works_non_additive():
     parameters["use_cell_lists"] = 1
     potential_with_cell_lists = InversePowerStillingerCutQuad(**parameters)
 
-    final_coords = lbfgs_cpp(initial_coords, potential_with_cell_lists)["coords"]
+    final_coords = lbfgs_cpp(initial_coords, potential_with_cell_lists)[
+        "coords"
+    ]
 
     energy_with_cell_lists = potential_with_cell_lists.getEnergy(final_coords)
-    energy_without_cell_lists = potential_without_cell_lists.getEnergy(final_coords)
+    energy_without_cell_lists = potential_without_cell_lists.getEnergy(
+        final_coords
+    )
 
     assert energy_with_cell_lists == energy_without_cell_lists
     return

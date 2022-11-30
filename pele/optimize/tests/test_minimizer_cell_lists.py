@@ -52,7 +52,9 @@ class TestSameMinimaInversePower(unittest.TestCase):
         nsteps = 1000
         tol = 1e-10
 
-        res_cell_lists = modifiedfire_cpp(coords, pot_cellists, nsteps=nsteps, tol=tol)
+        res_cell_lists = modifiedfire_cpp(
+            coords, pot_cellists, nsteps=nsteps, tol=tol
+        )
         res_no_cell_lists = modifiedfire_cpp(
             coords, pot_no_cellists, nsteps=nsteps, tol=tol
         )
@@ -61,7 +63,9 @@ class TestSameMinimaInversePower(unittest.TestCase):
         fcoords_no_cell_lists = res_no_cell_lists.coords
         # self.assertEqual(fcoords_no_cell_lists,fcoords_cell_lists)
         print(np.max(fcoords_no_cell_lists - fcoords_cell_lists))
-        self.assertTrue(np.all(fcoords_no_cell_lists - fcoords_cell_lists < 1e-5))
+        self.assertTrue(
+            np.all(fcoords_no_cell_lists - fcoords_cell_lists < 1e-5)
+        )
 
     def test_same_minima_HS_WCA(self):
         nparticles = 32
@@ -99,7 +103,9 @@ class TestSameMinimaInversePower(unittest.TestCase):
         )
         nsteps = 1000
         tol = 1e-10
-        res_cell_lists = modifiedfire_cpp(coords, pot_cellists, nsteps=nsteps, tol=tol)
+        res_cell_lists = modifiedfire_cpp(
+            coords, pot_cellists, nsteps=nsteps, tol=tol
+        )
         res_no_cell_lists = modifiedfire_cpp(
             coords, pot_no_cellists, nsteps=nsteps, tol=tol
         )
@@ -108,7 +114,9 @@ class TestSameMinimaInversePower(unittest.TestCase):
         fcoords_no_cell_lists = res_no_cell_lists.coords
         # self.assertEqual(fcoords_no_cell_lists,fcoords_cell_lists)
         print(np.max(fcoords_no_cell_lists - fcoords_cell_lists))
-        self.assertTrue(np.all(fcoords_no_cell_lists - fcoords_cell_lists < 1e-5))
+        self.assertTrue(
+            np.all(fcoords_no_cell_lists - fcoords_cell_lists < 1e-5)
+        )
 
     def test_same_minima_Frenkel(self):
         nparticles = 32
@@ -127,7 +135,9 @@ class TestSameMinimaInversePower(unittest.TestCase):
         )
         nsteps = 1000
         tol = 1e-10
-        res_cell_lists = modifiedfire_cpp(coords, pot_cellists, nsteps=nsteps, tol=tol)
+        res_cell_lists = modifiedfire_cpp(
+            coords, pot_cellists, nsteps=nsteps, tol=tol
+        )
         res_no_cell_lists = modifiedfire_cpp(
             coords, pot_no_cellists, nsteps=nsteps, tol=tol
         )
@@ -136,7 +146,9 @@ class TestSameMinimaInversePower(unittest.TestCase):
         fcoords_no_cell_lists = res_no_cell_lists.coords
         # self.assertEqual(fcoords_no_cell_lists,fcoords_cell_lists)
         print(np.max(fcoords_no_cell_lists - fcoords_cell_lists))
-        self.assertTrue(np.all(fcoords_no_cell_lists - fcoords_cell_lists < 1e-5))
+        self.assertTrue(
+            np.all(fcoords_no_cell_lists - fcoords_cell_lists < 1e-5)
+        )
 
 
 if __name__ == "__main__":

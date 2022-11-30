@@ -8,9 +8,11 @@
 # WARNING! All changes made in this file will be lost!
 
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import object
 from PyQt4 import QtCore, QtGui
+
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -23,15 +25,24 @@ class Ui_Dialog(object):
         self.verticalLayout.addWidget(self.treeParams)
         self.buttonBox = QtGui.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(
+            QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok
+        )
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(Dialog)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("accepted()"), Dialog.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("rejected()"), Dialog.reject)
+        QtCore.QObject.connect(
+            self.buttonBox, QtCore.SIGNAL("accepted()"), Dialog.accept
+        )
+        QtCore.QObject.connect(
+            self.buttonBox, QtCore.SIGNAL("rejected()"), Dialog.reject
+        )
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8))
-
+        Dialog.setWindowTitle(
+            QtGui.QApplication.translate(
+                "Dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )

@@ -19,7 +19,9 @@ class TestOptimizersBeale(unittest.TestCase):
         ret = minimizer(self.x, self.pot, tol=1e-7, **kwargs)
         self.assertTrue(ret.success)
         self.assertAlmostEqual(ret.energy, self.pot.target_E, 3)
-        self.assertLess(np.max(np.abs(ret.coords - self.pot.target_coords)), 1e-3)
+        self.assertLess(
+            np.max(np.abs(ret.coords - self.pot.target_coords)), 1e-3
+        )
 
     def test_lbfgs_py(self):
         self.do_check(_quench.lbfgs_py)

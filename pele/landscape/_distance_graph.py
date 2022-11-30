@@ -12,10 +12,10 @@ logger = logging.getLogger("pele.connect")
 class _DistanceGraph(object):
     """
     This graph is used by DoubleEndedConnect to make educated guesses for connecting two minima
-    
+
     Parameters
     ----------
-    database : 
+    database :
         the database in which to store newly found minima and transition states.
     graph :
         the graph build from the database which contains the minima and transition states
@@ -23,15 +23,15 @@ class _DistanceGraph(object):
         the routine which calculates the optimized distance between two structures
     verbosity :
         how much info to print (not very thoroughly implemented)
-    
+
     Description
     -----------
     This graph has a vertex for every minimum and an edge
     between every minima pair. The edge weight between vertices u and v
     is
-                       
+
         if u and v are connected by transition states:
-            weight(u, v) = 0. 
+            weight(u, v) = 0.
         elif we have already tried local_connect on (u,v):
             weight(u, v) = Infinity
         else:
@@ -39,7 +39,7 @@ class _DistanceGraph(object):
 
     Edge weights are set to Infinity to ensure that we don't try to connect
     them again.  The minimum weight path between min1 and min2 in this graph gives a
-    good guess for the best way to try connect min1 and min2.  
+    good guess for the best way to try connect min1 and min2.
 
     TODO: could we use a disjoint set data structure (nx.utils.UnionFind) to improve this
     algorithm?
@@ -52,7 +52,9 @@ class _DistanceGraph(object):
         self.verbosity = verbosity
 
         self.Gdist = nx.Graph()
-        self.distance_map = dict()  # place to store distances locally for faster lookup
+        self.distance_map = (
+            dict()
+        )  # place to store distances locally for faster lookup
         nx.set_edge_attributes(self.Gdist, "weight", dict())
         self.debug = False
 
@@ -61,16 +63,16 @@ class _DistanceGraph(object):
     def distToWeight(self, dist):
         """
         this function defines how the edge weight is calculated.
-        
+
         good options might be:
-        
+
         weight = dist
-        
+
         weight = dist**2
             this favors paths with many short edges over
             paths with fewer but longer edges.
         """
-        return dist ** 2
+        return dist**2
 
     def _setDist(self, min1, min2, dist):
         """
@@ -90,11 +92,13 @@ class _DistanceGraph(object):
         get distance from local memory.  if it doesn't exist, return None,
         don't calculate it.
         """
-        # first try to get the distance from the dictionary 
+        # first try to get the distance from the dictionary
         dist = self.distance_map.get((min1, min2))
-        if dist is not None: return dist
+        if dist is not None:
+            return dist
         dist = self.distance_map.get((min2, min1))
-        if dist is not None: return dist
+        if dist is not None:
+            return dist
         return None
 
     def getDist(self, min1, min2):
@@ -103,22 +107,28 @@ class _DistanceGraph(object):
         not already known
         """
         dist = self._getDistNoCalc(min1, min2)
-        if dist is not None: return dist
+        if dist is not None:
+            return dist
 
         # if it's not already known we must calculate it
         dist, coords1, coords2 = self.mindist(min1.coords, min2.coords)
         if self.verbosity > 1:
-            logger.debug("calculated distance between %s %s %s", min1.id(), min2.id(), dist)
+            logger.debug(
+                "calculated distance between %s %s %s",
+                min1.id(),
+                min2.id(),
+                dist,
+            )
         self._setDist(min1, min2, dist)
         return dist
 
     def _addMinimum(self, m):
         """
         add a new minimum to the graph
-        
-        must add an edge with the appropriate weight to every other 
+
+        must add an edge with the appropriate weight to every other
         node in the graph.
-        
+
         this can take a long time if there are many minima or if the
         distance calculation is slow.
         """
@@ -137,12 +147,11 @@ class _DistanceGraph(object):
                 weight = self.distToWeight(dist)
                 self.Gdist.add_edge(m, m2, weight=weight)
 
-
     def addMinimum(self, m):
         """
         add a new minima to the graph and add an edge to all the other
-        minima in the graph.  
-        
+        minima in the graph.
+
         Note: this can take a very long time if there are lots of minima
         in the graph.  mindist need to be run many many times.
         """
@@ -155,13 +164,12 @@ class _DistanceGraph(object):
             raise
         trans.commit()
 
-
     def removeEdge(self, min1, min2):
         """set the edge weight to near infinity
-                
+
         used to indicate that the routine should not try to connect
         these minima again.
-        
+
         don't overwrite zero edge weight
         """
         if self.Gdist.has_edge(min1, min2):
@@ -176,7 +184,7 @@ class _DistanceGraph(object):
     def initialize(self, minstart, minend):
         """
         set up the distance graph
-        
+
         initialize distance_map, add the start and end minima and load any other
         minima that should be used in the connect routine.
         """
@@ -187,10 +195,10 @@ class _DistanceGraph(object):
     def setTransitionStateConnection(self, min1, min2):
         """use this function to tell _DistanceGraph that
         there exists a known transition state connection between min1 and min2
-        
+
         The edge weight will be set to zero
         """
-        weight = 0.
+        weight = 0.0
         self.Gdist.add_edge(min1, min2, weight=weight)
 
     def shortestPath(self, min1, min2):
@@ -201,13 +209,16 @@ class _DistanceGraph(object):
             return None, None
 
         # get_edge attributes is really slow:
-        weights = [self.Gdist[path[i]][path[i + 1]]["weight"] for i in range(len(path) - 1)]
+        weights = [
+            self.Gdist[path[i]][path[i + 1]]["weight"]
+            for i in range(len(path) - 1)
+        ]
 
         return path, weights
 
     def mergeMinima(self, min1, min2):
         """
-        rebuild the graph with min2 deleted and 
+        rebuild the graph with min2 deleted and
         everything pointing to min1 pointing to min2 instead
         """
         for m, data in self.Gdist[min2].items():
@@ -224,7 +235,6 @@ class _DistanceGraph(object):
             self.Gdist.add_edge(min1, m, weight=wnew)
 
         self.Gdist.remove_node(min2)
-
 
     def checkGraph(self):
         """
@@ -254,20 +264,36 @@ class _DistanceGraph(object):
                         allok = False
                         count += 1
                         dist = self.getDist(e[0], e[1])
-                        logger.warning("    problem: are_connected %s %s %s %s %s %s %s %s %s",
-                                       are_connected, "but weight", weights[e], "dist", dist,
-                                       "path_weight", weight_sum, e[0].id(), e[1].id())
+                        logger.warning(
+                            "    problem: are_connected %s %s %s %s %s %s %s %s %s",
+                            are_connected,
+                            "but weight",
+                            weights[e],
+                            "dist",
+                            dist,
+                            "path_weight",
+                            weight_sum,
+                            e[0].id(),
+                            e[1].id(),
+                        )
                 self.setTransitionStateConnection(e[0], e[1])
 
             if not are_connected and zero_weight:
                 allok = False
                 dist = self.getDist(e[0], e[1])
-                logger.warning("    problem: are_connected %s %s %s %s %s %s %s",
-                               are_connected, "but weight", weights[e], "dist", dist, e[0].id(), e[1].id())
+                logger.warning(
+                    "    problem: are_connected %s %s %s %s %s %s %s",
+                    are_connected,
+                    "but weight",
+                    weights[e],
+                    "dist",
+                    dist,
+                    e[0].id(),
+                    e[1].id(),
+                )
                 w = self.distToWeight(dist)
                 self.Gdist.add_edge(e[0], e[1], weight=w)
         if count > 0:
             logger.info("    found %s %s", count, "inconsistencies in Gdist")
 
         return allok
-

@@ -19,14 +19,20 @@ from builtins import range
 from past.utils import old_div
 import numpy as np
 
-__all__ = ["get_eig", "get_eigvals", "get_sorted_eig", "get_smallest_eig", "make_sparse"]
+__all__ = [
+    "get_eig",
+    "get_eigvals",
+    "get_sorted_eig",
+    "get_smallest_eig",
+    "make_sparse",
+]
 
 
 def get_eigvals(hess, **kwargs):
     """return the eigenvalues of a Hessian (symmetric)
-    
+
     The following docs are from numpy.linalg.eigvalsh
-    
+
     Compute the eigenvalues of a Hermitian or real symmetric matrix.
 
     Main difference from eigh: the eigenvectors are not computed.
@@ -57,9 +63,9 @@ def get_eigvals(hess, **kwargs):
 
 def get_eig(hess, **kwargs):
     """return the eigenvalue and eigenvectors of a Hessian (symmetric)
-    
+
     The following is from numpy.linalg.eigh
-    
+
     Return the eigenvalues and eigenvectors of a Hermitian or symmetric matrix.
 
     Returns two objects, a 1-D array containing the eigenvalues of `a`, and
@@ -130,29 +136,31 @@ def get_smallest_eig(hess, **kwargs):
     return evals[0], evecs[:, 0].flatten()
 
 
-
-
 def get_smallest_eig_nohess(coords, system, **kwargs):
     """find the smallest eigenvalue and eigenvector without a hessian
-    
+
     this is just a wrapper for findLowestEigenVector
-    
+
     See Also
     --------
     pele.transition_states.findLowestEigenVector
     """
     from pele.transition_states import findLowestEigenVector
 
-    ret = findLowestEigenVector(coords, system.get_potential(),
-                                orthogZeroEigs=system.get_orthogonalize_to_zero_eigenvectors(), **kwargs)
+    ret = findLowestEigenVector(
+        coords,
+        system.get_potential(),
+        orthogZeroEigs=system.get_orthogonalize_to_zero_eigenvectors(),
+        **kwargs
+    )
     return ret.eigenval, ret.eigenvec
 
 
 def make_sparse(hess, **kwargs):
     """return a sparse form of the hessian using scipy.sparse
-    
+
     this function returns the hessian in compressed sparse column (CSC) form
-    
+
     Advantages of the CSC format:
         - efficient arithmetic operations CSC + CSC, CSC * CSC, etc.
         - efficient column slicing
@@ -171,22 +179,18 @@ def make_sparse(hess, **kwargs):
 #
 
 
-
-
-
-
 def size_scaling_smallest_eig(natoms):  # pragma: no cover
     from pele.systems import LJCluster
     import time, sys
 
     system = LJCluster(natoms)
     pot = system.get_potential()
-    quencher = system.get_minimizer(tol=10.)
+    quencher = system.get_minimizer(tol=10.0)
 
-    time1 = 0.
-    time2 = 0.
-    time3 = 0.
-    time4 = 0.
+    time1 = 0.0
+    time2 = 0.0
+    time3 = 0.0
+    time4 = 0.0
     for i in range(100):
         coords = system.get_random_configuration()
         # print "len(coords)", len(coords)
@@ -210,13 +214,22 @@ def size_scaling_smallest_eig(natoms):  # pragma: no cover
 
         wdiff = old_div(np.abs(w - w1), np.max(np.abs([w, w1])))
         if wdiff > 5e-3:
-            sys.stderr.write("eigenvalues for dense  are different %g %g normalized diff %g\n" % (w1, w, wdiff))
+            sys.stderr.write(
+                "eigenvalues for dense  are different %g %g normalized diff %g\n"
+                % (w1, w, wdiff)
+            )
         wdiff = old_div(np.abs(w - w2), np.max(np.abs([w, w2])))
         if wdiff > 5e-2:
-            sys.stderr.write("eigenvalues for sparse are different %g %g normalized diff %g\n" % (w2, w, wdiff))
+            sys.stderr.write(
+                "eigenvalues for sparse are different %g %g normalized diff %g\n"
+                % (w2, w, wdiff)
+            )
         wdiff = old_div(np.abs(w - w3), np.max(np.abs([w, w3])))
         if wdiff > 5e-2:
-            sys.stderr.write("eigenvalues for nohess are different %g %g normalized diff %g\n" % (w3, w, wdiff))
+            sys.stderr.write(
+                "eigenvalues for nohess are different %g %g normalized diff %g\n"
+                % (w3, w, wdiff)
+            )
         # print "times", n, t1-t0, t2-t1, w1, w
     print("times", n, time1, time2, time3, time4)
     sys.stdout.flush()
@@ -242,7 +255,7 @@ def test():  # pragma: no cover
     evals = get_eigvals(h)
     print(evals)
 
-    quencher = system.get_minimizer(tol=10.)
+    quencher = system.get_minimizer(tol=10.0)
     coords = quencher(coords)[0]
     e, g, h = pot.getEnergyGradientHessian(coords)
     w1, v1 = get_smallest_eig(h)
