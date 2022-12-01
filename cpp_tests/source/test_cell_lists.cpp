@@ -1440,7 +1440,7 @@ TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivityHarmonic) {
       std::make_shared<InverseIntPowerPeriodicCellLists<ndim, pow>>(
           eps, radii, boxvec, ncellsx_scale, exact_sum, non_additivity);
 
-  LBFGS lbfgs = LBFGS(potential_with_cell_lists, coordinates);
+  LBFGS lbfgs = LBFGS(potential_without_cell_lists, coordinates);
   lbfgs.run();
   Array<double> quenched_coordinates = lbfgs.get_x().copy();
 
