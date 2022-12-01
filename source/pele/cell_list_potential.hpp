@@ -20,6 +20,31 @@
 
 namespace pele {
 
+/*
+ * This Class forms the Base Class for all accumulator instances
+ * that are used in the CellListPotential class.
+ */
+template <typename pairwise_interaction, typename distance_policy>
+class BaseAccumulator {
+private:
+  const static size_t m_ndim = distance_policy::_ndim;
+  pairwise_interaction m_pairwise_interaction;
+  distance_policy m_distance_policy;
+  const pele::Array<double> *m_coords;
+  NonAdditiveCutoff cutoff;
+
+public:
+  BaseAccumulator(
+      std::shared_ptr<pairwise_interaction> pairwise_interaction_ptr,
+      std::shared_ptr<distance_policy> distance_policy_ptr,
+      const pele::Array<double> *coords, NonAdditiveCutoff cutoff)
+      : m_pairwise_interaction(*pairwise_interaction_ptr),
+        m_distance_policy(*distance_policy_ptr), m_coords(coords),
+        cutoff(cutoff) {}
+  
+  void reset_data(const pele::Array<double> *coords) { m_coords = coords; }
+};
+
 /**
  * class which accumulates the energy one pair interaction at a time
  */
