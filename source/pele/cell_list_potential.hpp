@@ -745,7 +745,7 @@ public:
         r2 += dr[k] * dr[k];
         neg_dr[k] = -dr[k];
       }
-      const double dij = m_pot->get_dij(atom_i, atom_j);
+      const double dij = m_pot->get_non_additive_cutoff(atom_i, atom_j);
       const double r_S = m_cutoff_sca * dij;
       const double r_S2 = r_S * r_S;
       if (r2 <= r_S2) {
@@ -1224,7 +1224,7 @@ public:
                                                         size_t atom_i,
                                                         size_t atom_j) const {
     double energy =
-        m_interaction->energy_gradient(r2, gij, get_dij(atom_i, atom_j));
+        m_interaction->energy_gradient(r2, gij, get_non_additive_cutoff(atom_i, atom_j));
     *gij *= sqrt(r2);
     return energy;
   }
@@ -1233,7 +1233,7 @@ public:
   get_interaction_energy_gradient_hessian(double r2, double *gij, double *hij,
                                           size_t atom_i, size_t atom_j) const {
     double energy = m_interaction->energy_gradient_hessian(
-        r2, gij, hij, get_dij(atom_i, atom_j));
+        r2, gij, hij, get_non_additive_cutoff(atom_i, atom_j));
     *gij *= sqrt(r2);
     return energy;
   }

@@ -15,6 +15,21 @@ using namespace std;
 
 namespace pele {
 
+/**
+ * @brief Get the non additive interaction range as defined in 
+ *        PHYSICAL REVIEW X 12, 021001 (2022). when non_additivity is set to 0
+ *        the interaction range is the same as the cutoff radius.
+ * 
+ * @param radius_i 
+ * @param radius_j 
+ * @param non_additivity 
+ * @return double 
+ */
+inline double get_non_additive_cutoff(double radius_i, double radius_j, double non_additivity) {
+  return (radius_i + radius_j) *
+             (1 - 2 * non_additivity * abs(radius_i - radius_j));
+}
+
 class PairwisePotentialInterface : public BasePotential {
 protected:
   const Array<double> m_radii;
@@ -36,7 +51,7 @@ public:
     size_t min_radius_index  = std::distance(radii.begin(), min_radius_address);
     size_t max_radius_index  = std::distance(radii.begin(), max_radius_address);
 
-    auto dij = get_dij(min_radius_index,max_radius_index);
+    auto dij = get_non_additive_cutoff(min_radius_index,max_radius_index);
 
     if (dij < 0) {
       std::cout << "dij = " << dij << std::endl;
@@ -56,16 +71,15 @@ public:
 
   /*
    * Finds the interaction distance between two particles, i and j. defaults to
-   * radii[i] + radii[j] when epsilon is zero
+   * radii[i] + radii[j] when non_additivity is zero
    */
-  inline double get_dij(const std::size_t atom_i,
-                        const std::size_t atom_j) const {
+  inline double get_non_additive_cutoff(const std::size_t atom_i,
+                          const std::size_t atom_j) const {
     if (m_radii.size() == 0) {
       return 0;
     } else {
       // uses the diameters being twice the radii
-      return (m_radii[atom_i] + m_radii[atom_j]) *
-             (1 - 2 * non_additivity * abs(m_radii[atom_i] - m_radii[atom_j]));
+      return ::pele::get_non_additive_cutoff(m_radii[atom_i], m_radii[atom_j], non_additivity);
     }
   }
 
@@ -290,6 +304,10 @@ public:
     return jammed;
   }
 };
+
+
+
+}
 
 } // namespace pele
 
