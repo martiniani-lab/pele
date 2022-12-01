@@ -44,7 +44,7 @@ TEST(CombinedPotential, TestEnergyGradientHessianWithoutCellLists) {
   double r_std1 = 0.05;
   double r_std2 = 0.05;
 
-  radii_a = pele::generate_radii(n_1, n_2, r_1, r_2, r_std1, r_std2);
+  radii_a = pele::generate_bidisperse_radii(n_1, n_2, r_1, r_2, r_std1, r_std2);
 
   radii_b = 2 * radii_a;
 
@@ -135,7 +135,7 @@ TEST(EXTENDED_POTENTIAL, TEST_ALL_ENERGY_GRADIENT_HESSIAN_FUNCTIONS) {
   double r_std1 = 0.05;
   double r_std2 = 0.05;
 
-  radii_a = pele::generate_radii(n_1, n_2, r_1, r_2, r_std1, r_std2);
+  radii_a = pele::generate_bidisperse_radii(n_1, n_2, r_1, r_2, r_std1, r_std2);
 
   radii_b = 2 * radii_a;
 
@@ -270,7 +270,7 @@ TEST(ExtendedPotential, WithCellLists) {
   double r_std1 = 0.05;
   double r_std2 = 0.05;
 
-  radii_a = pele::generate_radii(n_1, n_2, r_1, r_2, r_std1, r_std2);
+  radii_a = pele::generate_bidisperse_radii(n_1, n_2, r_1, r_2, r_std1, r_std2);
 
   radii_b = 2 * radii_a;
 

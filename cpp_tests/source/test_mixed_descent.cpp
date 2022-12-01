@@ -51,7 +51,7 @@ TEST(MXD, TEST_256_RUN) {
   double r_std1 = 0.05;
   double r_std2 = 0.05;
 
-  radii = pele::generate_radii(n_1, n_2, r_1, r_2, r_std1, r_std2);
+  radii = pele::generate_bidisperse_radii(n_1, n_2, r_1, r_2, r_std1, r_std2);
 
   double box_length = pele::get_box_length(radii, _ndim, phi);
 

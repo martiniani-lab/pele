@@ -35,7 +35,7 @@ namespace pele {
  *
  * @return     Array of radii
  */
-inline Array<double> generate_radii(int n_1, int n_2, double r_1, double r_2,
+inline Array<double> generate_bidisperse_radii(int n_1, int n_2, double r_1, double r_2,
                                     double r_std_1, double r_std_2) {
 
   Array<double> radii(n_1 + n_2);

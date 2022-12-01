@@ -50,7 +50,7 @@ TEST(utils, generate_random_coordinates) {
   }
 }
 
-TEST(utils, generate_radii) {
+TEST(utils, generate_bidisperse) {
   int n_1 = 5;
   int n_2 = 5;
 
@@ -60,7 +60,7 @@ TEST(utils, generate_radii) {
   double r_std_2 = 0.05 * 1.4;
 
   Array<double> radii =
-      pele::generate_radii(n_1, n_2, r_1, r_2, r_std_1, r_std_2);
+      pele::generate_bidisperse_radii(n_1, n_2, r_1, r_2, r_std_1, r_std_2);
 
   std::cout << "radii = " << radii << std::endl;
   // TODO: check that radii are within the correct range
