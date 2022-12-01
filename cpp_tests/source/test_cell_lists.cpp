@@ -1305,31 +1305,31 @@ TEST_F(CellListsSpecificTest, Number_of_overlaps) {
   }
 }
 
-
 // Tests for neighbors with non additive potentials
 TEST(CellLists, NeighborsWithNonAdditivity) {
 
   Array<double> radii = {1.0, 2.0};
-  Array<double> boxvec = {20., 20.}; // Make sure the periodicity of the box doesn't matter
+  Array<double> boxvec = {
+      20., 20.}; // Make sure the periodicity of the box doesn't matter
   double non_additivity = 0.2;
   double machine_epsilon = std::numeric_limits<double>::epsilon();
 
-  double cutoff = (radii[0] + radii[1]) * (1. - 2*non_additivity*std::abs(radii[0] - radii[1]));
+  double cutoff = (radii[0] + radii[1]) *
+                  (1. - 2 * non_additivity * std::abs(radii[0] - radii[1]));
 
-  Array<double> overlapping_coords = {0., 0., 0., cutoff-machine_epsilon};
-  Array<double> non_overlapping_coords = {0., 0., 0., cutoff+machine_epsilon};
-
+  Array<double> overlapping_coords = {0., 0., 0., cutoff - machine_epsilon};
+  Array<double> non_overlapping_coords = {0., 0., 0., cutoff + machine_epsilon};
 
   int pow = 2;
   double eps = 1.0;
-  InversePowerPeriodicCellLists<2> potential = InversePowerPeriodicCellLists<2>(pow, eps, radii, boxvec, 1.0, false, non_additivity);
-
+  InversePowerPeriodicCellLists<2> potential = InversePowerPeriodicCellLists<2>(
+      pow, eps, radii, boxvec, 1.0, false, non_additivity);
 
   pele::Array<std::vector<size_t>> neighbor_indexes;
   pele::Array<std::vector<std::vector<double>>> neighbor_displacements;
 
-
-  potential.get_neighbors(overlapping_coords, neighbor_indexes, neighbor_displacements);
+  potential.get_neighbors(overlapping_coords, neighbor_indexes,
+                          neighbor_displacements);
   ASSERT_EQ(neighbor_indexes.size(), 2);
   ASSERT_EQ(neighbor_displacements.size(), 2);
   for (auto neighbors : neighbor_indexes) {
@@ -1340,8 +1340,8 @@ TEST(CellLists, NeighborsWithNonAdditivity) {
     ASSERT_EQ(displacements.size(), 1);
   }
 
-  potential.get_neighbors(non_overlapping_coords, neighbor_indexes, neighbor_displacements);
-
+  potential.get_neighbors(non_overlapping_coords, neighbor_indexes,
+                          neighbor_displacements);
 
   ASSERT_EQ(neighbor_indexes.size(), 2);
   ASSERT_EQ(neighbor_displacements.size(), 2);
@@ -1354,7 +1354,12 @@ TEST(CellLists, NeighborsWithNonAdditivity) {
   }
 }
 
-TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivity) {
+/*
+ *  Test to check whether the non-additivity works with a potential defined in
+ *  Relaxation Dynamics in the Energy Landscape of Glass-Forming Liquids,
+ *  PHYSICAL REVIEW X 12, 021001 (2022) (The soft sphere potential in the paper)
+ */
+TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivityStillinger) {
 
   constexpr size_t n_particles = 32;
   constexpr int ndim = 2;
@@ -1363,10 +1368,11 @@ TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivity) {
   constexpr double non_additivity = 0.2;
 
   double cutoff_factor = 1.25;
-  
+
   double dmin_by_dmax = 0.449;
   double d_mean = 1.0;
-  BerthierDistribution3d berthier_dist = BerthierDistribution3d(dmin_by_dmax, d_mean);
+  BerthierDistribution3d berthier_dist =
+      BerthierDistribution3d(dmin_by_dmax, d_mean);
   Array<double> radii = berthier_dist.sample(n_particles);
 
   double phi = 1.2;
@@ -1375,10 +1381,14 @@ TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivity) {
   Array<double> boxvec;
   boxvec = {box_length, box_length};
 
-  Array<double> coordinates = generate_random_coordinates(box_length, n_particles, ndim);
-  auto potential_with_cell_lists = std::make_shared<InversePowerStillingerCutQuadPeriodicCellLists<ndim>>(pow, v0, cutoff_factor, radii, boxvec, 1.0, non_additivity);
-  auto potential_without_cell_lists = std::make_shared<InversePowerStillingerCutQuadPeriodic<ndim>>(pow, v0, cutoff_factor, radii, boxvec, non_additivity);
-
+  Array<double> coordinates =
+      generate_random_coordinates(box_length, n_particles, ndim);
+  auto potential_with_cell_lists =
+      std::make_shared<InversePowerStillingerCutQuadPeriodicCellLists<ndim>>(
+          pow, v0, cutoff_factor, radii, boxvec, 1.0, non_additivity);
+  auto potential_without_cell_lists =
+      std::make_shared<InversePowerStillingerCutQuadPeriodic<ndim>>(
+          pow, v0, cutoff_factor, radii, boxvec, non_additivity);
 
   LBFGS lbfgs = LBFGS(potential_with_cell_lists, coordinates, 1e-6);
 
@@ -1386,7 +1396,58 @@ TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivity) {
 
   Array<double> quenched_coordinates = lbfgs.get_x().copy();
 
-  double energy_with_cell_lists = potential_with_cell_lists->get_energy(quenched_coordinates);
-  double energy_without_cell_lists = potential_without_cell_lists->get_energy(quenched_coordinates);
+  double energy_with_cell_lists =
+      potential_with_cell_lists->get_energy(quenched_coordinates);
+  double energy_without_cell_lists =
+      potential_without_cell_lists->get_energy(quenched_coordinates);
+  ASSERT_EQ(energy_with_cell_lists, energy_without_cell_lists);
+}
+
+/*
+ *  Test to check whether the non-additivity works with a potential defined in
+ *  Relaxation Dynamics in the Energy Landscape of Glass-Forming Liquids,
+ *  PHYSICAL REVIEW X 12, 021001 (2022) (The soft sphere potential in the paper)
+ *  This is in 2D, for the 3d version we don't really need non additivit
+ */
+TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivityHarmonic) {
+  constexpr size_t n_particles = 32;
+  constexpr int ndim = 2;
+  constexpr int pow = 2;
+  constexpr int eps = 1.0;
+  constexpr double non_additivity = 0.2;
+  bool exact_sum = false;
+
+  double cutoff_factor = 1.25;
+
+  double dmin_by_dmax = 0.449;
+  double d_mean = 1.0;
+  BerthierDistribution3d berthier_dist =
+      BerthierDistribution3d(dmin_by_dmax, d_mean);
+  Array<double> radii = berthier_dist.sample(n_particles);
+
+  double phi = 1.2;
+  double box_length = get_box_length(radii, ndim, phi);
+  Array<double> boxvec = {box_length, box_length};
+  double ncellsx_scale = 1.0;
+
+  Array<double> coordinates =
+      generate_random_coordinates(box_length, n_particles, ndim);
+
+  auto potential_with_cell_lists =
+      std::make_shared<InverseIntPowerPeriodic<ndim, pow>>(
+          eps, radii, boxvec, exact_sum, non_additivity);
+  auto potential_without_cell_lists =
+      std::make_shared<InverseIntPowerPeriodicCellLists<ndim, pow>>(
+          eps, radii, boxvec, ncellsx_scale, exact_sum, non_additivity);
+
+  LBFGS lbfgs = LBFGS(potential_with_cell_lists, coordinates);
+  lbfgs.run();
+  Array<double> quenched_coordinates = lbfgs.get_x().copy();
+
+  double energy_with_cell_lists =
+      potential_with_cell_lists->get_energy(quenched_coordinates);
+  double energy_without_cell_lists = potential_without_cell_lists->get_energy(
+      quenched_coordinates);
+
   ASSERT_EQ(energy_with_cell_lists, energy_without_cell_lists);
 }
