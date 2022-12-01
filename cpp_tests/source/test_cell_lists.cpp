@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstddef>
 #include <gtest/gtest.h>
 
 #include "pele/array.hpp"
@@ -6,14 +7,18 @@
 #include "pele/distance.hpp"
 #include "pele/hs_wca.hpp"
 #include "pele/inversepower.hpp"
+#include "pele/inversepower_stillinger_cut_quad.hpp"
+#include "pele/lbfgs.hpp"
 #include "pele/lj_cut.hpp"
 #include "pele/modified_fire.hpp"
+#include "pele/utils.hpp"
 #include "pele/vecn.hpp"
 #include "test_utils.hpp"
 
 #include <algorithm>
 #include <ctime>
 #include <iostream>
+#include <memory>
 #include <omp.h>
 #include <random>
 #include <stdexcept>
@@ -1347,4 +1352,41 @@ TEST(CellLists, NeighborsWithNonAdditivity) {
   for (auto displacements : neighbor_displacements) {
     ASSERT_EQ(displacements.size(), 0);
   }
+}
+
+TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivity) {
+
+  constexpr size_t n_particles = 32;
+  constexpr int ndim = 2;
+  int pow = 12;
+  double v0 = 1.0;
+  constexpr double non_additivity = 0.2;
+
+  double cutoff_factor = 1.25;
+  
+  double dmin_by_dmax = 0.449;
+  double d_mean = 1.0;
+  BerthierDistribution3d berthier_dist = BerthierDistribution3d(dmin_by_dmax, d_mean);
+  Array<double> radii = berthier_dist.sample(n_particles);
+
+  double phi = 1.2;
+  double box_length = get_box_length(radii, ndim, phi);
+
+  Array<double> boxvec;
+  boxvec = {box_length, box_length};
+
+  Array<double> coordinates = generate_random_coordinates(box_length, n_particles, ndim);
+  auto potential_with_cell_lists = std::make_shared<InversePowerStillingerCutQuadPeriodicCellLists<ndim>>(pow, v0, cutoff_factor, radii, boxvec, 1.0, non_additivity);
+  auto potential_without_cell_lists = std::make_shared<InversePowerStillingerCutQuadPeriodic<ndim>>(pow, v0, cutoff_factor, radii, boxvec, non_additivity);
+
+
+  LBFGS lbfgs = LBFGS(potential_with_cell_lists, coordinates, 1e-6);
+
+  lbfgs.run();
+
+  Array<double> quenched_coordinates = lbfgs.get_x().copy();
+
+  double energy_with_cell_lists = potential_with_cell_lists->get_energy(quenched_coordinates);
+  double energy_without_cell_lists = potential_without_cell_lists->get_energy(quenched_coordinates);
+  ASSERT_EQ(energy_with_cell_lists, energy_without_cell_lists);
 }
