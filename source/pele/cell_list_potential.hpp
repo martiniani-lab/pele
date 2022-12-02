@@ -20,79 +20,56 @@
 
 namespace pele {
 
+inline void init_energies(vector<double> &energies) {
+#ifdef _OPENMP
+  energies = std::vector<double>(omp_get_max_threads());
+#pragma omp parallel
+  { energies[omp_get_thread_num()] = 0; }
+#else
+  energies = std::vector<double>(1);
+  energies[0] = 0;
+#endif
+}
+
+inline void reset_energies(vector<double> &energies) {
+#ifdef _OPENMP
+#pragma omp parallel
+  { energies[omp_get_thread_num()] = 0; }
+#else
+  energies[0] = 0;
+#endif
+}
+
 /*
  * This Class forms the Base Class for all accumulator instances
  * that are used in the CellListPotential class.
  */
 template <typename pairwise_interaction, typename distance_policy>
 class BaseAccumulator {
-private:
+protected:
   const static size_t m_ndim = distance_policy::_ndim;
-  pairwise_interaction m_pairwise_interaction;
-  distance_policy m_distance_policy;
-  const pele::Array<double> *m_coords;
-  NonAdditiveCutoff cutoff;
+  std::shared_ptr<pairwise_interaction> m_interaction;
+  std::shared_ptr<distance_policy> m_dist;
+  const Array<double> *m_coords;
+  const Array<double> m_radii;
+  NonAdditiveCutoff m_cutoff;
 
 public:
   BaseAccumulator(
       std::shared_ptr<pairwise_interaction> pairwise_interaction_ptr,
       std::shared_ptr<distance_policy> distance_policy_ptr,
-      const pele::Array<double> *coords, NonAdditiveCutoff cutoff)
-      : m_pairwise_interaction(*pairwise_interaction_ptr),
-        m_distance_policy(*distance_policy_ptr), m_coords(coords),
-        cutoff(cutoff) {}
-  
+      pele::Array<double> const &radii, NonAdditiveCutoff cutoff)
+      : m_interaction(pairwise_interaction_ptr), m_dist(distance_policy_ptr),
+        m_coords(nullptr), m_radii(radii), m_cutoff(cutoff) {}
+
   void reset_data(const pele::Array<double> *coords) { m_coords = coords; }
-};
 
-/**
- * class which accumulates the energy one pair interaction at a time
- */
-template <typename pairwise_interaction, typename distance_policy>
-class EnergyAccumulator {
-  const static size_t m_ndim = distance_policy::_ndim;
-  std::shared_ptr<pairwise_interaction> m_interaction;
-  std::shared_ptr<distance_policy> m_dist;
-  const pele::Array<double> *m_coords;
-  const pele::Array<double> m_radii;
-  std::vector<double *> m_energies;
-
-public:
-  ~EnergyAccumulator() {
-    for (auto &energy : m_energies) {
-      delete energy;
-    }
-  }
-
-  EnergyAccumulator(std::shared_ptr<pairwise_interaction> &interaction,
-                    std::shared_ptr<distance_policy> &dist,
-                    pele::Array<double> const &radii = pele::Array<double>(0))
-      : m_interaction(interaction), m_dist(dist), m_radii(radii) {
-#ifdef _OPENMP
-    m_energies = std::vector<double *>(omp_get_max_threads());
-#pragma omp parallel
-    { m_energies[omp_get_thread_num()] = new double(); }
-#else
-    m_energies = std::vector<double *>(1);
-    m_energies[0] = new double();
-#endif
-  }
-
-  void reset_data(const pele::Array<double> *coords) {
-    m_coords = coords;
-#ifdef _OPENMP
-#pragma omp parallel
-    { *m_energies[omp_get_thread_num()] = 0; }
-#else
-    *m_energies[0] = 0;
-#endif
-  }
-
-  void insert_atom_pair(const size_t atom_i, const size_t atom_j,
-                        const size_t isubdom) {
+  inline tuple<double, double> get_r2_and_dij(const pele::Array<double> &coords,
+                                              const size_t atom_i,
+                                              const size_t atom_j) const {
+    pele::VecN<m_ndim, double> dr;
     const size_t xi_off = m_ndim * atom_i;
     const size_t xj_off = m_ndim * atom_j;
-    pele::VecN<m_ndim, double> dr;
     m_dist->get_rij(dr.data(), m_coords->data() + xi_off,
                     m_coords->data() + xj_off);
     double r2 = 0;
@@ -101,19 +78,55 @@ public:
     }
     double dij = 0;
     if (m_radii.size() > 0) {
-      dij = m_radii[atom_i] + m_radii[atom_j];
+      dij = m_cutoff.get_cutoff(m_radii[atom_i], m_radii[atom_j]);
     }
+
+    return std::make_tuple(r2, dij);
+  }
+};
+
+/**
+ * class which accumulates the energy one pair interaction at a time
+ */
+template <typename pairwise_interaction, typename distance_policy>
+class EnergyAccumulator
+    : public BaseAccumulator<pairwise_interaction, distance_policy> {
+  std::vector<double> m_energies;
+
+public:
+  ~EnergyAccumulator() {}
+
+  EnergyAccumulator(std::shared_ptr<pairwise_interaction> &interaction,
+                    std::shared_ptr<distance_policy> &dist,
+                    pele::Array<double> const &radii = pele::Array<double>(0),
+                    NonAdditiveCutoff cutoff = NonAdditiveCutoff())
+      : BaseAccumulator<pairwise_interaction, distance_policy>(
+            interaction, dist, radii, cutoff),
+        m_energies(0) {
+    init_energies(m_energies);
+  }
+
+  void reset_data(const pele::Array<double> *coords) {
+    this->m_coords = coords;
+    reset_energies(m_energies);
+  }
+
+  void insert_atom_pair(const size_t atom_i, const size_t atom_j,
+                        const size_t isubdom) {
+
+    double r2, dij;
+    std::tie(r2, dij) = this->get_r2_and_dij(*this->m_coords, atom_i, atom_j);
 #ifdef _OPENMP
-    *m_energies[isubdom] += m_interaction->energy(r2, dij);
+    m_energies[isubdom] += this->m_interaction->energy(r2, dij);
 #else
-    *m_energies[0] += m_interaction->energy(r2, dij);
+    m_energies[0] += m_interaction->energy(r2, dij);
 #endif
   }
 
   double get_energy() {
     double energy = 0;
     for (size_t i = 0; i < m_energies.size(); ++i) {
-      energy += *m_energies[i];
+      energy += m_energies[i];
     }
     return energy;
   }
