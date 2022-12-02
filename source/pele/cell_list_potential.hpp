@@ -6,6 +6,7 @@
 #include <iostream>
 #include <math.h>
 #include <memory>
+#include <numeric>
 #include <omp.h>
 #include <pele/base_potential.hpp>
 #include <stdexcept>
@@ -40,6 +41,83 @@ inline void reset_energies(vector<double> &energies) {
 #endif
 }
 
+inline void accumulate_energies_omp(vector<double> &energies, double energy) {
+#ifdef _OPENMP
+  energies[omp_get_thread_num()] += energy;
+#else
+  energies[0] += energy;
+#endif
+}
+
+/*
+ * accumulates gradient given in spherical coordinate system between particles
+ * to the cartesian coordinate total gradient
+ */
+template <size_t ndim>
+inline void accumulate_gradient(pele::Array<double> &gradient, const double gij,
+                                const size_t offset_i, const size_t offset_j,
+                                VecN<ndim> const &dr) {
+  if (gij != 0) {
+    for (size_t k = 0; k < ndim; ++k) {
+      gradient[offset_i + k] -= dr[k] * gij;
+      gradient[offset_j + k] += dr[k] * gij;
+    }
+  }
+}
+
+template <size_t ndim>
+inline void accumulate_hessian(pele::Array<double> &hessian, const double hij,
+                               const double gij, const size_t xi_off,
+                               const size_t xj_off, VecN<ndim> const &dr,
+                               const double r2, const size_t coords_size) {
+  if (hij != 0) {
+    const size_t i1 = xi_off;
+    const size_t j1 = xj_off;
+    for (size_t k = 0; k < ndim; ++k) {
+      // diagonal block - diagonal terms
+      const double Hii_diag = (hij + gij) * dr[k] * dr[k] / r2 - gij;
+      hessian[coords_size * (i1 + k) + i1 + k] += Hii_diag;
+      hessian[coords_size * (j1 + k) + j1 + k] += Hii_diag;
+      // off diagonal block - diagonal terms
+      const double Hij_diag = -Hii_diag;
+      hessian[coords_size * (i1 + k) + j1 + k] += Hij_diag;
+      hessian[coords_size * (j1 + k) + i1 + k] += Hij_diag;
+      for (size_t l = k + 1; l < ndim; ++l) {
+        // diagonal block - off diagonal terms
+        const double Hii_off = (hij + gij) * dr[k] * dr[l] / r2;
+        hessian[coords_size * (i1 + k) + i1 + l] += Hii_off;
+        hessian[coords_size * (i1 + l) + i1 + k] += Hii_off;
+        hessian[coords_size * (j1 + k) + j1 + l] += Hii_off;
+        hessian[coords_size * (j1 + l) + j1 + k] += Hii_off;
+        // off diagonal block - off diagonal terms
+        const double Hij_off = -Hii_off;
+        hessian[coords_size * (i1 + k) + j1 + l] += Hij_off;
+        hessian[coords_size * (i1 + l) + j1 + k] += Hij_off;
+        hessian[coords_size * (j1 + k) + i1 + l] += Hij_off;
+        hessian[coords_size * (j1 + l) + i1 + k] += Hij_off;
+      }
+    }
+  }
+}
+
+// class containing r2, dij, dr, , xi_off, xj_off
+template <size_t ndim> class DistanceData {
+public:
+  double r2;                   // r2 = dr * dr
+  double dij;                  // cutoff distance between particles i and j
+  size_t xi_off;               // offset of particle i in the x array
+  size_t xj_off;               // offset of particle j in the x array
+  pele::VecN<ndim, double> dr; // vector from particle i to particle j
+  DistanceData() : r2(0), dij(0), xi_off(0), xj_off(0), dr() {}
+  inline void reset() {
+    r2 = 0;
+    dij = 0;
+    xi_off = 0;
+    xj_off = 0;
+    dr.assign(0);
+  }
+};
+
 /*
  * This Class forms the Base Class for all accumulator instances
  * that are used in the CellListPotential class.
@@ -53,6 +131,7 @@ protected:
   const Array<double> *m_coords;
   const Array<double> m_radii;
   NonAdditiveCutoff m_cutoff;
+  DistanceData<distance_policy::_ndim> m_dist_data;
 
 public:
   BaseAccumulator(
@@ -60,28 +139,30 @@ public:
       std::shared_ptr<distance_policy> distance_policy_ptr,
       pele::Array<double> const &radii, NonAdditiveCutoff cutoff)
       : m_interaction(pairwise_interaction_ptr), m_dist(distance_policy_ptr),
-        m_coords(nullptr), m_radii(radii), m_cutoff(cutoff) {}
+        m_coords(nullptr), m_radii(radii), m_cutoff(cutoff), m_dist_data() {}
 
   void reset_data(const pele::Array<double> *coords) { m_coords = coords; }
 
-  inline tuple<double, double> get_r2_and_dij(const pele::Array<double> &coords,
-                                              const size_t atom_i,
-                                              const size_t atom_j) const {
-    pele::VecN<m_ndim, double> dr;
-    const size_t xi_off = m_ndim * atom_i;
-    const size_t xj_off = m_ndim * atom_j;
-    m_dist->get_rij(dr.data(), m_coords->data() + xi_off,
-                    m_coords->data() + xj_off);
-    double r2 = 0;
-    for (size_t k = 0; k < m_ndim; ++k) {
-      r2 += dr[k] * dr[k];
-    }
-    double dij = 0;
-    if (m_radii.size() > 0) {
-      dij = m_cutoff.get_cutoff(m_radii[atom_i], m_radii[atom_j]);
-    }
+  /*
+   * Calculates distance data for a pair of particles. i.e sets DistanceData
+   * variables
+   */
+  inline void calculate_distance_data(const pele::Array<double> &coords,
+                                      const size_t atom_i,
+                                      const size_t atom_j) {
 
-    return std::make_tuple(r2, dij);
+    m_dist_data.xi_off = m_ndim * atom_i;
+    m_dist_data.xj_off = m_ndim * atom_j;
+    m_dist->get_rij(m_dist_data.dr.data(),
+                    m_coords->data() + m_dist_data.xi_off,
+                    m_coords->data() + m_dist_data.xj_off);
+    m_dist_data.r2 = 0;
+    for (size_t k = 0; k < m_ndim; ++k) {
+      m_dist_data.r2 += m_dist_data.dr[k] * m_dist_data.dr[k];
+    }
+    if (m_radii.size() > 0) {
+      m_dist_data.dij = m_cutoff.get_cutoff(m_radii[atom_i], m_radii[atom_j]);
+    }
   }
 };
 
@@ -113,22 +194,14 @@ public:
 
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
                         const size_t isubdom) {
-
-    double r2, dij;
-    std::tie(r2, dij) = this->get_r2_and_dij(*this->m_coords, atom_i, atom_j);
-#ifdef _OPENMP
-    m_energies[isubdom] += this->m_interaction->energy(r2, dij);
-#else
-    m_energies[0] += m_interaction->energy(r2, dij);
-#endif
+    this->calculate_distance_data(*this->m_coords, atom_i, atom_j);
+    double energy = this->m_interaction->energy(this->m_dist_data.r2,
+                                                this->m_dist_data.dij);
+    accumulate_energies_omp(m_energies, energy);
   }
-
   double get_energy() {
-    double energy = 0;
-    for (size_t i = 0; i < m_energies.size(); ++i) {
-      energy += m_energies[i];
-    }
-    return energy;
+    return std::reduce(m_energies.begin(),
+                       m_energies.end()); // reduce sums up energies
   }
 };
 
@@ -137,86 +210,44 @@ public:
  * time
  */
 template <typename pairwise_interaction, typename distance_policy>
-class EnergyGradientAccumulator {
-  const static size_t m_ndim = distance_policy::_ndim;
-  std::shared_ptr<pairwise_interaction> m_interaction;
-  std::shared_ptr<distance_policy> m_dist;
-  const pele::Array<double> *m_coords;
-  const pele::Array<double> m_radii;
-  std::vector<double *> m_energies;
+class EnergyGradientAccumulator
+    : public BaseAccumulator<pairwise_interaction, distance_policy> {
+  std::vector<double> m_energies;
 
 public:
   pele::Array<double> *m_gradient;
-
-  ~EnergyGradientAccumulator() {
-    for (auto &energy : m_energies) {
-      delete energy;
-    }
-  }
-
+  ~EnergyGradientAccumulator() {}
   EnergyGradientAccumulator(
       std::shared_ptr<pairwise_interaction> &interaction,
       std::shared_ptr<distance_policy> &dist,
-      pele::Array<double> const &radii = pele::Array<double>(0))
-      : m_interaction(interaction), m_dist(dist), m_radii(radii) {
-#ifdef _OPENMP
-    m_energies = std::vector<double *>(omp_get_max_threads());
-#pragma omp parallel
-    { m_energies[omp_get_thread_num()] = new double(); }
-#else
-    m_energies = std::vector<double *>(1);
-    m_energies[0] = new double();
-#endif
+      pele::Array<double> const &radii = pele::Array<double>(0),
+      NonAdditiveCutoff cutoff = NonAdditiveCutoff())
+      : BaseAccumulator<pairwise_interaction, distance_policy>(
+            interaction, dist, radii, cutoff),
+        m_energies(0) {
+    init_energies(m_energies);
   }
 
   void reset_data(const pele::Array<double> *coords,
                   pele::Array<double> *gradient) {
-    m_coords = coords;
-#ifdef _OPENMP
-#pragma omp parallel
-    { *m_energies[omp_get_thread_num()] = 0; }
-#else
-    *m_energies[0] = 0;
-#endif
+    this->m_coords = coords;
+    reset_energies(m_energies);
     m_gradient = gradient;
   }
 
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
                         const size_t isubdom) {
-    pele::VecN<m_ndim, double> dr;
-    const size_t xi_off = m_ndim * atom_i;
-    const size_t xj_off = m_ndim * atom_j;
-    m_dist->get_rij(dr.data(), m_coords->data() + xi_off,
-                    m_coords->data() + xj_off);
-    double r2 = 0;
-    for (size_t k = 0; k < m_ndim; ++k) {
-      r2 += dr[k] * dr[k];
-    }
+    this->calculate_distance_data(*this->m_coords, atom_i, atom_j);
     double gij;
-    double dij = 0;
-    if (m_radii.size() > 0) {
-      dij = m_radii[atom_i] + m_radii[atom_j];
-    }
-#ifdef _OPENMP
-    *m_energies[isubdom] += m_interaction->energy_gradient(r2, &gij, dij);
-#else
-    *m_energies[0] += m_interaction->energy_gradient(r2, &gij, dij);
-#endif
-    if (gij != 0) {
-      for (size_t k = 0; k < m_ndim; ++k) {
-        dr[k] *= gij;
-        (*m_gradient)[xi_off + k] -= dr[k];
-        (*m_gradient)[xj_off + k] += dr[k];
-      }
-    }
+    double energy = this->m_interaction->energy_gradient(
+        this->m_dist_data.r2, &gij, this->m_dist_data.dij);
+    accumulate_energies_omp(m_energies, energy);
+    accumulate_gradient(*m_gradient, gij, this->m_dist_data.xi_off,
+                        this->m_dist_data.xj_off, this->m_dist_data.dr);
   }
 
   double get_energy() {
-    double energy = 0;
-    for (size_t i = 0; i < m_energies.size(); ++i) {
-      energy += *m_energies[i];
-    }
-    return energy;
+    return std::reduce(m_energies.begin(), m_energies.end());
   }
 };
 
@@ -225,118 +256,50 @@ public:
  * interaction at a time
  */
 template <typename pairwise_interaction, typename distance_policy>
-class EnergyGradientHessianAccumulator {
-  const static size_t m_ndim = distance_policy::_ndim;
-  std::shared_ptr<pairwise_interaction> m_interaction;
-  std::shared_ptr<distance_policy> m_dist;
-  const pele::Array<double> *m_coords;
-  const pele::Array<double> m_radii;
-  std::vector<double *> m_energies;
+class EnergyGradientHessianAccumulator
+    : public BaseAccumulator<pairwise_interaction, distance_policy> {
+  std::vector<double> m_energies;
 
 public:
   pele::Array<double> *m_gradient;
   pele::Array<double> *m_hessian;
 
-  ~EnergyGradientHessianAccumulator() {
-    for (auto &energy : m_energies) {
-      delete energy;
-    }
-  }
+  ~EnergyGradientHessianAccumulator() {}
 
   EnergyGradientHessianAccumulator(
       std::shared_ptr<pairwise_interaction> &interaction,
       std::shared_ptr<distance_policy> &dist,
-      pele::Array<double> const &radii = pele::Array<double>(0))
-      : m_interaction(interaction), m_dist(dist), m_radii(radii) {
-#ifdef _OPENMP
-    m_energies = std::vector<double *>(omp_get_max_threads());
-#pragma omp parallel
-    { m_energies[omp_get_thread_num()] = new double(); }
-#else
-    m_energies = std::vector<double *>(1);
-    m_energies[0] = new double();
-#endif
+      pele::Array<double> const &radii = pele::Array<double>(0),
+      NonAdditiveCutoff cutoff = NonAdditiveCutoff())
+      : BaseAccumulator<pairwise_interaction, distance_policy>(
+            interaction, dist, radii, cutoff),
+        m_energies(0) {
+    init_energies(m_energies);
   }
 
   void reset_data(const pele::Array<double> *coords,
                   pele::Array<double> *gradient, pele::Array<double> *hessian) {
-    m_coords = coords;
-#ifdef _OPENMP
-#pragma omp parallel
-    { *m_energies[omp_get_thread_num()] = 0; }
-#else
-    *m_energies[0] = 0;
-#endif
+    this->m_coords = coords;
+    reset_energies(m_energies);
     m_gradient = gradient;
     m_hessian = hessian;
   }
-
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
                         const size_t isubdom) {
-    pele::VecN<m_ndim, double> dr;
-    const size_t xi_off = m_ndim * atom_i;
-    const size_t xj_off = m_ndim * atom_j;
-    m_dist->get_rij(dr.data(), m_coords->data() + xi_off,
-                    m_coords->data() + xj_off);
-    double r2 = 0;
-    for (size_t k = 0; k < m_ndim; ++k) {
-      r2 += dr[k] * dr[k];
-    }
+    this->calculate_distance_data(*this->m_coords, atom_i, atom_j);
     double gij, hij;
-    double dij = 0;
-    if (m_radii.size() > 0) {
-      dij = m_radii[atom_i] + m_radii[atom_j];
-    }
-#ifdef _OPENMP
-    *m_energies[isubdom] +=
-        m_interaction->energy_gradient_hessian(r2, &gij, &hij, dij);
-#else
-    *m_energies[0] +=
-        m_interaction->energy_gradient_hessian(r2, &gij, &hij, dij);
-#endif
-    if (gij != 0) {
-      for (size_t k = 0; k < m_ndim; ++k) {
-        (*m_gradient)[xi_off + k] -= gij * dr[k];
-        (*m_gradient)[xj_off + k] += gij * dr[k];
-      }
-    }
-    // this part is copied from simple_pairwise_potential.h
-    //(even more so than the rest)
-    const size_t N = m_gradient->size();
-    const size_t i1 = xi_off;
-    const size_t j1 = xj_off;
-    for (size_t k = 0; k < m_ndim; ++k) {
-      // diagonal block - diagonal terms
-      const double Hii_diag = (hij + gij) * dr[k] * dr[k] / r2 - gij;
-      (*m_hessian)[N * (i1 + k) + i1 + k] += Hii_diag;
-      (*m_hessian)[N * (j1 + k) + j1 + k] += Hii_diag;
-      // off diagonal block - diagonal terms
-      const double Hij_diag = -Hii_diag;
-      (*m_hessian)[N * (i1 + k) + j1 + k] += Hij_diag;
-      (*m_hessian)[N * (j1 + k) + i1 + k] += Hij_diag;
-      for (size_t l = k + 1; l < m_ndim; ++l) {
-        // diagonal block - off diagonal terms
-        const double Hii_off = (hij + gij) * dr[k] * dr[l] / r2;
-        (*m_hessian)[N * (i1 + k) + i1 + l] += Hii_off;
-        (*m_hessian)[N * (i1 + l) + i1 + k] += Hii_off;
-        (*m_hessian)[N * (j1 + k) + j1 + l] += Hii_off;
-        (*m_hessian)[N * (j1 + l) + j1 + k] += Hii_off;
-        // off diagonal block - off diagonal terms
-        const double Hij_off = -Hii_off;
-        (*m_hessian)[N * (i1 + k) + j1 + l] += Hij_off;
-        (*m_hessian)[N * (i1 + l) + j1 + k] += Hij_off;
-        (*m_hessian)[N * (j1 + k) + i1 + l] += Hij_off;
-        (*m_hessian)[N * (j1 + l) + i1 + k] += Hij_off;
-      }
-    }
-  }
+    double energy = this->m_interaction->energy_gradient_hessian(
+        this->m_dist_data.r2, &gij, &hij, this->m_dist_data.dij);
+    accumulate_energies_omp(m_energies, energy);
+    accumulate_gradient(*m_gradient, gij, this->m_dist_data.xi_off,
+                        this->m_dist_data.xj_off, this->m_dist_data.dr);
 
+    accumulate_hessian(*m_hessian, hij, gij, this->m_dist_data.xi_off,
+                       this->m_dist_data.xj_off, this->m_dist_data.dr,
+                       this->m_dist_data.r2, m_gradient->size());
+  }
   double get_energy() {
-    double energy = 0;
-    for (size_t i = 0; i < m_energies.size(); ++i) {
-      energy += *m_energies[i];
-    }
-    return energy;
+    return std::reduce(m_energies.begin(), m_energies.end());
   }
 };
 
@@ -356,6 +319,7 @@ class EnergyHessianAccumulator {
   std::vector<double *> m_energies;
   pele::Array<double> *m_hessian;
   pele::Array<double> *m_gradient;
+  NonAdditiveCutoff m_cutoff;
 
 public:
   ~EnergyHessianAccumulator() {
@@ -770,7 +734,7 @@ public:
         m_neighbor_displacements(radii.size()) {}
 
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
-                        const size_t isubdom) {
+                        const size_t) {
     if (m_include_atoms[atom_i] && m_include_atoms[atom_j]) {
       std::vector<double> dr(m_ndim);
       std::vector<double> neg_dr(m_ndim);
@@ -1161,15 +1125,15 @@ public:
     }
   }
 
-  virtual void
-  get_neighbors(pele::Array<double> const &coords,
-                pele::Array<std::vector<size_t>> &neighbor_indexes,
-                pele::Array<std::vector<std::vector<double>>> &neighbor_displacements,
-                const double cutoff_factor = 1.0) {
+  virtual void get_neighbors(
+      pele::Array<double> const &coords,
+      pele::Array<std::vector<size_t>> &neighbor_indexes,
+      pele::Array<std::vector<std::vector<double>>> &neighbor_displacements,
+      const double cutoff_factor = 1.0) {
     const size_t natoms = coords.size() / m_ndim;
     pele::Array<short> include_atoms(natoms, 1);
-    get_neighbors_picky(coords, neighbor_indexes, neighbor_displacements, include_atoms,
-                        cutoff_factor);
+    get_neighbors_picky(coords, neighbor_indexes, neighbor_displacements,
+                        include_atoms, cutoff_factor);
   }
 
   virtual void get_neighbors_picky(
@@ -1261,8 +1225,8 @@ public:
   virtual inline double get_interaction_energy_gradient(double r2, double *gij,
                                                         size_t atom_i,
                                                         size_t atom_j) const {
-    double energy =
-        m_interaction->energy_gradient(r2, gij, get_non_additive_cutoff(atom_i, atom_j));
+    double energy = m_interaction->energy_gradient(
+        r2, gij, get_non_additive_cutoff(atom_i, atom_j));
     *gij *= sqrt(r2);
     return energy;
   }
