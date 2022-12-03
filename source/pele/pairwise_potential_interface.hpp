@@ -25,23 +25,28 @@ namespace pele {
  * @param non_additivity 
  * @return double 
  */
-inline double get_non_additive_cutoff(double radius_i, double radius_j, double non_additivity) {
-  return (radius_i + radius_j) *
-             (1 - 2 * non_additivity * abs(radius_i - radius_j));
-}
+ class NonAdditiveCutoff {
+  public:
+    NonAdditiveCutoff(double non_additivity) : _non_additivity(non_additivity) {}
+    NonAdditiveCutoff() : _non_additivity(0) {}
+    inline double get_cutoff(const double radius_i,const double radius_j) const {
+        return (radius_i + radius_j) *
+             (1 - 2 * _non_additivity * abs(radius_i - radius_j));
+    }
+  private:
+    double _non_additivity;
+ };
 
 class PairwisePotentialInterface : public BasePotential {
 protected:
   const Array<double> m_radii;
-  const double non_additivity;
-
-
+  const NonAdditiveCutoff m_non_additive_cutoff;
 
 public:
-  PairwisePotentialInterface() : m_radii(0), non_additivity(0) {}
+  PairwisePotentialInterface() : m_radii(0), m_non_additive_cutoff(0) {}
   PairwisePotentialInterface(pele::Array<double> const &radii,
                              double non_addivity = 0)
-      : m_radii(radii.copy()), non_additivity(non_addivity) {
+      : m_radii(radii.copy()), m_non_additive_cutoff(non_addivity) {
     if (radii.size() == 0) {
       throw std::runtime_error(
           "PairwisePotentialInterface: illegal input: radii");
@@ -51,7 +56,7 @@ public:
     size_t min_radius_index  = std::distance(radii.begin(), min_radius_address);
     size_t max_radius_index  = std::distance(radii.begin(), max_radius_address);
 
-    auto dij = get_non_additive_cutoff(min_radius_index,max_radius_index);
+    double dij = get_non_additive_cutoff(min_radius_index,max_radius_index);
 
     if (dij < 0) {
       std::cout << "dij = " << dij << std::endl;
@@ -79,7 +84,7 @@ public:
       return 0;
     } else {
       // uses the diameters being twice the radii
-      return ::pele::get_non_additive_cutoff(m_radii[atom_i], m_radii[atom_j], non_additivity);
+      return m_non_additive_cutoff.get_cutoff(m_radii[atom_i], m_radii[atom_j]);
     }
   }
 
@@ -158,10 +163,10 @@ public:
    * Return lists of neighbors.
    */
   virtual void
-  get_neighbors(pele::Array<double> const &coords,
-                pele::Array<std::vector<size_t>> &neighbor_indss,
-                pele::Array<std::vector<std::vector<double>>> &neighbor_distss,
-                const double cutoff_factor = 1.0) {
+  get_neighbors(pele::Array<double> const &,
+                pele::Array<std::vector<size_t>> &,
+                pele::Array<std::vector<std::vector<double>>> &,
+                const double cutoff_factor = 1) {
     throw std::runtime_error(
         "PairwisePotentialInterface::get_neighbors must be overloaded");
   }
@@ -304,10 +309,6 @@ public:
     return jammed;
   }
 };
-
-
-
-}
 
 } // namespace pele
 
