@@ -1102,7 +1102,7 @@ TEST_F(OpenMPCellListsTest, HSWCAEnergyLeesEdwards_Works) {
 }
 
 TEST_F(OpenMPCellListsTest, HSWCAEnergyGradientLeesEdwards_Works) {
-  for (size_t nthreads = 2; nthreads <= 4; nthreads++) {
+  for (size_t nthreads = 2; nthreads <= 2; nthreads++) {
 #ifdef _OPENMP
     omp_set_num_threads(nthreads);
 #endif
@@ -1120,7 +1120,7 @@ TEST_F(OpenMPCellListsTest, HSWCAEnergyGradientLeesEdwards_Works) {
         pele::Array<double> g_cell(x.size());
         const double eg_no_cells =
             pot_no_cells.get_energy_gradient(x, g_no_cells);
-        for (size_t rep_same = 0; rep_same < 100; rep_same++) {
+        for (size_t rep_same = 0; rep_same < 1; rep_same++) {
           const double eg_cell = pot_cell.get_energy_gradient(x, g_cell);
           EXPECT_TRUE(almostEqual(e_no_cells, eg_no_cells, 8));
           EXPECT_TRUE(almostEqual(e_no_cells, eg_cell, 8));
@@ -1403,51 +1403,158 @@ TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivityStillinger) {
   ASSERT_EQ(energy_with_cell_lists, energy_without_cell_lists);
 }
 
+class CellListsHarmonicNonAdditive : public ::testing::Test {
+public:
+  std::shared_ptr<BasePotential> potential_with_cell_lists;
+  std::shared_ptr<BasePotential> potential_without_cell_lists;
+  Array<double> quenched_coordinates;
+  void SetUp() {
+    constexpr size_t dim = 2;
+    constexpr int pow = 2;
+
+    size_t n_particles = 32;
+    int eps = 1.0;
+    double non_additivity = 0.0;
+    bool exact_sum = false;
+
+    double cutoff_factor = 1.25;
+
+    double dmin_by_dmax = 0.449;
+    double d_mean = 1.0;
+    BerthierDistribution3d berthier_dist =
+        BerthierDistribution3d(dmin_by_dmax, d_mean);
+    Array<double> radii = berthier_dist.sample(n_particles);
+
+    double phi = 1.2;
+    double box_length = get_box_length(radii, dim, phi);
+    Array<double> boxvec = {box_length, box_length};
+    double ncellsx_scale = 1.0;
+
+    Array<double> coordinates =
+        generate_random_coordinates(box_length, n_particles, dim);
+
+    potential_without_cell_lists =
+        std::make_shared<InverseIntPowerPeriodic<dim, pow>>(
+            eps, radii, boxvec, exact_sum, non_additivity);
+    potential_with_cell_lists =
+        std::make_shared<InverseIntPowerPeriodicCellLists<dim, pow>>(
+            eps, radii, boxvec, ncellsx_scale, exact_sum, non_additivity);
+
+    LBFGS lbfgs = LBFGS(potential_without_cell_lists, coordinates);
+    lbfgs.run();
+    quenched_coordinates = lbfgs.get_x().copy();
+  }
+};
+
 /*
  *  Test to check whether the non-additivity works with a potential defined in
  *  Relaxation Dynamics in the Energy Landscape of Glass-Forming Liquids,
  *  PHYSICAL REVIEW X 12, 021001 (2022) (The soft sphere potential in the paper)
- *  This is in 2D, for the 3d version we don't really need non additivit
+ *  This is in 2D, for the 3d version we don't really need non additivity
  */
-TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivityHarmonic) {
-  constexpr size_t n_particles = 32;
-  constexpr int ndim = 2;
-  constexpr int pow = 2;
-  constexpr int eps = 1.0;
-  constexpr double non_additivity = 0.2;
-  bool exact_sum = false;
-
-  double cutoff_factor = 1.25;
-
-  double dmin_by_dmax = 0.449;
-  double d_mean = 1.0;
-  BerthierDistribution3d berthier_dist =
-      BerthierDistribution3d(dmin_by_dmax, d_mean);
-  Array<double> radii = berthier_dist.sample(n_particles);
-
-  double phi = 1.2;
-  double box_length = get_box_length(radii, ndim, phi);
-  Array<double> boxvec = {box_length, box_length};
-  double ncellsx_scale = 1.0;
-
-  Array<double> coordinates =
-      generate_random_coordinates(box_length, n_particles, ndim);
-
-  auto potential_with_cell_lists =
-      std::make_shared<InverseIntPowerPeriodic<ndim, pow>>(
-          eps, radii, boxvec, exact_sum, non_additivity);
-  auto potential_without_cell_lists =
-      std::make_shared<InverseIntPowerPeriodicCellLists<ndim, pow>>(
-          eps, radii, boxvec, ncellsx_scale, exact_sum, non_additivity);
-
-  LBFGS lbfgs = LBFGS(potential_without_cell_lists, coordinates);
-  lbfgs.run();
-  Array<double> quenched_coordinates = lbfgs.get_x().copy();
+TEST_F(CellListsHarmonicNonAdditive, Energy) {
 
   double energy_with_cell_lists =
       potential_with_cell_lists->get_energy(quenched_coordinates);
-  double energy_without_cell_lists = potential_without_cell_lists->get_energy(
-      quenched_coordinates);
+  double energy_without_cell_lists =
+      potential_without_cell_lists->get_energy(quenched_coordinates);
 
-  ASSERT_EQ(energy_with_cell_lists, energy_without_cell_lists);
+  EXPECT_TRUE(
+      almostEqual(energy_with_cell_lists, energy_without_cell_lists, 8));
+}
+
+TEST_F(CellListsHarmonicNonAdditive, EnergyGradient) {
+  Array<double> gradient_with_cell_lists(quenched_coordinates.size());
+  Array<double> gradient_without_cell_lists(quenched_coordinates.size());
+
+  double energy_with_cell_lists =
+      potential_with_cell_lists->get_energy_gradient(quenched_coordinates,
+                                                     gradient_with_cell_lists);
+  double energy_without_cell_lists =
+      potential_without_cell_lists->get_energy_gradient(
+          quenched_coordinates, gradient_without_cell_lists);
+
+  EXPECT_TRUE(
+      almostEqual(energy_with_cell_lists, energy_without_cell_lists, 8));
+
+  for (size_t i = 0; i < gradient_with_cell_lists.size(); i++) {
+    EXPECT_TRUE(almostEqual(gradient_with_cell_lists[i],
+                            gradient_without_cell_lists[i], 8));
+  }
+}
+
+TEST_F(CellListsHarmonicNonAdditive, EnergyGradientHessian) {
+  Array<double> gradient_with_cell_lists(quenched_coordinates.size());
+  Array<double> gradient_without_cell_lists(quenched_coordinates.size());
+  Array<double> hessian_with_cell_lists(quenched_coordinates.size() *
+                                        quenched_coordinates.size());
+  Array<double> hessian_without_cell_lists(quenched_coordinates.size() *
+                                           quenched_coordinates.size());
+
+  double energy_with_cell_lists =
+      potential_with_cell_lists->get_energy_gradient_hessian(
+          quenched_coordinates, gradient_with_cell_lists,
+          hessian_with_cell_lists);
+  double energy_without_cell_lists =
+      potential_without_cell_lists->get_energy_gradient_hessian(
+          quenched_coordinates, gradient_without_cell_lists,
+          hessian_without_cell_lists);
+
+  EXPECT_TRUE(
+      almostEqual(energy_with_cell_lists, energy_without_cell_lists, 8));
+
+  for (size_t i = 0; i < gradient_with_cell_lists.size(); i++) {
+    EXPECT_TRUE(almostEqual(gradient_with_cell_lists[i],
+                            gradient_without_cell_lists[i], 8));
+  }
+
+  for (size_t i = 0; i < hessian_with_cell_lists.size(); i++) {
+    EXPECT_TRUE(almostEqual(hessian_with_cell_lists[i],
+                            hessian_without_cell_lists[i], 8));
+  }
+
+
+
+  class CellListsHarmonicNonAdditive : public ::testing::Test {
+public:
+  std::shared_ptr<BasePotential> potential_with_cell_lists;
+  std::shared_ptr<BasePotential> potential_without_cell_lists;
+  Array<double> quenched_coordinates;
+  void SetUp() {
+    constexpr size_t dim = 2;
+    constexpr int pow = 2;
+
+    size_t n_particles = 32;
+    int eps = 1.0;
+    double non_additivity = 0.0;
+    bool exact_sum = false;
+
+    double cutoff_factor = 1.25;
+
+    double dmin_by_dmax = 0.449;
+    double d_mean = 1.0;
+    BerthierDistribution3d berthier_dist =
+        BerthierDistribution3d(dmin_by_dmax, d_mean);
+    Array<double> radii = berthier_dist.sample(n_particles);
+
+    double phi = 1.2;
+    double box_length = get_box_length(radii, dim, phi);
+    Array<double> boxvec = {box_length, box_length};
+    double ncellsx_scale = 1.0;
+
+    Array<double> coordinates =
+        generate_random_coordinates(box_length, n_particles, dim);
+
+    potential_without_cell_lists =
+        std::make_shared<InverseIntPowerPeriodic<dim, pow>>(
+            eps, radii, boxvec, exact_sum, non_additivity);
+    potential_with_cell_lists =
+        std::make_shared<InverseIntPowerPeriodicCellLists<dim, pow>>(
+            eps, radii, boxvec, ncellsx_scale, exact_sum, non_additivity);
+
+    LBFGS lbfgs = LBFGS(potential_without_cell_lists, coordinates);
+    lbfgs.run();
+    quenched_coordinates = lbfgs.get_x().copy();
+  }
+};
 }
