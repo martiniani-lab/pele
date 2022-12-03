@@ -192,10 +192,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
   }
   double gij;
   double dr[m_ndim];
-  // std::vector<double> grad_test (grad.size(), 0);
-
   if (exact_sum) {
-
     xsum_large_accumulator esum;
     xsum_large_init(&esum);
     if (!exact_gradient_initialized) {
@@ -258,9 +255,10 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
         for (size_t k = 0; k < m_ndim; ++k) {
           r2 += dr[k] * dr[k];
         }
-
+        const double dij = get_non_additive_cutoff(atom_i, atom_j);
         e += _interaction->energy_gradient(
             r2, &gij, get_non_additive_cutoff(atom_i, atom_j));
+        
         if (gij != 0) {
 #pragma GCC unroll 3
           for (size_t k = 0; k < m_ndim; ++k) {
