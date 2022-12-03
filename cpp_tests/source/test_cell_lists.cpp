@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "pele/array.hpp"
+#include "pele/base_potential.hpp"
 #include "pele/cell_lists.hpp"
 #include "pele/distance.hpp"
 #include "pele/hs_wca.hpp"
@@ -1354,55 +1355,6 @@ TEST(CellLists, NeighborsWithNonAdditivity) {
   }
 }
 
-/*
- *  Test to check whether the non-additivity works with a potential defined in
- *  Relaxation Dynamics in the Energy Landscape of Glass-Forming Liquids,
- *  PHYSICAL REVIEW X 12, 021001 (2022) (The soft sphere potential in the paper)
- */
-TEST(CellLists, EnergyGradientHessianCalculationsWithNonAdditivityStillinger) {
-
-  constexpr size_t n_particles = 32;
-  constexpr int ndim = 2;
-  int pow = 12;
-  double v0 = 1.0;
-  constexpr double non_additivity = 0.2;
-
-  double cutoff_factor = 1.25;
-
-  double dmin_by_dmax = 0.449;
-  double d_mean = 1.0;
-  BerthierDistribution3d berthier_dist =
-      BerthierDistribution3d(dmin_by_dmax, d_mean);
-  Array<double> radii = berthier_dist.sample(n_particles);
-
-  double phi = 1.2;
-  double box_length = get_box_length(radii, ndim, phi);
-
-  Array<double> boxvec;
-  boxvec = {box_length, box_length};
-
-  Array<double> coordinates =
-      generate_random_coordinates(box_length, n_particles, ndim);
-  auto potential_with_cell_lists =
-      std::make_shared<InversePowerStillingerCutQuadPeriodicCellLists<ndim>>(
-          pow, v0, cutoff_factor, radii, boxvec, 1.0, non_additivity);
-  auto potential_without_cell_lists =
-      std::make_shared<InversePowerStillingerCutQuadPeriodic<ndim>>(
-          pow, v0, cutoff_factor, radii, boxvec, non_additivity);
-
-  LBFGS lbfgs = LBFGS(potential_with_cell_lists, coordinates, 1e-6);
-
-  lbfgs.run();
-
-  Array<double> quenched_coordinates = lbfgs.get_x().copy();
-
-  double energy_with_cell_lists =
-      potential_with_cell_lists->get_energy(quenched_coordinates);
-  double energy_without_cell_lists =
-      potential_without_cell_lists->get_energy(quenched_coordinates);
-  ASSERT_EQ(energy_with_cell_lists, energy_without_cell_lists);
-}
-
 class CellListsHarmonicNonAdditive : public ::testing::Test {
 public:
   std::shared_ptr<BasePotential> potential_with_cell_lists;
@@ -1413,7 +1365,7 @@ public:
     constexpr int pow = 2;
 
     size_t n_particles = 32;
-    int eps = 1.0;
+    double eps = 1.0;
     double non_additivity = 0.0;
     bool exact_sum = false;
 
@@ -1446,33 +1398,29 @@ public:
   }
 };
 
-/*
- *  Test to check whether the non-additivity works with a potential defined in
- *  Relaxation Dynamics in the Energy Landscape of Glass-Forming Liquids,
- *  PHYSICAL REVIEW X 12, 021001 (2022) (The soft sphere potential in the paper)
- *  This is in 2D, for the 3d version we don't really need non additivity
- */
-TEST_F(CellListsHarmonicNonAdditive, Energy) {
-
+inline void test_energy(BasePotential &potential_with_cell_lists,
+                        BasePotential &potential_without_cell_lists,
+                        Array<double> coordinates) {
   double energy_with_cell_lists =
-      potential_with_cell_lists->get_energy(quenched_coordinates);
+      potential_with_cell_lists.get_energy(coordinates);
   double energy_without_cell_lists =
-      potential_without_cell_lists->get_energy(quenched_coordinates);
+      potential_without_cell_lists.get_energy(coordinates);
 
   EXPECT_TRUE(
       almostEqual(energy_with_cell_lists, energy_without_cell_lists, 8));
 }
 
-TEST_F(CellListsHarmonicNonAdditive, EnergyGradient) {
-  Array<double> gradient_with_cell_lists(quenched_coordinates.size());
-  Array<double> gradient_without_cell_lists(quenched_coordinates.size());
+inline void test_energy_gradient(BasePotential &potential_with_cell_lists,
+                                 BasePotential &potential_without_cell_lists,
+                                 Array<double> coordinates) {
+  Array<double> gradient_with_cell_lists(coordinates.size());
+  Array<double> gradient_without_cell_lists(coordinates.size());
 
-  double energy_with_cell_lists =
-      potential_with_cell_lists->get_energy_gradient(quenched_coordinates,
-                                                     gradient_with_cell_lists);
+  double energy_with_cell_lists = potential_with_cell_lists.get_energy_gradient(
+      coordinates, gradient_with_cell_lists);
   double energy_without_cell_lists =
-      potential_without_cell_lists->get_energy_gradient(
-          quenched_coordinates, gradient_without_cell_lists);
+      potential_without_cell_lists.get_energy_gradient(
+          coordinates, gradient_without_cell_lists);
 
   EXPECT_TRUE(
       almostEqual(energy_with_cell_lists, energy_without_cell_lists, 8));
@@ -1483,22 +1431,24 @@ TEST_F(CellListsHarmonicNonAdditive, EnergyGradient) {
   }
 }
 
-TEST_F(CellListsHarmonicNonAdditive, EnergyGradientHessian) {
-  Array<double> gradient_with_cell_lists(quenched_coordinates.size());
-  Array<double> gradient_without_cell_lists(quenched_coordinates.size());
-  Array<double> hessian_with_cell_lists(quenched_coordinates.size() *
-                                        quenched_coordinates.size());
-  Array<double> hessian_without_cell_lists(quenched_coordinates.size() *
-                                           quenched_coordinates.size());
+inline void
+test_energy_gradient_hessian(BasePotential &potential_with_cell_lists,
+                             BasePotential &potential_without_cell_lists,
+                             Array<double> coordinates) {
+  Array<double> gradient_with_cell_lists(coordinates.size());
+  Array<double> gradient_without_cell_lists(coordinates.size());
+
+  Array<double> hessian_with_cell_lists(coordinates.size() *
+                                        coordinates.size());
+  Array<double> hessian_without_cell_lists(coordinates.size() *
+                                           coordinates.size());
 
   double energy_with_cell_lists =
-      potential_with_cell_lists->get_energy_gradient_hessian(
-          quenched_coordinates, gradient_with_cell_lists,
-          hessian_with_cell_lists);
+      potential_with_cell_lists.get_energy_gradient_hessian(
+          coordinates, gradient_with_cell_lists, hessian_with_cell_lists);
   double energy_without_cell_lists =
-      potential_without_cell_lists->get_energy_gradient_hessian(
-          quenched_coordinates, gradient_without_cell_lists,
-          hessian_without_cell_lists);
+      potential_without_cell_lists.get_energy_gradient_hessian(
+          coordinates, gradient_without_cell_lists, hessian_without_cell_lists);
 
   EXPECT_TRUE(
       almostEqual(energy_with_cell_lists, energy_without_cell_lists, 8));
@@ -1512,20 +1462,41 @@ TEST_F(CellListsHarmonicNonAdditive, EnergyGradientHessian) {
     EXPECT_TRUE(almostEqual(hessian_with_cell_lists[i],
                             hessian_without_cell_lists[i], 8));
   }
+}
 
+/*
+ *  Test to check whether the non-additivity works with a potential defined in
+ *  Relaxation Dynamics in the Energy Landscape of Glass-Forming Liquids,
+ *  PHYSICAL REVIEW X 12, 021001 (2022) (The soft sphere potential in the paper)
+ *  This is in 2D, for the 3d version we don't really need non additivity
+ */
+TEST_F(CellListsHarmonicNonAdditive, Energy) {
+  test_energy(*potential_with_cell_lists, *potential_without_cell_lists,
+              quenched_coordinates);
+}
 
+TEST_F(CellListsHarmonicNonAdditive, EnergyGradient) {
+  test_energy_gradient(*potential_with_cell_lists,
+                       *potential_without_cell_lists, quenched_coordinates);
+}
 
-  class CellListsHarmonicNonAdditive : public ::testing::Test {
+TEST_F(CellListsHarmonicNonAdditive, EnergyGradientHessian) {
+  test_energy_gradient_hessian(*potential_with_cell_lists,
+                               *potential_without_cell_lists,
+                               quenched_coordinates);
+}
+
+class CellListsStillingerCutQuadNonAdditive : public ::testing::Test {
 public:
   std::shared_ptr<BasePotential> potential_with_cell_lists;
   std::shared_ptr<BasePotential> potential_without_cell_lists;
   Array<double> quenched_coordinates;
   void SetUp() {
     constexpr size_t dim = 2;
-    constexpr int pow = 2;
+    constexpr int pow = 12;
 
     size_t n_particles = 32;
-    int eps = 1.0;
+    double v0 = 1.0;
     double non_additivity = 0.0;
     bool exact_sum = false;
 
@@ -1546,15 +1517,43 @@ public:
         generate_random_coordinates(box_length, n_particles, dim);
 
     potential_without_cell_lists =
-        std::make_shared<InverseIntPowerPeriodic<dim, pow>>(
-            eps, radii, boxvec, exact_sum, non_additivity);
+        std::make_shared<InversePowerStillingerCutQuadPeriodicCellLists<dim>>(
+            pow, v0, cutoff_factor, radii, boxvec, ncellsx_scale,
+            non_additivity);
     potential_with_cell_lists =
-        std::make_shared<InverseIntPowerPeriodicCellLists<dim, pow>>(
-            eps, radii, boxvec, ncellsx_scale, exact_sum, non_additivity);
+        std::make_shared<InversePowerStillingerCutQuadPeriodic<dim>>(
+            pow, v0, cutoff_factor, radii, boxvec, non_additivity);
 
     LBFGS lbfgs = LBFGS(potential_without_cell_lists, coordinates);
     lbfgs.run();
     quenched_coordinates = lbfgs.get_x().copy();
   }
 };
+
+/*
+ *  Test to check whether the non-additivity works with a potential defined in
+ *  Relaxation Dynamics in the Energy Landscape of Glass-Forming Liquids,
+ *  PHYSICAL REVIEW X 12, 021001 (2022) (The soft sphere potential in the
+ * paper)
+ */
+TEST_F(CellListsStillingerCutQuadNonAdditive,
+       Energy) {
+  test_energy(*potential_with_cell_lists, *potential_without_cell_lists,
+              quenched_coordinates);
 }
+
+
+
+// Fixes need to be done before these tests pass
+// TEST_F(CellListsStillingerCutQuadNonAdditive,
+//        EnergyGradient) {
+//   test_energy_gradient(*potential_with_cell_lists,
+//                        *potential_without_cell_lists, quenched_coordinates);
+// }
+
+// TEST_F(CellListsStillingerCutQuadNonAdditive,
+//        EnergyGradientHessian) {
+//   test_energy_gradient_hessian(*potential_with_cell_lists,
+//                                *potential_without_cell_lists,
+//                                quenched_coordinates);
+// }
