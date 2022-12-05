@@ -4,8 +4,11 @@ import sys
 
 import numpy as np
 
-from pele.thermodynamics._normalmodes import logproduct_freq2, normalmodes,\
-    NormalModeError
+from pele.thermodynamics._normalmodes import (
+    logproduct_freq2,
+    normalmodes,
+    NormalModeError,
+)
 from pele.thermodynamics import get_thermodynamic_information
 from pele.systems import LJCluster
 
@@ -13,6 +16,7 @@ from pele.systems import LJCluster
 class TestNormalModes(unittest.TestCase):
     def setUp(self):
         import numpy as np
+
         s = np.random.randint(1000000)
         s = 322846
         self.seed = s
@@ -21,7 +25,9 @@ class TestNormalModes(unittest.TestCase):
         import pele.rates.tests.__init__ as f
 
         dirname = os.path.dirname(f.__file__)
-        dbfname = os.path.join(dirname, "lj15.{}.sqlite".format(sys.version_info.major))
+        dbfname = os.path.join(
+            dirname, "lj15.{}.sqlite".format(sys.version_info.major)
+        )
         if not os.path.exists(dbfname):
             raise IOError("database file %s does not exist" % dbfname)
         self.system = LJCluster(15)
@@ -48,7 +54,6 @@ class TestNormalModes(unittest.TestCase):
         m = self.db.minima()[0]
         mt = np.eye(m.coords.size)
         self.check(m.fvib, m.coords, 6, 0, metric=mt)
-
 
     def test_get_thermo_info(self):
         # note, there is an intermittant error in this test
@@ -97,7 +102,9 @@ class TestNormalModes(unittest.TestCase):
             tslist.append(newts)
 
         # with self.assertRaises(ValueError):
-        get_thermodynamic_information(self.system, newdb, nproc=2, verbose=False)
+        get_thermodynamic_information(
+            self.system, newdb, nproc=2, verbose=False
+        )
         for ts in tslist:
             self.assertTrue(ts.invalid)
 
@@ -112,7 +119,9 @@ class TestNormalModes(unittest.TestCase):
             mlist.append(m1)
 
         # with self.assertRaises(ValueError):
-        get_thermodynamic_information(self.system, newdb, nproc=2, verbose=False)
+        get_thermodynamic_information(
+            self.system, newdb, nproc=2, verbose=False
+        )
         for m in mlist:
             self.assertTrue(m.invalid)
 

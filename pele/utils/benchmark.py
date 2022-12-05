@@ -42,7 +42,6 @@ class QuenchBenchmark(object):
     classdocs
     """
 
-
     def __init__(self, potential):
         """
         Constructor

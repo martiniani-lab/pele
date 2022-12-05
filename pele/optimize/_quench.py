@@ -16,19 +16,34 @@ from past.utils import old_div
 import numpy as np
 
 
-from pele.optimize import LBFGS, MYLBFGS, Fire, Result, LBFGS_CPP, ModifiedFireCPP
+from pele.optimize import (
+    LBFGS,
+    MYLBFGS,
+    Fire,
+    Result,
+    LBFGS_CPP,
+    ModifiedFireCPP,
+)
 
 from scipy.integrate import Radau
 
 
-__all__ = ["lbfgs_scipy", "fire", "lbfgs_py", "mylbfgs", "cg",
-           "steepest_descent", "bfgs_scipy", "lbfgs_cpp"]
+__all__ = [
+    "lbfgs_scipy",
+    "fire",
+    "lbfgs_py",
+    "mylbfgs",
+    "cg",
+    "steepest_descent",
+    "bfgs_scipy",
+    "lbfgs_cpp",
+]
 
 
 def lbfgs_scipy(coords, pot, iprint=-1, tol=1e-3, nsteps=15000):
     """
     a wrapper function for lbfgs routine in scipy
-    
+
     .. warn::
         the scipy version of lbfgs uses linesearch based only on energy
         which can make the minimization stop early.  When the step size
@@ -39,31 +54,36 @@ def lbfgs_scipy(coords, pot, iprint=-1, tol=1e-3, nsteps=15000):
         the energy.  Thus we want to make factr as small as possible.  Unfortunately,
         if we make it too small the routine realizes that the linesearch routine
         isn't working and declares failure and exits.
-        
+
         So long story short, if your tolerance is very small (< 1e-6) this routine
-        will probably stop before truly reaching that tolerance.  If you reduce `factr` 
-        too much to mitigate this lbfgs will stop anyway, but declare failure misleadingly.  
+        will probably stop before truly reaching that tolerance.  If you reduce `factr`
+        too much to mitigate this lbfgs will stop anyway, but declare failure misleadingly.
     """
     import scipy.optimize
 
     res = Result()
-    res.coords, res.energy, dictionary = scipy.optimize.fmin_l_bfgs_b(pot.getEnergyGradient,
-                                                                      coords, iprint=iprint, pgtol=tol, maxfun=nsteps,
-                                                                      factr=10.)
+    res.coords, res.energy, dictionary = scipy.optimize.fmin_l_bfgs_b(
+        pot.getEnergyGradient,
+        coords,
+        iprint=iprint,
+        pgtol=tol,
+        maxfun=nsteps,
+        factr=10.0,
+    )
     res.grad = dictionary["grad"]
     res.nfev = dictionary["funcalls"]
-    warnflag = dictionary['warnflag']
+    warnflag = dictionary["warnflag"]
     # res.nsteps = dictionary['nit'] #  new in scipy version 0.12
     res.nsteps = res.nfev
-    res.message = dictionary['task']
+    res.message = dictionary["task"]
     res.success = True
     if warnflag > 0:
-        print("warning: problem with quench: ", end=' ')
+        print("warning: problem with quench: ", end=" ")
         res.success = False
         if warnflag == 1:
             res.message = "too many function evaluations"
         else:
-            res.message = str(dictionary['task'])
+            res.message = str(dictionary["task"])
         print(res.message)
     # note: if the linesearch fails the lbfgs may fail without setting warnflag.  Check
     # tolerance exactly
@@ -71,7 +91,13 @@ def lbfgs_scipy(coords, pot, iprint=-1, tol=1e-3, nsteps=15000):
         if res.success:
             maxV = np.max(np.abs(res.grad))
             if maxV > tol:
-                print("warning: gradient seems too large", maxV, "tol =", tol, ". This is a known, but not understood issue of scipy_lbfgs")
+                print(
+                    "warning: gradient seems too large",
+                    maxV,
+                    "tol =",
+                    tol,
+                    ". This is a known, but not understood issue of scipy_lbfgs",
+                )
                 print(res.message)
     res.rms = res.grad.std()
     return res
@@ -92,9 +118,16 @@ def cg(coords, pot, iprint=-1, tol=1e-3, nsteps=5000, **kwargs):
     """
     import scipy.optimize
 
-    ret = scipy.optimize.fmin_cg(pot.getEnergy, coords, pot.getGradient,
-                                 gtol=tol, full_output=True, disp=iprint > 0,
-                                 maxiter=nsteps, **kwargs)
+    ret = scipy.optimize.fmin_cg(
+        pot.getEnergy,
+        coords,
+        pot.getGradient,
+        gtol=tol,
+        full_output=True,
+        disp=iprint > 0,
+        maxiter=nsteps,
+        **kwargs
+    )
     res = Result()
     res.coords = ret[0]
     res.nfev = ret[2]
@@ -115,10 +148,18 @@ def cg(coords, pot, iprint=-1, tol=1e-3, nsteps=5000, **kwargs):
     return res
 
 
-def steepest_descent(x0, pot, iprint=-1, dx=1e-4, nsteps=10000000,
-                     tol=1e-4, maxstep=-1., events=None):
+def steepest_descent(
+    x0,
+    pot,
+    iprint=-1,
+    dx=1e-4,
+    nsteps=10000000,
+    tol=1e-4,
+    maxstep=-1.0,
+    events=None,
+):
     """steepest descent minimization
-    
+
     Notes
     -----
     this should never be used except for testing purposes.  It is a bad implementation
@@ -140,7 +181,10 @@ def steepest_descent(x0, pot, iprint=-1, dx=1e-4, nsteps=10000000,
         rms = old_div(np.linalg.norm(V), np.sqrt(N))
         if iprint > 0:
             if funcalls % iprint == 0:
-                print("step %8d energy %20.12g rms gradient %20.12g" % (funcalls, E, rms))
+                print(
+                    "step %8d energy %20.12g rms gradient %20.12g"
+                    % (funcalls, E, rms)
+                )
         if events is not None:
             for event in events:
                 event(energy=E, coords=x, rms=rms)
@@ -163,9 +207,16 @@ def bfgs_scipy(coords, pot, iprint=-1, tol=1e-3, nsteps=5000, **kwargs):
     """
     import scipy.optimize
 
-    ret = scipy.optimize.fmin_bfgs(pot.getEnergy, coords, fprime=pot.getGradient,
-                                   gtol=tol, full_output=True, disp=iprint > 0,
-                                   maxiter=nsteps, **kwargs)
+    ret = scipy.optimize.fmin_bfgs(
+        pot.getEnergy,
+        coords,
+        fprime=pot.getGradient,
+        gtol=tol,
+        full_output=True,
+        disp=iprint > 0,
+        maxiter=nsteps,
+        **kwargs
+    )
     res = Result()
     res.coords = ret[0]
     res.energy = ret[1]
@@ -197,11 +248,17 @@ def modifiedfire_cpp(coords, pot, **kwargs):
     return modifiedfire.run()
 
 
-
-
-
-def ode_scipy_naive(coords, pot, t_bound=1000, tol=1e-4, nsteps=20000, convergence_check=None, solver_type='rk45', **kwargs):
-    """ This uses rk45 in a minimizer like approach to find the ode
+def ode_scipy_naive(
+    coords,
+    pot,
+    t_bound=1000,
+    tol=1e-4,
+    nsteps=20000,
+    convergence_check=None,
+    solver_type="rk45",
+    **kwargs
+):
+    """This uses rk45 in a minimizer like approach to find the ode
         The idea is to solve for the path
          dx/dt = - \\grad{E}
     Parameters
@@ -223,16 +280,19 @@ def ode_scipy_naive(coords, pot, t_bound=1000, tol=1e-4, nsteps=20000, convergen
     """
 
     class feval_pot:
-        """ wrapper class that calculates function evaluations
-            and makes sure to point the gradient in the right direction
+        """wrapper class that calculates function evaluations
+        and makes sure to point the gradient in the right direction
         """
+
         def __init__(self):
             self.nfev = 0
+
         def get_gradient(self, t, x):
-            self.nfev +=1
+            self.nfev += 1
             return -pot.getEnergyGradient(x.copy())[1]
+
         def get_energy_gradient(self, x):
-            self.nfev +=1
+            self.nfev += 1
             return pot.getEnergyGradient(x.copy())
 
     # This code seems to work for these two solvers
@@ -245,22 +305,27 @@ def ode_scipy_naive(coords, pot, t_bound=1000, tol=1e-4, nsteps=20000, convergen
     #     # gets just the gradient from the potential
     #     return pot.getEnergyGradient(x)[1]
     function_evaluate_pot = feval_pot()
-    solver = solver(function_evaluate_pot.get_gradient,
-                    # function_evaluate_pot.get_energy_gradient,
-                    0, coords, t_bound,
-                    rtol=1e-3, atol=1e-3)
+    solver = solver(
+        function_evaluate_pot.get_gradient,
+        # function_evaluate_pot.get_energy_gradient,
+        0,
+        coords,
+        t_bound,
+        rtol=1e-3,
+        atol=1e-3,
+    )
     # min_step = 10 * np.abs(np.nextafter(t, self.direction * np.inf) - t)
     converged = False
     n = 0
     if convergence_check == None:
-        convergence_check = lambda g: np.linalg.norm(g)<tol
+        convergence_check = lambda g: np.linalg.norm(g) < tol
 
     x_ = np.full(len(coords), np.nan)
-    while not converged and n<nsteps:
+    while not converged and n < nsteps:
         xold = x_
         solver.step()
-        x_ = solver.dense_output().y_old        
-        n+=1
+        x_ = solver.dense_output().y_old
+        n += 1
         converged = convergence_check(pot.getEnergyGradient(x_)[1])
     res = Result()
     res.coords = x_
@@ -273,8 +338,3 @@ def ode_scipy_naive(coords, pot, t_bound=1000, tol=1e-4, nsteps=20000, convergen
     res.nsteps = n
     res.success = converged
     return res
-
-
-
-
-

@@ -66,34 +66,45 @@ You can access other attributes of the :class:`.Minimum` as `minimum.coords` in 
 
 """
 from __future__ import print_function
+
+
 def bh_with_system_class():
     from pele.systems import LJCluster
+
     natoms = 17
     system = LJCluster(natoms)
-    database = system.create_database('lj17.sqlite')
+    database = system.create_database("lj17.sqlite")
     bh = system.get_basinhopping(database)
     bh.run(10)
+
 
 def bh_no_system_class():
     import numpy as np
     from pele.potentials import LJ
+
     natoms = 17
     potential = LJ()
-    x0 = np.random.uniform(-1, 1, 3*natoms)
-    
+    x0 = np.random.uniform(-1, 1, 3 * natoms)
+
     from pele.takestep import RandomDisplacement, AdaptiveStepsizeTemperature
+
     displace = RandomDisplacement()
     adaptive_displacement = AdaptiveStepsizeTemperature(displace)
-    
+
     from pele.storage import Database
+
     database = Database("lj17.sqlite")
-    
+
     from pele.basinhopping import BasinHopping
-    bh = BasinHopping(x0, potential, adaptive_displacement, storage=database.minimum_adder)
+
+    bh = BasinHopping(
+        x0, potential, adaptive_displacement, storage=database.minimum_adder
+    )
     bh.run(10)
-    
+
     for m in database.minima():
         print(m.energy)
+
 
 if __name__ == "__main__":
     bh_no_system_class()

@@ -22,13 +22,13 @@ class LJCut(BasePotentialAtomistic):
         self.boxl = boxl
         if self.boxl is None:
             self.periodic = False
-            self.boxl = 100000.
+            self.boxl = 100000.0
         else:
             self.periodic = True
 
         if False:
-            print("using Lennard-Jones potential", self.sig, self.eps, end=' ')
-            print("with cutoff", self.rcut, end=' ')
+            print("using Lennard-Jones potential", self.sig, self.eps, end=" ")
+            print("with cutoff", self.rcut, end=" ")
             if self.periodic:
                 print("periodic with boxl ", self.boxl)
             else:
@@ -36,26 +36,38 @@ class LJCut(BasePotentialAtomistic):
 
     def getEnergy(self, coords):
         E = _ljcut.ljenergy(
-            coords, self.eps, self.sig, self.periodic, self.boxl,
-            self.rcut)
+            coords, self.eps, self.sig, self.periodic, self.boxl, self.rcut
+        )
         return E
 
     def getEnergyGradient(self, coords):
         E, grad = _ljcut.ljenergy_gradient(
-            coords, self.eps, self.sig, self.periodic, self.boxl,
-            self.rcut)
+            coords, self.eps, self.sig, self.periodic, self.boxl, self.rcut
+        )
         return E, grad
 
     def getEnergyList(self, coords, ilist):
         E = _ljcut.energy_ilist(
-            coords, self.eps, self.sig, ilist.reshape(-1), self.periodic,
-            self.boxl, self.rcut)
+            coords,
+            self.eps,
+            self.sig,
+            ilist.reshape(-1),
+            self.periodic,
+            self.boxl,
+            self.rcut,
+        )
         return E
 
     def getEnergyGradientList(self, coords, ilist):
         E, grad = _ljcut.energy_gradient_ilist(
-            coords, self.eps, self.sig, ilist.reshape(-1), self.periodic,
-            self.boxl, self.rcut)
+            coords,
+            self.eps,
+            self.sig,
+            ilist.reshape(-1),
+            self.periodic,
+            self.boxl,
+            self.rcut,
+        )
         return E, grad
 
     #
@@ -67,7 +79,9 @@ class LJCut(BasePotentialAtomistic):
 
 def test():  # pragma: no cover
     natoms = 10
-    coords = np.random.uniform(-1, 1., 3 * natoms) * natoms ** (old_div(-1., 3))
+    coords = np.random.uniform(-1, 1.0, 3 * natoms) * natoms ** (
+        old_div(-1.0, 3)
+    )
     pot = LJCut()
     E = pot.getEnergy(coords)
     Egrad, grad = pot.getEnergyGradient(coords)

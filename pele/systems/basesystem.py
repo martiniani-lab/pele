@@ -16,17 +16,17 @@ __all__ = ["BaseParameters", "Parameters", "dict_copy_update", "BaseSystem"]
 
 class BaseParameters(dict):
     """define a dictionary who's values can be accessed like attributes
-    
+
     if `params` is a BaseParameters object then this command::
-    
+
         base_params["key"] = value
-    
+
     is the same as::
-    
+
         base_params.key = value
-        
+
     This only works for keys that are strings
-    
+
     """
 
     def __getattr__(self, name):
@@ -52,15 +52,21 @@ class Parameters(BaseParameters):
         self.double_ended_connect = BaseParameters()
         self.double_ended_connect.local_connect_params = BaseParameters()
 
-        self.double_ended_connect.local_connect_params.pushoff_params = BaseParameters()
+        self.double_ended_connect.local_connect_params.pushoff_params = (
+            BaseParameters()
+        )
 
-        self.double_ended_connect.local_connect_params.tsSearchParams = BaseParameters(FindTransitionState.params())
-        self.double_ended_connect.local_connect_params.NEBparams = BaseParameters(NEBDriver.params())
+        self.double_ended_connect.local_connect_params.tsSearchParams = (
+            BaseParameters(FindTransitionState.params())
+        )
+        self.double_ended_connect.local_connect_params.NEBparams = (
+            BaseParameters(NEBDriver.params())
+        )
 
 
 def dict_copy_update(dict1, dict2):
-    """return a new dictionary from the union of dict1 and dict2.  
-    
+    """return a new dictionary from the union of dict1 and dict2.
+
     If there are conflicts, take the value in dict2"""
     newdict = dict1.copy()
     newdict.update(dict2)
@@ -70,13 +76,13 @@ def dict_copy_update(dict1, dict2):
 class BaseSystem(object):
     """
     The base class for a System object
-        
+
     Notes
     -------------
     The following functions need to be overloaded for running
     the given routines
 
-    
+
     Global Optimization::
 
     1. get_potential : required
@@ -90,23 +96,23 @@ class BaseSystem(object):
     #. get_mindist : required
     #. get_orthogonalize_to_zero_eigenvectors : required
     #. get_compare_exact : optional, recommended
-    
+
     thermodynamics::
     1. get_metric_tensor
-    
+
     GUI::
-        
+
     1. all of the above functions are required, plus
     #. draw : required
     #. smooth_path : required
     #. load_coords_pymol : recommended
-    
 
-    additionally, it's a very good idea to specify the accuracy in the 
+
+    additionally, it's a very good idea to specify the accuracy in the
     database using self.params.database.accuracy
-    
+
     See the method documentation for more information and relevant links
-    
+
     """
 
     def __init__(self, *args, **kwargs):
@@ -116,14 +122,14 @@ class BaseSystem(object):
 
     def __call__(self):
         """calling a system returns itself
-        
+
         this exists solely for the gui. this should be rewritten
         """
         return self
 
     def get_potential(self):
         """return the potential object
-        
+
         See Also
         --------
         pele.potentials
@@ -132,7 +138,7 @@ class BaseSystem(object):
 
     def get_random_configuration(self):
         """return starting point for basinhopping, etc.
-        
+
         Returns
         -------
         coords : array
@@ -141,11 +147,11 @@ class BaseSystem(object):
 
     def get_random_minimized_configuration(self, **kwargs):
         """return a random configuration that is already minimized
-        
+
         Returns
         -------
         result : an optimizer Results object
-        
+
         See Also
         --------
         pele.optimize
@@ -156,24 +162,26 @@ class BaseSystem(object):
 
     def get_minimizer(self, **kwargs):
         """return a function to minimize the structure
-        
+
         Notes
         The function should be one of the optimizers in `pele.optimize`, or
         have similar structure.
-        
+
         See Also
         --------
         pele.optimize
         """
         pot = self.get_potential()
-        kwargs = dict_copy_update(self.params["structural_quench_params"], kwargs)
+        kwargs = dict_copy_update(
+            self.params["structural_quench_params"], kwargs
+        )
         return lambda coords: lbfgs_cpp(coords, pot, **kwargs)
 
     def get_compare_exact(self):
         """object that returns True if two structures are identical.
-        
+
             true_false = compare_exact(coords1, coords2)
-        
+
         See Also
         --------
         pele.mindist
@@ -181,8 +189,7 @@ class BaseSystem(object):
         raise NotImplementedError
 
     def get_compare_minima(self):
-        """a wrapper for compare exact so in input can be in Minimum Form
-        """
+        """a wrapper for compare exact so in input can be in Minimum Form"""
         compare = self.get_compare_exact()
         if compare is None:
             return None
@@ -190,27 +197,29 @@ class BaseSystem(object):
 
     def get_system_properties(self):
         """return a dictionary of system specific properties.
-        
+
         Notes
         -----
-        These will be stored automatically in the database.  
+        These will be stored automatically in the database.
         The keys must be strings.
         """
         return dict()
 
     def create_database(self, *args, **kwargs):
         """return a new database object
-        
+
         See Also
         --------
         pele.storage
         """
         kwargs = dict_copy_update(self.params["database"], kwargs)
-        # note this syntax is quite ugly, but we would like to be able to 
-        # create a new database by passing the filename as the first arg, 
-        # not as a kwarg.  
+        # note this syntax is quite ugly, but we would like to be able to
+        # create a new database by passing the filename as the first arg,
+        # not as a kwarg.
         if len(args) > 1:
-            raise ValueError("create_database can only take one non-keyword argument")
+            raise ValueError(
+                "create_database can only take one non-keyword argument"
+            )
         if len(args) == 1:
             if "db" not in kwargs:
                 kwargs["db"] = args[0]
@@ -234,18 +243,19 @@ class BaseSystem(object):
 
         db = Database(**kwargs)
 
-        db.add_properties(self.get_system_properties(), overwrite=overwrite_properties)
+        db.add_properties(
+            self.get_system_properties(), overwrite=overwrite_properties
+        )
         return db
-
 
     def get_takestep(self, **kwargs):
         """return the takestep object for use in basinhopping, etc.
-        
+
         Notes
         -----
         default is random displacement with adaptive step size and
         adaptive temperature
-        
+
         See Also
         --------
         pele.takestep
@@ -259,11 +269,17 @@ class BaseSystem(object):
         tsAdaptive = AdaptiveStepsizeTemperature(takeStep, **kwargs)
         return tsAdaptive
 
-    def get_basinhopping(self, database=None, takestep=None, coords=None, add_minimum=None,
-                         max_n_minima=None,
-                         **kwargs):
+    def get_basinhopping(
+        self,
+        database=None,
+        takestep=None,
+        coords=None,
+        add_minimum=None,
+        max_n_minima=None,
+        **kwargs
+    ):
         """construct a basinhopping object with takestep and accept step already implemented
-        
+
         Parameters
         ----------
         database : object
@@ -279,7 +295,7 @@ class BaseSystem(object):
             This is ignored if add_minimum is passed
         kwargs : key word arguments
             Extra key word arguments are passed to BasinHopping.
-        
+
         See Also
         --------
         pele.basinhopping
@@ -301,31 +317,36 @@ class BaseSystem(object):
             if database is None:
                 database = self.create_database()
             add_minimum = database.minimum_adder(max_n_minima=max_n_minima)
-        bh = basinhopping.BasinHopping(coords, pot, takestep, quench=self.get_minimizer(),
-                                       storage=add_minimum,
-                                       **kwargs)
+        bh = basinhopping.BasinHopping(
+            coords,
+            pot,
+            takestep,
+            quench=self.get_minimizer(),
+            storage=add_minimum,
+            **kwargs
+        )
         return bh
 
     def get_mindist(self):
         """return a function that structurally aligns two configurations
-        
+
         Returns
         -------
         mindist : callable object with the form::
             dist, X1new, X2new = mindist(X1, X2)
-            
-        
+
+
         Notes
         -----
         The mindist object returns returns the best alignment between two
         configurations, taking into account all global symmetries.  X2new
         might be different from X2, but X1new should be the same as X1.
-        
+
         If you have a simple system with cartesian distances and no symmetries,
         you can simply return::
-        
+
             return lambda x1, x2: np.linalg.norm(x1-x2), x1, x2
-        
+
         See Also
         --------
         pele.mindist
@@ -333,21 +354,21 @@ class BaseSystem(object):
         raise NotImplementedError
 
     def get_orthogonalize_to_zero_eigenvectors(self):
-        """return `None` or a function which makes a vector orthogonal to the known zero eigenvectors 
-        
+        """return `None` or a function which makes a vector orthogonal to the known zero eigenvectors
+
         Notes
         -----
         zero eigenvectors are those which have zero eigenvalues
 
-        
+
         Returns
         -------
         orthogopt : None, or a function with the form::
-                
+
                 vec_new = orthogVec(vec, coords)
-        
-        
-        
+
+
+
         See Also
         --------
         pele.transition_states
@@ -356,7 +377,7 @@ class BaseSystem(object):
 
     def get_double_ended_connect(self, min1, min2, database, **kwargs):
         """return a DoubleEndedConnect object
-    
+
         See Also
         --------
         pele.landscape
@@ -382,46 +403,52 @@ class BaseSystem(object):
                 tssp = lcp["tsSearchParams"] = BaseParameters()
 
             if not "orthogZeroEigs" in tssp:
-                tssp["orthogZeroEigs"] = self.get_orthogonalize_to_zero_eigenvectors()
+                tssp[
+                    "orthogZeroEigs"
+                ] = self.get_orthogonalize_to_zero_eigenvectors()
 
         try:
             kwargs["local_connect_params"]["pushoff_params"]["quench"]
         except Exception:
             if not "pushoff_params" in kwargs["local_connect_params"]:
-                kwargs["local_connect_params"]["pushoff_params"] = BaseParameters()
-            kwargs["local_connect_params"]["pushoff_params"]["quench"] = self.get_minimizer()
+                kwargs["local_connect_params"][
+                    "pushoff_params"
+                ] = BaseParameters()
+            kwargs["local_connect_params"]["pushoff_params"][
+                "quench"
+            ] = self.get_minimizer()
 
         return DoubleEndedConnect(min1, min2, pot, mindist, database, **kwargs)
 
     #
-    # the following functions used for getting thermodynamic information about the minima 
+    # the following functions used for getting thermodynamic information about the minima
     #
 
     def get_pgorder(self, coords):
         """return the point group order of the configuration
-        
+
         Notes
         -----
-        This is a measure of the symmetry of a configuration.  It is used in 
+        This is a measure of the symmetry of a configuration.  It is used in
         calculating the thermodynamic weight of a minimum.  Most configurations
         will have pgorder 1, but some highly symmetric minima will have higher orders.
         Routines to compute the point group order are in module `mindist`.
         If your system has not symmetries you can just return 1.
-        
+
         Returns
         -------
         pgorder : int
-        
+
         See Also
         --------
         pele.mindist
-        
+
         """
         raise NotImplementedError
 
     def get_metric_tensor(self, coords):
         """return (mass-weighted) metric tensor for given coordinates
-        
+
         Notes
         -----
         The metric tensor is needed for normal mode analysis. In the simplest case it is just the identity.
@@ -433,8 +460,8 @@ class BaseSystem(object):
         Returns
         -------
         metric_tensor : None or 2d array
-            
-        
+
+
         See Also
         --------
         pele.thermodynamics, get_normalmodes
@@ -443,25 +470,25 @@ class BaseSystem(object):
 
     def get_nzero_modes(self):
         """return the number of vibration modes with zero frequency
-        
+
         Returns
         -------
         nzero_modes : int
-        
+
         Notes
         -----
         Zero modes can come from a number of different sources.  You will have one
-        zero mode for every symmetry in the Hamiltonian.  e.g. 3 zero modes for 
-        translational invariance and 3 zero modes for rotational invariance.  If 
+        zero mode for every symmetry in the Hamiltonian.  e.g. 3 zero modes for
+        translational invariance and 3 zero modes for rotational invariance.  If
         you have extra degrees of freedom, from say frozen particles they will
         contribute zero modes.
-        
+
         Harmonic modes are necessary to calculate the free energy of a minimum in
         the harmonic approximation.  The density of states is inversly proportional
-        to the product of the frequencies.  If the zero modes are not accounted for 
+        to the product of the frequencies.  If the zero modes are not accounted for
         correctly then the product will be trivially zero and the free energy will
         be completely wrong.
-        
+
         See Also
         --------
         get_log_product_normalmode_freq, get_ndof
@@ -470,16 +497,16 @@ class BaseSystem(object):
 
     def get_ndof(self):
         """return the number of degrees of freedom
-        
+
         Notes
         -----
         This is the true number of degrees of freedom.  It is probably the length
         of the coordinates array minus the number of zero modes
-        
+
         Returns
         -------
         ndof : int
-        
+
         See Also
         --------
         get_nzero_modes
@@ -492,13 +519,13 @@ class BaseSystem(object):
 
     def get_normalmodes(self, coords):
         """return the squared normal mode frequencies and eigenvectors
-        
+
         Notes
         -----
         This is usually used to compute the log product of the normal mode frequencies
         which is used to determine the free energy of a minimum in the harmonic
         superposition approximation.
-        
+
         Returns
         -------
         freqs : array
@@ -506,10 +533,10 @@ class BaseSystem(object):
         vecs : 2d array
             array of normal mode vectors.  `vecs[:,i]` is the vector for
             the the i'th frequency
-        
+
         See Also
         --------
-        pele.thermodynamics, get_log_product_normalmode_freq, get_metric_tensor 
+        pele.thermodynamics, get_log_product_normalmode_freq, get_metric_tensor
         """
         mt = self.get_metric_tensor(coords)
         pot = self.get_potential()
@@ -519,13 +546,13 @@ class BaseSystem(object):
 
     def get_log_product_normalmode_freq(self, coords, nnegative=0):
         """return the log product of the squared normal mode frequencies
-        
+
         Parameters
         ----------
         coords : array
         nnegative : int, optional
             number of expected negative eigenvalues
-        
+
         Notes
         -----
         This is necessary to calculate the free energy contribution of a minimum
@@ -533,7 +560,7 @@ class BaseSystem(object):
         Returns
         -------
         lprod : float
-        
+
         See Also
         --------
         pele.thermodynamics, get_normalmodes, get_nzero_modes
@@ -543,7 +570,6 @@ class BaseSystem(object):
         n, lprod = logproduct_freq2(freqs, nzero, nnegative=nnegative)
         return lprod
 
-
     #
     # the following functions are used only for the GUI
     #
@@ -551,14 +577,14 @@ class BaseSystem(object):
     def draw(self, coords, index):
         """
         tell the gui how to represent your system using openGL objects
-        
+
         Parameters
         ----------
         coords : array
         index : int
             we can have more than one molecule on the screen at one time.  index tells
             which one to draw.  They are viewed at the same time, so they should be
-            visually distinct, e.g. different colors.  accepted values are 1 or 2        
+            visually distinct, e.g. different colors.  accepted values are 1 or 2
         """
         raise NotImplementedError
 
@@ -566,29 +592,37 @@ class BaseSystem(object):
         """return a smoothed path between two configurations.
 
         used for movies
-        
+
         See Also
         --------
         pele.landscape.smooth_path
         """
         from pele.landscape import smooth_path
+
         try:
-            interpolator = self.params.double_ended_connect.local_connect_params.NEBparams.interpolator
+            interpolator = (
+                self.params.double_ended_connect.local_connect_params.NEBparams.interpolator
+            )
         except (KeyError, AttributeError):
             interpolator = None
-        return smooth_path(images, self.get_mindist(), interpolator=interpolator)        
+        return smooth_path(
+            images, self.get_mindist(), interpolator=interpolator
+        )
 
     def createNEB(self, coords1, coords2, **kwargs):
         """return an NEB object to find a minimum energy path from coords1 to coords2"""
         pot = self.get_potential()
-        kwargs = dict_copy_update(kwargs, self.params.double_ended_connect.local_connect_params.NEBparams)
+        kwargs = dict_copy_update(
+            kwargs,
+            self.params.double_ended_connect.local_connect_params.NEBparams,
+        )
         return NEBDriver(pot, coords1, coords2, **kwargs)
 
     def load_coords_pymol(self, coordslist, oname, index=1):
         """load the coords into pymol
-        
+
         the new object must be named oname so we can manipulate it later
-                        
+
         Parameters
         ----------
         coordslist : list of arrays
@@ -599,17 +633,17 @@ class BaseSystem(object):
             we can have more than one molecule on the screen at one time.  index tells
             which one to draw.  They are viewed at the same time, so they should be
             visually distinct, e.g. different colors.  accepted values are 1 or 2
-        
+
         Notes
         -----
         the implementation here is a bit hacky.  we create a temporary xyz file from coords
-        and load the molecule in pymol from this file.  
+        and load the molecule in pymol from this file.
         """
         # pymol is imported here so you can do, e.g. basinhopping without installing pymol
         import pymol
 
         # create the temporary file (.xyz or .pdb, or whatever else pymol can read)
-        # note: this is the part that will be really system dependent.        
+        # note: this is the part that will be really system dependent.
         f = tempfile.NamedTemporaryFile(mode="w", suffix=".xyz")
         fname = f.name
         # write the coords into file

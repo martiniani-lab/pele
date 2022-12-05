@@ -35,7 +35,7 @@ namespace pele {
  *
  * @return     Array of radii
  */
-inline Array<double> generate_radii(int n_1, int n_2, double r_1, double r_2,
+inline Array<double> generate_bidisperse_radii(int n_1, int n_2, double r_1, double r_2,
                                     double r_std_1, double r_std_2) {
 
   Array<double> radii(n_1 + n_2);
@@ -51,6 +51,70 @@ inline Array<double> generate_radii(int n_1, int n_2, double r_1, double r_2,
   }
   return radii;
 }
+
+class BerthierDistribution3d {
+    public:
+        /**
+         * Distribution is given by
+         * p(x) = norm/(x^3)  where x in [dmin, dmax]
+         *
+         * Parameters
+         * ----------
+         * delta : float
+         *     stdev(diameter) / mean(diameter)
+         * dmin_by_dmax : float
+         *     dmin / dmax
+         * d_av : float
+         *     mean(diameter)
+         * seed : int
+         */
+        BerthierDistribution3d(double dmin_by_dmax, double d_mean, int seed=0)
+        : norm(0.5 * d_mean * d_mean * (1 + dmin_by_dmax) / (1 - dmin_by_dmax)),
+              dmin(d_mean * 0.5 * (1 + dmin_by_dmax)),
+              dmax(dmin / dmin_by_dmax),
+              d_mean(d_mean),
+              uniform(0., 1.)
+        {}
+
+        inline double _inverse_cdf(double x) {
+            /**
+             * Inverse of the cdf of the distribution.
+             * used to sample, see https://en.wikipedia.org/wiki/Inverse_transform_sampling
+             *
+             * converts a sample from a uniform random distribution in [0, 1] to a sample from
+             * the berthier distribution
+             */
+            if (x < 0 || x > 1) {
+                throw std::invalid_argument("x must be in [0,1]");
+            }
+            // comes from solving the integral of the pdf
+            double inv_x_2 = 1 / (dmin * dmin) - 2 * x / norm;
+            return 1 / sqrt(inv_x_2);
+        }
+
+        Array<double> sample(size_t n) {
+            Array<double> sample(n);
+            for (size_t i = 0; i < n; ++i) {
+                sample[i] = _inverse_cdf(uniform(generator));
+            }
+            return sample;
+        }
+
+        double pdf(double x) {
+            if (x < dmin || x > dmax) {
+                return 0;
+            }
+            return norm / (x * x * x);
+        }
+
+    private:
+        double norm;
+        double dmin;
+        double dmax;
+        double d_mean;
+        std::default_random_engine generator;
+        std::uniform_real_distribution<double> uniform;
+};
 
 template <typename T> vector<size_t> sort_indexes(const vector<T> &v) {
 

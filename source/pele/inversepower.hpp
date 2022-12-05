@@ -299,7 +299,6 @@ public:
             std::make_shared<InverseHalfIntPower_interaction<POW2>>(eps), radii,
             std::make_shared<periodic_distance<ndim>>(boxvec), 0.0, exact_sum,
             non_additivity) {
-    std::cout << "exact_sum:" << exact_sum << std::endl;
   }
 };
 

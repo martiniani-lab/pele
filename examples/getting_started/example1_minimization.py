@@ -41,13 +41,14 @@ from pele.potentials import LJ
 from pele.optimize import lbfgs_py
 
 natoms = 5
-x = np.random.uniform(-2, 2, natoms*3)
+x = np.random.uniform(-2, 2, natoms * 3)
 pot = LJ()
 result = lbfgs_py(x, pot)
 print(result)
 
 
 from pele.utils.xyz import write_xyz
+
 with open("out.xyz", "w") as fout:
     title = "energy = " + str(result.energy)
     write_xyz(fout, result.coords, title=title)

@@ -20,7 +20,8 @@ def read_xyzdr(fname, bdim=3):
     f = open(fname, "r")
     while True:
         xyzdr = f.readline()
-        if not xyzdr: break
+        if not xyzdr:
+            break
         x, y, z, d, r = xyzdr.split()
         coords.extend([float(x), float(y), float(z)])
         radii.extend([float(d) / 2])
@@ -38,7 +39,9 @@ def minimize(coords, pot):
 class TestInversePower_CPP(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
-        xyz, hs_radii, rattlers = read_xyzdr(current_dir + "/_hswca20_min2.xyzdr")
+        xyz, hs_radii, rattlers = read_xyzdr(
+            current_dir + "/_hswca20_min2.xyzdr"
+        )
         sca = 0.205071132088
         radii = hs_radii * (1.0 + sca)
         boxv = np.array([6.26533756282, 6.26533756282, 6.26533756282])
@@ -54,5 +57,5 @@ class TestInversePower_CPP(_base_test.BaseTestCases._BaseTest):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='hs_wca_cpp.log', level=logging.DEBUG)
+    logging.basicConfig(filename="hs_wca_cpp.log", level=logging.DEBUG)
     unittest.main()

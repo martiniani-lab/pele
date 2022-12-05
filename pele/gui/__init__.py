@@ -39,9 +39,6 @@ and BLJCluster for more information and examples of how to implement these.
 from __future__ import absolute_import
 
 
-
-
-
-
 from .run import run_gui
-#from ui.mplwidget import MPLWidget
+
+# from ui.mplwidget import MPLWidget

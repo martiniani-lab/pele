@@ -8,17 +8,19 @@ import numpy as np
 from pele.potentials import BasePotential
 from pele.optimize import LBFGS
 
+
 class _TransversePotential(BasePotential):
     """This wraps a potential and returns the gradient with the component parallel to a vector removed
-    
+
     Parameters
     ----------
     potential : Potential object
     vector : float array
         the vector along which to remove the gradient
-    
-        
+
+
     """
+
     def __init__(self, potential, vector):
         self.pot = potential
         self.update_vector(vector)
@@ -46,30 +48,33 @@ class _TransversePotential(BasePotential):
 
     def get_true_energy_gradient(self, coords):
         """return the true energy and gradient at coords
-        
+
         this should primarily be used to access the energy and gradient that have
         already been computed
         """
         if (coords == self._true_coords).all():
             return self._true_energy, self._true_gradient.copy()
         else:
-            print("warning: get_true_gradient should only be used to access precomputed energies and gradients")
-#            raise Exception("get_true_gradient should only be used to access precomputed energies and gradients")
+            print(
+                "warning: get_true_gradient should only be used to access precomputed energies and gradients"
+            )
+            #            raise Exception("get_true_gradient should only be used to access precomputed energies and gradients")
             return self._get_true_energy_gradient(coords)
-    
+
     def getEnergyGradient(self, coords):
-        """return the energy and the gradient with the component along the self.vector removed.  
-        
+        """return the energy and the gradient with the component along the self.vector removed.
+
         For use in energy minimization in the space perpendicular to eigenvec
         """
         e, grad = self._get_true_energy_gradient(coords)
         return self.projected_energy_gradient(e, grad)
 
+
 class _TransverseWalker(object):
     """It minimizes the energy in the direction perpendicular to a vector
-    
+
     this class manages the minimization _TransversePotential
-    
+
     Parameters
     ----------
     coords : float array
@@ -81,35 +86,53 @@ class _TransverseWalker(object):
         the energy and gradient at position coords
     minimizer_kwargs : kwargs
         these kwargs are passed to the minimizer
-    
+
     """
-    def __init__(self, coords, potential, eigenvec, energy=None, gradient=None, **minimizer_kwargs):
+
+    def __init__(
+        self,
+        coords,
+        potential,
+        eigenvec,
+        energy=None,
+        gradient=None,
+        **minimizer_kwargs
+    ):
         self.tspot = _TransversePotential(potential, eigenvec)
         if energy is not None and gradient is not None:
-            transverse_energy, transverse_gradient = self.tspot.projected_energy_gradient(energy, gradient)
+            (
+                transverse_energy,
+                transverse_gradient,
+            ) = self.tspot.projected_energy_gradient(energy, gradient)
         else:
             transverse_energy, transverse_gradient = None, None
 
-        self.walker = LBFGS(coords, self.tspot,
-                            energy=transverse_energy, gradient=transverse_gradient,
-                            **minimizer_kwargs)
-    
+        self.walker = LBFGS(
+            coords,
+            self.tspot,
+            energy=transverse_energy,
+            gradient=transverse_gradient,
+            **minimizer_kwargs
+        )
+
     def update_eigenvec(self, eigenvec, eigenval):
         """update the vecotr"""
         self.tspot.update_vector(eigenvec)
-    
+
     def update_maxstep(self, maxstep):
         """update the maximum step size of the minimizer"""
         self.walker.maxstep = float(maxstep)
-        
+
     def update_coords(self, coords, true_energy, true_gradient):
         """update the position of the optimizer
-        
+
         this must be called after update_eigenvec
         """
-        energy, gradient = self.tspot.projected_energy_gradient(true_energy, true_gradient)
+        energy, gradient = self.tspot.projected_energy_gradient(
+            true_energy, true_gradient
+        )
         self.walker.update_coords(coords, energy, gradient)
-    
+
     def stop_criterion_satisfied(self):
         """test if the stop criterion is satisfied"""
         return self.walker.stop_criterion_satisfied()
@@ -118,28 +141,28 @@ class _TransverseWalker(object):
         """return the true energy and gradient"""
         return self.tspot.get_true_energy_gradient(coords)
 
-#    def get_energy(self):
-#        """return the true energy
-#        
-#        warning it's possible for this to return the wrong energy if the minimizer
-#        had an aborted line search on the last iteration.
-#        """
-#        return self.tspot.true_energy
-#
-#    def get_gradient(self):
-#        """return the true gradient
-#        
-#        warning it's possible for this to return the wrong energy if the minimizer
-#        had an aborted line search on the last iteration.
-#        """
-#        return self.tspot.true_gradient
+    #    def get_energy(self):
+    #        """return the true energy
+    #
+    #        warning it's possible for this to return the wrong energy if the minimizer
+    #        had an aborted line search on the last iteration.
+    #        """
+    #        return self.tspot.true_energy
+    #
+    #    def get_gradient(self):
+    #        """return the true gradient
+    #
+    #        warning it's possible for this to return the wrong energy if the minimizer
+    #        had an aborted line search on the last iteration.
+    #        """
+    #        return self.tspot.true_gradient
 
     def get_result(self):
         """return the results object"""
         ret = self.walker.get_result()
         ret.nfev = self.tspot.nfev
         return ret
-    
+
     def run(self, niter):
         """do a specified number of iterations, or until the stop criterion is satisfied"""
         for i in range(niter):
@@ -147,4 +170,3 @@ class _TransverseWalker(object):
                 break
             self.walker.one_iteration()
         return self.get_result()
-

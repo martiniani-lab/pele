@@ -15,5 +15,3 @@ AMBER
     gmin_potential  
 
 """
-
-

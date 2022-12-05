@@ -15,18 +15,38 @@ using namespace std;
 
 namespace pele {
 
+/**
+ * @brief Get the non additive interaction range as defined in 
+ *        PHYSICAL REVIEW X 12, 021001 (2022). when non_additivity is set to 0
+ *        the interaction range is the same as the cutoff radius.
+ * 
+ * @param radius_i 
+ * @param radius_j 
+ * @param non_additivity 
+ * @return double 
+ */
+ class NonAdditiveCutoff {
+  public:
+    NonAdditiveCutoff(double non_additivity) : _non_additivity(non_additivity) {}
+    NonAdditiveCutoff() : _non_additivity(0) {}
+    inline double get_cutoff(const double radius_i,const double radius_j) const {
+        return (radius_i + radius_j) *
+             (1 - 2 * _non_additivity * abs(radius_i - radius_j));
+    }
+  private:
+    double _non_additivity;
+ };
+
 class PairwisePotentialInterface : public BasePotential {
 protected:
   const Array<double> m_radii;
-  const double non_additivity;
-
-
+  const NonAdditiveCutoff m_non_additive_cutoff;
 
 public:
-  PairwisePotentialInterface() : m_radii(0), non_additivity(0) {}
+  PairwisePotentialInterface() : m_radii(0), m_non_additive_cutoff(0) {}
   PairwisePotentialInterface(pele::Array<double> const &radii,
                              double non_addivity = 0)
-      : m_radii(radii.copy()), non_additivity(non_addivity) {
+      : m_radii(radii.copy()), m_non_additive_cutoff(non_addivity) {
     if (radii.size() == 0) {
       throw std::runtime_error(
           "PairwisePotentialInterface: illegal input: radii");
@@ -36,7 +56,7 @@ public:
     size_t min_radius_index  = std::distance(radii.begin(), min_radius_address);
     size_t max_radius_index  = std::distance(radii.begin(), max_radius_address);
 
-    auto dij = get_dij(min_radius_index,max_radius_index);
+    double dij = get_non_additive_cutoff(min_radius_index,max_radius_index);
 
     if (dij < 0) {
       std::cout << "dij = " << dij << std::endl;
@@ -56,16 +76,15 @@ public:
 
   /*
    * Finds the interaction distance between two particles, i and j. defaults to
-   * radii[i] + radii[j] when epsilon is zero
+   * radii[i] + radii[j] when non_additivity is zero
    */
-  inline double get_dij(const std::size_t atom_i,
-                        const std::size_t atom_j) const {
+  inline double get_non_additive_cutoff(const std::size_t atom_i,
+                          const std::size_t atom_j) const {
     if (m_radii.size() == 0) {
       return 0;
     } else {
       // uses the diameters being twice the radii
-      return (m_radii[atom_i] + m_radii[atom_j]) *
-             (1 - 2 * non_additivity * abs(m_radii[atom_i] - m_radii[atom_j]));
+      return m_non_additive_cutoff.get_cutoff(m_radii[atom_i], m_radii[atom_j]);
     }
   }
 
@@ -144,10 +163,10 @@ public:
    * Return lists of neighbors.
    */
   virtual void
-  get_neighbors(pele::Array<double> const &coords,
-                pele::Array<std::vector<size_t>> &neighbor_indss,
-                pele::Array<std::vector<std::vector<double>>> &neighbor_distss,
-                const double cutoff_factor = 1.0) {
+  get_neighbors(pele::Array<double> const &,
+                pele::Array<std::vector<size_t>> &,
+                pele::Array<std::vector<std::vector<double>>> &,
+                const double cutoff_factor = 1) {
     throw std::runtime_error(
         "PairwisePotentialInterface::get_neighbors must be overloaded");
   }

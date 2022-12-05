@@ -8,7 +8,9 @@ from pele.potentials import BasePotential
 from pele.systems import BaseSystem
 
 
-def makeplot2d(f, nx=100, xmin=None, xmax=None, zlim=None, show=True):  # pragma: no cover
+def makeplot2d(
+    f, nx=100, xmin=None, xmax=None, zlim=None, show=True
+):  # pragma: no cover
     from matplotlib import cm
     import matplotlib.pyplot as plt
     import numpy as np
@@ -52,21 +54,33 @@ def makeplot2d(f, nx=100, xmin=None, xmax=None, zlim=None, show=True):  # pragma
 
 
 class Beale(BasePotential):
-    target_E = 0.
-    target_coords = np.array([3., 0.5])
+    target_E = 0.0
+    target_coords = np.array([3.0, 0.5])
     xmin = np.array([-4.5, -4.5])
     # xmin = np.array([0., 0.])
     xmax = np.array([4.5, 4.5])
 
     def getEnergy(self, coords):
         x, y = coords
-        return (1.5 - x + x * y) ** 2 + (2.25 - x + x * y ** 2) ** 2 + (2.625 - x + x * y ** 3) ** 2
+        return (
+            (1.5 - x + x * y) ** 2
+            + (2.25 - x + x * y**2) ** 2
+            + (2.625 - x + x * y**3) ** 2
+        )
 
     def getEnergyGradient(self, coords):
         E = self.getEnergy(coords)
         x, y = coords
-        dx = 2. * (1.5 - x + x*y) * (-1. + y) + 2. * (2.25 - x + x * y**2) * (-1. + y**2) + 2. * (2.625 - x + x * y**3) * (-1. + y**3)
-        dy = 2. * (1.5 - x + x*y) * x +       2. * (2.25 - x + x * y**2) * (2. * y * x) + 2. * (2.625 - x + x * y**3) * (3. * x * y**2)
+        dx = (
+            2.0 * (1.5 - x + x * y) * (-1.0 + y)
+            + 2.0 * (2.25 - x + x * y**2) * (-1.0 + y**2)
+            + 2.0 * (2.625 - x + x * y**3) * (-1.0 + y**3)
+        )
+        dy = (
+            2.0 * (1.5 - x + x * y) * x
+            + 2.0 * (2.25 - x + x * y**2) * (2.0 * y * x)
+            + 2.0 * (2.625 - x + x * y**3) * (3.0 * x * y**2)
+        )
         return E, np.array([dx, dy])
 
 
@@ -91,7 +105,7 @@ def add_minimizer(pot, ax, minimizer, x0, **kwargs):  # pragma: no cover
 
     minimizer(x0, pot, events=[cb], **kwargs)
     xcb = np.array(xcb)
-    ax.plot(xcb[:, 0], xcb[:, 1], '-o', label=minimizer.__name__)
+    ax.plot(xcb[:, 0], xcb[:, 1], "-o", label=minimizer.__name__)
 
 
 def test_minimize():  # pragma: no cover
@@ -104,13 +118,12 @@ def test_minimize():  # pragma: no cover
     pot = system.get_potential()
     fig = makeplot2d(pot, nx=60, show=False, zlim=[0, 50])
     ax = fig.gca()
-    x0 = system.get_random_configuration(eps=.5)
+    x0 = system.get_random_configuration(eps=0.5)
 
     # add_minimizer(pot, ax, fire, x0, nsteps=200, maxstep=.1)
     add_minimizer(pot, ax, lbfgs_py, x0, nsteps=200, M=1)
     add_minimizer(pot, ax, steepest_descent, x0, nsteps=10000, dx=1e-4)
     plt.legend()
-
 
     # lbfgs_py(system.get_random_configuration(), pot, events=[callback], nsteps=100, M=1)
     plt.show()
@@ -122,13 +135,12 @@ def test1():  # pragma: no cover
     f.test_potential(f.target_coords)
     print("")
     f.test_potential(s.get_random_configuration())
-    f.test_potential(np.array([1., 1.]))  # , print_grads=True)
+    f.test_potential(np.array([1.0, 1.0]))  # , print_grads=True)
 
     # from base_function import makeplot2d
-    v = 3.
+    v = 3.0
     makeplot2d(f, nx=60, zlim=[0, 100])
 
 
 if __name__ == "__main__":
     test_minimize()
-

@@ -21,7 +21,7 @@ def printspins(fout, pot, angles):
 
 pi = np.pi
 L = 24
-nspins = L ** 2
+nspins = L**2
 
 pot = XYModel(dim=[L, L], phi=np.pi)
 
@@ -30,7 +30,6 @@ print(angles)
 
 e = pot.getEnergy(angles)
 print("energy ", e)
-
 
 
 # try a quench
@@ -64,7 +63,7 @@ with open("out.spin", "w") as fout:
         print("energy", min.energy)
         fout.write("# %g\n" % (min.energy))
         printspins(fout, pot, min.coords)
-        fout.write('\n\n')
+        fout.write("\n\n")
         """
         view this in gnuplot with the command
         set size ratio -1
@@ -91,5 +90,3 @@ try:
     plt.show()
 except:
     print("problem ploting with matplotlib")
-
-

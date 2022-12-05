@@ -11,7 +11,12 @@ from builtins import range
 from past.utils import old_div
 import numpy as np
 
-__all__ = ["zeroEV_translation", "zeroEV_rotation", "zeroEV_cluster", "gramm_schmidt"]
+__all__ = [
+    "zeroEV_translation",
+    "zeroEV_rotation",
+    "zeroEV_cluster",
+    "gramm_schmidt",
+]
 
 
 def zeroEV_translation(coords):
@@ -21,32 +26,30 @@ def zeroEV_translation(coords):
     x1 = np.zeros(coords.shape)
     x2 = np.zeros(coords.shape)
     x3 = np.zeros(coords.shape)
-    x1.reshape(-1, 3)[:, 0] = 1.
-    x2.reshape(-1, 3)[:, 1] = 1.
-    x3.reshape(-1, 3)[:, 2] = 1.
-    return [old_div(x1, np.linalg.norm(x1)), old_div(x2, np.linalg.norm(x2)), old_div(x3, np.linalg.norm(x3))]
+    x1.reshape(-1, 3)[:, 0] = 1.0
+    x2.reshape(-1, 3)[:, 1] = 1.0
+    x3.reshape(-1, 3)[:, 2] = 1.0
+    return [
+        old_div(x1, np.linalg.norm(x1)),
+        old_div(x2, np.linalg.norm(x2)),
+        old_div(x3, np.linalg.norm(x3)),
+    ]
 
 
 def zeroEV_rotation(coords):
     """
     return the set of zero eigenvalue vectors corresponding to global rotation
-    
+
     note that these are not necessarily orthogonal.  use `gramm_schmidt` to make them orthogonal
-    
+
     See Also
     --------
     gramm_schmidt
     """
     # translational eigenvectors
-    Rx = np.array([[0., 0., 0.],
-                   [0., 0., 1.],
-                   [0., -1., 0.]])
-    Ry = np.array([[0., 0., 1.],
-                   [0., 0., 0.],
-                   [-1., 0., 0.]])
-    Rz = np.array([[0., 1., 0.],
-                   [-1., 0., 0.],
-                   [0., 0., 0.]])
+    Rx = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]])
+    Ry = np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 0.0], [-1.0, 0.0, 0.0]])
+    Rz = np.array([[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
     x = coords.reshape(old_div(coords.size, 3), 3)
     com = old_div(x.sum(0), x.shape[0])
 
@@ -54,7 +57,11 @@ def zeroEV_rotation(coords):
     r2 = np.dot(Ry, (x - com).transpose()).transpose().reshape(coords.shape)
     r3 = np.dot(Rz, (x - com).transpose()).transpose().reshape(coords.shape)
 
-    return [old_div(r1, np.linalg.norm(r1)), old_div(r2, np.linalg.norm(r2)), old_div(r3, np.linalg.norm(r3))]
+    return [
+        old_div(r1, np.linalg.norm(r1)),
+        old_div(r2, np.linalg.norm(r2)),
+        old_div(r3, np.linalg.norm(r3)),
+    ]
 
 
 def zeroEV_cluster(coords):
@@ -80,13 +87,13 @@ def gramm_schmidt(v):
 
 def orthogonalize(v, ozev):
     """make vector v orthogonal to all vectors in list ozev
-    
+
     Parameters
     ----------
     v : array
         vector to orthogonalize
     ozev : list of arrays
-        v will be made orthogonal to all of these vectors. 
+        v will be made orthogonal to all of these vectors.
     """
     for u in ozev:
         v -= np.dot(v, u) * u
@@ -96,6 +103,7 @@ def orthogonalize(v, ozev):
 #
 # testing only below here
 #
+
 
 def test():  # pragma: no cover
     from ._orthogopt import orthogopt_slow, orthogopt
@@ -118,7 +126,9 @@ def test():  # pragma: no cover
     from pele.potentials import lj
 
     pot = lj.LJ()
-    x = np.array([-1., 0., 0., 1., 0., 0., 0., 1., 1., 0., -1., -1.])
+    x = np.array(
+        [-1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, -1.0, -1.0]
+    )
     x = np.random.random(x.shape)
     print(x)
     v = zeroEV_cluster(x)
@@ -126,7 +136,9 @@ def test():  # pragma: no cover
     print(np.dot(v[3], v[4]), np.dot(v[3], v[5]), np.dot(v[5], v[4]))
     u = gramm_schmidt(zeroEV_cluster(x))
     for i in u:
-        print(old_div((pot.getEnergy(x + 1e-4 * i) - pot.getEnergy(x)), 1e-4), i)
+        print(
+            old_div((pot.getEnergy(x + 1e-4 * i) - pot.getEnergy(x)), 1e-4), i
+        )
     print(np.dot(u[3], u[4]), np.dot(u[3], u[5]), np.dot(u[5], u[4]))
     print("########################")
 
@@ -134,5 +146,5 @@ def test():  # pragma: no cover
     print(orthogopt(r.copy(), x.copy()) - orthogonalize(r.copy(), u))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()

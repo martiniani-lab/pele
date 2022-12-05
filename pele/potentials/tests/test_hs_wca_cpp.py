@@ -20,7 +20,8 @@ def read_xyzdr(fname, bdim=3):
     f = open(fname, "r")
     while True:
         xyzdr = f.readline()
-        if not xyzdr: break
+        if not xyzdr:
+            break
         x, y, z, d, r = xyzdr.split()
         coords.extend([float(x), float(y), float(z)])
         radii.extend([float(d) / 2])
@@ -38,45 +39,71 @@ def minimize(coords, pot):
 class TestHS_WCA_CPP(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
-        xyz, hs_radii, rattlers = read_xyzdr(current_dir + "/_hswca20_min2.xyzdr")
+        xyz, hs_radii, rattlers = read_xyzdr(
+            current_dir + "/_hswca20_min2.xyzdr"
+        )
         sca = 0.205071132088
         boxv = [6.26533756282, 6.26533756282, 6.26533756282]
-        self.pot = _hs_wca_cpp.HS_WCA(eps=1, sca=sca, radii=hs_radii, boxvec=boxv,
-                                      distance_method=Distance.PERIODIC)
+        self.pot = _hs_wca_cpp.HS_WCA(
+            eps=1,
+            sca=sca,
+            radii=hs_radii,
+            boxvec=boxv,
+            distance_method=Distance.PERIODIC,
+        )
         self.natoms = 20
         result = minimize(xyz, self.pot)
         self.xmin = result[0]  # xyz
         self.Emin = result[1]  # self.pot.getEnergy(self.xmin)
         self.xrandom = np.random.uniform(-1, 1, len(xyz)) * 1e-2
+
 
 class TestHS_WCA_CPP_LeesEdwards_NoShear(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
-        xyz, hs_radii, rattlers = read_xyzdr(current_dir + "/_hswca20_min2.xyzdr")
+        xyz, hs_radii, rattlers = read_xyzdr(
+            current_dir + "/_hswca20_min2.xyzdr"
+        )
         sca = 0.205071132088
         boxv = [6.26533756282, 6.26533756282, 6.26533756282]
-        self.pot = _hs_wca_cpp.HS_WCA(eps=1, sca=sca, radii=hs_radii, boxvec=boxv,
-                                      distance_method=Distance.LEES_EDWARDS, pot_kwargs={'shear': 0.0})
+        self.pot = _hs_wca_cpp.HS_WCA(
+            eps=1,
+            sca=sca,
+            radii=hs_radii,
+            boxvec=boxv,
+            distance_method=Distance.LEES_EDWARDS,
+            pot_kwargs={"shear": 0.0},
+        )
         self.natoms = 20
         result = minimize(xyz, self.pot)
         self.xmin = result[0]  # xyz
         self.Emin = result[1]  # self.pot.getEnergy(self.xmin)
         self.xrandom = np.random.uniform(-1, 1, len(xyz)) * 1e-2
 
+
 class TestHS_WCA_CPP_LeesEdwards_Shear(_base_test.BaseTestCases._BaseTest):
     def setUp(self):
         current_dir = os.path.dirname(__file__)
-        xyz, hs_radii, rattlers = read_xyzdr(current_dir + "/_hswca20_shear_min.xyzdr")
+        xyz, hs_radii, rattlers = read_xyzdr(
+            current_dir + "/_hswca20_shear_min.xyzdr"
+        )
         sca = 0.1186889420813968
         boxv = [5.5295418812871766, 5.5295418812871766, 5.5295418812871766]
         shear = 0.1
-        self.pot = _hs_wca_cpp.HS_WCA(eps=1, sca=sca, radii=hs_radii, boxvec=boxv,
-                                      distance_method=Distance.LEES_EDWARDS, pot_kwargs={'shear': 0.0})
+        self.pot = _hs_wca_cpp.HS_WCA(
+            eps=1,
+            sca=sca,
+            radii=hs_radii,
+            boxvec=boxv,
+            distance_method=Distance.LEES_EDWARDS,
+            pot_kwargs={"shear": 0.0},
+        )
         self.natoms = 20
         result = minimize(xyz, self.pot)
         self.xmin = result[0]  # xyz
         self.Emin = result[1]  # self.pot.getEnergy(self.xmin)
         self.xrandom = np.random.uniform(-1, 1, len(xyz)) * 1e-2
+
 
 # class TestHS_WCA_CPP_NeighborList(_base_test.BaseTestCases._BaseTest):
 # def setUp(self):
@@ -95,5 +122,5 @@ class TestHS_WCA_CPP_LeesEdwards_Shear(_base_test.BaseTestCases._BaseTest):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='hs_wca_cpp.log', level=logging.DEBUG)
+    logging.basicConfig(filename="hs_wca_cpp.log", level=logging.DEBUG)
     unittest.main()

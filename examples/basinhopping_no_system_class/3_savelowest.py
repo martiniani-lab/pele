@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 # ###########################################################
 # Example 3: Saving the coordinates as an xyz file
 # ###########################################################
@@ -41,4 +42,4 @@ try:
         pym.draw_spheres(coords, "A", frame)
         frame += 1
 except:
-    print("Could not draw using pymol, skipping this step") 
+    print("Could not draw using pymol, skipping this step")

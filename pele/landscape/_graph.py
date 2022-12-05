@@ -20,9 +20,9 @@ def database2graph(db, Emax=None):
 
     g = nx.Graph()
     # js850> It's not strictly necessary to add the minima explicitly here,
-    # but for some reason it is much faster if you do (factor of 2).  Even 
-    # if this means there are many more minima in the graph.  I'm not sure 
-    # why this is.  This step is already often the bottleneck of the d-graph 
+    # but for some reason it is much faster if you do (factor of 2).  Even
+    # if this means there are many more minima in the graph.  I'm not sure
+    # why this is.  This step is already often the bottleneck of the d-graph
     # calculation.
     if Emax is not None:
         minima = db.session.query(Minimum).filter(Minimum.energy <= Emax)
@@ -32,8 +32,11 @@ def database2graph(db, Emax=None):
     # if we order by energy first and add the transition states with the largest energy first
     # then we will take the smallest energy transition state in the case of duplicates
     if Emax is not None:
-        ts = db.session.query(TransitionState).filter(TransitionState.energy <= Emax) \
+        ts = (
+            db.session.query(TransitionState)
+            .filter(TransitionState.energy <= Emax)
             .order_by(-TransitionState.energy)
+        )
     else:
         ts = db.session.query(TransitionState).order_by(-TransitionState.energy)
     for t in ts:
@@ -44,7 +47,7 @@ def database2graph(db, Emax=None):
 class _ConnectedComponents(nx.utils.UnionFind):
     """
     a class to build and maintain the connected components
-    
+
     This allows connections to be determined much more rapidly because
     the breadth first search algorithm is slow
     """
@@ -121,7 +124,9 @@ class TSGraph(object):
                 if m1 in minima:
                     if m2 in minima:
                         self.graph.add_edge(ts.minimum1, ts.minimum2, ts=ts)
-                        self.connected_components.union(ts.minimum1, ts.minimum2)
+                        self.connected_components.union(
+                            ts.minimum1, ts.minimum2
+                        )
 
     def refresh(self):
         if self.minima is None:
@@ -158,7 +163,8 @@ class TSGraph(object):
         self.connected_components.union(min1, min2)
         # make the edges of min2 now point to min1
         for v, data in self.graph[min2].items():
-            if v == min1: continue
+            if v == min1:
+                continue
             if v == min2:
                 print("warning: minimum", min2.id(), "is connected to itself")
                 continue
@@ -170,4 +176,5 @@ class TSGraph(object):
 
 class Graph(TSGraph):
     """this is included for backwards compatibility"""
+
     pass

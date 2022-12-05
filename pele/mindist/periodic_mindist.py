@@ -6,25 +6,35 @@ import numpy as np
 from pele.mindist.periodic_exact_match import TransformPeriodic
 from inspect import stack
 
+
 class MinDistBulk(object):
-    """ Obtain the best alignment between two configurations of a periodic system"""
-    def __init__(self, boxvec, measure, transform=TransformPeriodic(), niter=10, verbose=False, tol=0.01, 
-                 accuracy=0.01):        
-        self.niter = niter       
+    """Obtain the best alignment between two configurations of a periodic system"""
+
+    def __init__(
+        self,
+        boxvec,
+        measure,
+        transform=TransformPeriodic(),
+        niter=10,
+        verbose=False,
+        tol=0.01,
+        accuracy=0.01,
+    ):
+        self.niter = niter
         self.verbose = verbose
         self.measure = measure
-        self.transform=transform
+        self.transform = transform
         self.accuracy = accuracy
         self.tol = tol
         self.boxvec = boxvec
-                          
-    def align_fragments(self, x1, x2): 
+
+    def align_fragments(self, x1, x2):
         """
         Obtain the best alignment between two configurations of a periodic system
-        
+
         Parameters
         ----------
-        coords1, coords2 : np.array 
+        coords1, coords2 : np.array
             the structures to align.  X2 will be aligned with X1
             Both structures are arrays of cartesian coordinates
 
@@ -40,7 +50,7 @@ class MinDistBulk(object):
             print("Measure.topology:")
             print(self.measure.topology)
             print("Called by", stack())
-        
+
         # we don't want to change the given coordinates
         x1 = np.copy(x1).reshape(-1, self.boxvec.size)
         x2 = np.copy(x2).reshape(-1, self.boxvec.size)
@@ -50,14 +60,14 @@ class MinDistBulk(object):
         ave2 = old_div(dx.sum(0), (dx.shape[0]))
         self.transform.translate(x2, ave2)
 
-        dist, x2 = self.finalize_best_match(x1, x2)    
-        return dist, x1.ravel(), x2.ravel()  
-    
-    def __call__(self, coords1, coords2): 
-        return self.align_fragments(coords1, coords2)    
+        dist, x2 = self.finalize_best_match(x1, x2)
+        return dist, x1.ravel(), x2.ravel()
+
+    def __call__(self, coords1, coords2):
+        return self.align_fragments(coords1, coords2)
 
     def finalize_best_match(self, x1, best_x2):
-        ''' do final processing of the best match '''
+        """do final processing of the best match"""
         # Calculate the periodic distance between the two structures
         dist = self.measure.get_dist(x1, best_x2)
         return dist, best_x2.ravel()

@@ -11,7 +11,7 @@ from pele.potentials import BasePotential
 
 class MyPot(BasePotential):
     """a Lennard Jones potential with altered exponents
-    
+
     V(r) = 4. * (r**-24 - r**-12)
     """
 
@@ -20,23 +20,23 @@ class MyPot(BasePotential):
 
     def getEnergy(self, coords):
         coords = np.reshape(coords, [self.natoms, 3])
-        E = 0.
+        E = 0.0
         for i in range(self.natoms):
             for j in range(i):
                 r = np.sqrt(np.sum((coords[i, :] - coords[j, :]) ** 2))
-                E += 4. * (r**-24 - r**-12)
+                E += 4.0 * (r**-24 - r**-12)
         return E
 
     def getEnergyGradient(self, coords):
         coords = np.reshape(coords, [self.natoms, 3])
-        E = 0.
+        E = 0.0
         grad = np.zeros(coords.shape)
         for i in range(self.natoms):
             for j in range(i):
                 dr = coords[i, :] - coords[j, :]
-                r = np.sqrt(np.sum(dr ** 2))
-                E += 4. * (r**(-24) - r**(-12))
-                g = 4. * ( 24. * r**(-25) - 12. * r**(-13))
+                r = np.sqrt(np.sum(dr**2))
+                E += 4.0 * (r ** (-24) - r ** (-12))
+                g = 4.0 * (24.0 * r ** (-25) - 12.0 * r ** (-13))
                 grad[i, :] += old_div(-g * dr, r)
                 grad[j, :] += old_div(g * dr, r)
         return E, grad.reshape(-1)
@@ -95,7 +95,10 @@ def run_double_ended_connect(system, database):
         connect.connect()
 
 
-from pele.utils.disconnectivity_graph import DisconnectivityGraph, database2graph
+from pele.utils.disconnectivity_graph import (
+    DisconnectivityGraph,
+    database2graph,
+)
 import matplotlib.pyplot as plt
 
 
@@ -129,4 +132,3 @@ if __name__ == "__main__":
     mysys, database = run_basinhopping()
     run_double_ended_connect(mysys, database)
     make_disconnectivity_graph(database)
-    

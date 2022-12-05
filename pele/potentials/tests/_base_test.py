@@ -2,12 +2,13 @@ import numpy as np
 import unittest
 import logging
 
+
 class BaseTestCases:
     class _BaseTest(unittest.TestCase):
-    # def energy_test(self, x, e):
-    # e = self.pot.getEnergy(x)
-    # print e
-    #        self.assertAlmostEqual(e, self.target_E, 4)
+        # def energy_test(self, x, e):
+        # e = self.pot.getEnergy(x)
+        # print e
+        #        self.assertAlmostEqual(e, self.target_E, 4)
 
         def grad_t(self, x):
             log = logging.getLogger("BaseTest.grad_t")
@@ -45,7 +46,9 @@ class BaseTestCases:
             self.assertGreater(np.min(eigenvals), -1e-4)
 
         def test_hess_analytical_against_numerical(self):
-            log = logging.getLogger("BaseTest.test_hess_analytical_against_numerical")
+            log = logging.getLogger(
+                "BaseTest.test_hess_analytical_against_numerical"
+            )
             e, g, h = self.pot.getEnergyGradientHessian(self.xmin)
             h_num = self.pot.NumericalHessian(self.xmin)
             h = h.reshape(-1).copy()
@@ -54,11 +57,13 @@ class BaseTestCases:
 
         def test_random(self):
             self.grad_t(self.xmin + self.xrandom)
+
     class _TestConfiguration(unittest.TestCase):
         """test a potential at a single configuration single configuration
 
         In setUp() you should define attributes self.pot, self.x0 and the energy of that position x0
         """
+
         pot = None
         x0 = None
         e0 = None
@@ -68,7 +73,9 @@ class BaseTestCases:
             assert_arrays_almost_equal(self, v1, v2, **self.ae_kwargs)
 
         def test_energy(self):
-            self.assertAlmostEqual(self.pot.getEnergy(self.x0), self.e0, **self.ae_kwargs)
+            self.assertAlmostEqual(
+                self.pot.getEnergy(self.x0), self.e0, **self.ae_kwargs
+            )
 
         def test_energy_gradient(self):
             e, g = self.pot.getEnergyGradient(self.x0)
@@ -83,6 +90,7 @@ class BaseTestCases:
             self.compare_arrays(g, gnum)
             hnum = self.pot.NumericalHessian(self.x0)
             self.compare_arrays(hess.reshape(-1), hnum.reshape(-1))
+
 
 def assert_arrays_almost_equal(self, v1, v2, **kwargs):
     self.assertEqual(v1.shape, v2.shape)

@@ -19,7 +19,7 @@ class DiscontinuousHarmonic(BasePotential):
 
     def getEnergyGradient(self, x):
         e = self.getEnergy(x)
-        g = 2. * x
+        g = 2.0 * x
         return e, g
 
 
@@ -126,8 +126,6 @@ class TestLBFGS_State(unittest.TestCase):
         arrays_nearly_equal(self, res1.coords, res2.coords)
 
 
-
-
 class TestLBFGS_wolfe(unittest.TestCase):
     def setUp(self):
         self.system = LJCluster(13)
@@ -145,7 +143,13 @@ class TestLBFGS_wolfe(unittest.TestCase):
         ret_nowolfe = minimizer.run()
         self.assertTrue(ret_nowolfe.success)
 
-        print("nfev wolfe, nowolfe", ret.nfev, ret_nowolfe.nfev, ret.energy, ret_nowolfe.energy)
+        print(
+            "nfev wolfe, nowolfe",
+            ret.nfev,
+            ret_nowolfe.nfev,
+            ret.energy,
+            ret_nowolfe.energy,
+        )
 
 
 class TestLBFGS_armijo(unittest.TestCase):
@@ -166,7 +170,13 @@ class TestLBFGS_armijo(unittest.TestCase):
 
         self.assertAlmostEqual(ret.energy, ret_nowolfe.energy, delta=1e-3)
 
-        print("nfev armijo, noarmijo", ret.nfev, ret_nowolfe.nfev, ret.energy, ret_nowolfe.energy)
+        print(
+            "nfev armijo, noarmijo",
+            ret.nfev,
+            ret_nowolfe.nfev,
+            ret.energy,
+            ret_nowolfe.energy,
+        )
 
 
 class TestLBFGSCython(unittest.TestCase):
@@ -208,6 +218,3 @@ class TestLBFGSFortran(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-        
-        
-        

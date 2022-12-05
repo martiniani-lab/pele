@@ -74,7 +74,7 @@ NEBparams.iter_density = 40
 # Transition State Search parameters:
 tsparams = decparams.local_connect_params.tsSearchParams
 # change the maximum uphill step
-tsparams.max_uphill_step = .05
+tsparams.max_uphill_step = 0.05
 # change the number of steps in the transverse minimization
 tsparams.nsteps_tangent1 = 4
 
@@ -97,7 +97,7 @@ else:
     print("plotting energies along the path")
     import pylab as pl
 
-    pl.plot(S, energies, '-')
+    pl.plot(S, energies, "-")
     pl.xlabel("distance along path")
     pl.ylabel("energy")
     pl.show()

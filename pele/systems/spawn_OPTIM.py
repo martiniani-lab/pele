@@ -35,7 +35,6 @@ class PathInfoReader(object):
                     print("I think I'm done... ??")
                     break
 
-
     def read_coords(self, fin):
         coords = np.zeros([self.natoms, 3])
         for i in range(self.natoms):
@@ -46,7 +45,7 @@ class PathInfoReader(object):
     def read_minimum(self, fin):
         """
         the minima and transition states are stored as
-        
+
         1 line with energy
         1 line with point group info
         natoms lines with eigenvalues
@@ -70,14 +69,16 @@ class PathInfoReader(object):
 class SpawnOPTIM(object):
     """
     this class will control spawning of optim jobs and importing the results
-    
+
     1. make temp directory
     #. make imput files (odata, finish, perm.allow, etc)
     #. call OPTIM
     #. when OPTIM finishes, load the results into the database
     """
 
-    def __init__(self, coords1, coords2, OPTIM="OPTIM", rundir=None, tempdir=False):
+    def __init__(
+        self, coords1, coords2, OPTIM="OPTIM", rundir=None, tempdir=False
+    ):
         self.coords1 = coords1.reshape(-1, 3)
         self.coords2 = coords2.reshape(-1, 3)
         self.OPTIM = OPTIM
@@ -111,17 +112,16 @@ class SpawnOPTIM(object):
         # make any additional files
         self.write_additional_input_files(rundir, self.coords1, self.coords2)
 
-
     def write_odata(self, fout):
         """write the odata file to the open file fout
-        
+
         stop after the line POINTS.  i.e. don't write coordinates
         """
         raise NotImplementedError
 
     def write_odata_coords(self, coords, fout):
         """write the coords to odata
-        
+
         need to label the atoms correctly for the system
         """
         raise NotImplementedError
@@ -178,20 +178,24 @@ class SpawnOPTIM(object):
 
     def load_results(self, database):
         """load the resulting min-ts-min triplets from the path.info file and put them in the database
-        
+
         Returns
         -------
         newminima : a set of the minima found
         newts : a set of the transition states found
         """
-        reader = PathInfoReader(self.sys.natoms, fname=self.rundir + "/path.info")
+        reader = PathInfoReader(
+            self.sys.natoms, fname=self.rundir + "/path.info"
+        )
         newminima = set()
         newts = set()
         for min1res, tsres, min2res in reader.read():
             # print min1
             min1 = database.addMinimum(min1res.energy, min1res.coords)
             min2 = database.addMinimum(min2res.energy, min2res.coords)
-            ts = database.addTransitionState(tsres.energy, tsres.coords, min1, min2)
+            ts = database.addTransitionState(
+                tsres.energy, tsres.coords, min1, min2
+            )
             # I should probably get the eigenvector here
             print("adding ", min1._id, min2._id)
             # print min1.energy, ts.energy, min2.energy
@@ -254,6 +258,7 @@ POINTS
 # only testing stuff below here
 #
 
+
 def spawnlj(**kwargs):
     from pele.systems import LJCluster
     from pele.config import config
@@ -277,6 +282,3 @@ def spawnlj(**kwargs):
 
 if __name__ == "__main__":
     spawnlj(tempdir=True)
-    
-    
-    

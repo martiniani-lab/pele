@@ -22,7 +22,7 @@ __all__ = ["read_xyz", "write_xyz"]
 
 
 def read_xyz(fin):
-    """ read a xyz file from file handle
+    """read a xyz file from file handle
 
     Parameters
     ----------
@@ -49,12 +49,13 @@ def read_xyz(fin):
         atomtypes.append(line[0])
         x[:] = list(map(float, line[1:4]))
 
-    return namedtuple("XYZFile", ["coords", "title", "atomtypes"]) \
-        (coords, title, atomtypes)
+    return namedtuple("XYZFile", ["coords", "title", "atomtypes"])(
+        coords, title, atomtypes
+    )
 
 
 def write_xyz(fout, coords, title="", atomtypes=("A",)):
-    """ write a xyz file from file handle
+    """write a xyz file from file handle
 
     Writes coordinates in xyz format. It uses atomtypes as names. The list is
     cycled if it contains less entries than there are coordinates,
@@ -82,4 +83,3 @@ def write_xyz(fout, coords, title="", atomtypes=("A",)):
     fout.write("%d\n%s\n" % (old_div(coords.size, 3), title))
     for x, atomtype in zip(coords.reshape(-1, 3), cycle(atomtypes)):
         fout.write("%s %.18g %.18g %.18g\n" % (atomtype, x[0], x[1], x[2]))
- 

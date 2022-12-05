@@ -84,7 +84,7 @@ class RigidFragment(aatopology.AASiteType):
         pos = np.array(pos, dtype=float)
         self.atom_types.append(atomtype)
         self.atom_positions.append(pos.copy())
-        #print self.atom_positions
+        # print self.atom_positions
         self.atom_masses.append(mass)
 
     def get_natoms(self):
@@ -110,7 +110,7 @@ class RigidFragment(aatopology.AASiteType):
         self.M = np.sum(self.atom_masses)
 
         # now calculate the weighted moment of inertia tensor
-        self.S[:] = 0.
+        self.S[:] = 0.0
         for x in self.atom_positions:
             self.S[:] += np.outer(x, x)
         self.Sm = np.zeros([3, 3])
@@ -124,8 +124,7 @@ class RigidFragment(aatopology.AASiteType):
             self.symmetriesaa.append(mx2aa(rot))
 
     def to_atomistic(self, com, p):
-        """convert the center of mass position + angle axis vector to atomistic coords
-        """
+        """convert the center of mass position + angle axis vector to atomistic coords"""
         R = rotations.aa2mx(p)
         return com + np.dot(R, np.transpose(self.atom_positions)).transpose()
 
@@ -142,12 +141,23 @@ class RigidFragment(aatopology.AASiteType):
     def redistribute_forces(self, p, grad_com, grad_p):
         # js850> as far as I can tell this is never used.  Maybe we should remove it?
         R, R1, R2, R3 = rotations.rot_mat_derivatives(p)
-        grad = np.dot(R1, np.transpose(self.atom_positions)).transpose() * grad_p[0]
-        grad += np.dot(R2, np.transpose(self.atom_positions)).transpose() * grad_p[1]
-        grad += np.dot(R3, np.transpose(self.atom_positions)).transpose() * grad_p[2]
+        grad = (
+            np.dot(R1, np.transpose(self.atom_positions)).transpose()
+            * grad_p[0]
+        )
+        grad += (
+            np.dot(R2, np.transpose(self.atom_positions)).transpose()
+            * grad_p[1]
+        )
+        grad += (
+            np.dot(R3, np.transpose(self.atom_positions)).transpose()
+            * grad_p[2]
+        )
         grad += grad_com
 
-        grad = old_div((self.atom_masses * grad.transpose()).transpose(), self.M)
+        grad = old_div(
+            (self.atom_masses * grad.transpose()).transpose(), self.M
+        )
 
         return grad
 
@@ -194,35 +204,39 @@ class RigidFragment(aatopology.AASiteType):
         self._determine_inversion(permlist)
         self._determine_rotational_symmetry(permlist)
 
-       
+
 class RigidFragmentBulk(RigidFragment):
-    """Modified site type class; this is an exact copy of RigidFragment 
-       but with an overloaded method "get_smallest_rij" to incorporate 
-       periodic boundary conditions.
+    """Modified site type class; this is an exact copy of RigidFragment
+    but with an overloaded method "get_smallest_rij" to incorporate
+    periodic boundary conditions.
     """
-    def __init__(self,boxl):
+
+    def __init__(self, boxl):
         aatopology.AASiteType.__init__(self)
         self.atom_positions = []
         self.atom_types = []
         self.atom_masses = []
         self.boxsize = boxl
-    
+
     def get_smallest_rij(self, com1, com2):
-        """return the shortest vector from com1 to com2 (both numpy arrays containing 
+        """return the shortest vector from com1 to com2 (both numpy arrays containing
         coordinates for any number of atoms) using periodic boundary conditions.
         """
         boxvec = self.boxsize
-        dx = com2 - com1  
-        dx = dx.reshape(-1, boxvec.size) # sn402: takes dx (however long it is - 
+        dx = com2 - com1
+        dx = dx.reshape(
+            -1, boxvec.size
+        )  # sn402: takes dx (however long it is -
         # in this case 3*nrigid) and reshapes it to boxvec.size columns.
-        dx -= boxvec * np.round(old_div(dx, boxvec[np.newaxis,:])) # np.newaxis inserts a new column into boxvec. 
+        dx -= boxvec * np.round(
+            old_div(dx, boxvec[np.newaxis, :])
+        )  # np.newaxis inserts a new column into boxvec.
         # This is just to match shape with dx and hence allow division.
-        return dx       
-                    
+        return dx
+
 
 class RBTopology(aatopology.AATopology):
-    """This defines the topology of a collection of rigid bodies.
-    """
+    """This defines the topology of a collection of rigid bodies."""
 
     def __init__(self):
         aatopology.AATopology.__init__(self)
@@ -245,7 +259,7 @@ class RBTopology(aatopology.AATopology):
     def add_sites(self, sites):
         """
         add sites to the Rigid Body topology
-        
+
         Parameters
         ----------
         sites : RigidFragment
@@ -255,14 +269,16 @@ class RBTopology(aatopology.AATopology):
         for site in sites:
             nsite_atoms = len(site.atom_positions)
             if not hasattr(site, "atom_indices"):
-                site.atom_indices = list(range(self.natoms, self.natoms + nsite_atoms))
+                site.atom_indices = list(
+                    range(self.natoms, self.natoms + nsite_atoms)
+                )
             self.natoms += nsite_atoms
 
     def finalize_setup(self, use_cpp=True):
         from pele.angleaxis import _cpp_aa
+
         if use_cpp:
             self.set_cpp_topology(_cpp_aa.cdefRBTopology(self))
-
 
     def get_atom_labels(self):
         labels = []
@@ -281,7 +297,7 @@ class RBTopology(aatopology.AATopology):
         for site, com, p in zip(self.sites, ca.posRigid, ca.rotRigid):
             atoms = site.to_atomistic(com, p)
             for i, x in zip(site.atom_indices, atoms):
-                atomistic[i,:] = x
+                atomistic[i, :] = x
         return atomistic
 
     def transform_gradient(self, rbcoords, grad):
@@ -292,9 +308,12 @@ class RBTopology(aatopology.AATopology):
 
         ca = self.coords_adapter(rbcoords)
         rbgrad = self.coords_adapter(np.zeros_like(rbcoords))
-        for site, p, g_com, g_p in zip(self.sites, ca.rotRigid,
-                                       rbgrad.posRigid, rbgrad.rotRigid):
-            g_com[:], g_p[:] = site.transform_grad(p, grad.reshape(-1, 3)[site.atom_indices,:])
+        for site, p, g_com, g_p in zip(
+            self.sites, ca.rotRigid, rbgrad.posRigid, rbgrad.rotRigid
+        ):
+            g_com[:], g_p[:] = site.transform_grad(
+                p, grad.reshape(-1, 3)[site.atom_indices, :]
+            )
         return rbgrad.coords
 
     def redistribute_gradient(self, rbcoords, rbgrad):
@@ -302,7 +321,9 @@ class RBTopology(aatopology.AATopology):
         ca = self.coords_adapter(rbcoords)
         cg = self.coords_adapter(rbgrad)
         grad = np.zeros([self.natoms, 3])
-        for site, p, g_com, g_p in zip(self.sites, ca.rotRigid, cg.posRigid, cg.rotRigid):
+        for site, p, g_com, g_p in zip(
+            self.sites, ca.rotRigid, cg.posRigid, cg.rotRigid
+        ):
             gatom = site.redistribute_forces(p, g_com, g_p)
             for i, x in zip(site.atom_indices, gatom):
                 grad[i] = x
@@ -319,12 +340,12 @@ class RBTopologyBulk(RBTopology, aatopology.AATopologyBulk):
             sites = []
         self.sites = sites
         self.boxvec = boxvec
-        self.natoms=0
-         
+        self.natoms = 0
+
 
 class RBPotentialWrapper(potential):
     """Wrap a potential
-    
+
     Note: there is a c++ implementation of which is much faster
     """
 
@@ -341,6 +362,7 @@ class RBPotentialWrapper(potential):
         E, g = self.pot.getEnergyGradient(coords.reshape(-1))
         return E, self.rbsystem.transform_gradient(rbcoords, g)
 
+
 def test():  # pragma: no cover
     from math import pi
     from copy import deepcopy
@@ -348,10 +370,10 @@ def test():  # pragma: no cover
     water = RigidFragment()
     rho = 0.9572
     theta = 104.52 / 180.0 * pi
-    water.add_atom("O", np.array([0., -1., 0.]), 1.)
-    water.add_atom("O", np.array([0., 1., 0.]), 1.)
+    water.add_atom("O", np.array([0.0, -1.0, 0.0]), 1.0)
+    water.add_atom("O", np.array([0.0, 1.0, 0.0]), 1.0)
     # water.add_atom("H", rho*np.array([0.0, sin(0.5*theta), cos(0.5*theta)]), 1.)
-    #water.add_atom("H", rho*np.array([0.0, -sin(0.5*theta), cos(0.5*theta)]), 1.)
+    # water.add_atom("H", rho*np.array([0.0, -sin(0.5*theta), cos(0.5*theta)]), 1.)
     water.finalize_setup()
     # define the whole water system
     system = RBTopology()
@@ -366,7 +388,7 @@ def test():  # pragma: no cover
 
     print("rb coords\n", rbcoords)
     print("coords\n", coords)
-    grad = (np.random.random(coords.shape) - 0.5)
+    grad = np.random.random(coords.shape) - 0.5
 
     v = coords[1] - coords[0]
     v /= np.linalg.norm(v)
@@ -389,38 +411,43 @@ def test():  # pragma: no cover
     print("test1", np.linalg.norm(R1 * gp[0]))
     print("test2", np.linalg.norm(R2 * gp[1]))
     print("test3", np.linalg.norm(R3 * gp[2]))
-    print("test4", np.linalg.norm(R1 * gp[0]) + np.linalg.norm(R2 * gp[1]) + np.linalg.norm(R3 * gp[2]))
+    print(
+        "test4",
+        np.linalg.norm(R1 * gp[0])
+        + np.linalg.norm(R2 * gp[1])
+        + np.linalg.norm(R3 * gp[2]),
+    )
 
     dR = R1 * gp[0] + R2 * gp[1] + R3 * gp[2]
     print("test", np.linalg.norm(R1 * gp[0] + R2 * gp[1] + R3 * gp[2]))
     print(np.trace(np.dot(dR, dR.transpose())))
-    #G = water.metric_tensor_aa(p)
-    #print np.dot(p, np.dot(G, p))     
+    # G = water.metric_tensor_aa(p)
+    # print np.dot(p, np.dot(G, p))
     exit()
-    
-    
+
     gnew = system.redistribute_forces(rbcoords, rbgrad)
     print(gnew)
     print(system.transform_grad(rbcoords, gnew))
-    
+
+
 def test_bulk_class():  # pragma: no cover
-    
-    boxvec = np.array([5,10,20])
-    coords1 = np.array([1,2,3,4,4,4])
-    coords2 = np.array([4,8,8,-4,-4,-4])
+
+    boxvec = np.array([5, 10, 20])
+    coords1 = np.array([1, 2, 3, 4, 4, 4])
+    coords2 = np.array([4, 8, 8, -4, -4, -4])
     print(boxvec, coords1, coords2)
     a = RBTopologyBulk(boxvec)
     for i in range(2):
         otp = RigidFragmentBulk(boxvec)
-        otp.add_atom("O", np.array([0.0, 0.0, 0.0]), 1.)
-        otp.add_atom("O", np.array([1.0, 0.0, 0.0]), 1.)        
-        otp.finalize_setup()     
+        otp.add_atom("O", np.array([0.0, 0.0, 0.0]), 1.0)
+        otp.add_atom("O", np.array([1.0, 0.0, 0.0]), 1.0)
+        otp.finalize_setup()
         a.add_sites(otp)
-   
+
     b = a.distance_squared(coords1, coords2)
-    print(b)      
-    
+    print(b)
+
 
 if __name__ == "__main__":
-    #test()
+    # test()
     test_bulk_class()

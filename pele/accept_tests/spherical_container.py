@@ -15,10 +15,10 @@ class SphericalContainer(object):
     Reject a structure if any atoms are outside a spherical region
 
     This test is necessary to avoid evaporation in clusters
-    
+
     a class to make sure the cluster doesn't leave a spherical region of
     given radius.  The center of the spherical region is at the center of mass.
-    
+
     Parameters
     ----------
     radius : float
@@ -34,10 +34,10 @@ class SphericalContainer(object):
         self.nocenter = nocenter
         self.verbose = verbose
 
-
     def accept(self, coords):
-        """ perform the test"""
-        if self.nocenter: return self.accept_fortran(coords)
+        """perform the test"""
+        if self.nocenter:
+            return self.accept_fortran(coords)
         self.count += 1
         # get center of mass
         natoms = old_div(len(coords), 3)
@@ -48,7 +48,9 @@ class SphericalContainer(object):
             com = old_div(np.sum(coords, 0), natoms)
         # print np.max(np.sqrt(((coords-com[np.newaxis,:] )**2).sum(1)))
         # print np.max(np.sqrt(((coords)**2).sum(1)))
-        reject = (((coords - com[np.newaxis, :] ) ** 2).sum(1) >= self.radius2).any()
+        reject = (
+            ((coords - com[np.newaxis, :]) ** 2).sum(1) >= self.radius2
+        ).any()
         if reject and self.verbose:
             self.nrejected += 1
             print("radius> rejecting", self.nrejected, "out of", self.count)

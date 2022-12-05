@@ -7,15 +7,15 @@ from pele.systems import BaseSystem
 
 
 class Booth(BasePotential):
-    target_E = 0.
-    target_coords = np.array([1., 3.])
-    xmin = np.array([-10., -10.])
+    target_E = 0.0
+    target_coords = np.array([1.0, 3.0])
+    xmin = np.array([-10.0, -10.0])
     # xmin = np.array([0., 0.])
-    xmax = np.array([10., 10.])
+    xmax = np.array([10.0, 10.0])
 
     def getEnergy(self, coords):
         x, y = coords
-        return (x + 2.*y - 7.)**2 + (2.*x + y - 5.)**2
+        return (x + 2.0 * y - 7.0) ** 2 + (2.0 * x + y - 5.0) ** 2
 
 
 class BoothSystem(BaseSystem):
@@ -38,7 +38,7 @@ def test1():
     f.test_potential(f.target_coords)
     print("")
     f.test_potential(s.get_random_configuration())
-    f.test_potential(np.array([1., 1.]))  # , print_grads=True)
+    f.test_potential(np.array([1.0, 1.0]))  # , print_grads=True)
 
     # from base_function import makeplot2d
     makeplot2d(f, nx=60, zlim=[0, 100])
@@ -46,4 +46,3 @@ def test1():
 
 if __name__ == "__main__":
     test1()
-

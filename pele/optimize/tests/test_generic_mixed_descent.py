@@ -2,7 +2,11 @@
 """
 from matplotlib import use
 import numpy as np
-from pele.optimize import GenericMixedDescent, ModifiedFireCPP, CVODEBDFOptimizer
+from pele.optimize import (
+    GenericMixedDescent,
+    ModifiedFireCPP,
+    CVODEBDFOptimizer,
+)
 from pele.potentials import InversePower
 
 from .potential_fixture import potential_initial_and_final_conditions

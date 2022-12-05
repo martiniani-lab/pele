@@ -13,11 +13,11 @@ from pele.transition_states._dimer_translator import _DimerTranslator
 
 class GeneralizedDimer(object):
     """Use the generalized dimer method to find a saddle point
-    
+
     This should be considered experimental.  It works, but I haven't spent
     enough time on it to make it very robust and efficient.  I would recommend
     using FindTransitionState instead.
-    
+
     Parameters
     ----------
     coords : array
@@ -29,52 +29,56 @@ class GeneralizedDimer(object):
         The number of iterations for optimizing the smallest eigenvector
         (rotating the dimer) between translational moves
     translational_steps : int
-        The number of translational steps before re-optimizing the 
-        smallest eigenvector 
+        The number of translational steps before re-optimizing the
+        smallest eigenvector
     maxiter : int
         the maximum number of iterations
     minimizer_kwargs : dict
-        these keyword arguments are passed to the minimizer that does the 
+        these keyword arguments are passed to the minimizer that does the
         translational steps
     leig_kwargs : dict
-        these keyword arguments are passed to the class for optimizing 
+        these keyword arguments are passed to the class for optimizing
         the smallest eigenvector
-        
+
     Notes
     -----
     The dimer method defines a way of walking along an energy surface
-    towards a saddle point.  The dimer is defined by a location and 
+    towards a saddle point.  The dimer is defined by a location and
     a direction, vec.  vec will point along the direction of largest
     negative curvature, which corresponds to the eigenvector of the Hessian
-    matrix with the smallest eigenvalue.  The eigenvalue is the 
-    curvature.  The eigenvector can be computed analytically if the 
+    matrix with the smallest eigenvalue.  The eigenvalue is the
+    curvature.  The eigenvector can be computed analytically if the
     Hessian is available, but this is often computationally expensive
-    normally you would use gradients and an optimization function to 
+    normally you would use gradients and an optimization function to
     converge towards the direction of largest curvature.  If the
     gradient is inverted along the direction of the largest negative
     curvature then following that gradient will lead you towards a
     saddle point.  As you walk towards the saddle point the direction
-    of largest negative curvature will change, so it will need to be 
+    of largest negative curvature will change, so it will need to be
     periodically re-optimized.  Thus the main iteration loop is
-    
+
     1. Optimize the rotation of the dimer so that it is aligned with
     the direction of largest negative curvature.
-    
+
     2. Translate the dimer uphill following the direction of largest
     negative curvature while simultaneously walking downhill in all
     perpendicular directions.
-    
-    3. If converged, then end, else go to 1.   
-    
+
+    3. If converged, then end, else go to 1.
+
     """
 
-    def __init__(self, coords, potential, eigenvec0=None,
-                 rotational_steps=20,
-                 translational_steps=10,
-                 maxiter=500,
-                 leig_kwargs=None,
-                 translator_kwargs=None,
-                 dimer=True,
+    def __init__(
+        self,
+        coords,
+        potential,
+        eigenvec0=None,
+        rotational_steps=20,
+        translational_steps=10,
+        maxiter=500,
+        leig_kwargs=None,
+        translator_kwargs=None,
+        dimer=True,
     ):
         coords = coords.copy()
         self.rotational_steps = rotational_steps
@@ -83,8 +87,10 @@ class GeneralizedDimer(object):
         self.iter_number = 0
 
         # check the keyword dictionaries
-        if translator_kwargs is None: translator_kwargs = {}
-        if leig_kwargs is None: leig_kwargs = {}
+        if translator_kwargs is None:
+            translator_kwargs = {}
+        if leig_kwargs is None:
+            leig_kwargs = {}
 
         # set up the initial guess for the eigenvector
         if eigenvec0 is None:
@@ -93,18 +99,23 @@ class GeneralizedDimer(object):
         assert coords.shape == eigenvec0.shape
 
         # set up the object that will maintain the rotation of the dimer
-        self.rotator = FindLowestEigenVector(coords, potential, eigenvec0=eigenvec0, **leig_kwargs)
+        self.rotator = FindLowestEigenVector(
+            coords, potential, eigenvec0=eigenvec0, **leig_kwargs
+        )
 
         # set up the object that will translate the dimer
         if dimer:
-            self.translator = _DimerTranslator(coords, potential, eigenvec0, **translator_kwargs)
+            self.translator = _DimerTranslator(
+                coords, potential, eigenvec0, **translator_kwargs
+            )
         else:
-            self.translator = _HybridEigenvectorWalker(coords, potential, eigenvec0, **translator_kwargs)
+            self.translator = _HybridEigenvectorWalker(
+                coords, potential, eigenvec0, **translator_kwargs
+            )
 
     def get_true_energy_gradient(self, coords):
         """return the true energy and gradient"""
         return self.translator.get_true_energy_gradient(coords)
-
 
     # def get_true_energy(self):
     # """return the true energy"""
@@ -122,7 +133,10 @@ class GeneralizedDimer(object):
 
     def stop_criterion_satisfied(self):
         """return True if the stop criterion is satisfied"""
-        return self.translator.stop_criterion_satisfied() and self.rotator.stop_criterion_satisfied()
+        return (
+            self.translator.stop_criterion_satisfied()
+            and self.rotator.stop_criterion_satisfied()
+        )
 
     def one_iteration(self):
         """do one iteration"""
@@ -141,14 +155,15 @@ class GeneralizedDimer(object):
 
         self.iter_number += 1
 
-
     def run(self):
         """the main iteration loop"""
-        while not self.stop_criterion_satisfied() and self.iter_number < self.maxiter:
+        while (
+            not self.stop_criterion_satisfied()
+            and self.iter_number < self.maxiter
+        ):
             self.one_iteration()
 
         return self.get_result()
-
 
     def get_result(self):
         """return a results object"""
@@ -176,6 +191,7 @@ class GeneralizedDimer(object):
 # testing only below here
 #
 
+
 class PotWrapper(object):  # pragma: no cover
     def __init__(self, pot):
         self.pot = pot
@@ -190,7 +206,9 @@ def compare_HEF(x0, evec0, system, **kwargs):  # pragma: no cover
     from pele.transition_states import findTransitionState
 
     pot = PotWrapper(system.get_potential())
-    ret = findTransitionState(x0, pot, eigenvec0=evec0, orthogZeroEigs=None, **kwargs)
+    ret = findTransitionState(
+        x0, pot, eigenvec0=evec0, orthogZeroEigs=None, **kwargs
+    )
     print(ret.eigenval)
     print(pot.nfev)
     print(ret.rms)
@@ -219,11 +237,13 @@ def get_x0():  # pragma: no cover
 def test():  # pragma: no cover
     system, x0, evec0 = get_x0()
 
-    dimer = GeneralizedDimer(x0.copy(), system.get_potential(),
-                             eigenvec0=evec0,
-                             # dimer_kwargs=dict(n_translational_steps=5,
-                             # n_rotational_steps=20),
-                             # minimizer_kwargs=dict(iprint=1, tol=4e-5, nsteps=2000)
+    dimer = GeneralizedDimer(
+        x0.copy(),
+        system.get_potential(),
+        eigenvec0=evec0,
+        # dimer_kwargs=dict(n_translational_steps=5,
+        # n_rotational_steps=20),
+        # minimizer_kwargs=dict(iprint=1, tol=4e-5, nsteps=2000)
     )
     ret = dimer.run()
 
@@ -232,8 +252,15 @@ def test():  # pragma: no cover
     print("rms", ret.rms)
 
     print("\n\nnow with hybrid eigenvector following")
-    compare_HEF(x0, evec0, system, nsteps_tangent1=5, nsteps_tangent2=5,
-                lowestEigenvectorQuenchParams={"nsteps": 20, "tol": 1e-4}, iprint=10)
+    compare_HEF(
+        x0,
+        evec0,
+        system,
+        nsteps_tangent1=5,
+        nsteps_tangent2=5,
+        lowestEigenvectorQuenchParams={"nsteps": 20, "tol": 1e-4},
+        iprint=10,
+    )
 
 
 if __name__ == "__main__":
