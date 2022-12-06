@@ -95,6 +95,7 @@ public:
       }
     }
 #else
+    nsubdoms = m_cell_atoms.size();
     for (size_t isubdom = 0; isubdom < nsubdoms; ++isubdom) {
       for (auto &v : m_cell_atoms[isubdom]) {
         v.clear();
@@ -133,14 +134,12 @@ public:
   }
 };
 
-
-
 /**
  * Gets the cell scale for tests in c++. NOTE: this needs to be tested for all
  * cases
  */
-inline double get_ncellx_scale(pele::Array<double> radii, pele::Array<double> boxv,
-                        size_t omp_threads) {
+inline double get_ncellx_scale(pele::Array<double> radii,
+                               pele::Array<double> boxv, size_t omp_threads) {
   double ndim = boxv.size();
   double ncellsx_max =
       std::max<size_t>(omp_threads, pow(radii.size(), 1 / ndim));
@@ -159,7 +158,7 @@ inline double get_ncellx_scale(pele::Array<double> radii, pele::Array<double> bo
   return ncellsx_scale;
 }
 
-} // namespace
+} // namespace pele
 
 namespace pele {
 
