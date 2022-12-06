@@ -95,7 +95,7 @@ public:
       }
     }
 #else
-    nsubdoms = m_cell_atoms.size();
+    size_t nsubdoms = m_cell_atoms.size();
     for (size_t isubdom = 0; isubdom < nsubdoms; ++isubdom) {
       for (auto &v : m_cell_atoms[isubdom]) {
         v.clear();

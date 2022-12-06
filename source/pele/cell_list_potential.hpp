@@ -501,7 +501,7 @@ public:
     { xsum_large_init(&(m_energies[omp_get_thread_num()])); }
 #else
     m_energies = std::vector<xsum_large_accumulator>(1);
-    xsum_large_init(&(m_energies[0]))
+    xsum_large_init(&(m_energies[0]));
 #endif
   }
 
