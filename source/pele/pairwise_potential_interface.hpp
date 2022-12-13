@@ -26,11 +26,11 @@ namespace pele {
  * @param non_additivity
  * @return double
  */
-class NonAdditiveCutoff {
+class NonAdditiveCutoffCalculator {
 public:
-  NonAdditiveCutoff(double non_additivity, double cutoff_factor = 1.0)
+  NonAdditiveCutoffCalculator(double non_additivity, double cutoff_factor = 1.0)
       : _non_additivity(non_additivity), _cutoff_factor_(cutoff_factor) {}
-  NonAdditiveCutoff() : _non_additivity(0) {}
+  NonAdditiveCutoffCalculator() : _non_additivity(0) {}
   inline double get_cutoff(const double radius_i, const double radius_j) const {
     return (radius_i + radius_j) * _cutoff_factor_ *
            (1 - 2 * _non_additivity * abs(radius_i - radius_j));
@@ -47,18 +47,18 @@ private:
 class PairwisePotentialInterface : public BasePotential {
 protected:
   const Array<double> m_radii;
-  const NonAdditiveCutoff m_non_additive_cutoff;
+  const NonAdditiveCutoffCalculator m_cutoff_calculator;
 
 public:
-  PairwisePotentialInterface() : m_radii(0), m_non_additive_cutoff(0) {}
+  PairwisePotentialInterface() : m_radii(0), m_cutoff_calculator(0) {}
   PairwisePotentialInterface(pele::Array<double> const &radii,
                              double non_additivity = 0)
-      : m_radii(radii.copy()), m_non_additive_cutoff(non_additivity) {
+      : m_radii(radii.copy()), m_cutoff_calculator(non_additivity) {
     initialize();
   }
   PairwisePotentialInterface(pele::Array<double> const &radii,
-                             NonAdditiveCutoff non_additive_cutoff)
-      : m_radii(radii.copy()), m_non_additive_cutoff(non_additive_cutoff) {
+                             NonAdditiveCutoffCalculator cutoff_calculator)
+      : m_radii(radii.copy()), m_cutoff_calculator(cutoff_calculator) {
     initialize();
   }
 
@@ -101,7 +101,7 @@ public:
       return 0;
     } else {
       // uses the diameters being twice the radii
-      return m_non_additive_cutoff.get_cutoff(m_radii[atom_i], m_radii[atom_j]);
+      return m_cutoff_calculator.get_cutoff(m_radii[atom_i], m_radii[atom_j]);
     }
   }
 
