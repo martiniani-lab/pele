@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <cstdio>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <sys/types.h>
@@ -42,6 +43,17 @@ protected:
   bool exact_sum;
   std::shared_ptr<std::vector<xsum_small_accumulator>> exact_gradient;
   bool exact_gradient_initialized;
+  SimplePairwisePotential(std::shared_ptr<pairwise_interaction> interaction,
+                          const Array<double> radii,
+                          NonAdditiveCutoffCalculator cutoff_calculator,
+                          std::shared_ptr<distance_policy> dist = NULL,
+                          const double radii_sca = 0.0, bool exact_sum = false)
+      : PairwisePotentialInterface(radii, cutoff_calculator),
+        _interaction(interaction), _dist(dist), m_radii_sca(radii_sca),
+        exact_gradient_initialized(false), exact_sum(exact_sum) {
+    if (_dist == NULL)
+      _dist = std::make_shared<distance_policy>();
+  }
 
   SimplePairwisePotential(std::shared_ptr<pairwise_interaction> interaction,
                           const Array<double> radii,
@@ -258,7 +270,7 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
         const double dij = get_non_additive_cutoff(atom_i, atom_j);
         e += _interaction->energy_gradient(
             r2, &gij, get_non_additive_cutoff(atom_i, atom_j));
-        
+
         if (gij != 0) {
 #pragma GCC unroll 3
           for (size_t k = 0; k < m_ndim; ++k) {

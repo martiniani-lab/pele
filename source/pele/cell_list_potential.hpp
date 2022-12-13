@@ -154,7 +154,7 @@ protected:
   std::shared_ptr<distance_policy> m_dist;
   const Array<double> *m_coords;
   const Array<double> m_radii;
-  NonAdditiveCutoff m_cutoff;
+  NonAdditiveCutoffCalculator m_cutoff;
   std::vector<DistanceData<distance_policy::_ndim>>
       m_distance_datas; // distance data for every thread. Prevents being
                         // overwritten by other threads
@@ -163,7 +163,7 @@ public:
   BaseAccumulator(
       std::shared_ptr<pairwise_interaction> pairwise_interaction_ptr,
       std::shared_ptr<distance_policy> distance_policy_ptr,
-      pele::Array<double> const &radii, NonAdditiveCutoff cutoff)
+      pele::Array<double> const &radii, NonAdditiveCutoffCalculator cutoff)
       : m_interaction(pairwise_interaction_ptr), m_dist(distance_policy_ptr),
         m_coords(nullptr), m_radii(radii), m_cutoff(cutoff),
         m_distance_datas(0) {
@@ -218,10 +218,11 @@ class EnergyAccumulator
 public:
   ~EnergyAccumulator() {}
 
-  EnergyAccumulator(std::shared_ptr<pairwise_interaction> &interaction,
-                    std::shared_ptr<distance_policy> &dist,
-                    pele::Array<double> const &radii = pele::Array<double>(0),
-                    NonAdditiveCutoff cutoff = NonAdditiveCutoff())
+  EnergyAccumulator(
+      std::shared_ptr<pairwise_interaction> &interaction,
+      std::shared_ptr<distance_policy> &dist,
+      pele::Array<double> const &radii = pele::Array<double>(0),
+      NonAdditiveCutoffCalculator cutoff = NonAdditiveCutoffCalculator())
       : BaseAccumulator<pairwise_interaction, distance_policy>(
             interaction, dist, radii, cutoff),
         m_energies(0) {
@@ -263,7 +264,7 @@ public:
       std::shared_ptr<pairwise_interaction> &interaction,
       std::shared_ptr<distance_policy> &dist,
       pele::Array<double> const &radii = pele::Array<double>(0),
-      NonAdditiveCutoff cutoff = NonAdditiveCutoff())
+      NonAdditiveCutoffCalculator cutoff = NonAdditiveCutoffCalculator())
       : BaseAccumulator<pairwise_interaction, distance_policy>(
             interaction, dist, radii, cutoff),
         m_energies(0) {
@@ -312,7 +313,7 @@ public:
       std::shared_ptr<pairwise_interaction> &interaction,
       std::shared_ptr<distance_policy> &dist,
       pele::Array<double> const &radii = pele::Array<double>(0),
-      NonAdditiveCutoff cutoff = NonAdditiveCutoff())
+      NonAdditiveCutoffCalculator cutoff = NonAdditiveCutoffCalculator())
       : BaseAccumulator<pairwise_interaction, distance_policy>(
             interaction, dist, radii, cutoff),
         m_energies(0) {
@@ -363,7 +364,7 @@ public:
       std::shared_ptr<pairwise_interaction> &interaction,
       std::shared_ptr<distance_policy> &dist,
       pele::Array<double> const &radii = pele::Array<double>(0),
-      NonAdditiveCutoff cutoff = NonAdditiveCutoff())
+      NonAdditiveCutoffCalculator cutoff = NonAdditiveCutoffCalculator())
       : BaseAccumulator<pairwise_interaction, distance_policy>(
             interaction, dist, radii, cutoff),
         m_energies(0) {
@@ -823,6 +824,52 @@ public:
       delete m_eghAcc;
     }
   }
+
+  CellListPotential(std::shared_ptr<pairwise_interaction> interaction,
+                    std::shared_ptr<distance_policy> dist,
+                    pele::Array<double> const &boxvec, double rcut,
+                    double ncellx_scale, const pele::Array<double> radii,
+                    NonAdditiveCutoffCalculator cutoff_calculator,
+                    const double radii_sca = 0.0, const bool balance_omp = true,
+                    const bool exact_sum = false)
+      : PairwisePotentialInterface(radii, cutoff_calculator),
+        m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
+        m_interaction(interaction), m_dist(dist), m_radii_sca(radii_sca),
+        exact_gradient_initialized(false), exact_sum(exact_sum) {
+    if (exact_sum) {
+      std::cout
+          << "WARNING: Exact sum is not being maintained and will be removed"
+          << std::endl;
+      m_eAccExact =
+          new EnergyAccumulatorExact<pairwise_interaction, distance_policy>(
+              m_interaction, m_dist, m_radii);
+      m_egAccExact = new EnergyGradientAccumulatorExact<pairwise_interaction,
+                                                        distance_policy>(
+          m_interaction, m_dist, m_radii);
+      m_eghAccExact =
+          new EnergyGradientHessianAccumulatorExact<pairwise_interaction,
+                                                    distance_policy>(
+              m_interaction, m_dist, m_radii);
+      std::cout << "Warning: exact sum not implemented for get_hessian"
+                << std::endl;
+      m_ehAcc =
+          new EnergyHessianAccumulator<pairwise_interaction, distance_policy>(
+              m_interaction, m_dist, m_radii);
+    } else {
+      m_eAcc = new EnergyAccumulator<pairwise_interaction, distance_policy>(
+          interaction, dist, m_radii, cutoff_calculator);
+      m_egAcc =
+          new EnergyGradientAccumulator<pairwise_interaction, distance_policy>(
+              interaction, dist, m_radii, cutoff_calculator);
+      m_eghAcc = new EnergyGradientHessianAccumulator<pairwise_interaction,
+                                                      distance_policy>(
+          interaction, dist, m_radii, cutoff_calculator);
+      m_ehAcc =
+          new EnergyHessianAccumulator<pairwise_interaction, distance_policy>(
+              m_interaction, m_dist, m_radii, cutoff_calculator);
+    }
+  }
+
   CellListPotential(std::shared_ptr<pairwise_interaction> interaction,
                     std::shared_ptr<distance_policy> dist,
                     pele::Array<double> const &boxvec, double rcut,
@@ -855,17 +902,20 @@ public:
               m_interaction, m_dist, m_radii);
     } else {
       m_eAcc = new EnergyAccumulator<pairwise_interaction, distance_policy>(
-          interaction, dist, m_radii, NonAdditiveCutoff(non_additivity));
+          interaction, dist, m_radii,
+          NonAdditiveCutoffCalculator(non_additivity));
       m_egAcc =
           new EnergyGradientAccumulator<pairwise_interaction, distance_policy>(
-              interaction, dist, m_radii, NonAdditiveCutoff(non_additivity));
+              interaction, dist, m_radii,
+              NonAdditiveCutoffCalculator(non_additivity));
       m_eghAcc = new EnergyGradientHessianAccumulator<pairwise_interaction,
                                                       distance_policy>(
-          interaction, dist, m_radii, NonAdditiveCutoff(non_additivity));
+          interaction, dist, m_radii,
+          NonAdditiveCutoffCalculator(non_additivity));
       m_ehAcc =
           new EnergyHessianAccumulator<pairwise_interaction, distance_policy>(
               m_interaction, m_dist, m_radii,
-              NonAdditiveCutoff(non_additivity));
+              NonAdditiveCutoffCalculator(non_additivity));
     }
   }
 
