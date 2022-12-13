@@ -35,7 +35,7 @@ public:
     return (radius_i + radius_j) * _cutoff_factor_ *
            (1 - 2 * _non_additivity * abs(radius_i - radius_j));
   }
-  inline double get_max_cutoff_distance(double max_radius) {
+  inline double get_max_cutoff_distance(double max_radius) const {
     return 2 * max_radius * _cutoff_factor_;
   }
 
@@ -48,20 +48,6 @@ class PairwisePotentialInterface : public BasePotential {
 protected:
   const Array<double> m_radii;
   const NonAdditiveCutoffCalculator m_cutoff_calculator;
-
-public:
-  PairwisePotentialInterface() : m_radii(0), m_cutoff_calculator(0) {}
-  PairwisePotentialInterface(pele::Array<double> const &radii,
-                             double non_additivity = 0)
-      : m_radii(radii.copy()), m_cutoff_calculator(non_additivity) {
-    initialize();
-  }
-  PairwisePotentialInterface(pele::Array<double> const &radii,
-                             NonAdditiveCutoffCalculator cutoff_calculator)
-      : m_radii(radii.copy()), m_cutoff_calculator(cutoff_calculator) {
-    initialize();
-  }
-
   inline void initialize() {
     if (m_radii.size() == 0) {
       throw std::runtime_error(
@@ -83,6 +69,20 @@ public:
       throw std::runtime_error("cutoff(dij) is negative");
     }
   }
+public:
+  PairwisePotentialInterface() : m_radii(0), m_cutoff_calculator(0) {}
+  PairwisePotentialInterface(pele::Array<double> const &radii,
+                             double non_additivity = 0)
+      : m_radii(radii.copy()), m_cutoff_calculator(non_additivity) {
+    initialize();
+  }
+  PairwisePotentialInterface(pele::Array<double> const &radii,
+                             NonAdditiveCutoffCalculator cutoff_calculator)
+      : m_radii(radii.copy()), m_cutoff_calculator(cutoff_calculator) {
+    initialize();
+  }
+
+
 
   virtual ~PairwisePotentialInterface() {}
 
@@ -102,6 +102,16 @@ public:
     } else {
       // uses the diameters being twice the radii
       return m_cutoff_calculator.get_cutoff(m_radii[atom_i], m_radii[atom_j]);
+    }
+  }
+
+  inline double get_max_cutoff() const {
+    if (m_radii.size() == 0) {
+      return 0;
+    } else {
+      // uses the diameters being twice the radii
+      return m_cutoff_calculator.get_max_cutoff_distance(
+          *std::max_element(m_radii.begin(), m_radii.end()));
     }
   }
 
