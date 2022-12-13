@@ -827,13 +827,13 @@ public:
 
   CellListPotential(std::shared_ptr<pairwise_interaction> interaction,
                     std::shared_ptr<distance_policy> dist,
-                    pele::Array<double> const &boxvec, double rcut,
+                    pele::Array<double> const &boxvec,
                     double ncellx_scale, const pele::Array<double> radii,
                     NonAdditiveCutoffCalculator cutoff_calculator,
                     const double radii_sca = 0.0, const bool balance_omp = true,
                     const bool exact_sum = false)
       : PairwisePotentialInterface(radii, cutoff_calculator),
-        m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
+        m_cell_lists(dist, boxvec, this->get_max_cutoff(), ncellx_scale, balance_omp),
         m_interaction(interaction), m_dist(dist), m_radii_sca(radii_sca),
         exact_gradient_initialized(false), exact_sum(exact_sum) {
     if (exact_sum) {

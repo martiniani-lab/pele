@@ -10,6 +10,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
+#include <pele/pairwise_potential_interface.hpp>
 #include <stdexcept>
 
 namespace pele {
@@ -35,25 +36,26 @@ struct InversePowerStillingerQuadCutInteraction : BaseInteraction {
   const double m_v0;             // overall energy scale for the full potential
   InversePowerStillingerQuadCutInteraction(const int pow, const double v0,
                                            const double cutoff_factor)
-      : m_pow(pow), m_pow_by_2(pow / 2), m_v0(v0),
-        m_cutoff_factor(cutoff_factor),
+      : m_pow(pow), m_pow_by_2(pow / 2), m_cutoff_factor(cutoff_factor),
         m_cutoff_factor2(cutoff_factor * cutoff_factor),
         c0(-(1.0 / 8.0) * v0 * std::pow(m_cutoff_factor, -pow) *
            (8 + 6 * pow + pow * pow)),
         c2((1.0 / 4.0) * v0 * std::pow(m_cutoff_factor, -pow - 2) *
            (4 * pow + pow * pow)),
         c4(-(1.0 / 8.0) * v0 * std::pow(m_cutoff_factor, -pow - 4) *
-           (pow * pow + 2 * pow)) {
+           (pow * pow + 2 * pow)),
+        m_v0(v0) {
     if (pow % 2 != 0) {
       // not implemented for odd powers
       throw std::runtime_error("InversePowerStillingerQuadCutInteraction: only "
                                "implemented for even powers");
     }
   }
-  double energy(const double r2, const double dij) const {
-    if (r2 > dij * dij * m_cutoff_factor2) {
+  double energy(const double r2, const double cutoff) const {
+    if (r2 > cutoff * cutoff) {
       return 0;
     }
+    const double dij = cutoff/m_cutoff_factor;
     const double r2_scaled = r2 / (dij * dij);
     const double r4_scaled = r2_scaled * r2_scaled;
     const double r_pow_scaled = std::pow(r2_scaled, m_pow_by_2);
@@ -62,11 +64,12 @@ struct InversePowerStillingerQuadCutInteraction : BaseInteraction {
   }
   // calculate energy and gradient from distance squared, gradient is in
   // -(dv/drij)/|rij|
-  double energy_gradient(double r2, double *gij, const double dij) const {
-    if (r2 > dij * dij * m_cutoff_factor2) {
+  double energy_gradient(double r2, double *gij, const double cutoff) const {
+    if (r2 > cutoff * cutoff) {
       *gij = 0;
       return 0.;
     }
+    const double dij = cutoff/m_cutoff_factor;
     const double dij_2 = dij * dij;
     const double r2_scaled = r2 / (dij_2);
     const double r4 = r2_scaled * r2_scaled;
@@ -78,12 +81,13 @@ struct InversePowerStillingerQuadCutInteraction : BaseInteraction {
     return e;
   }
   double energy_gradient_hessian(const double r2, double *gij, double *hij,
-                                 const double dij) const {
-    if (r2 > dij * dij * m_cutoff_factor2) {
+                                 const double cutoff) const {
+    if (r2 > cutoff * cutoff) {
       *gij = 0;
       *hij = 0;
       return 0.;
     }
+    const double dij = cutoff/m_cutoff_factor;
     const double dij_2 = dij * dij;
     const double r2_scaled = r2 / (dij_2);
     const double r4_scaled = r2_scaled * r2_scaled;
@@ -105,12 +109,14 @@ class InversePowerStillingerCutQuad
 public:
   InversePowerStillingerCutQuad(const int pow, const double v0,
                                 const double cutoff_factor,
-                                const pele::Array<double> radii, double non_additivity =0.0)
+                                const pele::Array<double> radii,
+                                double non_additivity = 0.0)
       : SimplePairwisePotential<InversePowerStillingerQuadCutInteraction,
                                 cartesian_distance<ndim>>(
             std::make_shared<InversePowerStillingerQuadCutInteraction>(
                 pow, v0, cutoff_factor),
-            radii, std::make_shared<cartesian_distance<ndim>>(), 0.0, false,  non_additivity) {}
+            radii, NonAdditiveCutoffCalculator(non_additivity, cutoff_factor),
+            std::make_shared<cartesian_distance<ndim>>(), 0.0, false) {}
 };
 
 template <size_t ndim>
@@ -121,12 +127,14 @@ public:
   InversePowerStillingerCutQuadPeriodic(const int pow, const double v0,
                                         const double cutoff_factor,
                                         const pele::Array<double> radii,
-                                        const pele::Array<double> boxvec, double non_additivity =0.0)
+                                        const pele::Array<double> boxvec,
+                                        double non_additivity = 0.0)
       : SimplePairwisePotential<InversePowerStillingerQuadCutInteraction,
                                 periodic_distance<ndim>>(
             std::make_shared<InversePowerStillingerQuadCutInteraction>(
                 pow, v0, cutoff_factor),
-            radii, std::make_shared<periodic_distance<ndim>>(boxvec), 0.0, false, non_additivity) {}
+            radii, NonAdditiveCutoffCalculator(non_additivity, cutoff_factor), std::make_shared<periodic_distance<ndim>>(boxvec), 0.0,
+            false) {}
 };
 
 template <size_t ndim>
@@ -137,15 +145,13 @@ public:
   InversePowerStillingerCutQuadPeriodicCellLists(
       const int pow, const double v0, const double cutoff_factor,
       const pele::Array<double> radii, const pele::Array<double> boxvec,
-      double ncellx_scale, double non_additivity =0.0)
+      double ncellx_scale, double non_additivity = 0.0)
       : CellListPotential<InversePowerStillingerQuadCutInteraction,
                           periodic_distance<ndim>>(
             std::make_shared<InversePowerStillingerQuadCutInteraction>(
                 pow, v0, cutoff_factor),
             std::make_shared<periodic_distance<ndim>>(boxvec), boxvec,
-            2.0 * cutoff_factor *
-                (*std::max_element(radii.begin(), radii.end())),
-            ncellx_scale, radii, 0.0, true, false, non_additivity) {}
+            ncellx_scale, radii, NonAdditiveCutoffCalculator(non_additivity, cutoff_factor), 0.0, true, false) {}
 };
 
 } // namespace pele
