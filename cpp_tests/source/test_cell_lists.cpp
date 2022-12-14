@@ -1493,11 +1493,11 @@ public:
   Array<double> quenched_coordinates;
   void SetUp() {
     constexpr size_t dim = 2;
-    constexpr int pow = 12;
+    constexpr int pow = 6;
 
     size_t n_particles = 32;
     double v0 = 1.0;
-    double non_additivity = 0.0;
+    double non_additivity = 0.2;
     bool exact_sum = false;
 
     double cutoff_factor = 1.25;
@@ -1524,7 +1524,7 @@ public:
         std::make_shared<InversePowerStillingerCutQuadPeriodic<dim>>(
             pow, v0, cutoff_factor, radii, boxvec, non_additivity);
 
-    LBFGS lbfgs = LBFGS(potential_without_cell_lists, coordinates);
+    LBFGS lbfgs = LBFGS(potential_without_cell_lists, coordinates, 1e-4);
     lbfgs.run();
     quenched_coordinates = lbfgs.get_x().copy();
   }
@@ -1536,24 +1536,19 @@ public:
  *  PHYSICAL REVIEW X 12, 021001 (2022) (The soft sphere potential in the
  * paper)
  */
-TEST_F(CellListsStillingerCutQuadNonAdditive,
-       Energy) {
+TEST_F(CellListsStillingerCutQuadNonAdditive, Energy) {
   test_energy(*potential_with_cell_lists, *potential_without_cell_lists,
               quenched_coordinates);
 }
 
-
-
 // Fixes need to be done before these tests pass
-// TEST_F(CellListsStillingerCutQuadNonAdditive,
-//        EnergyGradient) {
-//   test_energy_gradient(*potential_with_cell_lists,
-//                        *potential_without_cell_lists, quenched_coordinates);
-// }
+TEST_F(CellListsStillingerCutQuadNonAdditive, EnergyGradient) {
+  test_energy_gradient(*potential_with_cell_lists,
+                       *potential_without_cell_lists, quenched_coordinates);
+}
 
-// TEST_F(CellListsStillingerCutQuadNonAdditive,
-//        EnergyGradientHessian) {
-//   test_energy_gradient_hessian(*potential_with_cell_lists,
-//                                *potential_without_cell_lists,
-//                                quenched_coordinates);
-// }
+TEST_F(CellListsStillingerCutQuadNonAdditive, EnergyGradientHessian) {
+  test_energy_gradient_hessian(*potential_with_cell_lists,
+                               *potential_without_cell_lists,
+                               quenched_coordinates);
+}

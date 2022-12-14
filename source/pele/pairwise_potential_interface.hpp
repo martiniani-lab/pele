@@ -16,55 +16,71 @@ using namespace std;
 namespace pele {
 
 /**
- * @brief Get the non additive interaction range as defined in 
+ * @brief Get the non additive interaction range as defined in
  *        PHYSICAL REVIEW X 12, 021001 (2022). when non_additivity is set to 0
  *        the interaction range is the same as the cutoff radius.
- * 
- * @param radius_i 
- * @param radius_j 
- * @param non_additivity 
- * @return double 
+ * @details TODO: template this to make the additional cost of this 0 without
+ * non_additivity
+ * @param radius_i
+ * @param radius_j
+ * @param non_additivity
+ * @return double
  */
- class NonAdditiveCutoff {
-  public:
-    NonAdditiveCutoff(double non_additivity) : _non_additivity(non_additivity) {}
-    NonAdditiveCutoff() : _non_additivity(0) {}
-    inline double get_cutoff(const double radius_i,const double radius_j) const {
-        return (radius_i + radius_j) *
-             (1 - 2 * _non_additivity * abs(radius_i - radius_j));
-    }
-  private:
-    double _non_additivity;
- };
+class NonAdditiveCutoffCalculator {
+public:
+  NonAdditiveCutoffCalculator(double non_additivity, double cutoff_factor = 1.0)
+      : _non_additivity(non_additivity), _cutoff_factor_(cutoff_factor) {}
+  NonAdditiveCutoffCalculator() : _non_additivity(0) {}
+  inline double get_cutoff(const double radius_i, const double radius_j) const {
+    return (radius_i + radius_j) * _cutoff_factor_ *
+           (1 - 2 * _non_additivity * abs(radius_i - radius_j));
+  }
+  inline double get_max_cutoff_distance(double max_radius) const {
+    return 2 * max_radius * _cutoff_factor_;
+  }
+
+private:
+  double _non_additivity;
+  double _cutoff_factor_; // For the soft sphere potential defined in the paper
+};
 
 class PairwisePotentialInterface : public BasePotential {
 protected:
   const Array<double> m_radii;
-  const NonAdditiveCutoff m_non_additive_cutoff;
-
-public:
-  PairwisePotentialInterface() : m_radii(0), m_non_additive_cutoff(0) {}
-  PairwisePotentialInterface(pele::Array<double> const &radii,
-                             double non_addivity = 0)
-      : m_radii(radii.copy()), m_non_additive_cutoff(non_addivity) {
-    if (radii.size() == 0) {
+  const NonAdditiveCutoffCalculator m_cutoff_calculator;
+  inline void initialize() {
+    if (m_radii.size() == 0) {
       throw std::runtime_error(
           "PairwisePotentialInterface: illegal input: radii");
     }
-    const auto [min_radius_address, max_radius_address] = std::minmax_element(radii.begin(),
-                                                            radii.end());
-    size_t min_radius_index  = std::distance(radii.begin(), min_radius_address);
-    size_t max_radius_index  = std::distance(radii.begin(), max_radius_address);
+    const auto [min_radius_address, max_radius_address] =
+        std::minmax_element(m_radii.begin(), m_radii.end());
+    size_t min_radius_index =
+        std::distance(m_radii.begin(), min_radius_address);
+    size_t max_radius_index =
+        std::distance(m_radii.begin(), max_radius_address);
 
-    double dij = get_non_additive_cutoff(min_radius_index,max_radius_index);
+    double dij = get_non_additive_cutoff(min_radius_index, max_radius_index);
 
     if (dij < 0) {
       std::cout << "dij = " << dij << std::endl;
       std::cout << "min_radius = " << m_radii[min_radius_index] << std::endl;
       std::cout << "max_radius = " << m_radii[max_radius_index] << std::endl;
-      throw std::runtime_error(
-          "cutoff(dij) is negative");
+      throw std::runtime_error("cutoff(dij) is negative");
     }
+  }
+
+public:
+  PairwisePotentialInterface() : m_radii(0), m_cutoff_calculator(0) {}
+  PairwisePotentialInterface(pele::Array<double> const &radii,
+                             double non_additivity = 0)
+      : m_radii(radii.copy()), m_cutoff_calculator(non_additivity) {
+    initialize();
+  }
+  PairwisePotentialInterface(pele::Array<double> const &radii,
+                             NonAdditiveCutoffCalculator cutoff_calculator)
+      : m_radii(radii.copy()), m_cutoff_calculator(cutoff_calculator) {
+    initialize();
   }
 
   virtual ~PairwisePotentialInterface() {}
@@ -79,12 +95,22 @@ public:
    * radii[i] + radii[j] when non_additivity is zero
    */
   inline double get_non_additive_cutoff(const std::size_t atom_i,
-                          const std::size_t atom_j) const {
+                                        const std::size_t atom_j) const {
     if (m_radii.size() == 0) {
       return 0;
     } else {
       // uses the diameters being twice the radii
-      return m_non_additive_cutoff.get_cutoff(m_radii[atom_i], m_radii[atom_j]);
+      return m_cutoff_calculator.get_cutoff(m_radii[atom_i], m_radii[atom_j]);
+    }
+  }
+
+  inline double get_max_cutoff() const {
+    if (m_radii.size() == 0) {
+      return 0;
+    } else {
+      // uses the diameters being twice the radii
+      return m_cutoff_calculator.get_max_cutoff_distance(
+          *std::max_element(m_radii.begin(), m_radii.end()));
     }
   }
 
@@ -110,8 +136,7 @@ public:
    * Return energy_gradient of interaction.
    */
   virtual inline double get_interaction_energy_gradient(double, double *,
-                                                        size_t,
-                                                        size_t) const {
+                                                        size_t, size_t) const {
     throw std::runtime_error("PairwisePotentialInterface::get_interaction_"
                              "energy_gradient must be overloaded");
   }
@@ -120,8 +145,8 @@ public:
    * Return gradient and Hessian of interaction.
    */
   virtual inline double
-  get_interaction_energy_gradient_hessian(double, double *, double *,
-                                          size_t, size_t) const {
+  get_interaction_energy_gradient_hessian(double, double *, double *, size_t,
+                                          size_t) const {
     throw std::runtime_error("PairwisePotentialInterface::get_interaction_"
                              "energy_gradient_hessian must be overloaded");
   }
@@ -130,11 +155,9 @@ public:
    * Return lists of neighbors considering only certain atoms.
    */
   virtual void get_neighbors_picky(
-      pele::Array<double> const &,
-      pele::Array<std::vector<size_t>> &,
+      pele::Array<double> const &, pele::Array<std::vector<size_t>> &,
       pele::Array<std::vector<std::vector<double>>> &,
-      pele::Array<short> const &,
-      const double cutoff_factor = 1.0) {
+      pele::Array<short> const &, const double cutoff_factor = 1.0) {
     throw std::runtime_error(
         "PairwisePotentialInterface::get_neighbors_picky must be overloaded");
   }
@@ -162,11 +185,10 @@ public:
   /**
    * Return lists of neighbors.
    */
-  virtual void
-  get_neighbors(pele::Array<double> const &,
-                pele::Array<std::vector<size_t>> &,
-                pele::Array<std::vector<std::vector<double>>> &,
-                const double cutoff_factor = 1) {
+  virtual void get_neighbors(pele::Array<double> const &,
+                             pele::Array<std::vector<size_t>> &,
+                             pele::Array<std::vector<std::vector<double>>> &,
+                             const double cutoff_factor = 1) {
     throw std::runtime_error(
         "PairwisePotentialInterface::get_neighbors must be overloaded");
   }
@@ -298,7 +320,7 @@ public:
     }
     cout << endl;
 
-    int minimum_jammed_contacts = 2 * ((n_stable_particles - 1) * dim + 1);
+    size_t minimum_jammed_contacts = 2 * ((n_stable_particles - 1) * dim + 1);
 
     if ((total_contacts < minimum_jammed_contacts) ||
         (n_stable_particles < dim)) {
