@@ -1398,6 +1398,24 @@ public:
   }
 };
 
+// Checks for almost equal values
+// This checks there are no differences between the gradients calculated with
+// and without cell lists upto a tolerance of 1e-11. Ideally they should be
+// almost equal but due to the differences in summation order there is floating
+// point error
+inline void test_value_equal_relative(double reference, double value,
+                                      double tol = 1e-11) {
+  if (reference == 0) {
+    EXPECT_EQ(reference, value);
+  } else if (std::abs(reference) < 1e-3) {
+    // use absolute tolerance if the reference value is small
+    EXPECT_NEAR(reference, value, tol);
+  } else {
+    // use relative tolerance if the reference value is large
+    EXPECT_NEAR(reference, value, tol * std::abs(reference));
+  }
+}
+
 inline void test_energy(BasePotential &potential_with_cell_lists,
                         BasePotential &potential_without_cell_lists,
                         Array<double> coordinates) {
@@ -1406,8 +1424,7 @@ inline void test_energy(BasePotential &potential_with_cell_lists,
   double energy_without_cell_lists =
       potential_without_cell_lists.get_energy(coordinates);
 
-  EXPECT_TRUE(
-      almostEqual(energy_with_cell_lists, energy_without_cell_lists, 8));
+  test_value_equal_relative(energy_without_cell_lists, energy_with_cell_lists);
 }
 
 inline void test_energy_gradient(BasePotential &potential_with_cell_lists,
@@ -1422,12 +1439,11 @@ inline void test_energy_gradient(BasePotential &potential_with_cell_lists,
       potential_without_cell_lists.get_energy_gradient(
           coordinates, gradient_without_cell_lists);
 
-  EXPECT_TRUE(
-      almostEqual(energy_with_cell_lists, energy_without_cell_lists, 8));
+  test_value_equal_relative(energy_without_cell_lists, energy_with_cell_lists);
 
   for (size_t i = 0; i < gradient_with_cell_lists.size(); i++) {
-    EXPECT_TRUE(almostEqual(gradient_with_cell_lists[i],
-                            gradient_without_cell_lists[i], 8));
+    test_value_equal_relative(gradient_without_cell_lists[i],
+                              gradient_with_cell_lists[i]);
   }
 }
 
@@ -1450,17 +1466,16 @@ test_energy_gradient_hessian(BasePotential &potential_with_cell_lists,
       potential_without_cell_lists.get_energy_gradient_hessian(
           coordinates, gradient_without_cell_lists, hessian_without_cell_lists);
 
-  EXPECT_TRUE(
-      almostEqual(energy_with_cell_lists, energy_without_cell_lists, 8));
+  test_value_equal_relative(energy_without_cell_lists, energy_with_cell_lists);
 
   for (size_t i = 0; i < gradient_with_cell_lists.size(); i++) {
-    EXPECT_TRUE(almostEqual(gradient_with_cell_lists[i],
-                            gradient_without_cell_lists[i], 8));
+    test_value_equal_relative(gradient_without_cell_lists[i],
+                              gradient_with_cell_lists[i]);
   }
 
   for (size_t i = 0; i < hessian_with_cell_lists.size(); i++) {
-    EXPECT_TRUE(almostEqual(hessian_with_cell_lists[i],
-                            hessian_without_cell_lists[i], 8));
+    test_value_equal_relative(hessian_without_cell_lists[i],
+                              hessian_with_cell_lists[i]);
   }
 }
 
@@ -1493,7 +1508,7 @@ public:
   Array<double> quenched_coordinates;
   void SetUp() {
     constexpr size_t dim = 2;
-    constexpr int pow = 6;
+    constexpr int pow = 12;
 
     size_t n_particles = 32;
     double v0 = 1.0;
