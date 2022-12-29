@@ -18,6 +18,17 @@
 #include "queue.hpp"
 #include "vecn.hpp"
 
+
+
+#ifndef NDEBUG
+#define ASSERT_EX(condition, statement) \
+    do { \
+        if (!(condition)) { statement; assert(condition); } \
+    } while (false)
+#else
+#define ASSERT_EX(condition, statement) ((void)0)
+#endif
+
 namespace pele {
 
 // Type of each cell inside the cell list
@@ -353,9 +364,11 @@ public:
           m_ncells_vec[idim] * (x_in_box[idim] * m_inv_boxvec[idim] + 0.5 -
                                 std::numeric_limits<double>::epsilon());
 
-      assert(cell_vec[idim] <
-             m_ncells_vec[idim]); // Cell index is inside bounds (if not, the
-                                  // coordinates might be defective/too large)
+      ASSERT_EX(cell_vec[idim] <
+             m_ncells_vec[idim], std::cout << "x_in_box[idim] = " << x_in_box[idim] << std::endl;
+             std::cout << "m_inv_boxvec[idim] = " << m_inv_boxvec[idim] << std::endl;
+             std::cout << "cell_vec[idim] = " << cell_vec[idim] << std::endl;
+             std::cout << "m_ncells_vec[idim] = " << m_ncells_vec[idim] << std::endl;);
     }
     return cell_vec;
   }
