@@ -83,6 +83,16 @@ TEST_F(BasicIPSCutQuadTest, Pow_Works) {
   }
 }
 
+
+
+TEST_F(BasicIPSCutQuadTest, Energy_WorksIntPower12) {
+  // TODO: Figure out how to do a constexpr loop
+  constexpr size_t power = 12;
+  pele::InversePowerStillingerQuadCutInteractionInt<power> in(1.0, 1.0);
+  const double e = pot->get_energy(x);
+  ASSERT_NEAR(etrue, e, 1e-10);
+}
+
 // Checks that pairwise energy, gradient and hessian are zero at cutoff
 TEST_F(BasicIPSCutQuadTest, zero_at_cutoff) {
   double dr0 = expected_cutoff - eps;
@@ -111,11 +121,18 @@ TEST_F(BasicIPSCutQuadTest, zero_at_cutoff) {
   }
 }
 
-class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
+
+/*
+* Base class for testing variants of the InversePowerStillingerCutQuad
+* potential. The potential should the same but different optimizations are 
+* made based on information available at compile time
+*/
+class BaseTestInversePowerStillingerCutQuadAuto  : public PotentialTest {
+protected:
   size_t ndim;
   size_t ndof;
   size_t npart;
-  size_t exponent;
+  static constexpr size_t exponent = 12;
   double diameters, rcut;
   // do not declare etrue here
   pele::Array<double> radii;
@@ -123,28 +140,7 @@ class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
 
   double v0, cutoff_factor, expected_cutoff;
 
-  virtual void SetUp() {
-    ndim = 2;
-    npart = 2;
-    ndof = ndim * npart;
-    x = {1.1, 3, 1, 1.5};
-    radii = {1.05, 1.15};
-    diameters = radii[0] * 2;
-    exponent = 12;
-    v0 = 1.5;
-    cutoff_factor = 1.25;
-    non_additivity = 0.0;
-
-    // cuts off when distance is greater than two radii and a factor
-    expected_cutoff = cutoff_factor * 2 * radii[0];
-
-    double dr = std::sqrt(std::pow(x[0] - x[2], 2) + std::pow(x[1] - x[3], 2));
-    etrue = get_test_energy(dr, cutoff_factor, v0, exponent, radii);
-
-    pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(
-        exponent, v0, cutoff_factor, radii);
-  }
-  // Expected energy for a pair of particles with distance dr
+    // Expected energy for a pair of particles with distance dr
   // Expected energy for a pair of particles with distance dr
   double get_test_energy(double dr, double cutoff_factor, double v0, int pow,
                          Array<double> radii) {
@@ -162,6 +158,34 @@ class TestInversePowerStillingerCutQuadAuto : public PotentialTest {
                    c4 * dr_scaled * dr_scaled * dr_scaled * dr_scaled;
     return etest;
   }
+
+  void init_potential_parameters() {
+    ndim = 2;
+    npart = 2;
+    ndof = ndim * npart;
+    x = {1.1, 3, 1, 1.5};
+    radii = {1.05, 1.15};
+    diameters = radii[0] * 2;
+    v0 = 1.5;
+    cutoff_factor = 1.25;
+    non_additivity = 0.0;
+
+    // cuts off when distance is greater than two radii and a factor
+    expected_cutoff = cutoff_factor * 2 * radii[0];
+
+    double dr = std::sqrt(std::pow(x[0] - x[2], 2) + std::pow(x[1] - x[3], 2));
+    etrue = get_test_energy(dr, cutoff_factor, v0, exponent, radii);
+  }
+
+};
+
+class TestInversePowerStillingerCutQuadAuto : public BaseTestInversePowerStillingerCutQuadAuto {
+
+  virtual void SetUp() {
+    init_potential_parameters();
+    pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(
+        exponent, v0, cutoff_factor, radii);
+  }
 };
 
 TEST_F(TestInversePowerStillingerCutQuadAuto, Energy_Works) { test_energy(); }
@@ -175,3 +199,27 @@ TEST_F(TestInversePowerStillingerCutQuadAuto,
        EnergyGradientHessian_AgreesWithNumerical) {
   test_energy_gradient_hessian();
 }
+
+
+class TestInversePowerStillingerCutQuadAutoInt : public BaseTestInversePowerStillingerCutQuadAuto {
+
+  virtual void SetUp() {
+    init_potential_parameters();
+    pot = std::make_shared<pele::InversePowerStillingerCutQuadInt<2, exponent>>(
+        v0, cutoff_factor, radii);
+  }
+};
+
+TEST_F(TestInversePowerStillingerCutQuadAutoInt, Energy_Works) {
+  test_energy();
+}
+TEST_F(TestInversePowerStillingerCutQuadAutoInt,
+       EnergyGradient_AgreesWithNumerical) {
+  test_energy_gradient();
+}
+TEST_F(TestInversePowerStillingerCutQuadAutoInt,
+       EnergyGradientHessian_AgreesWithNumerical) {
+  test_energy_gradient_hessian();
+}
+
+
