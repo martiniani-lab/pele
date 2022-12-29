@@ -364,12 +364,18 @@ public:
       cell_vec[idim] =
           m_ncells_vec[idim] * (x_in_box[idim] * m_inv_boxvec[idim] + 0.5 -
                                 std::numeric_limits<double>::epsilon());
-
-      ASSERT_EX(cell_vec[idim] <
-             m_ncells_vec[idim], std::cout << "x_in_box[idim] = " << x_in_box[idim] << std::endl;
-             std::cout << "m_inv_boxvec[idim] = " << m_inv_boxvec[idim] << std::endl;
-             std::cout << "cell_vec[idim] = " << cell_vec[idim] << std::endl;
-             std::cout << "m_ncells_vec[idim] = " << m_ncells_vec[idim] << std::endl;);
+      ASSERT_EX(
+          cell_vec[idim] < m_ncells_vec[idim],
+          std::cout << "This error occurs when the coordinates are so "
+                       "unreasonably large that the floating point precision "
+                       "is not enough to figure out the cell index."
+                    << std::endl;
+          std::cout << "x_in_box[idim] = " << x_in_box[idim] << std::endl;
+          std::cout << "m_inv_boxvec[idim] = " << m_inv_boxvec[idim]
+                    << std::endl;
+          std::cout << "cell_vec[idim] = " << cell_vec[idim] << std::endl;
+          std::cout << "m_ncells_vec[idim] = " << m_ncells_vec[idim]
+                    << std::endl;);
     }
     return cell_vec;
   }
