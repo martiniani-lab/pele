@@ -1197,7 +1197,8 @@ public:
     ndof = nparticles * ndim;
     eps = 1;
     r_hs = 1;
-    x = Array<double>(ndof);
+    sca = 0.01;
+    x = Array<double>(ndof, 0);
     radii = Array<double>(nparticles);
     for (size_t i = 0; i < nparticles; ++i) {
       radii[i] = r_hs;
@@ -1226,7 +1227,7 @@ public:
 
   void create_coords() {
     // Order atoms like a stair, with some random component
-    Array<double> coords(2);
+    Array<double> coords(2, 0);
     size_t k = 0;
     for (int i = 0; i < nparticles; i++) {
       coords[k] += (1 + (0.6 + 0.5 * distribution(generator)) * sca) * 2 * r_hs;
