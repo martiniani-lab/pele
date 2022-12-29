@@ -236,8 +236,8 @@ public:
 };
 
 /**
- * Integer powers
- */
+* Integer powers
+*/
 
 template <size_t ndim, int POW>
 class InverseIntPower

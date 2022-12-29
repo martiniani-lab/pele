@@ -243,14 +243,14 @@ class InversePowerStillingerCutQuadInt
     : public SimplePairwisePotential<InversePowerStillingerQuadCutInteractionInt<POW>,
                                      cartesian_distance<ndim>> {
 public:
-  InversePowerStillingerCutQuadInt(const int pow, const double v0,
+  InversePowerStillingerCutQuadInt(const double v0,
                                 const double cutoff_factor,
                                 const pele::Array<double> radii,
                                 double non_additivity = 0.0)
       : SimplePairwisePotential<InversePowerStillingerQuadCutInteractionInt<POW>,
                                 cartesian_distance<ndim>>(
             std::make_shared<InversePowerStillingerQuadCutInteractionInt<POW>>(
-                pow, v0, cutoff_factor),
+                v0, cutoff_factor),
             radii, NonAdditiveCutoffCalculator(non_additivity, cutoff_factor),
             std::make_shared<cartesian_distance<ndim>>(), 0.0, false) {}
 };
@@ -260,7 +260,7 @@ class InversePowerStillingerCutQuadIntPeriodic
     : public SimplePairwisePotential<InversePowerStillingerQuadCutInteractionInt<POW>,
                                      periodic_distance<ndim>> {
 public:
-  InversePowerStillingerCutQuadIntPeriodic(const int pow, const double v0,
+  InversePowerStillingerCutQuadIntPeriodic(const double v0,
                                         const double cutoff_factor,
                                         const pele::Array<double> radii,
                                         const pele::Array<double> boxvec,
@@ -268,7 +268,7 @@ public:
       : SimplePairwisePotential<InversePowerStillingerQuadCutInteractionInt<POW>,
                                 periodic_distance<ndim>>(
             std::make_shared<InversePowerStillingerQuadCutInteractionInt<POW>>(
-                pow, v0, cutoff_factor),
+                v0, cutoff_factor),
             radii, NonAdditiveCutoffCalculator(non_additivity, cutoff_factor), std::make_shared<periodic_distance<ndim>>(boxvec), 0.0,
             false) {}
 };
@@ -279,13 +279,13 @@ class InversePowerStillingerCutQuadIntPeriodicCellLists
                                periodic_distance<ndim>> {
 public:
   InversePowerStillingerCutQuadIntPeriodicCellLists(
-      const int pow, const double v0, const double cutoff_factor,
+      const double v0, const double cutoff_factor,
       const pele::Array<double> radii, const pele::Array<double> boxvec,
       double ncellx_scale, double non_additivity = 0.0)
       : CellListPotential<InversePowerStillingerQuadCutInteractionInt<POW>,
                           periodic_distance<ndim>>(
             std::make_shared<InversePowerStillingerQuadCutInteractionInt<POW>>(
-                pow, v0, cutoff_factor),
+                v0, cutoff_factor),
             std::make_shared<periodic_distance<ndim>>(boxvec), boxvec,
             ncellx_scale, radii, NonAdditiveCutoffCalculator(non_additivity, cutoff_factor), 0.0, true, false) {}
 };
