@@ -66,6 +66,7 @@ cdef class InversePowerStillingerCutQuad(_pele.BasePotential):
     def __cinit__(self, power, v0, cutoff_factor, radii, ndim=3, boxvec=None, boxl=None,
                   ncellx_scale=1., use_cell_lists=False, non_additivity=0.):
         assert(ndim == 2 or ndim == 3)
+        power = int(power)
         assert not (boxvec is not None and boxl is not None)
         if boxl is not None:
             boxvec = [boxl] * ndim
