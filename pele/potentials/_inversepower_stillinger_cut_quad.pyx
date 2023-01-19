@@ -126,15 +126,15 @@ cdef class InversePowerStillingerCutQuad(_pele.BasePotential):
                     raise Exception("InversePowerStillinger: illegal input, illegal ndim")
         else:
             assert use_cell_lists is False, "Cell Lists Implementation only works for periodic systems"
-            if ndim == 2:
+            if ndim == 2 and power == 12:
                 # no cell lists, non-periodic, 2d
                 self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*> new
                                                                                     cInversePowerStillingerCutQuadInt[INT2, INT12](v0, cutoff_factor, radii_, non_additivity))
-            elif ndim ==3:
+            elif ndim ==3 and power == 12:
                 # no cell lists, non-periodic, 3d
                 self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*> new
                                                                                     cInversePowerStillingerCutQuadInt[INT3, INT12](v0, cutoff_factor, radii_, non_additivity))
-            if ndim == 2:
+            elif ndim == 2:
                 # no cell lists, non-periodic, 2d
                 self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*> new
                                                                                     cInversePowerStillingerCutQuad[INT2](power, v0, cutoff_factor, radii_, non_additivity))
