@@ -1,13 +1,14 @@
 #ifndef PYGMIN_SIMPLE_PAIRWISE_ILIST_H
 #define PYGMIN_SIMPLE_PAIRWISE_ILIST_H
 
-#include "array.hpp"
-#include "distance.hpp"
-#include "pairwise_potential_interface.hpp"
 #include <assert.h>
 #include <iostream>
 #include <memory>
 #include <vector>
+
+#include "array.hpp"
+#include "distance.hpp"
+#include "pairwise_potential_interface.hpp"
 
 namespace pele {
 /**
@@ -19,7 +20,7 @@ namespace pele {
 template <typename pairwise_interaction,
           typename distance_policy = cartesian_distance<3>>
 class SimplePairwiseNeighborList : public PairwisePotentialInterface {
-protected:
+ protected:
   std::shared_ptr<pairwise_interaction> _interaction;
   std::shared_ptr<distance_policy> _dist;
   std::vector<size_t> const _neighbor_list;
@@ -29,23 +30,23 @@ protected:
                              Array<size_t> const &neighbor_list,
                              const Array<double> radii,
                              std::shared_ptr<distance_policy> dist = NULL)
-      : PairwisePotentialInterface(radii), _interaction(interaction),
+      : PairwisePotentialInterface(radii),
+        _interaction(interaction),
         _dist(dist),
         _neighbor_list(neighbor_list.begin(), neighbor_list.end()) {
-    if (_dist == NULL)
-      _dist = std::make_shared<distance_policy>();
+    if (_dist == NULL) _dist = std::make_shared<distance_policy>();
   }
 
   SimplePairwiseNeighborList(std::shared_ptr<pairwise_interaction> interaction,
                              Array<size_t> const &neighbor_list,
                              std::shared_ptr<distance_policy> dist = NULL)
-      : _interaction(interaction), _dist(dist),
+      : _interaction(interaction),
+        _dist(dist),
         _neighbor_list(neighbor_list.begin(), neighbor_list.end()) {
-    if (_dist == NULL)
-      _dist = std::make_shared<distance_policy>();
+    if (_dist == NULL) _dist = std::make_shared<distance_policy>();
   }
 
-public:
+ public:
   virtual ~SimplePairwiseNeighborList() {}
 
   virtual double get_energy(Array<double> const &x);
@@ -68,9 +69,10 @@ public:
 };
 
 template <typename pairwise_interaction, typename distance_policy>
-inline double
-SimplePairwiseNeighborList<pairwise_interaction, distance_policy>::
-    add_energy_gradient(Array<double> const &x, Array<double> &grad) {
+inline double SimplePairwiseNeighborList<
+    pairwise_interaction,
+    distance_policy>::add_energy_gradient(Array<double> const &x,
+                                          Array<double> &grad) {
   double e = 0.;
   double gij, dr[_ndim];
   const size_t nlist = _neighbor_list.size();
@@ -100,7 +102,8 @@ SimplePairwiseNeighborList<pairwise_interaction, distance_policy>::
       r2 += dr[k] * dr[k];
     }
 
-    e += _interaction->energy_gradient(r2, &gij, get_non_additive_cutoff(atom1, atom2));
+    e += _interaction->energy_gradient(r2, &gij,
+                                       get_non_additive_cutoff(atom1, atom2));
     for (size_t k = 0; k < _ndim; ++k) {
       grad[i1 + k] -= gij * dr[k];
     }
@@ -137,6 +140,6 @@ SimplePairwiseNeighborList<pairwise_interaction, distance_policy>::get_energy(
 
   return e;
 }
-} // namespace pele
+}  // namespace pele
 
 #endif

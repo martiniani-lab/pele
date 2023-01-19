@@ -4,13 +4,14 @@
  * Utility functions for testing and debugging.
  */
 
-#include "pele/array.hpp"
 #include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <math.h>
 #include <random>
 #include <vector>
+
+#include "pele/array.hpp"
 
 // Float definition of pi
 #define PI 3.14159265358979323846
@@ -35,9 +36,9 @@ namespace pele {
  *
  * @return     Array of radii
  */
-inline Array<double> generate_bidisperse_radii(int n_1, int n_2, double r_1, double r_2,
-                                    double r_std_1, double r_std_2) {
-
+inline Array<double> generate_bidisperse_radii(int n_1, int n_2, double r_1,
+                                               double r_2, double r_std_1,
+                                               double r_std_2) {
   Array<double> radii(n_1 + n_2);
 
   std::random_device rd;
@@ -53,71 +54,71 @@ inline Array<double> generate_bidisperse_radii(int n_1, int n_2, double r_1, dou
 }
 
 class BerthierDistribution3d {
-    public:
-        /**
-         * Distribution is given by
-         * p(x) = norm/(x^3)  where x in [dmin, dmax]
-         *
-         * Parameters
-         * ----------
-         * delta : float
-         *     stdev(diameter) / mean(diameter)
-         * dmin_by_dmax : float
-         *     dmin / dmax
-         * d_av : float
-         *     mean(diameter)
-         * seed : int
-         */
-        BerthierDistribution3d(double dmin_by_dmax, double d_mean, int seed=0)
-        : norm(0.5 * d_mean * d_mean * (1 + dmin_by_dmax) / (1 - dmin_by_dmax)),
-              dmin(d_mean * 0.5 * (1 + dmin_by_dmax)),
-              dmax(dmin / dmin_by_dmax),
-              d_mean(d_mean),
-              uniform(0., 1.)
-        {}
+ public:
+  /**
+   * Distribution is given by
+   * p(x) = norm/(x^3)  where x in [dmin, dmax]
+   *
+   * Parameters
+   * ----------
+   * delta : float
+   *     stdev(diameter) / mean(diameter)
+   * dmin_by_dmax : float
+   *     dmin / dmax
+   * d_av : float
+   *     mean(diameter)
+   * seed : int
+   */
+  BerthierDistribution3d(double dmin_by_dmax, double d_mean, int seed = 0)
+      : norm(0.5 * d_mean * d_mean * (1 + dmin_by_dmax) / (1 - dmin_by_dmax)),
+        dmin(d_mean * 0.5 * (1 + dmin_by_dmax)),
+        dmax(dmin / dmin_by_dmax),
+        d_mean(d_mean),
+        uniform(0., 1.) {}
 
-        inline double _inverse_cdf(double x) {
-            /**
-             * Inverse of the cdf of the distribution.
-             * used to sample, see https://en.wikipedia.org/wiki/Inverse_transform_sampling
-             *
-             * converts a sample from a uniform random distribution in [0, 1] to a sample from
-             * the berthier distribution
-             */
-            if (x < 0 || x > 1) {
-                throw std::invalid_argument("x must be in [0,1]");
-            }
-            // comes from solving the integral of the pdf
-            double inv_x_2 = 1 / (dmin * dmin) - 2 * x / norm;
-            return 1 / sqrt(inv_x_2);
-        }
+  inline double _inverse_cdf(double x) {
+    /**
+     * Inverse of the cdf of the distribution.
+     * used to sample, see
+     * https://en.wikipedia.org/wiki/Inverse_transform_sampling
+     *
+     * converts a sample from a uniform random distribution in [0, 1] to a
+     * sample from the berthier distribution
+     */
+    if (x < 0 || x > 1) {
+      throw std::invalid_argument("x must be in [0,1]");
+    }
+    // comes from solving the integral of the pdf
+    double inv_x_2 = 1 / (dmin * dmin) - 2 * x / norm;
+    return 1 / sqrt(inv_x_2);
+  }
 
-        Array<double> sample(size_t n) {
-            Array<double> sample(n);
-            for (size_t i = 0; i < n; ++i) {
-                sample[i] = _inverse_cdf(uniform(generator));
-            }
-            return sample;
-        }
+  Array<double> sample(size_t n) {
+    Array<double> sample(n);
+    for (size_t i = 0; i < n; ++i) {
+      sample[i] = _inverse_cdf(uniform(generator));
+    }
+    return sample;
+  }
 
-        double pdf(double x) {
-            if (x < dmin || x > dmax) {
-                return 0;
-            }
-            return norm / (x * x * x);
-        }
+  double pdf(double x) {
+    if (x < dmin || x > dmax) {
+      return 0;
+    }
+    return norm / (x * x * x);
+  }
 
-    private:
-        double norm;
-        double dmin;
-        double dmax;
-        double d_mean;
-        std::default_random_engine generator;
-        std::uniform_real_distribution<double> uniform;
+ private:
+  double norm;
+  double dmin;
+  double dmax;
+  double d_mean;
+  std::default_random_engine generator;
+  std::uniform_real_distribution<double> uniform;
 };
 
-template <typename T> vector<size_t> sort_indexes(const vector<T> &v) {
-
+template <typename T>
+vector<size_t> sort_indexes(const vector<T> &v) {
   // initialize original index locations
   vector<size_t> idx(v.size());
   iota(idx.begin(), idx.end(), 0);
@@ -144,7 +145,8 @@ inline void print_matrix(matrix m) {
   }
 }
 
-template <class T> inline void print_vector(std::vector<T> v) {
+template <class T>
+inline void print_vector(std::vector<T> v) {
   for (size_t i = 0; i < v.size(); i++) {
     std::cout << v[i] << " ";
   }
@@ -186,7 +188,6 @@ inline double get_box_length(Array<double> hs_radii, int dim, double phi) {
  */
 inline Array<double> generate_random_coordinates(double box_length,
                                                  int n_particles, int dim) {
-
   Array<double> coords(n_particles * dim);
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -202,7 +203,6 @@ inline Array<double> generate_random_coordinates(double box_length,
 
 inline std::vector<double> cross_shifted(matrix x, std::vector<size_t> shift_x,
                                          std::vector<size_t> shift_y) {
-
   std::vector<double> cross_product(x.size());
   for (size_t i = 0; i < x.size(); i++) {
     cross_product[i] = x[shift_x[i]][0] * x[shift_y[i]][1] -
@@ -288,5 +288,5 @@ inline bool origin_in_hull_2d(matrix vertices) {
   return false;
 }
 
-} // namespace pele
-#endif // !1
+}  // namespace pele
+#endif  // !1

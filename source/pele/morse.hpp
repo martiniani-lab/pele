@@ -1,14 +1,15 @@
 #ifndef _PELE_MORSE_H_
 #define _PELE_MORSE_H_
 
+#include <cmath>
+#include <memory>
+
 #include "atomlist_potential.hpp"
 #include "base_interaction.hpp"
 #include "distance.hpp"
 #include "frozen_atoms.hpp"
 #include "simple_pairwise_ilist.hpp"
 #include "simple_pairwise_potential.hpp"
-#include <cmath>
-#include <memory>
 
 namespace pele {
 
@@ -55,10 +56,10 @@ struct morse_interaction : BaseInteraction {
  * Pairwise Lennard-Jones potential with smooth cutoff
  */
 class Morse : public SimplePairwisePotential<morse_interaction> {
-public:
+ public:
   Morse(double rho, double r0, double A)
       : SimplePairwisePotential<morse_interaction>(
             std::make_shared<morse_interaction>(rho, r0, A)) {}
 };
-} // namespace pele
+}  // namespace pele
 #endif

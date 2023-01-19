@@ -4,9 +4,8 @@
 #include <stdexcept>
 
 #include "pele/array.hpp"
-#include "pele/inversepower.hpp"
-
 #include "pele/combine_potentials.hpp"
+#include "pele/inversepower.hpp"
 #include "pele/utils.hpp"
 
 using pele::Array;

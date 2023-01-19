@@ -1,7 +1,6 @@
 #ifndef _pele_vecn_h_
 #define _pele_vecn_h_
 
-#include "array.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -10,12 +9,15 @@
 #include <string>
 #include <vector>
 
+#include "array.hpp"
+
 namespace pele {
 
-template <size_t N, typename dtype = double> class VecN {
+template <size_t N, typename dtype = double>
+class VecN {
   dtype m_data[N];
 
-public:
+ public:
   /**
    * default constructor
    */
@@ -40,7 +42,8 @@ public:
   /**
    * initialize values from input iterators
    */
-  template <class input_iter> VecN(input_iter ibegin, input_iter iend) {
+  template <class input_iter>
+  VecN(input_iter ibegin, input_iter iend) {
     std::copy(ibegin, iend, this->begin());
   }
 
@@ -194,13 +197,14 @@ public:
     return p;
   }
 
-}; // close VecN
+};  // close VecN
 
-template <size_t N, size_t M, typename dtype = double> class MatrixNM {
+template <size_t N, size_t M, typename dtype = double>
+class MatrixNM {
   static size_t const m_size = N * M;
   dtype m_data[m_size];
 
-public:
+ public:
   /**
    * default constructor
    */
@@ -284,7 +288,7 @@ public:
     return v;
   }
 
-}; // close MatrixNM
+};  // close MatrixNM
 
 /**
  * compute the dot product of two Arrays
@@ -372,12 +376,10 @@ inline std::ostream &operator<<(std::ostream &out,
   out << "[ ";
   for (size_t n = 0; n < N; ++n) {
     for (size_t m = 0; m < M; ++m) {
-      if (m > 0)
-        out << ", ";
+      if (m > 0) out << ", ";
       out << a(n, m);
     }
-    if (n < N - 1)
-      out << ",\n  ";
+    if (n < N - 1) out << ",\n  ";
   }
   out << " ]";
   return out;
@@ -388,13 +390,12 @@ template <size_t N, typename dtype>
 inline std::ostream &operator<<(std::ostream &out, const VecN<N, dtype> &a) {
   out << "[ ";
   for (size_t i = 0; i < a.size(); ++i) {
-    if (i > 0)
-      out << ", ";
+    if (i > 0) out << ", ";
     out << a[i];
   }
   out << " ]";
   return out;
 }
 
-} // namespace pele
+}  // namespace pele
 #endif

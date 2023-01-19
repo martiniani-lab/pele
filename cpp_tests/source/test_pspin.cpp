@@ -1,16 +1,16 @@
+#include <fstream>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <stdexcept>
+
 #include "pele/array.hpp"
 #include "pele/combination.hpp"
 #include "pele/meta_pow.hpp"
 #include "pele/pspin_spherical.hpp"
 #include "test_utils.hpp"
 
-#include <fstream>
-#include <iostream>
-#include <stdexcept>
-
 static double const EPS = std::numeric_limits<double>::min();
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   EXPECT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
 using pele::Array;
@@ -19,7 +19,7 @@ using pele::MeanFieldPSpinSpherical;
 using pele::pos_int_pow;
 
 class MeanFieldPSpinSphericalTestP4 : public PotentialTest {
-public:
+ public:
   size_t n;
   Array<double> interactions;
   double tol;
@@ -39,7 +39,7 @@ public:
 };
 
 class MeanFieldPSpinSphericalTestP4_2 : public PotentialTest {
-public:
+ public:
   size_t n;
   Array<double> interactions;
   double tol;
@@ -65,7 +65,7 @@ public:
 };
 
 class MeanFieldPSpinSphericalTestP2 : public PotentialTest {
-public:
+ public:
   size_t n;
   Array<double> interactions;
   double tol;
@@ -85,7 +85,7 @@ public:
 };
 
 class MeanFieldPSpinSphericalTestP2_2 : public PotentialTest {
-public:
+ public:
   size_t n;
   Array<double> interactions;
   double tol;

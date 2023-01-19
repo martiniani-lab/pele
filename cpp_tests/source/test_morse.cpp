@@ -1,16 +1,17 @@
-#include <gtest/gtest.h>
-#include "pele/array.hpp"
-#include "pele/morse.hpp"
-#include "test_utils.hpp"
 #include <cmath>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 
+#include "pele/array.hpp"
+#include "pele/morse.hpp"
+#include "test_utils.hpp"
+
 using pele::Array;
 
 class MorseTest : public PotentialTest {
-public:
+ public:
   double rho, r0, A;
   void SetUp() {
     rho = 1.2;

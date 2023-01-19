@@ -1,18 +1,26 @@
 #include "pele/lbfgs.hpp"
-#include "pele/array.hpp"
-#include "pele/optimizer.hpp"
 #include <iostream>
 #include <limits>
 #include <memory>
+
+#include "pele/array.hpp"
+#include "pele/optimizer.hpp"
 
 namespace pele {
 
 LBFGS::LBFGS(std::shared_ptr<pele::BasePotential> potential,
              const pele::Array<double> x0, double tol, int M)
-    : GradientOptimizer(potential, x0, tol), M_(M), max_f_rise_(1e-4),
-      use_relative_f_(false), rho_(M_), H0_(0.1), k_(0), alpha(M_),
-      xold(x_.size()), gold(x_.size()), step(x_.size()) {
-
+    : GradientOptimizer(potential, x0, tol),
+      M_(M),
+      max_f_rise_(1e-4),
+      use_relative_f_(false),
+      rho_(M_),
+      H0_(0.1),
+      k_(0),
+      alpha(M_),
+      xold(x_.size()),
+      gold(x_.size()),
+      step(x_.size()) {
 #if PRINT_TO_FILE == 1
   trajectory_file.open("trajectory_lbfgs.txt");
 #endif
@@ -46,8 +54,9 @@ void LBFGS::one_iteration() {
 
   // print some status information
   if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {
-    std::cout << "lbgs: " << iter_number_ << " E " << f_ << " rms " << gradient_norm_
-              << " nfev " << nfev_ << " step norm " << stepnorm << std::endl;
+    std::cout << "lbgs: " << iter_number_ << " E " << f_ << " rms "
+              << gradient_norm_ << " nfev " << nfev_ << " step norm "
+              << stepnorm << std::endl;
   }
   iter_number_ += 1;
 #if PRINT_TO_FILE == 1
@@ -143,13 +152,13 @@ void LBFGS::compute_lbfgs_step(Array<double> step) {
 #pragma simd reduction(+ : beta)
     for (size_t j2 = 0; j2 < step.size(); ++j2) {
       beta -= rho_[i] * y_[i * step.size() + j2] *
-              step[j2]; // -= due to inverted step
+              step[j2];  // -= due to inverted step
     }
     double alpha_beta = alpha[i] - beta;
 #pragma simd
     for (size_t j2 = 0; j2 < step.size(); ++j2) {
       step[j2] -=
-          s_[i * step.size() + j2] * alpha_beta; // -= due to inverted step
+          s_[i * step.size() + j2] * alpha_beta;  // -= due to inverted step
     }
   }
 }
@@ -220,8 +229,9 @@ double LBFGS::backtracking_linesearch(Array<double> step) {
 
 void LBFGS::reset(pele::Array<double> &x0) {
   if (x0.size() != x_.size()) {
-    throw std::invalid_argument("The number of degrees of freedom (x0.size()) "
-                                "cannot change when calling reset()");
+    throw std::invalid_argument(
+        "The number of degrees of freedom (x0.size()) "
+        "cannot change when calling reset()");
   }
   k_ = 0;
   iter_number_ = 0;
@@ -229,4 +239,4 @@ void LBFGS::reset(pele::Array<double> &x0) {
   x_.assign(x0);
   func_initialized_ = false;
 }
-} // namespace pele
+}  // namespace pele

@@ -1,3 +1,9 @@
+#include <gtest/gtest.h>
+#include <iostream>
+#include <omp.h>
+#include <ostream>
+#include <random>
+
 #include "pele/array.hpp"
 #include "pele/cell_lists.hpp"
 #include "pele/distance.hpp"
@@ -5,19 +11,15 @@
 #include "pele/inversepower.hpp"
 #include "pele/modified_fire.hpp"
 #include "test_utils.hpp"
-#include <gtest/gtest.h>
-#include <iostream>
-#include <omp.h>
-#include <ostream>
-#include <random>
 
 using pele::Array;
 
-template <size_t ndim> class stupid_counter {
-private:
+template <size_t ndim>
+class stupid_counter {
+ private:
   std::vector<size_t> m_count;
 
-public:
+ public:
   stupid_counter() {
 #ifdef _OPENMP
     m_count = std::vector<size_t>(omp_get_max_threads(), 0);
@@ -51,7 +53,7 @@ size_t get_nr_unique_pairs(Array<double> coords,
 }
 
 class CellListsTestMoreHS_WCA : public ::testing::Test {
-public:
+ public:
   double pow;
   size_t seed;
   std::mt19937_64 generator;
@@ -284,7 +286,7 @@ TEST_F(CellListsTestMoreHS_WCA, HSWCAEnergyCartesian_Works) {
     std::cout << "radii: " << radii << std::endl;
     std::cout << "boxvec: " << boxvec << std::endl;
     pele::HS_WCACellLists<3> pot_cell1(eps, sca, radii, boxvec);
-    
+
     const double e_cell1 = pot_cell1.get_energy(x);
     std::cout << "e_cell1: " << e_cell1 << std::endl;
     pele::HS_WCACellLists<3> pot_cellA(eps, sca, radii, boxvec, factor);
@@ -575,7 +577,7 @@ TEST_F(CellListsTestMoreHS_WCA, HSWCAMinimizationCartesian_Works) {
 }
 
 class CellListsTestMoreHS_WCA2D : public ::testing::Test {
-public:
+ public:
   size_t seed;
   std::mt19937_64 generator;
   std::uniform_real_distribution<double> distribution;

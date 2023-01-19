@@ -46,13 +46,27 @@ MODIFIED_FIRE::MODIFIED_FIRE(std::shared_ptr<pele::BasePotential> potential,
                              double dtmax, double maxstep, size_t Nmin,
                              double finc, double fdec, double fa, double astart,
                              double tol, bool stepback, bool save_trajectory)
-    : ODEBasedOptimizer(potential, x0,
-                        tol, save_trajectory),
-      _dtstart(dtstart), _dt(dtstart), _dtmax(dtmax), _maxstep(maxstep),
-      _Nmin(Nmin), _finc(finc), _fdec(fdec), _fa(fa), _astart(astart),
-      _a(astart), _fold(f_), _ifnorm(0), _vnorm(0), _v(x0.size(), 0),
-      _dx(x0.size()), _xold(x0.copy()), _gold(g_.copy()), _fire_iter_number(0),
-      _N(x_.size()), _stepback(stepback) {
+    : ODEBasedOptimizer(potential, x0, tol, save_trajectory),
+      _dtstart(dtstart),
+      _dt(dtstart),
+      _dtmax(dtmax),
+      _maxstep(maxstep),
+      _Nmin(Nmin),
+      _finc(finc),
+      _fdec(fdec),
+      _fa(fa),
+      _astart(astart),
+      _a(astart),
+      _fold(f_),
+      _ifnorm(0),
+      _vnorm(0),
+      _v(x0.size(), 0),
+      _dx(x0.size()),
+      _xold(x0.copy()),
+      _gold(g_.copy()),
+      _fire_iter_number(0),
+      _N(x_.size()),
+      _stepback(stepback) {
 #if PRINT_TO_FILE == 1
   trajectory_file.open("trajectory_modified_fire.txt");
   time_file.open("time_modified_fire.txt");
@@ -78,11 +92,11 @@ MODIFIED_FIRE::MODIFIED_FIRE(std::shared_ptr<pele::BasePotential> potential,
  */
 
 void MODIFIED_FIRE::initialize_func_gradient() {
-  nfev_ += 1; // this accounts for the energy evaluation done by the integrator
+  nfev_ += 1;  // this accounts for the energy evaluation done by the integrator
   f_ = potential_->get_energy_gradient(x_, g_);
   _fold = f_;
   for (size_t k = 0; k < x_.size();
-       ++k) { // set initial velocities (using forward Euler)
+       ++k) {  // set initial velocities (using forward Euler)
     _v[k] = -g_[k] * _dt;
   }
   _ifnorm = 1. / norm(g_);
@@ -105,7 +119,7 @@ void MODIFIED_FIRE::set_func_gradient(double f, Array<double> grad) {
   _fold = f_;
   g_.assign(grad);
   for (size_t k = 0; k < x_.size();
-       ++k) { // set initial velocities (using forward Euler)
+       ++k) {  // set initial velocities (using forward Euler)
     _v[k] = -g_[k] * _dt;
   }
   _ifnorm = 1. / norm(g_);
@@ -113,4 +127,4 @@ void MODIFIED_FIRE::set_func_gradient(double f, Array<double> grad) {
   gradient_norm_ = 1. / (_ifnorm * sqrt(_N));
   func_initialized_ = true;
 }
-} // namespace pele
+}  // namespace pele

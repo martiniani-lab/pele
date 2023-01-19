@@ -7,16 +7,17 @@
  */
 #include <gtest/gtest.h>
 #include <random>
+#include <vector>
+
 #include "pele/hs_wca.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/modified_fire.hpp"
-#include <vector>
 
 // Class for making sure the minimizer gives the same answer with and without
 // cell lists
 //
 class CheckInitializerTest : public ::testing::Test {
-public:
+ public:
   static const size_t _ndim = 3;
   size_t nr_particles;
   size_t nr_dof;
@@ -84,7 +85,7 @@ public:
 
 TEST_F(CheckInitializerTest, FullRunFire) {
   double dtstart =
-      0.1; // Parameters match the defaults for the python interface for fire
+      0.1;  // Parameters match the defaults for the python interface for fire
   double dtmax = 1;
   double maxstep = 0.5;
   size_t Nmin = 5;

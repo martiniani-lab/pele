@@ -70,4 +70,4 @@ double OldLineSearch::line_search(Array<double> &x, Array<double> step) {
   return stepnorm * factor;
 };
 
-} // namespace pele
+}  // namespace pele

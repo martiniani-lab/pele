@@ -1,11 +1,12 @@
 #ifndef _PELE_POTENTIAL_FUNCTION_H
 #define _PELE_POTENTIAL_FUNCTION_H
-#include "array.hpp"
-#include "base_potential.hpp"
 #include <Python.h>
 #include <iostream>
 #include <numpy/arrayobject.h>
 #include <stdexcept>
+
+#include "array.hpp"
+#include "base_potential.hpp"
 
 //#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -50,7 +51,7 @@ get_energy_gradient(Array<double> const & x, Array<double> & grad) {  return
 class PythonPotential : public BasePotential {
   PyObject *_potential;
 
-public:
+ public:
   PythonPotential(PyObject *potential) : _potential(potential) {
     Py_XINCREF(_potential);
 
@@ -157,8 +158,8 @@ public:
 
     // parse the returned tuple into a doulbe and a numpy array
     double energy;
-    PyObject *npgrad_returned; // the reference count for this does not need to
-                               // be decreased
+    PyObject *npgrad_returned;  // the reference count for this does not need to
+                                // be decreased
     if (!PyArg_ParseTuple(returnval, "dO", &energy, &npgrad_returned)) {
       Py_XDECREF(returnval);
       throw std::runtime_error("failed to parse the tuple");
@@ -173,8 +174,9 @@ public:
                         1, NPY_CARRAY, NULL);
     if (!npgrad_safe) {
       Py_XDECREF(returnval);
-      throw std::runtime_error("gradient returned by getEnergyGradient could "
-                               "not be converted to numpy double array");
+      throw std::runtime_error(
+          "gradient returned by getEnergyGradient could "
+          "not be converted to numpy double array");
     }
     // check the size of the gradient array
     if (static_cast<size_t>(PyArray_Size(npgrad_safe)) != grad.size()) {
@@ -200,5 +202,5 @@ public:
     return energy;
   }
 };
-} // namespace pele
+}  // namespace pele
 #endif

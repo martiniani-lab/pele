@@ -1,12 +1,5 @@
 
 #include "pele/mxopt.hpp"
-#include "pele/array.hpp"
-#include "pele/base_potential.hpp"
-#include "pele/eigen_interface.hpp"
-#include "pele/lbfgs.hpp"
-#include "pele/lsparameters.hpp"
-#include "pele/optimizer.hpp"
-#include "pele/preprocessor_directives.hpp"
 #include <algorithm>
 #include <complex>
 #include <cvode/cvode.h>
@@ -14,10 +7,17 @@
 #include <limits>
 #include <memory>
 #include <sundials/sundials_context.h>
-#include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
-#include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
+#include <sunlinsol/sunlinsol_dense.h>  // access to dense SUNLinearSolver
+#include <sunlinsol/sunlinsol_spgmr.h>  /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h>
 
+#include "pele/array.hpp"
+#include "pele/base_potential.hpp"
+#include "pele/eigen_interface.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/lsparameters.hpp"
+#include "pele/optimizer.hpp"
+#include "pele/preprocessor_directives.hpp"
 
 namespace pele {
 
@@ -25,13 +25,24 @@ MixedOptimizer::MixedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                                const pele::Array<double> x0, double tol, int T,
                                double step, double conv_tol, double conv_factor,
                                double rtol, double atol, bool iterative)
-    : GradientOptimizer(potential, x0, tol), N_size(x_.size()), t0(0),
-      tN(100.0), rtol(rtol), atol(atol), xold(x_.size()), gold(x_.size()),
-      step(x_.size()), T_(T), usephase1(true), conv_tol_(conv_tol),
-      conv_factor_(conv_factor), n_phase_1_steps(0), n_phase_2_steps(0),
-      hessian(x_.size(), x_.size()), hessian_shifted(x_.size(), x_.size()),
+    : GradientOptimizer(potential, x0, tol),
+      N_size(x_.size()),
+      t0(0),
+      tN(100.0),
+      rtol(rtol),
+      atol(atol),
+      xold(x_.size()),
+      gold(x_.size()),
+      step(x_.size()),
+      T_(T),
+      usephase1(true),
+      conv_tol_(conv_tol),
+      conv_factor_(conv_factor),
+      n_phase_1_steps(0),
+      n_phase_2_steps(0),
+      hessian(x_.size(), x_.size()),
+      hessian_shifted(x_.size(), x_.size()),
       line_search_method(this, step) {
-
   // assume previous phase is phase 1
   prev_phase_is_phase1 = true;
 
@@ -116,7 +127,6 @@ void MixedOptimizer::one_iteration() {
 
     compute_phase_1_step(step);
   } else {
-
 #if OPTIMIZER_DEBUG_LEVEL >= 3
     std::cout << " computing phase 2 step"
               << "\n";
@@ -135,7 +145,8 @@ void MixedOptimizer::one_iteration() {
 
 #if OPTIMIZER_DEBUG_LEVEL >= 3
   std::cout << "mixed optimizer: " << iter_number_ << " E " << f_ << " rms "
-            << gradient_norm_ << " nfev " << nfev_ << " nhev " << udata.nhev << std::endl;
+            << gradient_norm_ << " nfev " << nfev_ << " nhev " << udata.nhev
+            << std::endl;
 #endif
   /**
    * Checks whether the stop criterion is satisfied: if stop criterion is
@@ -151,8 +162,9 @@ void MixedOptimizer::one_iteration() {
  */
 void MixedOptimizer::reset(pele::Array<double> &x0) {
   if (x0.size() != x_.size()) {
-    throw std::invalid_argument("The number of degrees of freedom (x0.size()) "
-                                "cannot change when calling reset()");
+    throw std::invalid_argument(
+        "The number of degrees of freedom (x0.size()) "
+        "cannot change when calling reset()");
   }
   iter_number_ = 0;
   nfev_ = 0;
@@ -170,7 +182,6 @@ with help convexity flag false ->
 out the result.
  */
 bool MixedOptimizer::convexity_check() {
-
   get_hess(hessian);
 
   hessian_shifted = hessian;
@@ -210,7 +221,7 @@ bool MixedOptimizer::convexity_check() {
 void MixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
   potential_->get_hessian(
-      x_, hessian_pele); // preferably switch this to sparse Eigen
+      x_, hessian_pele);  // preferably switch this to sparse Eigen
   udata.nhev += 1;
 }
 
@@ -249,7 +260,6 @@ void MixedOptimizer::compute_phase_1_step(Array<double> step) {
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
 void MixedOptimizer::compute_phase_2_step(Array<double> step) {
-
   if (hessian_calculated == false) {
     // we can afford to perform convexity checks at every steps
     // assuming the rate limiting cost is the hessian which is calculated
@@ -272,4 +282,4 @@ void MixedOptimizer::compute_phase_2_step(Array<double> step) {
   n_phase_2_steps += 1;
   prev_phase_is_phase1 = false;
 }
-} // namespace pele
+}  // namespace pele

@@ -1,10 +1,10 @@
-#include "pele/array.hpp"
-#include "pele/frozen_atoms.hpp"
-#include "pele/lj.hpp"
-
 #include <gtest/gtest.h>
 #include <iostream>
 #include <stdexcept>
+
+#include "pele/array.hpp"
+#include "pele/frozen_atoms.hpp"
+#include "pele/lj.hpp"
 
 using pele::Array;
 using pele::LJ;
@@ -13,7 +13,7 @@ using pele::LJ;
  * Pairwise Lennard-Jones potential with frozen atoms
  */
 class LJFrozen : public pele::FrozenPotentialWrapper {
-public:
+ public:
   LJFrozen(double C6, double C12, Array<double> const &reference_coords,
            Array<size_t> const &frozen_dof)
       : pele::FrozenPotentialWrapper(std::make_shared<LJ>(C6, C12),
@@ -21,7 +21,7 @@ public:
 };
 
 class FrozenLJTest : public ::testing::Test {
-public:
+ public:
   double c6, c12, etrue;
   Array<double> x, y;
   Array<size_t> frozen_dof;

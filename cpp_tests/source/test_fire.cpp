@@ -1,9 +1,8 @@
 #include <cmath>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <vector>
-
-#include <gtest/gtest.h>
 
 #include "pele/lj.hpp"
 #include "pele/modified_fire.hpp"

@@ -3,12 +3,11 @@
 #include <random>
 #include <string>
 
+#include "bench_utils.hpp"
 #include "pele/array.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/lj.hpp"
 #include "pele/matrix.hpp"
-
-#include "bench_utils.hpp"
 
 using namespace pele;
 using std::string;

@@ -15,12 +15,17 @@ namespace pele {
 struct WCA_interaction : BaseInteraction {
   double const _C6, _C12;
   double const _6C6, _12C12, _42C6, _156C12;
-  double const _coff2, _eps; // cutoff distance for WCA potential
+  double const _coff2, _eps;  // cutoff distance for WCA potential
 
   WCA_interaction(double sig, double eps)
-      : _C6(sig * sig * sig * sig * sig * sig), _C12(_C6 * _C6), _6C6(6. * _C6),
-        _12C12(12. * _C12), _42C6(42 * _C6), _156C12(156 * _C12),
-        _coff2(pow(2., 1. / 3) * sig * sig), _eps(eps) {}
+      : _C6(sig * sig * sig * sig * sig * sig),
+        _C12(_C6 * _C6),
+        _6C6(6. * _C6),
+        _12C12(12. * _C12),
+        _42C6(42 * _C6),
+        _156C12(156 * _C12),
+        _coff2(pow(2., 1. / 3) * sig * sig),
+        _eps(eps) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij) const {
@@ -38,8 +43,7 @@ struct WCA_interaction : BaseInteraction {
 
   /* calculate energy and gradient from distance squared, gradient is in
    * -(dv/drij)/|rij| */
-  double energy_gradient(double r2, double *gij,
-                         const double dij) const {
+  double energy_gradient(double r2, double *gij, const double dij) const {
     double E;
     double ir2 = 1.0 / r2;
     double ir6 = ir2 * ir2 * ir2;
@@ -86,7 +90,7 @@ struct WCA_interaction : BaseInteraction {
  */
 class WCA
     : public SimplePairwisePotential<WCA_interaction, cartesian_distance<3>> {
-public:
+ public:
   WCA(double sig, double eps)
       : SimplePairwisePotential<WCA_interaction, cartesian_distance<3>>(
             std::make_shared<WCA_interaction>(sig, eps),
@@ -95,7 +99,7 @@ public:
 
 class WCA2D
     : public SimplePairwisePotential<WCA_interaction, cartesian_distance<2>> {
-public:
+ public:
   WCA2D(double sig, double eps)
       : SimplePairwisePotential<WCA_interaction, cartesian_distance<2>>(
             std::make_shared<WCA_interaction>(sig, eps),
@@ -107,7 +111,7 @@ public:
  */
 class WCAPeriodic
     : public SimplePairwisePotential<WCA_interaction, periodic_distance<3>> {
-public:
+ public:
   WCAPeriodic(double sig, double eps, Array<double> const boxvec)
       : SimplePairwisePotential<WCA_interaction, periodic_distance<3>>(
             std::make_shared<WCA_interaction>(sig, eps),
@@ -119,7 +123,7 @@ public:
  */
 class WCAPeriodic2D
     : public SimplePairwisePotential<WCA_interaction, periodic_distance<2>> {
-public:
+ public:
   WCAPeriodic2D(double sig, double eps, Array<double> const boxvec)
       : SimplePairwisePotential<WCA_interaction, periodic_distance<2>>(
             std::make_shared<WCA_interaction>(sig, eps),
@@ -130,7 +134,7 @@ public:
  * Pairwise WCA potential with interaction lists
  */
 class WCANeighborList : public SimplePairwiseNeighborList<WCA_interaction> {
-public:
+ public:
   WCANeighborList(Array<size_t> &ilist, double sig, double eps)
       : SimplePairwiseNeighborList<WCA_interaction>(
             std::make_shared<WCA_interaction>(sig, eps), ilist) {}
@@ -138,7 +142,7 @@ public:
 
 class WCAAtomList
     : public AtomListPotential<WCA_interaction, cartesian_distance<3>> {
-public:
+ public:
   WCAAtomList(double sig, double eps, Array<size_t> atoms1,
               Array<size_t> atoms2)
       : AtomListPotential<WCA_interaction, cartesian_distance<3>>(
@@ -150,5 +154,5 @@ public:
             std::make_shared<cartesian_distance<3>>(), atoms1) {}
 };
 
-} // namespace pele
+}  // namespace pele
 #endif

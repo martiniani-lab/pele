@@ -19,8 +19,11 @@
 namespace pele {
 
 ATLJ::ATLJ(double sig, double eps, double Z)
-    : m_eps(eps), m_sig(sig), m_Z(Z),
-      ljpot(4 * eps * pow(sig, 6), 4 * eps * pow(sig, 12)), m_natoms(3),
+    : m_eps(eps),
+      m_sig(sig),
+      m_Z(Z),
+      ljpot(4 * eps * pow(sig, 6), 4 * eps * pow(sig, 12)),
+      m_natoms(3),
       m_ndim(3)
 
 {}
@@ -54,4 +57,4 @@ double ATLJ::get_axilrod_teller_energy(const Array<double> &x) {
   return energy;
 }
 
-} // namespace pele
+}  // namespace pele

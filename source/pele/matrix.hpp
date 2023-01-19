@@ -9,8 +9,9 @@ namespace pele {
  * temporarily.  The idea is to redo something like the reshape() function in
  * numpy.
  */
-template <typename dtype> class MatrixAdapter : public pele::Array<dtype> {
-public:
+template <typename dtype>
+class MatrixAdapter : public pele::Array<dtype> {
+ public:
   /**
    * the second dimension of the matrix, e.g. the number of colums
    *
@@ -118,16 +119,14 @@ std::ostream &operator<<(std::ostream &out,
   size_t const M = a.shape().second;
   for (size_t n = 0; n < N; ++n) {
     for (size_t m = 0; m < M; ++m) {
-      if (m > 0)
-        out << ", ";
+      if (m > 0) out << ", ";
       out << a(n, m);
     }
-    if (n < N - 1)
-      out << ",\n  ";
+    if (n < N - 1) out << ",\n  ";
   }
   out << " ]";
   return out;
 }
 
-} // namespace pele
+}  // namespace pele
 #endif

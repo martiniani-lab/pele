@@ -1,4 +1,14 @@
 #include "pele/cvode.hpp"
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <ostream>
+#include <stdio.h>
+#include <sundials/sundials_context.h>
+#include <sundials/sundials_matrix.h>
 
 #include "cvode/cvode.h"
 #include "cvode/cvode_ls.h"
@@ -10,16 +20,6 @@
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_nvector.h"
 #include "sunmatrix/sunmatrix_dense.h"
-#include <cassert>
-#include <cmath>
-#include <cstddef>
-#include <iomanip>
-#include <iostream>
-#include <memory>
-#include <ostream>
-#include <stdio.h>
-#include <sundials/sundials_context.h>
-#include <sundials/sundials_matrix.h>
 //#include <hoomd/HOOMDMath.h>
 
 using namespace std;
@@ -32,10 +32,16 @@ namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0, double tol, double rtol, double atol,
-    HessianType hessian_type, bool use_newton_stop_criterion, bool save_trajectory)
-    : ODEBasedOptimizer(potential, x0, tol, save_trajectory), N_size(x0.size()),
-      tN(1.0), ret(0), hessian(x0.size(), x0.size()),
-      rtol_(rtol), atol_(atol), hessian_type_(hessian_type),
+    HessianType hessian_type, bool use_newton_stop_criterion,
+    bool save_trajectory)
+    : ODEBasedOptimizer(potential, x0, tol, save_trajectory),
+      N_size(x0.size()),
+      tN(1.0),
+      ret(0),
+      hessian(x0.size(), x0.size()),
+      rtol_(rtol),
+      atol_(atol),
+      hessian_type_(hessian_type),
       use_newton_stop_criterion_(use_newton_stop_criterion) {
   setup_cvode();
 };
@@ -56,7 +62,7 @@ void CVODEBDFOptimizer::setup_cvode() {
   std::cout << "tol: " << tol_ << std::endl;
   std::cout << "rtol: " << rtol_ << std::endl;
   std::cout << "atol: " << atol_ << std::endl;
-  switch(hessian_type_) {
+  switch (hessian_type_) {
     case HessianType::DENSE:
       std::cout << "hessian_type: DENSE" << std::endl;
       break;
@@ -122,7 +128,6 @@ void CVODEBDFOptimizer::setup_cvode() {
     }
 
   } else if (hessian_type_ == DENSE) {
-
     A = SUNDenseMatrix(N_size, N_size, sunctx);
     if (check_sundials_retval((void *)A, "SUNDenseMatrix", 0)) {
       throw std::runtime_error("SUNDenseMatrix failed");
@@ -204,14 +209,13 @@ void CVODEBDFOptimizer::one_iteration() {
 
 #if PRINT_TO_FILE == 1
   trajectory_file << std::setprecision(17) << x_;
-  time_file << std::setprecision(17) << time_ << std::endl;\
+  time_file << std::setprecision(17) << time_ << std::endl;
   gradient_file << std::setprecision(17) << g_;
 #endif
 }
 
 void CVODEBDFOptimizer::add_translation_offset_2d(Eigen::MatrixXd &hessian,
                                                   double offset) {
-
   // factor so that the added translation operators are unitary
   double factor = 2.0 / hessian.rows();
   offset = offset * factor;
@@ -348,7 +352,6 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
   return 0;
 };
 
-
 /**
  * @brief Checks sundials error code and prints out error message. Copied from
  * the sundials examples. Honestly this is 3 functions in one. it needs to be
@@ -360,7 +363,6 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
  */
 static int check_sundials_retval(void *return_value, const char *funcname,
                                  int opt) {
-
   int *retval;
 
   /* Check if SUNDIALS function returned NULL pointer - no memory allocated */
@@ -393,4 +395,4 @@ static int check_sundials_retval(void *return_value, const char *funcname,
   return (0);
 }
 
-} // namespace pele
+}  // namespace pele

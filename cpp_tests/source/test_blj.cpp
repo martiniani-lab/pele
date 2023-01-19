@@ -1,13 +1,14 @@
+#include <memory>
+
 #include "pele/atomlist_potential.hpp"
 #include "pele/combine_potentials.hpp"
 #include "pele/distance.hpp"
 #include "pele/lj.hpp"
 #include "pele/lj_cut.hpp"
 #include "test_utils.hpp"
-#include <memory>
 
 class BLJCutTest : public PotentialTest {
-public:
+ public:
   double c6, c12, rcut;
   size_t natoms;
   size_t ntypeA;

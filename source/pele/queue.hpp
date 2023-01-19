@@ -7,11 +7,12 @@
 /**
  * A queue with a thread-safe push method
  */
-template <typename T> class SafePushQueue : public std::queue<T> {
-protected:
+template <typename T>
+class SafePushQueue : public std::queue<T> {
+ protected:
   std::mutex m_mutex;
 
-public:
+ public:
   void push(const T &item) {
     std::unique_lock<std::mutex> mlock(m_mutex);
     std::queue<T>::push(item);
@@ -19,4 +20,4 @@ public:
   }
 };
 
-#endif // #ifndef _PELE_QUEUE_H_
+#endif  // #ifndef _PELE_QUEUE_H_

@@ -1,21 +1,21 @@
 #ifndef __PELE_TEST_UTILS_HPP__
 #define __PELE_TEST_UTILS_HPP__
-#include <gtest/gtest.h>
-#include "pele/array.hpp"
-#include "pele/base_potential.hpp"
-
 #include <cmath>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 
+#include "pele/array.hpp"
+#include "pele/base_potential.hpp"
+
 using pele::Array;
 
 class PotentialTest : public ::testing::Test {
-public:
-  std::shared_ptr<pele::BasePotential> pot; // this must be set manually
-  pele::Array<double> x;                    // this must be set manually
-  double etrue;                             // this must be set manually
+ public:
+  std::shared_ptr<pele::BasePotential> pot;  // this must be set manually
+  pele::Array<double> x;                     // this must be set manually
+  double etrue;                              // this must be set manually
   pele::Array<double> g, gnum, h, hnum;
 
   void test_energy() {
@@ -32,10 +32,9 @@ public:
     for (size_t k = 0; k < g.size(); ++k) {
       if (std::abs(g[k]) < 1e-10) {
         EXPECT_NEAR(g[k], gnum[k], 1e-6);
+      } else {
+        EXPECT_NEAR(g[k] / norm(g), gnum[k] / norm(gnum), 1e-6);
       }
-      else  {
-      EXPECT_NEAR(g[k]/norm(g), gnum[k]/norm(gnum), 1e-6);
-    }
     }
   }
 
@@ -53,17 +52,15 @@ public:
     for (size_t i = 0; i < g.size(); ++i) {
       if (std::abs(g[i]) < 1e-10) {
         EXPECT_NEAR(g[i], gnum[i], 1e-6);
-      }
-      else {
-        EXPECT_NEAR(g[i]/norm(g), gnum[i]/norm(gnum), 1e-6);
+      } else {
+        EXPECT_NEAR(g[i] / norm(g), gnum[i] / norm(gnum), 1e-6);
       }
     }
     for (size_t i = 0; i < h.size(); ++i) {
       if (std::abs(h[i]) < 1e-10) {
         EXPECT_NEAR(h[i], hnum[i], 1e-3);
-      }
-      else {
-        EXPECT_NEAR(h[i]/norm(h), hnum[i]/norm(hnum), 1e-3);
+      } else {
+        EXPECT_NEAR(h[i] / norm(h), hnum[i] / norm(hnum), 1e-3);
       }
     }
   }

@@ -11,12 +11,13 @@
  * @copyright Copyright (c) 2021
  *
  */
-#include <gtest/gtest.h>
-#include "pele/array.hpp"
-#include "pele/inversepower.hpp"
 #include "gtest/internal/gtest-internal.h"
 #include <cstddef>
+#include <gtest/gtest.h>
 #include <memory>
+
+#include "pele/array.hpp"
+#include "pele/inversepower.hpp"
 
 using pele::Array;
 /*
@@ -26,7 +27,6 @@ using pele::Array;
  *          python code.
  */
 TEST(Rattlers, CompareToJulia) {
-
   // potential parameters
   double eps = 1.0;
   double sigma = 1.0;

@@ -1,4 +1,10 @@
+#include <cmath>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <vector>
+
 #include "pele/cvode.hpp"
 #include "pele/gradient_descent.hpp"
 #include "pele/harmonic.hpp"
@@ -6,11 +12,6 @@
 #include "pele/lj.hpp"
 #include "pele/mxopt.hpp"
 #include "pele/rosenbrock.hpp"
-#include <cmath>
-#include <iostream>
-#include <memory>
-#include <stdexcept>
-#include <vector>
 
 using pele::Array;
 using std::cout;

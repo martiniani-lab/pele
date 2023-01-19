@@ -10,11 +10,12 @@
  *
  *
  */
+#include <memory>
+#include <vector>
+
 #include "array.hpp"
 #include "base_potential.hpp"
 #include "lj.hpp"
-#include <memory>
-#include <vector>
 extern "C" {
 #include "xsum.h"
 }
@@ -25,7 +26,7 @@ extern "C" {
 namespace pele {
 
 class ATLJ : public BasePotential {
-private:
+ private:
   double m_eps;
   double m_sig;
   double m_Z;
@@ -34,11 +35,11 @@ private:
   LJ ljpot;
   double get_axilrod_teller_energy(Array<double> const &x);
 
-public:
+ public:
   ATLJ(double sig, double eps, double Z);
   virtual ~ATLJ() {}
   double get_energy(Array<double> const &x);
 };
-} // namespace pele
+}  // namespace pele
 
-#endif // end header
+#endif  // end header

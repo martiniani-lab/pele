@@ -9,7 +9,7 @@ using pele::Array;
 using pele::InversePower;
 
 static double const EPS = std::numeric_limits<double>::min();
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   EXPECT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
 /*
@@ -17,7 +17,7 @@ static double const EPS = std::numeric_limits<double>::min();
  */
 
 class InversePowerTest : public ::testing::Test {
-public:
+ public:
   double pow, eps, etrue;
   Array<double> x, g, gnum, radii;
   virtual void SetUp() {
@@ -166,7 +166,8 @@ TEST_F(InversePowerTest, InverseHalfIntPower_AgreesWithInversePower) {
 
 // BEGIN: TEST_F(InversePowerTest, MetaPowFunctionsLoop_Work)
 
-template <int N> struct perform_tests {
+template <int N>
+struct perform_tests {
   /**
    *This test should work fine.
    *The comparison is to Mathematica.
@@ -388,7 +389,8 @@ template <int N> struct perform_tests {
   }
 };
 
-template <> struct perform_tests<0> {
+template <>
+struct perform_tests<0> {
   static void f(const double op) {
     const double true_result_direct = 1;
     const double true_result_std = std::pow(op, 0);
@@ -397,7 +399,8 @@ template <> struct perform_tests<0> {
   }
 };
 
-template <int N> inline void perform_tests_zero_to(const double op) {
+template <int N>
+inline void perform_tests_zero_to(const double op) {
   return perform_tests<N>::f(op);
 }
 

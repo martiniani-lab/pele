@@ -1,7 +1,6 @@
+#include <gtest/gtest.h>
 #include <numeric>
 #include <random>
-
-#include <gtest/gtest.h>
 
 #include "pele/array.hpp"
 #include "pele/combination.hpp"
@@ -9,11 +8,11 @@
 using pele::make_combination_generator;
 
 static double const EPS = std::numeric_limits<double>::min();
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   ASSERT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
 class CombinationTest : public ::testing::Test {
-public:
+ public:
   pele::Array<size_t> data;
 
   virtual void SetUp() {

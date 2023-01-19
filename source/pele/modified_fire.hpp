@@ -1,14 +1,15 @@
 #ifndef _PELE_MODIFIED_FIRE_H__
 #define _PELE_MODIFIED_FIRE_H__
 
-#include "array.hpp"
-#include "base_potential.hpp"
-#include "optimizer.hpp"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <ostream>
 #include <stdexcept>
+
+#include "array.hpp"
+#include "base_potential.hpp"
+#include "optimizer.hpp"
 
 namespace pele {
 /**
@@ -48,7 +49,7 @@ namespace pele {
  */
 
 class MODIFIED_FIRE : public ODEBasedOptimizer {
-private:
+ private:
   double _dtstart, _dt, _dtmax, _maxstep, _Nmin, _finc, _fdec, _fa, _astart, _a,
       _fold, _ifnorm, _vnorm;
   pele::Array<double> _v, _dx, _xold, _gold;
@@ -62,7 +63,7 @@ private:
   std::ofstream gradient_file;
 #endif
 
-public:
+ public:
   /**
    * Constructor
    */
@@ -70,7 +71,8 @@ public:
                 pele::Array<double> &x0, double dtstart, double dtmax,
                 double maxstep, size_t Nmin = 5, double finc = 1.1,
                 double fdec = 0.5, double fa = 0.99, double astart = 0.1,
-                double tol = 1e-4, bool stepback = true, bool save_trajectory = false);
+                double tol = 1e-4, bool stepback = true,
+                bool save_trajectory = false);
   /**
    * Destructor
    */
@@ -132,23 +134,23 @@ inline void MODIFIED_FIRE::_VelocityVerlet_integration() {
   }
   for (size_t i = 0; i < _N; ++i) {
     _v[i] -=
-        0.5 * _dt * (_gold[i] + g_[i]); // update velocity assumes all masses 1
+        0.5 * _dt * (_gold[i] + g_[i]);  // update velocity assumes all masses 1
     _dx[i] =
         _dt *
         (_v[i] -
-         0.5 * _dt * g_[i]); // build displacement vector, assumes all masses 1
+         0.5 * _dt * g_[i]);  // build displacement vector, assumes all masses 1
   }
-  _gold.assign(g_); // save gradient as old g
+  _gold.assign(g_);  // save gradient as old g
   double normdx = compute_pot_norm(_dx);
 
   if (normdx > _maxstep) {
     _dx *= (_maxstep /
-            normdx); // resize displacement vector is greater than _maxstep
+            normdx);  // resize displacement vector is greater than _maxstep
   }
 
   x_ += _dx;
 
-  f_ = potential_->get_energy_gradient(x_, g_); // update gradient
+  f_ = potential_->get_energy_gradient(x_, g_);  // update gradient
 }
 
 inline void MODIFIED_FIRE::_ForwardEuler_integration() {
@@ -156,22 +158,22 @@ inline void MODIFIED_FIRE::_ForwardEuler_integration() {
    * the gradients rather than the forces appear in the expression
    */
   for (size_t i = 0; i < _N;
-       ++i) { // this was after get_energy_gradient, moved for testing
-    _v[i] -= _dt * g_[i]; // update velocity, assumes all masses are 1
-    _dx[i] = _dt * _v[i]; // build displacement vector
+       ++i) {  // this was after get_energy_gradient, moved for testing
+    _v[i] -= _dt * g_[i];  // update velocity, assumes all masses are 1
+    _dx[i] = _dt * _v[i];  // build displacement vector
   }
 
-  _gold.assign(g_); // save gradient as old g
+  _gold.assign(g_);  // save gradient as old g
   double normdx = compute_pot_norm(_dx);
 
   if (normdx > _maxstep) {
     _dx *= (_maxstep /
-            normdx); // resize displacement vector is greater than _maxstep
+            normdx);  // resize displacement vector is greater than _maxstep
   }
 
   x_ += _dx;
 
-  f_ = potential_->get_energy_gradient(x_, g_); // update gradient
+  f_ = potential_->get_energy_gradient(x_, g_);  // update gradient
 }
 
 inline void MODIFIED_FIRE::one_iteration() {
@@ -185,12 +187,12 @@ inline void MODIFIED_FIRE::one_iteration() {
   nfev_ += 1;
   iter_number_ += 1;
   _fire_iter_number +=
-      1; // this is different from iter_number_ which does not get reset
+      1;  // this is different from iter_number_ which does not get reset
 
   // save old configuration in case next step has P < 0
-  _fold = f_;       // set f_ old before integration step
-  _xold.assign(x_); // save x as xold, gold saved in integrator (because
-                    // velocity verlet needs it, if vv is used)
+  _fold = f_;        // set f_ old before integration step
+  _xold.assign(x_);  // save x as xold, gold saved in integrator (because
+                     // velocity verlet needs it, if vv is used)
 
   /*equation written in this conditional statement _v = (1- _a)*_v + _a * funit
    * * vnorm*/
@@ -213,7 +215,7 @@ inline void MODIFIED_FIRE::one_iteration() {
 
     _ifnorm = 1. / norm(g_);
     _vnorm = norm(_v);
-    gradient_norm_ = 1. / (_ifnorm * sqrt(_N)); // update rms
+    gradient_norm_ = 1. / (_ifnorm * sqrt(_N));  // update rms
   } else {
     _dt *= _fdec;
     _a = _astart;
@@ -248,6 +250,6 @@ inline void MODIFIED_FIRE::one_iteration() {
 #endif
 }
 
-} // namespace pele
+}  // namespace pele
 
-#endif // #ifndef _PELE_MODIFIED_FIRE_H__
+#endif  // #ifndef _PELE_MODIFIED_FIRE_H__

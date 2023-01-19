@@ -1,14 +1,14 @@
-#include "pele/array.hpp"
-#include "pele/lj.hpp"
-#include "pele/lj_cut.hpp"
-#include "test_utils.hpp"
-
 #include <cmath>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
+
+#include "pele/array.hpp"
+#include "pele/lj.hpp"
+#include "pele/lj_cut.hpp"
+#include "test_utils.hpp"
 
 using pele::Array;
 
@@ -44,7 +44,7 @@ TEST(LJInteractionTest, Hessian_Works) {
 }
 
 class LJTest : public PotentialTest {
-public:
+ public:
   double c6, c12;
   size_t natoms;
 
@@ -116,7 +116,7 @@ TEST_F(LJNeighborListTest, EnergyGradientHessian_AgreesWithNumerical) {
 }
 
 class LJCutTest : public PotentialTest {
-public:
+ public:
   double c6, c12, rcut;
   size_t natoms;
 
@@ -162,7 +162,7 @@ TEST_F(LJCutTest, EnergyGradientHessian_AgreesWithNumerical) {
  */
 
 class LJCutAtomListTest : public LJCutTest {
-public:
+ public:
   virtual void setup_potential() {
     pele::Array<size_t> atoms(natoms);
     for (size_t i = 0; i < atoms.size(); ++i) {
@@ -184,7 +184,7 @@ TEST_F(LJCutAtomListTest, EnergyGradientHessian_AgreesWithNumerical) {
 }
 
 class LJCutPeriodicAtomListTest : public LJCutTest {
-public:
+ public:
   virtual void setup_potential() {
     // make the box huge, soe the energy is not affected
     // but displace some of the atoms, to check that the distances are being
