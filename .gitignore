@@ -42,7 +42,6 @@ htmlcov
 **/charmap.json.gz
 
 /.cache/
-/.clang-format
 /.clangd/
 /.cmake/
 /.dir-locals.el
