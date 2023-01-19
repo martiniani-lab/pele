@@ -45,8 +45,10 @@ MODIFIED_FIRE::MODIFIED_FIRE(std::shared_ptr<pele::BasePotential> potential,
                              pele::Array<double> &x0, double dtstart,
                              double dtmax, double maxstep, size_t Nmin,
                              double finc, double fdec, double fa, double astart,
-                             double tol, bool stepback, bool save_trajectory)
-    : ODEBasedOptimizer(potential, x0, tol, save_trajectory),
+                             double tol, bool stepback, bool save_trajectory,
+                             int iterations_before_save)
+    : ODEBasedOptimizer(potential, x0, tol, save_trajectory,
+                        iterations_before_save),
       _dtstart(dtstart),
       _dt(dtstart),
       _dtmax(dtmax),

@@ -42,8 +42,10 @@ class GradientDescent : public ODEBasedOptimizer {
    */
   GradientDescent(std::shared_ptr<pele::BasePotential> potential,
                   const pele::Array<double> x0, double tol = 1e-4,
-                  double step_size = 1e-4, bool save_trajectory = true)
-      : ODEBasedOptimizer(potential, x0, tol, save_trajectory),
+                  double step_size = 1e-4, bool save_trajectory = true,
+                  int iterations_before_save = 1)
+      : ODEBasedOptimizer(potential, x0, tol, save_trajectory,
+                          iterations_before_save),
         xold(x_.size()),
         step(x_.size()),
         line_search_method(this),

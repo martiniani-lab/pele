@@ -33,8 +33,9 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0, double tol, double rtol, double atol,
     HessianType hessian_type, bool use_newton_stop_criterion,
-    bool save_trajectory)
-    : ODEBasedOptimizer(potential, x0, tol, save_trajectory),
+    bool save_trajectory, int iterations_before_save)
+    : ODEBasedOptimizer(potential, x0, tol, save_trajectory,
+                        iterations_before_save),
       N_size(x0.size()),
       tN(1.0),
       ret(0),
