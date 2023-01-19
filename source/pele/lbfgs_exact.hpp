@@ -1,12 +1,13 @@
 #ifndef _PELE_LBFGS_H__
 #define _PELE_LBFGS_H__
 
-#include "array.hpp"
-#include "base_potential.hpp"
-#include "optimizer.hpp"
 #include <memory>
 #include <mpreal.h>
 #include <vector>
+
+#include "array.hpp"
+#include "base_potential.hpp"
+#include "optimizer.hpp"
 
 namespace pele {
 
@@ -18,7 +19,7 @@ using mpfr::mpreal;
 const int digits = 100;
 mpreal::set_default_prec(mpfr::digits2bits(digits)) class LBFGS_Exact
     : public GradientOptimizer {
-private:
+ private:
   int M_;               /**< The length of the LBFGS memory */
   double max_f_rise_;   /**< The maximum the function is allowed to rise in a
                          * given step.  This is the criterion for the
@@ -46,15 +47,15 @@ private:
   mpreal H0_;
   mpreal k_; /**< Counter for how many times the memory has been updated */
 
-  Array<mpreal> alpha; //!< Alpha used when looping through LBFGS memory
+  Array<mpreal> alpha;  //!< Alpha used when looping through LBFGS memory
 
-  Array<mpreal> xold; //!< Coordinates before taking a step
-  Array<mpreal> gold; //!< Gradient before taking a step
-  Array<mpreal> step; //!< Step size and direction
+  Array<mpreal> xold;  //!< Coordinates before taking a step
+  Array<mpreal> gold;  //!< Gradient before taking a step
+  Array<mpreal> step;  //!< Step size and direction
   double
-      inv_sqrt_size; //!< The inverse square root the the number of components
+      inv_sqrt_size;  //!< The inverse square root the the number of components
 
-public:
+ public:
   /**
    * Constructor-
    */
@@ -95,7 +96,7 @@ public:
    */
   virtual void reset(pele::Array<double> &x0);
 
-private:
+ private:
   /**
    * Add a step to the LBFGS Memory
    * This updates s_, y_, rho_, H0_, and k_
@@ -115,6 +116,6 @@ private:
    */
   double backtracking_linesearch(Array<mpreal> step);
 };
-} // namespace pele
+}  // namespace pele
 
 #endif

@@ -19,12 +19,12 @@ namespace pele {
  * degrees of freedom.
  */
 class FrozenCoordsConverter {
-protected:
+ protected:
   std::vector<double> const _reference_coords;
   std::vector<size_t> _frozen_dof;
   std::vector<size_t> _mobile_dof;
 
-public:
+ public:
   FrozenCoordsConverter(Array<double> const reference_coords,
                         Array<size_t> const frozen_dof)
       : _reference_coords(reference_coords.begin(), reference_coords.end()) {
@@ -139,10 +139,10 @@ public:
 };
 
 class FrozenPotentialWrapper : public BasePotential {
-protected:
+ protected:
   std::shared_ptr<BasePotential> _underlying_potential;
 
-public:
+ public:
   FrozenCoordsConverter coords_converter;
 
   FrozenPotentialWrapper(std::shared_ptr<BasePotential> potential,
@@ -225,6 +225,6 @@ public:
     return energy;
   }
 };
-} // namespace pele
+}  // namespace pele
 
 #endif

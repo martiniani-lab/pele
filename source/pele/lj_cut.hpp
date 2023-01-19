@@ -25,8 +25,13 @@ struct lj_interaction_cut_smooth : BaseInteraction {
   double const _A2;
   double const _2A2;
   lj_interaction_cut_smooth(double C6, double C12, double rcut)
-      : _C6(C6), _C12(C12), _6C6(6. * _C6), _12C12(12. * _C12),
-        _42C6(42. * _C6), _156C12(156. * _C12), _rcut2(rcut * rcut),
+      : _C6(C6),
+        _C12(C12),
+        _6C6(6. * _C6),
+        _12C12(12. * _C12),
+        _42C6(42. * _C6),
+        _156C12(156. * _C12),
+        _rcut2(rcut * rcut),
         // A0 = 4.0*(sig**6/rcut**6) - 7.0*(sig**12/rcut**12)
         _A0(4. * _C6 / (_rcut2 * _rcut2 * _rcut2) -
             7. * _C12 / (_rcut2 * _rcut2 * _rcut2 * _rcut2 * _rcut2 * _rcut2)),
@@ -85,7 +90,7 @@ struct lj_interaction_cut_smooth : BaseInteraction {
  * Pairwise Lennard-Jones potential with smooth cutoff
  */
 class LJCut : public SimplePairwisePotential<lj_interaction_cut_smooth> {
-public:
+ public:
   LJCut(double C6, double C12, double rcut)
       : SimplePairwisePotential<lj_interaction_cut_smooth>(
             std::make_shared<lj_interaction_cut_smooth>(C6, C12, rcut)) {}
@@ -96,7 +101,7 @@ public:
  */
 class LJCutPeriodic : public SimplePairwisePotential<lj_interaction_cut_smooth,
                                                      periodic_distance<3>> {
-public:
+ public:
   LJCutPeriodic(double C6, double C12, double rcut, Array<double> const boxvec)
       : SimplePairwisePotential<lj_interaction_cut_smooth,
                                 periodic_distance<3>>(
@@ -110,7 +115,7 @@ public:
  */
 class LJCutAtomList : public AtomListPotential<lj_interaction_cut_smooth,
                                                cartesian_distance<3>> {
-public:
+ public:
   LJCutAtomList(double C6, double C12, double rcut, Array<size_t> atoms1,
                 Array<size_t> atoms2)
       : AtomListPotential<lj_interaction_cut_smooth, cartesian_distance<3>>(
@@ -130,7 +135,7 @@ public:
 class LJCutPeriodicAtomList
     : public AtomListPotential<lj_interaction_cut_smooth,
                                periodic_distance<3>> {
-public:
+ public:
   LJCutPeriodicAtomList(double C6, double C12, double rcut,
                         pele::Array<double> boxvec, Array<size_t> atoms1,
                         Array<size_t> atoms2)
@@ -153,7 +158,7 @@ template <size_t ndim>
 class LJCutPeriodicCellLists
     : public CellListPotential<lj_interaction_cut_smooth,
                                periodic_distance<ndim>> {
-public:
+ public:
   LJCutPeriodicCellLists(double c6, double c12, double rcut,
                          Array<double> const boxvec, double ncellx_scale)
       : CellListPotential<lj_interaction_cut_smooth, periodic_distance<ndim>>(
@@ -162,6 +167,6 @@ public:
             ncellx_scale) {}
 };
 
-} // namespace pele
+}  // namespace pele
 
 #endif

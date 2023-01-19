@@ -1,8 +1,9 @@
 #include <gtest/gtest.h>
-#include "pele/array.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+
+#include "pele/array.hpp"
 
 using pele::Array;
 
@@ -140,8 +141,7 @@ TEST(ArrayTest, Free_Unwraps) {
 
 TEST(ArrayTest, Copy_WorksNotWrap) {
   pele::Array<double> v(6);
-  for (size_t i = 0; i < v.size(); ++i)
-    v[i] = i;
+  for (size_t i = 0; i < v.size(); ++i) v[i] = i;
   pele::Array<double> v2(6);
   v2 = v.copy();
   EXPECT_NE(v.data(), v2.data());
@@ -152,8 +152,7 @@ TEST(ArrayTest, Copy_WorksNotWrap) {
 
 TEST(ArrayTest, Assign_CopiesNoWrap) {
   pele::Array<double> v(6);
-  for (size_t i = 0; i < v.size(); ++i)
-    v[i] = i;
+  for (size_t i = 0; i < v.size(); ++i) v[i] = i;
   pele::Array<double> v2(6);
   v2.assign(v);
   EXPECT_NE(v.data(), v2.data());
@@ -172,7 +171,7 @@ TEST(ArrayTest, AssignWrongSize_Fails) {
   EXPECT_THROW(v2.assign(v), std::runtime_error);
   v2.free();
   v.free();
-  v2.assign(v); // this is pointless, but it shouldn't fail
+  v2.assign(v);  // this is pointless, but it shouldn't fail
 }
 
 TEST(ArrayTest, ConstructFromVector_Wraps) {
@@ -193,7 +192,7 @@ TEST(ArrayTest, ConstructFromVector_Wraps) {
 
   v.free();
   v2.free();
-  vec[0] = 0; // the data in vec should not have been deallocated
+  vec[0] = 0;  // the data in vec should not have been deallocated
 }
 
 TEST(ArrayTest, RangeBasedFor_Works) {
@@ -225,8 +224,7 @@ TEST(ArrayTest, InEqualityOperator_Works) {
 TEST(ArrayTest, SumOperator_Array) {
   pele::Array<double> v(6, -1);
   pele::Array<double> v2(6, 1);
-  for (size_t i = 0; i < v2.size(); ++i)
-    v2[i] = 1;
+  for (size_t i = 0; i < v2.size(); ++i) v2[i] = 1;
   v += v2;
   EXPECT_NE(v.data(), v2.data());
   for (int i = 0; i < 6; ++i) {
@@ -241,7 +239,7 @@ TEST(ArrayTest, SumOperator_ArraySelf) {
 
   v += v;
 
-  EXPECT_EQ(v.data(), old_v_data); // check that memory has not moved
+  EXPECT_EQ(v.data(), old_v_data);  // check that memory has not moved
 
   for (int i = 0; i < 6; ++i) {
     EXPECT_EQ(v[i], 2);
@@ -309,7 +307,7 @@ TEST(ArrayTest, DifOperator_ArraySelf) {
 
   v -= v;
 
-  EXPECT_EQ(v.data(), old_v_data); // check that memory has not moved
+  EXPECT_EQ(v.data(), old_v_data);  // check that memory has not moved
 
   for (int i = 0; i < 6; ++i) {
     EXPECT_EQ(v[i], 0);
@@ -346,7 +344,7 @@ TEST(ArrayTest, ProdOperator_ArraySelf) {
 
   v *= v;
 
-  EXPECT_EQ(v.data(), old_v_data); // check that memory has not moved
+  EXPECT_EQ(v.data(), old_v_data);  // check that memory has not moved
 
   for (int i = 0; i < 6; ++i) {
     EXPECT_EQ(v[i], 4);
@@ -366,7 +364,6 @@ TEST(ArrayTest, ProdOperator_Const) {
 ///////////
 
 TEST(ArrayTest, AddOperator) {
-
   pele::Array<double> v(6, 2);
   pele::Array<double> vr(6, 10);
   pele::Array<double> vl;
@@ -379,7 +376,6 @@ TEST(ArrayTest, AddOperator) {
 }
 
 TEST(ArrayTest, SubtractOperator) {
-
   pele::Array<double> vr(6, 2);
   pele::Array<double> v(6, 10);
   pele::Array<double> vl;
@@ -423,7 +419,7 @@ TEST(ArrayTest, DivOperator_ArraySelf) {
 
   v /= v;
 
-  EXPECT_EQ(v.data(), old_v_data); // check that memory has not moved
+  EXPECT_EQ(v.data(), old_v_data);  // check that memory has not moved
 
   for (int i = 0; i < 6; ++i) {
     EXPECT_EQ(v[i], 1);

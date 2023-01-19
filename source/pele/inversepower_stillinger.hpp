@@ -17,8 +17,7 @@ struct InversePowerStillinger_interaction : BaseInteraction {
   }
   // calculate energy and gradient from distance squared, gradient is in
   // -(dv/drij)/|rij|
-  double energy_gradient(double r2, double *gij,
-                         const double dij) const {
+  double energy_gradient(double r2, double *gij, const double dij) const {
     const double E = power_inp2((dij * dij) / r2, m_pow);
     *gij = m_pow * E / r2;
     return E;
@@ -33,7 +32,8 @@ struct InversePowerStillinger_interaction : BaseInteraction {
 
   // Compute inp ** n.
   // See Skiena, p. 48.
-  template <class T> T power(const T inp, const size_t n) const {
+  template <class T>
+  T power(const T inp, const size_t n) const {
     if (n == 0) {
       return 1;
     }
@@ -45,7 +45,8 @@ struct InversePowerStillinger_interaction : BaseInteraction {
     }
   }
   // Compute inp ** n, given inp ** 2.
-  template <class T> T power_inp2(const T inp2, const size_t n) const {
+  template <class T>
+  T power_inp2(const T inp2, const size_t n) const {
     const T x = power(inp2, n / 2);
     if (n % 2) {
       return std::sqrt(inp2) * x;
@@ -59,7 +60,7 @@ template <size_t ndim>
 class InversePowerStillinger
     : public SimplePairwisePotential<InversePowerStillinger_interaction,
                                      cartesian_distance<ndim>> {
-public:
+ public:
   InversePowerStillinger(const size_t pow, const pele::Array<double> radii)
       : SimplePairwisePotential<InversePowerStillinger_interaction,
                                 cartesian_distance<ndim>>(
@@ -71,7 +72,7 @@ template <size_t ndim>
 class InversePowerStillingerPeriodic
     : public SimplePairwisePotential<InversePowerStillinger_interaction,
                                      periodic_distance<ndim>> {
-public:
+ public:
   InversePowerStillingerPeriodic(const size_t pow,
                                  const pele::Array<double> radii,
                                  const pele::Array<double> boxvec)
@@ -81,6 +82,6 @@ public:
             std::make_shared<periodic_distance<ndim>>(boxvec)) {}
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // #ifndef _PELE_INVERSEPOWER_STILLIGNER_H
+#endif  // #ifndef _PELE_INVERSEPOWER_STILLIGNER_H

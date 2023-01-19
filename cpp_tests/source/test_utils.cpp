@@ -1,17 +1,17 @@
-#include <gtest/gtest.h>
-#include "pele/array.hpp"
-#include "pele/utils.hpp"
-
 #include <cmath>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
 
+#include "pele/array.hpp"
+#include "pele/utils.hpp"
+
 using pele::Array;
 
 TEST(utils, box_length_3d) {
-  Array<double> hs_radii{1.0, 1.0, 1.0, 1.0, 1.0, 1.0}; // radii
+  Array<double> hs_radii{1.0, 1.0, 1.0, 1.0, 1.0, 1.0};  // radii
 
   double dim = 3.0;
 
@@ -23,7 +23,7 @@ TEST(utils, box_length_3d) {
 }
 
 TEST(utils, box_length_2d) {
-  Array<double> hs_radii{1.0, 1.0, 1.0, 1.0, 1.0, 1.0}; // radii
+  Array<double> hs_radii{1.0, 1.0, 1.0, 1.0, 1.0, 1.0};  // radii
 
   double dim = 2.0;
 

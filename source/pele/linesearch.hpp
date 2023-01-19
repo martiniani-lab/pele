@@ -10,11 +10,12 @@
  *
  */
 
+#include <memory>
+#include <vector>
+
 #include "array.hpp"
 #include "base_potential.hpp"
 #include "optimizer.hpp"
-#include <memory>
-#include <vector>
 
 namespace pele {
 
@@ -23,8 +24,7 @@ namespace pele {
  * methods should ideally derive from this class
  */
 class LineSearch {
-
-protected:
+ protected:
   // // stored energy and gradient at the computed stepsize
   Array<double> end_gradient;
   double end_energy;
@@ -34,7 +34,7 @@ protected:
   // Optimizer class
   GradientOptimizer *opt_;
 
-public:
+ public:
   LineSearch(GradientOptimizer *opt, double max_stepnorm)
       : opt_(opt), max_stepnorm_(max_stepnorm){};
   virtual ~LineSearch(){};
@@ -61,17 +61,19 @@ public:
  */
 
 class OldLineSearch : public LineSearch {
-public:
+ public:
   OldLineSearch(GradientOptimizer *opt, double maxstepnorm,
                 double max_f_rise = 1e-4, double nred_max = 10,
                 bool use_relative_f = true)
-      : LineSearch(opt, maxstepnorm), max_f_rise_(max_f_rise),
-        nred_max_(nred_max), use_relative_f_(use_relative_f),
+      : LineSearch(opt, maxstepnorm),
+        max_f_rise_(max_f_rise),
+        nred_max_(nred_max),
+        use_relative_f_(use_relative_f),
         verbosity_(opt->get_verbosity_()){
 
         };
 
-private:
+ private:
   // maximum the function can rise to
   double max_f_rise_;
   // maximum number of backtracking iterations
@@ -93,7 +95,7 @@ private:
   // specify opt is gradient optimizer This ends up giving me a version of this
   // with version
 
-public:
+ public:
   // I'm putting this here instead of putting it elsewhere since I ended up
   // getting an undefined symbol error which means there are some linker issues?
   double line_search(Array<double> &x, Array<double> step);
@@ -111,6 +113,6 @@ public:
   inline void set_g_f_ptr(Array<double> &g) { g_ = g; };
 };
 
-} // namespace pele
+}  // namespace pele
 
 #endif /* End line search methods */

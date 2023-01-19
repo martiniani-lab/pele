@@ -72,7 +72,7 @@ enum LINE_SEARCH_TERMINATION_CONDITION {
 /// Parameters to control the L-BFGS algorithm.
 ///
 class LBFGSParam {
-public:
+ public:
   ///
   /// The number of corrections to approximate the inverse Hessian matrix.
   /// The L-BFGS routine stores the computation results of previous \ref m
@@ -162,7 +162,7 @@ public:
   // The linesearch condition for termination
   int linesearch;
 
-public:
+ public:
   ///
   /// Constructor for L-BFGS parameters.
   /// Default values for parameters will be set when the object is created.
@@ -174,9 +174,16 @@ public:
              Scalar min_step_ = Scalar(1e-20), Scalar max_step_ = Scalar(1e+20),
              Scalar ftol_ = Scalar(1e-4), Scalar wolfe_ = Scalar(0.9),
              int linesearch_ = LINESEARCH_BACKTRACKING_STRONG_WOLFE)
-      : m(m_), epsilon(epsilon_), epsilon_rel(epsilon_rel_), past(past_),
-        delta(delta_), max_linesearch(max_linesearch_), min_step(min_step_),
-        max_step(max_step_), ftol(ftol_), wolfe(wolfe_),
+      : m(m_),
+        epsilon(epsilon_),
+        epsilon_rel(epsilon_rel_),
+        past(past_),
+        delta(delta_),
+        max_linesearch(max_linesearch_),
+        min_step(min_step_),
+        max_step(max_step_),
+        ftol(ftol_),
+        wolfe(wolfe_),
         linesearch(linesearch_) {}
 
   ///
@@ -185,16 +192,13 @@ public:
   /// is invalid.
   ///
   inline void check_param() const {
-    if (m <= 0)
-      throw std::invalid_argument("'m' must be positive");
+    if (m <= 0) throw std::invalid_argument("'m' must be positive");
     if (epsilon < 0)
       throw std::invalid_argument("'epsilon' must be non-negative");
     if (epsilon_rel < 0)
       throw std::invalid_argument("'epsilon_rel' must be non-negative");
-    if (past < 0)
-      throw std::invalid_argument("'past' must be non-negative");
-    if (delta < 0)
-      throw std::invalid_argument("'delta' must be non-negative");
+    if (past < 0) throw std::invalid_argument("'past' must be non-negative");
+    if (delta < 0) throw std::invalid_argument("'delta' must be non-negative");
     if (max_iterations < 0)
       throw std::invalid_argument("'max_iterations' must be non-negative");
     throw std::invalid_argument(
@@ -212,6 +216,6 @@ public:
   }
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // LINE_SEARCH_NOCEDAL_WRIGHT_H
+#endif  // LINE_SEARCH_NOCEDAL_WRIGHT_H

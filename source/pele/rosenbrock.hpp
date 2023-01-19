@@ -1,23 +1,23 @@
 #ifndef _PELE_TEST_FUNCS_H
 #define _PELE_TEST_FUNCS_H
 
-#include "array.hpp"
-#include "base_potential.hpp"
-
 #include <iostream>
 #include <memory>
 #include <vector>
+
+#include "array.hpp"
+#include "base_potential.hpp"
 
 namespace pele {
 /**
  * RosenBrock function with defaults for testing purposes
  */
 class RosenBrock : public BasePotential {
-private:
+ private:
   double m_a;
   double m_b;
 
-public:
+ public:
   RosenBrock(double a = 1, double b = 100) : m_a(a), m_b(b){};
   virtual ~RosenBrock(){};
   inline double get_energy(Array<double> const &x) {
@@ -39,13 +39,13 @@ public:
  * Saddle point function for optimizer testing purposes
  */
 class Saddle : public BasePotential {
-private:
+ private:
   double m_a2;
   double m_b2;
   double m_a4;
   double m_b4;
 
-public:
+ public:
   Saddle(double a2 = 2, double b2 = 2, double a4 = 1, double b4 = 1)
       : m_a2(a2), m_b2(b2), m_a4(a4), m_b4(b4){};
   virtual ~Saddle(){};
@@ -69,7 +69,7 @@ public:
  *
  */
 class XCube : public BasePotential {
-public:
+ public:
   XCube(){};
   virtual ~XCube(){};
   inline double get_energy(Array<double> const &x) {
@@ -91,10 +91,10 @@ public:
  */
 
 class FlatHarmonic : public BasePotential {
-private:
+ private:
   double m_a;
 
-public:
+ public:
   FlatHarmonic(double a = 1) : m_a(a){};
   virtual ~FlatHarmonic(){};
   inline double get_energy(Array<double> const &x) { return m_a * x[0] * x[0]; }
@@ -120,5 +120,5 @@ public:
   };
 };
 
-} // namespace pele
+}  // namespace pele
 #endif

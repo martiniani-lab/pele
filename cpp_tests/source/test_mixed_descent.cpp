@@ -7,15 +7,15 @@
 #include "pele/mxopt.hpp"
 
 // potential imports
-#include "pele/inversepower.hpp"
-#include "pele/rosenbrock.hpp"
-
-#include "pele/gradient_descent.hpp"
 #include <cmath>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
+
+#include "pele/gradient_descent.hpp"
+#include "pele/inversepower.hpp"
+#include "pele/rosenbrock.hpp"
 
 using pele::Array;
 using std::cout;

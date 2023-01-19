@@ -1,28 +1,31 @@
 #ifndef _P_SPIN_SPHERICAL_H_
 #define _P_SPIN_SPHERICAL_H_
 
-#include "array.hpp"
-#include "base_potential.hpp"
-
-#include "pele/combination.hpp"
-#include "pele/meta_pow.hpp"
 #include <cassert>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
+#include "array.hpp"
+#include "base_potential.hpp"
+#include "pele/combination.hpp"
+#include "pele/meta_pow.hpp"
+
 namespace pele {
 
-template <size_t N> struct Factorial {
+template <size_t N>
+struct Factorial {
   enum { value = N * Factorial<N - 1>::value };
 };
 
-template <> struct Factorial<0> {
+template <>
+struct Factorial<0> {
   enum { value = 1 };
 };
 
-template <size_t p> class MeanFieldPSpinSpherical : public BasePotential {
-protected:
+template <size_t p>
+class MeanFieldPSpinSpherical : public BasePotential {
+ protected:
   pele::Array<double> m_interactions, m_spins;
   pele::Array<size_t> m_indexes;
   size_t m_N;
@@ -71,15 +74,18 @@ protected:
     spins_ /= (norm(spins_) / m_sqrt_N);
   }
 
-public:
+ public:
   virtual ~MeanFieldPSpinSpherical() {}
   // right now interactions_ is of size N**p which is not obtimal has it
   // contains all the permutations of the interactions this is fast but costs a
   // lot in terms of memory
   MeanFieldPSpinSpherical(pele::Array<double> interactions_, size_t nspins_,
                           double tol_)
-      : m_interactions(interactions_.copy()), m_spins(nspins_),
-        m_indexes(nspins_), m_N(nspins_), m_tol(tol_),
+      : m_interactions(interactions_.copy()),
+        m_spins(nspins_),
+        m_indexes(nspins_),
+        m_N(nspins_),
+        m_tol(tol_),
         m_sqrt_N(sqrt((double)m_N)),
         m_N_prf(m_p > 2 ? std::pow(m_sqrt_N, m_p - 1.) : 1),
         m_combination_generator(m_indexes.begin(), m_indexes.end(), m_p),
@@ -114,8 +120,8 @@ public:
 };
 
 template <size_t p>
-inline double
-MeanFieldPSpinSpherical<p>::add_energy(pele::Array<double> const &x) {
+inline double MeanFieldPSpinSpherical<p>::add_energy(
+    pele::Array<double> const &x) {
   if (x.size() != m_N) {
     throw std::invalid_argument("x.size() be the same as m_N");
   }
@@ -136,9 +142,8 @@ MeanFieldPSpinSpherical<p>::add_energy(pele::Array<double> const &x) {
 }
 
 template <size_t p>
-inline double
-MeanFieldPSpinSpherical<p>::add_energy_gradient(pele::Array<double> const &x,
-                                                pele::Array<double> &grad) {
+inline double MeanFieldPSpinSpherical<p>::add_energy_gradient(
+    pele::Array<double> const &x, pele::Array<double> &grad) {
   size_t comb_full[m_p];
   size_t combg[m_p - 1];
   for (size_t i = 0; i < m_N; ++i) {
@@ -159,31 +164,30 @@ MeanFieldPSpinSpherical<p>::add_energy_gradient(pele::Array<double> const &x,
       }
     }
     // now set the gradient element i
-    /*grad[i] = g + 2 * x[m_N] * x[i];*/ // lagrange
-    grad[i] = g / m_N_prf; // rr here we might want to divide by m_p because in
-                           // the gradient we have only fact(m_p-1) terms
+    /*grad[i] = g + 2 * x[m_N] * x[i];*/  // lagrange
+    grad[i] = g / m_N_prf;  // rr here we might want to divide by m_p because in
+                            // the gradient we have only fact(m_p-1) terms
   }
   // now normalize the spin vector and orthogonalise the gradient to it
   double e = this->add_energy(x);
-  /*grad[m_N] = dot(m_spins, m_spins) - m_N;*/ // lagrange
-  this->m_orthogonalize(x, grad);              // rr
+  /*grad[m_N] = dot(m_spins, m_spins) - m_N;*/  // lagrange
+  this->m_orthogonalize(x, grad);               // rr
   return e;
 }
 
 template <size_t p>
-inline double
-MeanFieldPSpinSpherical<p>::get_energy(pele::Array<double> const &x) {
+inline double MeanFieldPSpinSpherical<p>::get_energy(
+    pele::Array<double> const &x) {
   Array<double> xnew = x.copy();
-  this->m_normalize_spins(xnew); // normalize spins vector
+  this->m_normalize_spins(xnew);  // normalize spins vector
   return this->add_energy(xnew);
 }
 
 template <size_t p>
-inline double
-MeanFieldPSpinSpherical<p>::get_energy_gradient(pele::Array<double> const &x,
-                                                pele::Array<double> &grad) {
+inline double MeanFieldPSpinSpherical<p>::get_energy_gradient(
+    pele::Array<double> const &x, pele::Array<double> &grad) {
   Array<double> xnew = x.copy();
-  this->m_normalize_spins(xnew); // normalize spins vector
+  this->m_normalize_spins(xnew);  // normalize spins vector
   return this->add_energy_gradient(xnew, grad);
 }
 
@@ -192,7 +196,7 @@ void MeanFieldPSpinSpherical<p>::numerical_gradient(Array<double> const &x,
                                                     Array<double> &grad,
                                                     double eps) {
   Array<double> xnew = x.copy();
-  this->m_normalize_spins(xnew); // normalize spins vector
+  this->m_normalize_spins(xnew);  // normalize spins vector
   BasePotential::numerical_gradient(xnew, grad, eps);
   this->m_orthogonalize(xnew, grad);
 }
@@ -205,7 +209,7 @@ void MeanFieldPSpinSpherical<p>::numerical_hessian(Array<double> const &x,
     throw std::invalid_argument("hess.size() be the same as x.size()*x.size()");
   }
   Array<double> xnew = x.copy();
-  this->m_normalize_spins(xnew); // normalize spins vector
+  this->m_normalize_spins(xnew);  // normalize spins vector
   size_t const N = xnew.size();
 
   Array<double> gplus(xnew.size());
@@ -280,5 +284,5 @@ inline double MeanFieldPSpinSpherical<p>::add_energy_gradient_hessian(
   return this->add_energy_gradient(x, grad);
 }
 
-} // namespace pele
+}  // namespace pele
 #endif

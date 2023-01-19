@@ -1,12 +1,4 @@
 #include "pele/extended_mixed_descent.hpp"
-#include "pele/array.hpp"
-#include "pele/base_potential.hpp"
-#include "pele/eigen_interface.hpp"
-#include "pele/hessian_translations.hpp"
-#include "pele/lbfgs.hpp"
-#include "pele/lsparameters.hpp"
-#include "pele/optimizer.hpp"
-#include "pele/preprocessor_directives.hpp"
 #include <algorithm>
 #include <complex>
 #include <cstddef>
@@ -16,10 +8,19 @@
 #include <memory>
 #include <ostream>
 #include <stdexcept>
-#include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
-#include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
+#include <sunlinsol/sunlinsol_dense.h>  // access to dense SUNLinearSolver
+#include <sunlinsol/sunlinsol_spgmr.h>  /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h> /* access to Newton SUNNonLinearSolver */
 #include <unistd.h>
+
+#include "pele/array.hpp"
+#include "pele/base_potential.hpp"
+#include "pele/eigen_interface.hpp"
+#include "pele/hessian_translations.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/lsparameters.hpp"
+#include "pele/optimizer.hpp"
+#include "pele/preprocessor_directives.hpp"
 
 namespace pele {
 
@@ -31,14 +32,26 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     : GradientOptimizer(potential, x0, tol),
       extended_potential(
           std::make_shared<ExtendedPotential>(potential, potential_extension)),
-      N_size(x_.size()), t0(0), tN(100.0), rtol(rtol), atol(atol),
-      xold(x_.size()), gold(x_.size()), step(x_.size()), xold_old(x_.size()),
-      T_(T), use_phase_1(true), conv_tol_(conv_tol), n_phase_1_steps(0),
-      n_phase_2_steps(0), n_failed_phase_2_steps(0),
-      hessian(x_.size(), x_.size()), x_last_cvode(x_.size()),
+      N_size(x_.size()),
+      t0(0),
+      tN(100.0),
+      rtol(rtol),
+      atol(atol),
+      xold(x_.size()),
+      gold(x_.size()),
+      step(x_.size()),
+      xold_old(x_.size()),
+      T_(T),
+      use_phase_1(true),
+      conv_tol_(conv_tol),
+      n_phase_1_steps(0),
+      n_phase_2_steps(0),
+      n_failed_phase_2_steps(0),
+      hessian(x_.size(), x_.size()),
+      x_last_cvode(x_.size()),
       hessian_copy_for_cholesky(x_.size(), x_.size()),
-      line_search_method(this, step), iterative_(iterative) {
-
+      line_search_method(this, step),
+      iterative_(iterative) {
   SUNContext_Create(NULL, &sunctx);
   cvode_mem = CVodeCreate(CV_BDF, sunctx);
   if (T <= 1) {
@@ -74,7 +87,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
         "ExtendedMixedOptimizer: potential_extension is null");
   }
   set_potential(
-      extended_potential); // because we can only create the extended potential
+      extended_potential);  // because we can only create the extended potential
   // after we instantiate the extended potential
   double t0 = 0;
 #if PRINT_TO_FILE == 1
@@ -200,7 +213,6 @@ void ExtendedMixedOptimizer::one_iteration() {
       extended_potential->switch_off_extended_potential();
       n_failed_phase_2_steps += 1;
     } else {
-
       line_search_method.set_xold_gold_(xold, gold);
       line_search_method.set_g_f_ptr(g_);
       double stepnorm = line_search_method.line_search(x_, step);
@@ -228,7 +240,8 @@ void ExtendedMixedOptimizer::one_iteration() {
 
 #if OPTIMIZER_DEBUG_LEVEL >= 3
   std::cout << "mixed optimizer: " << iter_number_ << " E " << f_ << " n "
-            << gradient_norm_ << " nfev " << nfev_ << " nhev " << udata.nhev << std::endl;
+            << gradient_norm_ << " nfev " << nfev_ << " nhev " << udata.nhev
+            << std::endl;
   std::cout << "optimizer position \n" << x_ << "\n";
   std::cout << "optimizer step \n" << step << "\n";
 #endif
@@ -249,7 +262,6 @@ ExtendedMixedOptimizer::~ExtendedMixedOptimizer() {
 }
 
 void ExtendedMixedOptimizer::free_cvode_objects() {
-
   N_VDestroy(x0_N);
   SUNLinSolFree(LS);
   if (!iterative_) {
@@ -264,8 +276,9 @@ void ExtendedMixedOptimizer::free_cvode_objects() {
  */
 void ExtendedMixedOptimizer::reset(pele::Array<double> &x0) {
   if (x0.size() != x_.size()) {
-    throw std::invalid_argument("The number of degrees of freedom (x0.size()) "
-                                "cannot change when calling reset()");
+    throw std::invalid_argument(
+        "The number of degrees of freedom (x0.size()) "
+        "cannot change when calling reset()");
   }
   iter_number_ = 0;
   nfev_ = 0;
@@ -283,7 +296,6 @@ with help convexity flag false ->
 out the result.
  */
 bool ExtendedMixedOptimizer::convexity_check() {
-
   get_hess(hessian);
 
   // check if the hessian is positive definite by doing a cholesky decomposition
@@ -329,7 +341,7 @@ void ExtendedMixedOptimizer::get_hess(Eigen::MatrixXd &hessian) {
   // Does not allocate memory for hessian just wraps around the data
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
   potential_->get_hessian(
-      x_, hessian_pele); // preferably switch this to sparse Eigen
+      x_, hessian_pele);  // preferably switch this to sparse Eigen
   udata.nhev += 1;
 }
 
@@ -337,7 +349,7 @@ void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
   // Does not allocate memory for hessian just wraps around the data
   Array<double> hessian_pele = Array<double>(hessian.data(), hessian.size());
   extended_potential->get_hessian_extended(
-      x_, hessian_pele); // preferably switch this to sparse Eigen
+      x_, hessian_pele);  // preferably switch this to sparse Eigen
   udata.nhev += 1;
 }
 
@@ -369,7 +381,6 @@ void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
 void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
-
   if (!prev_phase_is_phase1) {
     convexity_check();
   }
@@ -384,4 +395,4 @@ void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
   pele_eq_eig(step, q);
 }
 
-} // namespace pele
+}  // namespace pele

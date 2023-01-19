@@ -1,4 +1,5 @@
 #include "pele/newton.hpp"
+
 #include "Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h"
 #include "pele/array.hpp"
 #include "pele/eigen_interface.hpp"
@@ -18,12 +19,19 @@ namespace pele {
 Newton::Newton(std::shared_ptr<BasePotential> potential,
                const pele::Array<double> &x0, double tol, double threshold,
                bool use_rattler_mask)
-    : GradientOptimizer(potential, x0, tol), _threshold(threshold),
-      _tolerance(tol), _hessian(x0.size(), x0.size()), _gradient(x0.size()),
-      _x(x0.size()), _rattlers_found(false),
-      _use_rattler_mask(use_rattler_mask), _not_rattlers(x0.size(), true),
-      _line_search(this, 1.0), _nhev(0), _x_old(x0.size()),
-      _gradient_old(x0.size()) // use step size of 1.0 for newton
+    : GradientOptimizer(potential, x0, tol),
+      _threshold(threshold),
+      _tolerance(tol),
+      _hessian(x0.size(), x0.size()),
+      _gradient(x0.size()),
+      _x(x0.size()),
+      _rattlers_found(false),
+      _use_rattler_mask(use_rattler_mask),
+      _not_rattlers(x0.size(), true),
+      _line_search(this, 1.0),
+      _nhev(0),
+      _x_old(x0.size()),
+      _gradient_old(x0.size())  // use step size of 1.0 for newton
 {
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x0.size(); ++i) {
@@ -140,8 +148,9 @@ void Newton::one_iteration() {
   // cout << "starting norm" << starting_norm << endl;
   // cout << "step norm" << stepnorm << endl;
   if (stepnorm / starting_norm < 1e-10) {
-    throw std::runtime_error("rescaled step decreased by too much. Newton "
-                             "might be in the wrong direction");
+    throw std::runtime_error(
+        "rescaled step decreased by too much. Newton "
+        "might be in the wrong direction");
   }
   cout << "starting step size" << starting_norm << endl;
   cout << "step size rescaled" << stepnorm << endl;
@@ -165,4 +174,4 @@ void Newton::compute_func_gradient(Array<double> x, double &func,
   }
 }
 
-} // namespace pele
+}  // namespace pele

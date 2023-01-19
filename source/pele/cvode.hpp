@@ -7,9 +7,6 @@
 
 // #define EIGEN_USE_MKL_ALL
 
-#include "array.hpp"
-#include "base_potential.hpp"
-#include "cvode/cvode_proj.h"
 #include <cstddef>
 #include <iostream>
 #include <memory>
@@ -17,12 +14,25 @@
 #include <sundials/sundials_context.h>
 #include <vector>
 
+#include "array.hpp"
+#include "base_potential.hpp"
+#include "cvode/cvode_proj.h"
+
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
-#include "eigen_interface.hpp"
 #include <Eigen/Dense>
 
+#include "eigen_interface.hpp"
+
 // line search methods
+#include <cvode/cvode.h> /* access to CVODE                 */
+#include <fstream>
+#include <iostream>
+#include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
+#include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
+#include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
+#include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
+
 #include "backtracking.hpp"
 #include "bracketing.hpp"
 #include "eigen_interface.hpp"
@@ -33,14 +43,6 @@
 #include "sundials/sundials_linearsolver.h"
 #include "sundials/sundials_matrix.h"
 #include "sundials/sundials_nvector.h"
-
-#include <cvode/cvode.h> /* access to CVODE                 */
-#include <fstream>
-#include <iostream>
-#include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
-#include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
-#include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver */
-#include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
 
 extern "C" {
 #include "xsum.h"
@@ -56,14 +58,13 @@ enum HessianType {
  * user data passed to CVODE
  */
 typedef struct UserData_ {
-
   double rtol; /* integration tolerances */
   double atol;
-  size_t nfev;               // number of gradient(function) evaluations
-  size_t nhev;               // number of st (jacobian) evaluations
-  double stored_energy = 0;  // stored energy
-  Array<double> stored_grad; // stored gradient. need to pass this on to
-  SUNMatrix stored_J;        // stored dense hessian
+  size_t nfev;                // number of gradient(function) evaluations
+  size_t nhev;                // number of st (jacobian) evaluations
+  double stored_energy = 0;   // stored energy
+  Array<double> stored_grad;  // stored gradient. need to pass this on to
+  SUNMatrix stored_J;         // stored dense hessian
   std::shared_ptr<pele::BasePotential> pot_;
 } * UserData;
 
@@ -72,7 +73,7 @@ typedef struct UserData_ {
  * \grad{V(x)} $ to arrive at the trajectory to the corresponding minimum
  */
 class CVODEBDFOptimizer : public ODEBasedOptimizer {
-private:
+ private:
   UserData_ udata;
   void *cvode_mem; /* CVODE memory         */
   size_t N_size;
@@ -80,7 +81,7 @@ private:
   SUNLinearSolver LS;
   double tN;
   int ret;
-  SUNContext sunctx; // SUNDIALS context
+  SUNContext sunctx;  // SUNDIALS context
 
   // save construction parameters
   double rtol_;
@@ -105,7 +106,7 @@ private:
   void setup_cvode();
   void free_cvode_objects();
 
-public:
+ public:
   void one_iteration();
   // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
   // static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
@@ -115,7 +116,8 @@ public:
                     const pele::Array<double> x0, double tol = 1e-5,
                     double rtol = 1e-5, double atol = 1e-5,
                     HessianType hessian_type = DENSE,
-                    bool use_newton_stop_criterion = false, bool save_trajectory=false);
+                    bool use_newton_stop_criterion = false,
+                    bool save_trajectory = false);
 
   ~CVODEBDFOptimizer();
 
@@ -142,7 +144,7 @@ public:
 
   inline int get_nhev() const { return udata.nhev; }
 
-protected:
+ protected:
   double H02;
 };
 
@@ -180,6 +182,6 @@ static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int check_sundials_retval(void *return_value, const char *funcname,
                                  int opt);
 
-} // namespace pele
+}  // namespace pele
 
 #endif

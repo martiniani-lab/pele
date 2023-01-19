@@ -1,9 +1,10 @@
 #ifndef _PELE_COMBINE_POTENTIALS_H_
 #define _PELE_COMBINE_POTENTIALS_H_
-#include "base_potential.hpp"
 #include <cstddef>
 #include <list>
 #include <memory>
+
+#include "base_potential.hpp"
 
 namespace pele {
 
@@ -14,10 +15,10 @@ namespace pele {
  * types atoms
  */
 class CombinedPotential : public BasePotential {
-protected:
+ protected:
   std::list<std::shared_ptr<BasePotential>> _potentials;
 
-public:
+ public:
   CombinedPotential() {}
 
   /**
@@ -95,14 +96,13 @@ public:
  * of the old potential and the new potential.
  */
 class ExtendedPotential : public CombinedPotential {
-
-private:
+ private:
   bool use_extended_potential_;
   size_t nhev_extension;
   size_t nfev_extension;
   size_t neev_extension;
 
-public:
+ public:
   /**
    * @brief Construct a new Extended Potential object
    *
@@ -184,8 +184,8 @@ public:
   size_t get_nfev_extension() { return nfev_extension; }
   size_t get_neev_extension() { return neev_extension; }
   size_t get_nhev_extension() { return nhev_extension; }
-}; // ExtendedPotential
+};  // ExtendedPotential
 
-} // namespace pele
+}  // namespace pele
 
 #endif

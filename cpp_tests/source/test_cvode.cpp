@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+
 #include "pele/cell_lists.hpp"
 #include "pele/cvode.hpp"
 #include "pele/gradient_descent.hpp"
@@ -12,7 +13,6 @@
 
 //#include "pele/mxd_end_only.hpp"
 
-#include "pele/array.hpp"
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -20,10 +20,10 @@
 #include <stdexcept>
 #include <vector>
 
+#include "pele/array.hpp"
+
 using pele::Array;
 using std::cout;
-
-
 
 TEST(CVODE, IterativeDenseCheck) {
   static const size_t _ndim = 2;

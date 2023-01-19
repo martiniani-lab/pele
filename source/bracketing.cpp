@@ -3,7 +3,6 @@
 namespace pele {
 
 double BracketingLineSearch::line_search(Array<double> &x, Array<double> step) {
-
   eig_eq_pele(xoldvec, xold_);
   eig_eq_pele(gradvec, gold_);
 
@@ -43,8 +42,7 @@ void BracketingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
                                   Scalar &step, const Vector &drt,
                                   const Vector &xp, const LBFGSParam &param) {
   // Check the value of step
-  if (step <= Scalar(0))
-    throw std::invalid_argument("'step' must be positive");
+  if (step <= Scalar(0)) throw std::invalid_argument("'step' must be positive");
 
   // Save the function value at the current x
   const Scalar fx_init = fx;
@@ -70,16 +68,14 @@ void BracketingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
       step_hi = step;
     } else {
       // Armijo condition is met
-      if (param.linesearch == LINESEARCH_BACKTRACKING_ARMIJO)
-        break;
+      if (param.linesearch == LINESEARCH_BACKTRACKING_ARMIJO) break;
 
       const Scalar dg = grad.dot(drt);
       if (dg < param.wolfe * dg_init) {
         step_lo = step;
       } else {
         // Regular Wolfe condition is met
-        if (param.linesearch == LINESEARCH_BACKTRACKING_WOLFE)
-          break;
+        if (param.linesearch == LINESEARCH_BACKTRACKING_WOLFE) break;
 
         if (dg > -param.wolfe * dg_init) {
           step_hi = step;
@@ -109,4 +105,4 @@ void BracketingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
   }
 }
 
-} // namespace pele
+}  // namespace pele

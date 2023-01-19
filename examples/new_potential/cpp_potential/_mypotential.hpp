@@ -5,9 +5,10 @@
  *
  */
 
+#include <memory>
+
 #include "pele/distance.h"
 #include "pele/simple_pairwise_potential.h"
-#include <memory>
 
 namespace pele {
 
@@ -69,9 +70,9 @@ struct mypot_interaction {
  */
 class MyPot : public pele::SimplePairwisePotential<mypot_interaction,
                                                    cartesian_distance<3>> {
-public:
+ public:
   MyPot(double sig, double eps)
       : SimplePairwisePotential<mypot_interaction, cartesian_distance<3>>(
             std::make_shared<mypot_interaction>(sig, eps)) {}
 };
-} // namespace pele
+}  // namespace pele

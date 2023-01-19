@@ -1,8 +1,7 @@
+#include <gtest/gtest.h>
 #include <iterator>
 #include <numeric>
 #include <random>
-
-#include <gtest/gtest.h>
 
 #include "pele/distance.hpp"
 #include "test_utils.hpp"
@@ -13,14 +12,14 @@ using pele::leesedwards_distance;
 using pele::periodic_distance;
 
 static double const EPS = std::numeric_limits<double>::min();
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   ASSERT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
 #define TEST_REPEAT 100
 #define BOX_LENGTH 10.0
 
 class DistanceTest : public ::testing::Test {
-public:
+ public:
   pele::Array<double> x2[TEST_REPEAT];
   pele::Array<double> y2[TEST_REPEAT];
   pele::Array<double> x3[TEST_REPEAT];
@@ -232,7 +231,6 @@ TEST_F(DistanceTest, SimplePeriodicNorm_Works) {
   pele::Array<double> bv42(42, BOX_LENGTH);
 
   for (size_t i_repeat = 0; i_repeat < TEST_REPEAT; i_repeat++) {
-
     // compute with periodic_distance
     double dx_periodic_2d[2];
     double dx_periodic_3d[3];
@@ -282,7 +280,6 @@ TEST_F(DistanceTest, LeesEdwards_Image_Y) {
 
   // Compute images using Lees-Edwards
   for (int i = 0; i < 4; i++) {
-
     leesedwards_distance<2>(bv2, shear).put_atom_in_box(r_new[i], r_test[i]);
     leesedwards_distance<2>(bv2, shear).put_atom_in_box(r_test[i]);
     for (int j = 0; j < 2; j++) {
@@ -306,7 +303,6 @@ TEST_F(DistanceTest, LeesEdwards_Image_NotY) {
   pele::Array<double> x42_new = pele::Array<double>(42);
 
   for (size_t i_repeat = 0; i_repeat < TEST_REPEAT; i_repeat++) {
-
     if (i_repeat > 20) {
       x2[0] *= 10;
       x3[0] *= 10;
@@ -380,7 +376,6 @@ TEST_F(DistanceTest, LeesEdwards_NoShear) {
   pele::Array<double> bv42(42, BOX_LENGTH);
 
   for (size_t i_repeat = 0; i_repeat < TEST_REPEAT; i_repeat++) {
-
     // Compute distance with leesedwards_distance
     double dx_leesedwards_2d[2];
     double dx_leesedwards_3d[3];
@@ -427,7 +422,6 @@ TEST_F(DistanceTest, LeesEdwards_ShearPeriodic) {
 
   for (int shear = 0; shear < 10; shear++) {
     for (size_t i_repeat = 0; i_repeat < TEST_REPEAT; i_repeat++) {
-
       // Compute distance with leesedwards_distance
       double dx_leesedwards_2d[2];
       double dx_leesedwards_3d[3];
@@ -491,7 +485,6 @@ TEST_F(DistanceTest, LeesEdwards_Shear) {
 
   for (double shear = 0.1; shear <= 1.0; shear += 0.1) {
     for (size_t i_repeat = 0; i_repeat < TEST_REPEAT; i_repeat++) {
-
       // Compute distance with leesedwards_distance
       double dx_leesedwards_2d[2];
       double dx_leesedwards_3d[3];

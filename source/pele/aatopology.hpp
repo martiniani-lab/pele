@@ -44,7 +44,7 @@ class CoordsAdaptor {
   pele::Array<double> _coords;
   static const size_t _ndim = 3;
 
-public:
+ public:
   CoordsAdaptor(size_t nrigid, size_t natoms, pele::Array<double> coords)
       : _nrigid(nrigid), _natoms(natoms), _coords(coords) {
     if (coords.size() != (6 * _nrigid + 3 * _natoms)) {
@@ -128,7 +128,7 @@ class RBTopology;
  * This is the base class from which all Transform Policies should be derived
  */
 class TransformPolicy {
-public:
+ public:
   //    void translate(self, X, d) {
   //        ''' translate the coordinates '''
   //    }
@@ -154,7 +154,7 @@ public:
  * Routines to apply transformations to a rigid body cluster
  */
 class TransformAACluster : public TransformPolicy {
-public:
+ public:
   pele::RBTopology *m_topology;
   TransformAACluster(pele::RBTopology *topology) : m_topology(topology) {}
   virtual ~TransformAACluster() {}
@@ -170,7 +170,7 @@ public:
 };
 
 class MeasureAngleAxisCluster {
-public:
+ public:
   pele::RBTopology *m_topology;
   MeasureAngleAxisCluster(pele::RBTopology *topology) : m_topology(topology) {}
 
@@ -192,13 +192,13 @@ class RigidFragment {
 
   std::shared_ptr<DistanceInterface> m_distance_function;
 
-  double m_M;          // total mass of the angle axis site
-  double m_W;          // sum of all weights
-  pele::VecN<3> m_cog; // center of geometry
+  double m_M;           // total mass of the angle axis site
+  double m_W;           // sum of all weights
+  pele::VecN<3> m_cog;  // center of geometry
   pele::MatrixNM<3, 3>
-      m_S; // weighted tensor of gyration S_ij = \sum m_i x_i x_j
+      m_S;  // weighted tensor of gyration S_ij = \sum m_i x_i x_j
   pele::MatrixNM<3, 3>
-      m_inversion; // matrix that applies the appropriate inversion
+      m_inversion;  // matrix that applies the appropriate inversion
   bool m_can_invert;
 
   // a list of rotations that leave the rigid body unchanged.
@@ -208,7 +208,7 @@ class RigidFragment {
   // coords[atom_indices[i]] is the first coordinate of the i'th atom
   pele::Array<size_t> m_atom_indices;
 
-public:
+ public:
   RigidFragment(pele::Array<double> atom_positions, Array<double> cog, double M,
                 double W, Array<double> S, Array<double> inversion,
                 bool can_invert,
@@ -216,8 +216,13 @@ public:
       : _atom_positions(atom_positions.copy()),
         _atom_positions_matrix(_atom_positions, _ndim),
         _natoms(_atom_positions.size() / _ndim),
-        m_distance_function(distance_function), m_M(M), m_W(W), m_cog(cog),
-        m_S(S), m_inversion(inversion), m_can_invert(can_invert) {
+        m_distance_function(distance_function),
+        m_M(M),
+        m_W(W),
+        m_cog(cog),
+        m_S(S),
+        m_inversion(inversion),
+        m_can_invert(can_invert) {
     if (_atom_positions.size() == 0) {
       throw std::invalid_argument("the atom positions must not have zero size");
     }
@@ -251,8 +256,8 @@ public:
   /**
    * access the vector of symmetry rotations
    */
-  inline std::vector<pele::MatrixNM<3, 3>> const &
-  get_symmetry_rotations() const {
+  inline std::vector<pele::MatrixNM<3, 3>> const &get_symmetry_rotations()
+      const {
     return m_symmetry_rotations;
   }
 
@@ -336,7 +341,7 @@ class RBTopology {
   std::vector<RigidFragment> _sites;
   size_t _natoms_total;
 
-public:
+ public:
   RBTopology() : _natoms_total(0) {}
 
   void add_site(RigidFragment const &site) {
@@ -511,10 +516,11 @@ class RBPotentialWrapper : public BasePotential {
   std::shared_ptr<BasePotential> potential_;
   std::shared_ptr<RBTopology> topology_;
 
-public:
+ public:
   RBPotentialWrapper(std::shared_ptr<BasePotential> potential,
                      std::shared_ptr<RBTopology> top)
-      : potential_(potential), topology_(top)
+      : potential_(potential),
+        topology_(top)
 
   {}
 
@@ -533,6 +539,6 @@ public:
   }
 };
 
-} // namespace pele
+}  // namespace pele
 
 #endif

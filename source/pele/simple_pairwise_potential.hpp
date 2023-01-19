@@ -7,6 +7,7 @@
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <omp.h>
 #include <sys/types.h>
 #include <vector>
 
@@ -14,7 +15,6 @@
 #include "distance.hpp"
 #include "pairwise_potential_interface.hpp"
 #include "vecn.hpp"
-#include <omp.h>
 
 extern "C" {
 #include "xsum.h"
@@ -33,7 +33,7 @@ namespace pele {
 template <typename pairwise_interaction,
           typename distance_policy = cartesian_distance<3>>
 class SimplePairwisePotential : public PairwisePotentialInterface {
-protected:
+ protected:
   static const size_t m_ndim = distance_policy::_ndim;
   std::shared_ptr<pairwise_interaction> _interaction;
   std::shared_ptr<distance_policy> _dist;
@@ -49,10 +49,12 @@ protected:
                           std::shared_ptr<distance_policy> dist = NULL,
                           const double radii_sca = 0.0, bool exact_sum = false)
       : PairwisePotentialInterface(radii, cutoff_calculator),
-        _interaction(interaction), _dist(dist), m_radii_sca(radii_sca),
-        exact_gradient_initialized(false), exact_sum(exact_sum) {
-    if (_dist == NULL)
-      _dist = std::make_shared<distance_policy>();
+        _interaction(interaction),
+        _dist(dist),
+        m_radii_sca(radii_sca),
+        exact_gradient_initialized(false),
+        exact_sum(exact_sum) {
+    if (_dist == NULL) _dist = std::make_shared<distance_policy>();
   }
 
   SimplePairwisePotential(std::shared_ptr<pairwise_interaction> interaction,
@@ -61,22 +63,26 @@ protected:
                           const double radii_sca = 0.0, bool exact_sum = false,
                           double non_additivity = 0.0)
       : PairwisePotentialInterface(radii, non_additivity),
-        _interaction(interaction), _dist(dist), m_radii_sca(radii_sca),
-        exact_gradient_initialized(false), exact_sum(exact_sum) {
-    if (_dist == NULL)
-      _dist = std::make_shared<distance_policy>();
+        _interaction(interaction),
+        _dist(dist),
+        m_radii_sca(radii_sca),
+        exact_gradient_initialized(false),
+        exact_sum(exact_sum) {
+    if (_dist == NULL) _dist = std::make_shared<distance_policy>();
   }
 
   SimplePairwisePotential(std::shared_ptr<pairwise_interaction> interaction,
                           std::shared_ptr<distance_policy> dist = NULL,
                           bool exact_sum = false)
-      : _interaction(interaction), _dist(dist), m_radii_sca(0.0),
-        exact_gradient_initialized(false), exact_sum(exact_sum) {
-    if (_dist == NULL)
-      _dist = std::make_shared<distance_policy>();
+      : _interaction(interaction),
+        _dist(dist),
+        m_radii_sca(0.0),
+        exact_gradient_initialized(false),
+        exact_sum(exact_sum) {
+    if (_dist == NULL) _dist = std::make_shared<distance_policy>();
   }
 
-public:
+ public:
   virtual ~SimplePairwisePotential() {}
   virtual inline size_t get_ndim() const { return m_ndim; }
   virtual double get_energy(Array<double> const &x);
@@ -93,9 +99,8 @@ public:
     return add_energy_gradient(x, grad, not_rattlers);
   }
 
-  virtual double
-  get_energy_gradient(Array<double> const &x,
-                      std::vector<xsum_small_accumulator> &exact_grad) {
+  virtual double get_energy_gradient(
+      Array<double> const &x, std::vector<xsum_small_accumulator> &exact_grad) {
     for (size_t i = 0; i < exact_grad.size(); ++i) {
       xsum_small_init(&(exact_grad[i]));
     };
@@ -109,10 +114,9 @@ public:
     hess.assign(0);
     return add_energy_gradient_hessian(x, grad, hess);
   }
-  virtual double
-  get_energy_gradient_hessian_rattlers(Array<double> const &x,
-                                       Array<double> &grad, Array<double> &hess,
-                                       Array<uint8_t> not_rattlers) {
+  virtual double get_energy_gradient_hessian_rattlers(
+      Array<double> const &x, Array<double> &grad, Array<double> &hess,
+      Array<uint8_t> not_rattlers) {
     grad.assign(0);
     hess.assign(0);
     std::cout << "rattlers" << std::endl;
@@ -133,9 +137,8 @@ public:
                                      Array<double> &grad,
                                      Array<uint8_t> not_rattlers);
 
-  virtual double
-  add_energy_gradient(Array<double> const &x,
-                      std::vector<xsum_small_accumulator> &exact_grad);
+  virtual double add_energy_gradient(
+      Array<double> const &x, std::vector<xsum_small_accumulator> &exact_grad);
   virtual double add_energy_gradient_hessian(Array<double> const &x,
                                              Array<double> &grad,
                                              Array<double> &hess);
@@ -144,11 +147,11 @@ public:
                                              Array<double> &hess,
                                              Array<uint8_t> not_rattlers);
   virtual void add_hessian(Array<double> const &x, Array<double> &hess);
-  virtual void
-  get_neighbors(pele::Array<double> const &coords,
-                pele::Array<std::vector<size_t>> &neighbor_indss,
-                pele::Array<std::vector<std::vector<double>>> &neighbor_distss,
-                const double cutoff_factor = 1.0);
+  virtual void get_neighbors(
+      pele::Array<double> const &coords,
+      pele::Array<std::vector<size_t>> &neighbor_indss,
+      pele::Array<std::vector<std::vector<double>>> &neighbor_distss,
+      const double cutoff_factor = 1.0);
   virtual void get_neighbors_picky(
       pele::Array<double> const &coords,
       pele::Array<std::vector<size_t>> &neighbor_indss,
@@ -166,9 +169,8 @@ public:
     return _interaction->energy_gradient(
         r2, gij, get_non_additive_cutoff(atom_i, atom_j));
   }
-  virtual inline double
-  get_interaction_energy_gradient_hessian(double r2, double *gij, double *hij,
-                                          size_t atom_i, size_t atom_j) const {
+  virtual inline double get_interaction_energy_gradient_hessian(
+      double r2, double *gij, double *hij, size_t atom_i, size_t atom_j) const {
     return _interaction->energy_gradient_hessian(
         r2, gij, hij, get_non_additive_cutoff(atom_i, atom_j));
   }
@@ -302,7 +304,6 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
   // std::vector<double> grad_test (grad.size(), 0);
 
   if (exact_sum) {
-
     xsum_large_accumulator esum;
     xsum_large_init(&esum);
     if (!exact_gradient_initialized) {
@@ -738,8 +739,9 @@ void SimplePairwisePotential<pairwise_interaction, distance_policy>::
         "include_atoms.size() is not equal to the number of atoms");
   }
   if (m_radii.size() == 0) {
-    throw std::runtime_error("Can't calculate neighbors, because the "
-                             "used interaction doesn't use radii. ");
+    throw std::runtime_error(
+        "Can't calculate neighbors, because the "
+        "used interaction doesn't use radii. ");
   }
   std::vector<double> dr(m_ndim);
   std::vector<double> neg_dr(m_ndim);
@@ -788,8 +790,9 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::get_overlaps(
         "coords.size() is not divisible by the number of dimensions");
   }
   if (m_radii.size() == 0) {
-    throw std::runtime_error("Can't calculate neighbors, because the "
-                             "used interaction doesn't use radii. ");
+    throw std::runtime_error(
+        "Can't calculate neighbors, because the "
+        "used interaction doesn't use radii. ");
   }
   pele::VecN<m_ndim, double> dr;
   std::vector<size_t> overlap_inds;
@@ -816,6 +819,6 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::get_overlaps(
   }
   return overlap_inds;
 }
-} // namespace pele
+}  // namespace pele
 
-#endif // #ifndef PYGMIN_SIMPLE_PAIRWISE_POTENTIAL_H
+#endif  // #ifndef PYGMIN_SIMPLE_PAIRWISE_POTENTIAL_H

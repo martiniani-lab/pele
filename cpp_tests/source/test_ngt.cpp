@@ -1,6 +1,7 @@
+#include <gtest/gtest.h>
+
 #include "pele/graph.hpp"
 #include "pele/ngt.hpp"
-#include <gtest/gtest.h>
 
 using pele::NGT;
 using pele::node_id;
@@ -17,7 +18,7 @@ TEST(Graph, AddDuplicateEdges_NoEffect) {
 }
 
 class NGT3 : public ::testing::Test {
-public:
+ public:
   NGT::rate_map_t rate_map;
   std::set<node_id> A, B;
   virtual void SetUp() {
@@ -53,15 +54,14 @@ TEST_F(NGT3, RatesCommittors_Correct) {
 }
 
 class NGT10 : public ::testing::Test {
-public:
+ public:
   NGT::rate_map_t rate_map;
   std::set<node_id> A, B;
   double kAB, kBA, kABSS, kBASS;
   virtual void SetUp() {
     for (int i = 0; i < 10; ++i) {
       for (int j = 0; j < 10; ++j) {
-        if (i == j)
-          continue;
+        if (i == j) continue;
         rate_map[std::pair<node_id, node_id>(i, j)] = double(i + j) / (i + 1);
       }
     }

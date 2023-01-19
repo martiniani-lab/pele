@@ -1,7 +1,4 @@
 #include "pele/backtracking.hpp"
-#include "pele/array.hpp"
-#include "pele/base_potential.hpp"
-#include "pele/lsparameters.hpp"
 #include <cmath>
 #include <complex>
 #include <iomanip>
@@ -9,12 +6,15 @@
 #include <pele/eigen_interface.hpp>
 #include <stdexcept>
 
+#include "pele/array.hpp"
+#include "pele/base_potential.hpp"
+#include "pele/lsparameters.hpp"
+
 using namespace std;
 namespace pele {
 
 double BacktrackingLineSearch::line_search(Array<double> &x,
                                            Array<double> step) {
-
   eig_eq_pele(xoldvec, xold_);
   eig_eq_pele(gradvec, gold_);
   Scalar stpsize = initial_stpsize;
@@ -31,10 +31,10 @@ double BacktrackingLineSearch::line_search(Array<double> &x,
   // start with the initial stepsize
 
   step_moving_away_from_min =
-      false; // only true when step is opposite to gradient
+      false;  // only true when step is opposite to gradient
   LSFunc(f, xvec, gradvec, stpsize, step_direction, xoldvec, params);
   if (step_moving_away_from_min) {
-    return 0; // Line search will not work
+    return 0;  // Line search will not work
   }
   pele_eq_eig(x, xvec);
   pele_eq_eig(g_, gradvec);
@@ -75,14 +75,12 @@ double BacktrackingLineSearch::func_grad_wrapper(Vector &x, Vector &grad) {
 void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
                                     Scalar &step, const Vector &drt,
                                     const Vector &xp, const LBFGSParam &param) {
-
   // Decreasing and increasing factors
   const Scalar dec = 0.5;
   const Scalar inc = 2.1;
 
   // Check the value of step
-  if (step <= Scalar(0))
-    std::invalid_argument("'step' must be positive");
+  if (step <= Scalar(0)) std::invalid_argument("'step' must be positive");
 
   // Save the function value at the current x
   const Scalar fx_init = fx;
@@ -95,7 +93,7 @@ void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
 #endif
   // Make sure d points to a descent direction
   if (dg_init > 0) {
-    step_moving_away_from_min = true; // step points away from minimum
+    step_moving_away_from_min = true;  // step points away from minimum
     return;
   }
   const Scalar test_decr = param.ftol * dg_init;
@@ -129,4 +127,4 @@ void BacktrackingLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
   }
 }
 
-} // namespace pele
+}  // namespace pele

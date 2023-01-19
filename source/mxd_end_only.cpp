@@ -10,14 +10,15 @@
  */
 
 #include "pele/mxd_end_only.hpp"
-#include "pele/array.hpp"
-#include "pele/newton.hpp"
-#include "pele/optimizer.hpp"
 #include <Eigen/Dense>
 #include <cstddef>
 #include <iostream>
 #include <memory>
 #include <pele/cvode.hpp>
+
+#include "pele/array.hpp"
+#include "pele/newton.hpp"
+#include "pele/optimizer.hpp"
 
 using namespace std;
 namespace pele {
@@ -28,11 +29,13 @@ MixedDescentEndOnly::MixedDescentEndOnly(
     double threshold, bool iterative)
     : GradientOptimizer(potential, x0, tol),
       _cvode_optimizer(potential, x0, tol, rtol, atol, DENSE,
-                       false), // initialize the CVODE optimizer
+                       false),  // initialize the CVODE optimizer
       _newton_optimizer(potential, x0, tol, threshold,
-                        false), // initialize the Newton optimizer with the
-                                // rattler mask option passed as true
-      _tol(tol), _newton_step_tol(newton_step_tol), use_newton_step(false),
+                        false),  // initialize the Newton optimizer with the
+                                 // rattler mask option passed as true
+      _tol(tol),
+      _newton_step_tol(newton_step_tol),
+      use_newton_step(false),
 
       particle_disp(potential->get_ndim()) {}
 
@@ -98,4 +101,4 @@ bool MixedDescentEndOnly::stop_criterion_satisfied() {
   // std::cout << "should not be here" << std::endl;
 }
 
-} // namespace pele
+}  // namespace pele

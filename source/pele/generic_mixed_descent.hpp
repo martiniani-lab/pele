@@ -15,7 +15,6 @@
 #ifndef PELE_MIXED_DESCENT_WITH_FIRE_HPP
 #define PELE_MIXED_DESCENT_WITH_FIRE_HPP
 
-#include "pele/combine_potentials.hpp"
 #include <Eigen/Dense>
 #include <cstddef>
 #include <iostream>
@@ -24,6 +23,8 @@
 #include <pele/base_potential.hpp>
 #include <pele/optimizer.hpp>
 
+#include "pele/combine_potentials.hpp"
+
 namespace pele {
 
 /**
@@ -31,20 +32,26 @@ namespace pele {
  * @details Base class for combining two optimizers.
  */
 class GenericMixedDescent : public GradientOptimizer {
-public:
+ public:
   GenericMixedDescent(std::shared_ptr<BasePotential> pot, Array<double> x,
                       double tol,
                       std::shared_ptr<GradientOptimizer> opt_non_convex,
                       std::shared_ptr<GradientOptimizer> opt_convex,
                       double translation_offset, int steps_before_convex_check,
                       std::shared_ptr<BasePotential> pot_extension = nullptr)
-      : GradientOptimizer(pot, x, tol), opt_non_convex_(opt_non_convex),
-        opt_convex_(opt_convex), hessian_(x.size(), x.size()),
-        hessian_copy_for_cholesky_(x.size(), x.size()), hessian_evaluations_(0),
+      : GradientOptimizer(pot, x, tol),
+        opt_non_convex_(opt_non_convex),
+        opt_convex_(opt_convex),
+        hessian_(x.size(), x.size()),
+        hessian_copy_for_cholesky_(x.size(), x.size()),
+        hessian_evaluations_(0),
         translation_offset_(translation_offset),
-        steps_before_convex_check_(steps_before_convex_check), in_convex_region_(false),
-        use_non_convex_method_(true), last_non_convex_x_(x.size()),
-        hessian_calculated_(false), n_phase_1_steps(0) {
+        steps_before_convex_check_(steps_before_convex_check),
+        in_convex_region_(false),
+        use_non_convex_method_(true),
+        last_non_convex_x_(x.size()),
+        hessian_calculated_(false),
+        n_phase_1_steps(0) {
     // Ensure that both optimizers have the same potential
     // There is redundancy because we add the potential to each optimizer
     // but this overrides the potential in the optimizer.
@@ -115,7 +122,7 @@ public:
     }
   }
 
-private:
+ private:
   std::shared_ptr<pele::GradientOptimizer> opt_non_convex_;
   std::shared_ptr<pele::GradientOptimizer> opt_convex_;
   /**
@@ -177,6 +184,6 @@ private:
   std::shared_ptr<ExtendedPotential> extended_potential_;
   bool pot_extension_provided_;
 };
-} // namespace pele
+}  // namespace pele
 
-#endif // !1
+#endif  // !1

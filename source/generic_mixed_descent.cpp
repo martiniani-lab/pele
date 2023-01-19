@@ -17,7 +17,6 @@
 using namespace std;
 namespace pele {
 bool GenericMixedDescent::x_in_convex_region() {
-
   x_.assign(opt_non_convex_->get_x());
   // Calculate hessian at x. Current version is hessian based.
   // Ideally you should be able to get the pointer to the hessian from the
@@ -34,8 +33,8 @@ bool GenericMixedDescent::x_in_convex_region() {
   hessian_copy_for_cholesky_data = hessian_copy_for_cholesky_.data();
   int info = 0;
   dpotrf_(&uplo, &N_int, hessian_copy_for_cholesky_data, &N_int, &info
-#ifdef LAPACK_FORTRAN_STRLEN_END // 1 is the length of the uplo string,
-                                 // necessary for current fortran
+#ifdef LAPACK_FORTRAN_STRLEN_END  // 1 is the length of the uplo string,
+                                  // necessary for current fortran
           ,
           1
 #endif
@@ -113,7 +112,6 @@ void GenericMixedDescent::one_iteration() {
  */
 void GenericMixedDescent::add_translation_offset_2d(Eigen::MatrixXd &hessian,
                                                     double offset) {
-
   // factor so that the added translation operators are unitary
   double factor = 2.0 / hessian.rows();
   offset = offset * factor;
@@ -129,4 +127,4 @@ void GenericMixedDescent::add_translation_offset_2d(Eigen::MatrixXd &hessian,
   // add the diagonal elements that were missed by the previous loop
   hessian.diagonal().array() += offset;
 }
-} // namespace pele
+}  // namespace pele

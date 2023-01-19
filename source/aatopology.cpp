@@ -1,12 +1,12 @@
 #include "pele/aatopology.hpp"
+
 #include "pele/rotations.hpp"
 #include "pele/vecn.hpp"
 
 namespace pele {
 
-pele::Array<double>
-pele::RigidFragment::to_atomistic(pele::Array<double> const com,
-                                  pele::VecN<3> const &p) {
+pele::Array<double> pele::RigidFragment::to_atomistic(
+    pele::Array<double> const com, pele::VecN<3> const &p) {
   assert(com.size() == _ndim);
   assert(p.size() == 3);
   auto rmat = pele::aa_to_rot_mat(p);
@@ -217,9 +217,8 @@ void pele::RBTopology::transform_gradient(pele::Array<double> rbcoords,
   }
 }
 
-pele::VecN<3>
-pele::RBTopology::align_angle_axis_vectors(pele::VecN<3> const &p1,
-                                           pele::VecN<3> const &p2in) {
+pele::VecN<3> pele::RBTopology::align_angle_axis_vectors(
+    pele::VecN<3> const &p1, pele::VecN<3> const &p2in) {
   pele::VecN<3> p2 = p2in;
   pele::VecN<3> n2, p2n;
   if (norm<3>(p2) < 1e-6) {
@@ -307,4 +306,4 @@ void pele::TransformAACluster::rotate(pele::Array<double> x,
   }
 }
 
-} // namespace pele
+}  // namespace pele

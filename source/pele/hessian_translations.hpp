@@ -21,7 +21,6 @@ namespace pele {
 
 void generate_2d_symmetries(size_t n_particles, Eigen::MatrixXd &projector_x,
                             Eigen::MatrixXd &projector_y) {
-
   projector_x.setZero();
   projector_y.setZero();
 
@@ -49,7 +48,6 @@ void generate_2d_symmetries(size_t n_particles, Eigen::MatrixXd &projector_x,
 void generate_3d_symmetries(size_t n_particles, Eigen::MatrixXd &projector_x,
                             Eigen::MatrixXd &projector_y,
                             Eigen::MatrixXd &projector_z) {
-
   projector_x.setZero();
   projector_y.setZero();
   projector_z.setZero();
@@ -112,7 +110,6 @@ std::vector<Eigen::MatrixXd> get_symmetries(size_t n_particles, size_t n_d) {
  * @param  offset the offset to be added
  */
 void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset) {
-
   // factor so that the added translation operators are unitary
   double factor = 2.0 / hessian.rows();
   offset = offset * factor;
@@ -128,5 +125,5 @@ void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset) {
   hessian.diagonal().array() += offset;
 }
 
-} // namespace pele
-#endif // TRANSLATION_SYMMETRY_MATRICES_HPP
+}  // namespace pele
+#endif  // TRANSLATION_SYMMETRY_MATRICES_HPP

@@ -4,7 +4,6 @@ namespace pele {
 
 double NocedalWrightLineSearch::line_search(Array<double> &x,
                                             Array<double> step) {
-
   eig_eq_pele(xoldvec, xold_);
   eig_eq_pele(gradvec, gold_);
 
@@ -40,8 +39,7 @@ void NocedalWrightLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
                                      const Vector &xp,
                                      const LBFGSParam &param) {
   // Check the function pointer reference
-  if (step <= Scalar(0))
-    throw std::invalid_argument("'step' must be positive");
+  if (step <= Scalar(0)) throw std::invalid_argument("'step' must be positive");
   // change
   // To make this implementation more similar to the other line search
   // methods in LBFGSpp, the symbol names from the literature
@@ -63,8 +61,8 @@ void NocedalWrightLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
     throw std::logic_error(
         "the moving direction increases the objective function value");
 
-  const Scalar test_decr = param.ftol * dg_init, // Sufficient decrease
-      test_curv = -param.wolfe * dg_init;        // Curvature
+  const Scalar test_decr = param.ftol * dg_init,  // Sufficient decrease
+      test_curv = -param.wolfe * dg_init;         // Curvature
 
   // Ends of the line search range (step_lo > step_hi is allowed)
   Scalar step_hi, step_lo = 0, fx_hi, fx_lo = fx_init, dg_hi, dg_lo = dg_init;
@@ -77,11 +75,9 @@ void NocedalWrightLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
   //     "Numerical Optimization", "Algorithm 3.5 (Line Search Algorithm)".
   int iter = 0;
   for (;;) {
-
     x.noalias() = xp + step * drt;
     fx = func_grad_wrapper(x, grad);
-    if (iter++ >= param.max_linesearch)
-      return;
+    if (iter++ >= param.max_linesearch) return;
     const Scalar dg = grad.dot(drt);
     if (fx - fx_init > step * test_decr || (0 < step_lo && fx >= fx_lo)) {
       step_hi = step;
@@ -99,8 +95,7 @@ void NocedalWrightLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
     fx_lo = fx;
     dg_lo = dg;
 
-    if (dg >= 0)
-      break;
+    if (dg >= 0) break;
 
     step *= expansion;
   }
@@ -166,7 +161,7 @@ void NocedalWrightLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
     step = (step_hi + step_lo) / 2;
     x.noalias() = xp + step * drt;
     fx = func_grad_wrapper(x, grad);
-    if (iter++ >= param.max_linesearch) { // Scalar ival;
+    if (iter++ >= param.max_linesearch) {  // Scalar ival;
       std::cout << grad << "drt \n";
       std::cout << drt.norm() << "norm \n";
       std::cout << xp << " starting configuration for error \n";
@@ -189,8 +184,9 @@ void NocedalWrightLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
 
     if (fx - fx_init > step * test_decr || fx >= fx_lo) {
       if (step == step_hi)
-        throw std::runtime_error("the line search routine failed, possibly due "
-                                 "to insufficient numeric precision");
+        throw std::runtime_error(
+            "the line search routine failed, possibly due "
+            "to insufficient numeric precision");
 
       step_hi = step;
       fx_hi = fx;
@@ -207,8 +203,9 @@ void NocedalWrightLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
       }
 
       if (step == step_lo)
-        throw std::runtime_error("the line search routine failed, possibly due "
-                                 "to insufficient numeric precision");
+        throw std::runtime_error(
+            "the line search routine failed, possibly due "
+            "to insufficient numeric precision");
 
       step_lo = step;
       fx_lo = fx;
@@ -217,4 +214,4 @@ void NocedalWrightLineSearch::LSFunc(Scalar &fx, Vector &x, Vector &grad,
   }
 }
 
-} // namespace pele
+}  // namespace pele

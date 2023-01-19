@@ -13,7 +13,7 @@
 namespace pele {
 
 class BaseHarmonic : public BasePotential {
-protected:
+ protected:
   virtual void _get_distance(const pele::Array<double> &x) = 0;
   pele::Array<double> _origin;
   pele::Array<double> _distance;
@@ -22,10 +22,13 @@ protected:
   const size_t _nparticles;
   BaseHarmonic(const pele::Array<double> origin, const double k,
                const size_t ndim)
-      : _origin(origin.copy()), _distance(origin.size()), _k(k), _ndim(ndim),
+      : _origin(origin.copy()),
+        _distance(origin.size()),
+        _k(k),
+        _ndim(ndim),
         _nparticles(origin.size() / _ndim) {}
 
-public:
+ public:
   virtual ~BaseHarmonic() {}
   virtual double inline get_energy(pele::Array<double> const &x);
   virtual double inline get_energy_gradient(pele::Array<double> const &x,
@@ -59,7 +62,7 @@ double inline BaseHarmonic::get_energy_gradient(pele::Array<double> const &x,
  * Simple Harmonic with cartesian distance
  */
 class Harmonic : public BaseHarmonic {
-public:
+ public:
   Harmonic(pele::Array<double> origin, double k, size_t ndim)
       : BaseHarmonic(origin, k, ndim) {}
   virtual void inline _get_distance(const pele::Array<double> &x) {
@@ -75,7 +78,7 @@ public:
  * Harmonic with cartesian distance and fixed centre of mass
  */
 class HarmonicCOM : public BaseHarmonic {
-public:
+ public:
   HarmonicCOM(pele::Array<double> origin, double k, size_t ndim)
       : BaseHarmonic(origin, k, ndim) {}
   virtual void inline _get_distance(const pele::Array<double> &x) {
@@ -136,7 +139,7 @@ struct harmonic_interaction : BaseInteraction {
  */
 class HarmonicAtomList
     : public AtomListPotential<harmonic_interaction, cartesian_distance<3>> {
-public:
+ public:
   HarmonicAtomList(double k, Array<size_t> atoms1, Array<size_t> atoms2)
       : AtomListPotential<harmonic_interaction, cartesian_distance<3>>(
             std::make_shared<harmonic_interaction>(k),
@@ -153,12 +156,12 @@ public:
  */
 class HarmonicNeighborList
     : public SimplePairwiseNeighborList<harmonic_interaction> {
-public:
+ public:
   HarmonicNeighborList(double k, Array<size_t> ilist)
       : SimplePairwiseNeighborList<harmonic_interaction>(
             std::make_shared<harmonic_interaction>(k), ilist) {}
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // #ifndef _PELE_HARMONIC_H
+#endif  // #ifndef _PELE_HARMONIC_H

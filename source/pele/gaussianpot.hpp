@@ -8,16 +8,18 @@
 namespace pele {
 
 class GaussianPot : public BasePotential {
-private:
+ private:
   const Array<double> m_mean;
   const Array<double> m_cov_diag;
   const double m_gauss_prefactor;
   const size_t m_bdim;
   std::vector<double> m_diag_icov;
 
-public:
+ public:
   GaussianPot(Array<double> mean, Array<double> cov_diag)
-      : m_mean(mean.copy()), m_cov_diag(cov_diag.copy()), m_gauss_prefactor(-1),
+      : m_mean(mean.copy()),
+        m_cov_diag(cov_diag.copy()),
+        m_gauss_prefactor(-1),
         m_bdim(mean.size()) {
     assert(m_mean.size() == m_bdim);
     assert(m_cov_diag.size() == m_bdim);
@@ -86,6 +88,6 @@ public:
   }
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // #ifndef _PELE_GAUSSIANPOT_H
+#endif  // #ifndef _PELE_GAUSSIANPOT_H

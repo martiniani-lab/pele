@@ -3,11 +3,10 @@
 #include <iostream>
 #include <string>
 
+#include "bench_utils.hpp"
 #include "pele/cell_lists.hpp"
 #include "pele/lj_cut.hpp"
 #include "pele/matrix.hpp"
-
-#include "bench_utils.hpp"
 
 using namespace pele;
 using std::string;
@@ -35,7 +34,7 @@ struct LJCellListMaker {
     std::cout << rcut << " " << boxvec << " " << ncellx_scale << "\n";
     auto lj = std::make_shared<LJCutPeriodicCellLists<3>>(4., 4., rcut, boxvec,
                                                           ncellx_scale);
-    double energy = lj->get_energy(x); // this does the initialization
+    double energy = lj->get_energy(x);  // this does the initialization
     std::cout << "initial energy " << energy << "\n";
     return lj;
   }
@@ -51,7 +50,7 @@ int main(int argc, char **argv) {
 
   double neval = 10000;
   size_t natoms = 10;
-  double const target_time_per_run = 5.; // in seconds
+  double const target_time_per_run = 5.;  // in seconds
 
   LJCellListMaker pot_maker(r, rcut, ncellx_scale);
 

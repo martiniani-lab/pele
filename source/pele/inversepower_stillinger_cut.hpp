@@ -12,7 +12,9 @@ struct InversePowerStillinger_cut_interaction : BaseInteraction {
   // http://dx.doi.org/10.1063/1.449840
   const double m_pow, m_rcut, m_rcut2, m_q0, m_q1, m_q2;
   InversePowerStillinger_cut_interaction(const size_t pow, const double rcut)
-      : m_pow(pow), m_rcut(rcut), m_rcut2(m_rcut * m_rcut),
+      : m_pow(pow),
+        m_rcut(rcut),
+        m_rcut2(m_rcut * m_rcut),
         m_q0(-0.5 * (m_pow + 1) * (m_pow + 2) / std::pow(m_rcut, m_pow)),
         m_q1(m_pow * (m_pow + 2) / std::pow(m_rcut, m_pow + 1)),
         m_q2(-0.5 * m_pow * (m_pow + 1) / std::pow(m_rcut, m_pow + 2)) {}
@@ -27,8 +29,7 @@ struct InversePowerStillinger_cut_interaction : BaseInteraction {
   }
   // calculate energy and gradient from distance squared, gradient is in
   // -(dv/drij)/|rij|
-  double energy_gradient(double r2, double *gij,
-                         const double dij) const {
+  double energy_gradient(double r2, double *gij, const double dij) const {
     if (r2 > m_rcut2) {
       *gij = 0;
       return 0.;
@@ -58,7 +59,8 @@ struct InversePowerStillinger_cut_interaction : BaseInteraction {
 
   // Compute inp ** n.
   // See Skiena, p. 48.
-  template <class T> T power(const T inp, const size_t n) const {
+  template <class T>
+  T power(const T inp, const size_t n) const {
     if (n == 0) {
       return 1;
     }
@@ -70,7 +72,8 @@ struct InversePowerStillinger_cut_interaction : BaseInteraction {
     }
   }
   // Compute inp ** n, given inp ** 2.
-  template <class T> T power_inp2(const T inp2, const size_t n) const {
+  template <class T>
+  T power_inp2(const T inp2, const size_t n) const {
     const T x = power(inp2, n / 2);
     if (n % 2) {
       return std::sqrt(inp2) * x;
@@ -84,7 +87,7 @@ template <size_t ndim>
 class InversePowerStillingerCut
     : public SimplePairwisePotential<InversePowerStillinger_cut_interaction,
                                      cartesian_distance<ndim>> {
-public:
+ public:
   InversePowerStillingerCut(const size_t pow, const pele::Array<double> radii,
                             double rcut)
       : SimplePairwisePotential<InversePowerStillinger_cut_interaction,
@@ -97,7 +100,7 @@ template <size_t ndim>
 class InversePowerStillingerCutPeriodic
     : public SimplePairwisePotential<InversePowerStillinger_cut_interaction,
                                      periodic_distance<ndim>> {
-public:
+ public:
   InversePowerStillingerCutPeriodic(const size_t pow,
                                     const pele::Array<double> radii,
                                     double rcut,
@@ -112,7 +115,7 @@ template <size_t ndim>
 class InversePowerStillingerCutPeriodicCellLists
     : public CellListPotential<InversePowerStillinger_cut_interaction,
                                periodic_distance<ndim>> {
-public:
+ public:
   InversePowerStillingerCutPeriodicCellLists(const size_t pow,
                                              const pele::Array<double> radii,
                                              double rcut,
@@ -125,6 +128,6 @@ public:
             ncellx_scale, radii) {}
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // #ifndef _PELE_INVERSEPOWER_STILLIGNER_CUT_H
+#endif  // #ifndef _PELE_INVERSEPOWER_STILLIGNER_CUT_H

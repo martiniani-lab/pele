@@ -12,13 +12,12 @@ using pele::norm;
 using pele::VecN;
 
 static double const EPS = std::numeric_limits<double>::min();
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   ASSERT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
 TEST(Rotations, AA2RotMat_Works) {
   VecN<3> p;
-  for (size_t i = 0; i < p.size(); ++i)
-    p[i] = i + 1;
+  for (size_t i = 0; i < p.size(); ++i) p[i] = i + 1;
   p /= norm<3>(p);
   auto mx = pele::aa_to_rot_mat(p);
   ASSERT_NEAR(mx(0, 0), 0.57313786, 1e-5);
@@ -34,8 +33,7 @@ TEST(Rotations, AA2RotMat_Works) {
 
 TEST(Rotations, RotMat2q_Works) {
   MatrixNM<3, 3> mx;
-  for (size_t i = 0; i < mx.size(); ++i)
-    mx.data()[i] = i;
+  for (size_t i = 0; i < mx.size(); ++i) mx.data()[i] = i;
   VecN<4> q = pele::rot_mat_to_quaternion(mx);
   ASSERT_NEAR(q[0], 1.80277564, 1e-5);
   ASSERT_NEAR(q[1], 0.2773501, 1e-5);
@@ -45,13 +43,11 @@ TEST(Rotations, RotMat2q_Works) {
 
 TEST(Rotations, Quaternion2AA_Works) {
   VecN<3> v;
-  for (size_t i = 0; i < v.size(); ++i)
-    v[i] = i + 1;
+  for (size_t i = 0; i < v.size(); ++i) v[i] = i + 1;
   v /= norm<3>(v);
 
   VecN<4> q(4);
-  for (size_t i = 0; i < 3; ++i)
-    q[i + 1] = v[i];
+  for (size_t i = 0; i < 3; ++i) q[i + 1] = v[i];
   //    std::cout << q << std::endl;
 
   VecN<3> aa = pele::quaternion_to_aa(q);
@@ -62,8 +58,7 @@ TEST(Rotations, Quaternion2AA_Works) {
 
 TEST(Rotations, RotMat2aa_Works) {
   MatrixNM<3, 3> mx;
-  for (size_t i = 0; i < mx.size(); ++i)
-    mx.data()[i] = i;
+  for (size_t i = 0; i < mx.size(); ++i) mx.data()[i] = i;
   VecN<3> p = pele::rot_mat_to_aa(mx);
   ASSERT_NEAR(p[0], 0.29425463, 1e-5);
   ASSERT_NEAR(p[1], -0.58850926, 1e-5);
@@ -72,10 +67,8 @@ TEST(Rotations, RotMat2aa_Works) {
 
 TEST(Rotations, QuaternionMultiply_Works) {
   VecN<4> q1, q2;
-  for (size_t i = 0; i < q1.size(); ++i)
-    q1[i] = i + 1;
-  for (size_t i = 0; i < q2.size(); ++i)
-    q2[i] = i + 2;
+  for (size_t i = 0; i < q1.size(); ++i) q1[i] = i + 1;
+  for (size_t i = 0; i < q2.size(); ++i) q2[i] = i + 2;
 
   VecN<4> q3 = pele::quaternion_multiply(q1, q2);
   ASSERT_NEAR(q3[0], -36., 1e-5);
@@ -86,8 +79,7 @@ TEST(Rotations, QuaternionMultiply_Works) {
 
 TEST(Rotations, AA2Q_Works) {
   VecN<3> p;
-  for (size_t i = 0; i < p.size(); ++i)
-    p[i] = i + 1;
+  for (size_t i = 0; i < p.size(); ++i) p[i] = i + 1;
   p /= norm<3>(p);
   VecN<4> q = pele::aa_to_quaternion(p);
   ASSERT_NEAR(q[0], 0.87758256, 1e-5);
@@ -98,8 +90,7 @@ TEST(Rotations, AA2Q_Works) {
 
 TEST(Rotations, AA2QAndBack_Works) {
   VecN<3> p;
-  for (size_t i = 0; i < p.size(); ++i)
-    p[i] = i + 1;
+  for (size_t i = 0; i < p.size(); ++i) p[i] = i + 1;
   p /= norm<3>(p);
   VecN<3> pnew = pele::quaternion_to_aa(pele::aa_to_quaternion(p));
 
@@ -110,8 +101,7 @@ TEST(Rotations, AA2QAndBack_Works) {
 
 TEST(Rotations, RotateAA_Works) {
   VecN<3> p1, p2;
-  for (size_t i = 0; i < p1.size(); ++i)
-    p1[i] = i + 1;
+  for (size_t i = 0; i < p1.size(); ++i) p1[i] = i + 1;
   p2 = p1;
   p2 += 1;
   VecN<3> p3 = pele::rotate_aa(p1, p2);
@@ -123,8 +113,7 @@ TEST(Rotations, RotateAA_Works) {
 
 TEST(RotMatDerivs, Works) {
   VecN<3> p;
-  for (size_t i = 0; i < p.size(); ++i)
-    p[i] = i + 1;
+  for (size_t i = 0; i < p.size(); ++i) p[i] = i + 1;
   p /= norm<3>(p);
   MatrixNM<3, 3> mx(1.);
   MatrixNM<3, 3> drm1(0.);
@@ -167,8 +156,7 @@ TEST(RotMatDerivs, Works) {
 
 TEST(RotMatDerivs, SmallTheta_Works) {
   VecN<3> p;
-  for (size_t i = 0; i < p.size(); ++i)
-    p[i] = i + 1;
+  for (size_t i = 0; i < p.size(); ++i) p[i] = i + 1;
   p /= norm<3>(p) * 1e7;
   MatrixNM<3, 3> mx(1.);
   MatrixNM<3, 3> drm1(0.);
@@ -211,8 +199,7 @@ TEST(RotMatDerivs, SmallTheta_Works) {
 
 TEST(RotMatDerivs, SmallTheta2_Works) {
   VecN<3> p;
-  for (size_t i = 0; i < p.size(); ++i)
-    p[i] = i + 1;
+  for (size_t i = 0; i < p.size(); ++i) p[i] = i + 1;
   p /= norm<3>(p) * 1e7;
   MatrixNM<3, 3> mx(1.);
   MatrixNM<3, 3> drm1(0.);
@@ -237,8 +224,7 @@ TEST(RotMatDerivs, SmallTheta2_Works) {
 
 TEST(RotMat, SmallTheta_Works) {
   VecN<3> p;
-  for (size_t i = 0; i < p.size(); ++i)
-    p[i] = i + 1;
+  for (size_t i = 0; i < p.size(); ++i) p[i] = i + 1;
   p /= norm<3>(p) * 1e7;
 
   auto mx = pele::aa_to_rot_mat(p);

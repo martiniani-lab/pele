@@ -43,9 +43,9 @@ static color_type color_black = 4;
  * basic class for an edge (arc) in the graph
  */
 class Edge {
-public:
-  node_ptr head_; // node the edge points to
-  node_ptr tail_; // node the edge comes from
+ public:
+  node_ptr head_;  // node the edge points to
+  node_ptr tail_;  // node the edge comes from
   double P;
 
   Edge(node_ptr tail, node_ptr head) : head_(head), tail_(tail) {}
@@ -58,17 +58,17 @@ public:
  * basic class for a node in the graph
  */
 class Node {
-public:
+ public:
   typedef std::set<edge_ptr> edge_list;
   typedef typename edge_list::iterator edge_iterator;
   typedef std::map<node_ptr, edge_ptr> successor_map_t;
 
-private:
+ private:
   node_id id_;
-  edge_list out_edge_list_; // list of outgoing edges
-  edge_list in_edge_list_;  // list of outgoing edges
+  edge_list out_edge_list_;  // list of outgoing edges
+  edge_list in_edge_list_;   // list of outgoing edges
 
-public:
+ public:
   successor_map_t successor_map_;
   double tau;
 
@@ -124,7 +124,7 @@ inline std::set<node_ptr> Node::in_out_neighbors() {
 }
 
 class Graph {
-public:
+ public:
   typedef std::map<node_id, node_ptr> node_map_t;
   node_map_t node_map_;
   typedef std::set<edge_ptr> edge_list_t;
@@ -292,6 +292,6 @@ inline std::ostream &operator<<(std::ostream &out, std::shared_ptr<Graph> g) {
   return out;
 }
 
-} // namespace pele
+}  // namespace pele
 
 #endif

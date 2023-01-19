@@ -7,10 +7,11 @@
 
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
+#include <Eigen/Dense>
+
 #include "eigen_interface.hpp"
 #include "pele/lbfgs.hpp"
 #include "sundials/sundials_context.h"
-#include <Eigen/Dense>
 
 // Lapack for cholesky
 extern "C" {
@@ -18,6 +19,11 @@ extern "C" {
 }
 
 // line search methods
+#include <cvode/cvode.h>               /* access to CVODE                 */
+#include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
+#include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
+#include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
+
 #include "backtracking.hpp"
 #include "bracketing.hpp"
 #include "cvode.hpp"
@@ -25,11 +31,6 @@ extern "C" {
 #include "more_thuente.hpp"
 #include "nwpele.hpp"
 #include "optimizer.hpp"
-
-#include <cvode/cvode.h>               /* access to CVODE                 */
-#include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
-#include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
-#include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
 
 extern "C" {
 #include "xsum.h"
@@ -57,7 +58,7 @@ namespace pele {
  * from the minimum/ somewhat close to the minimum and near the minimum
  */
 class MixedOptimizer : public GradientOptimizer {
-private:
+ private:
   /**
    * H0 is the initial estimate for the inverse hessian. This is as small as
    * possible, for making a good inverse hessian estimate next time.
@@ -78,20 +79,20 @@ private:
   N_Vector x0_N;
   double rtol;
   double atol;
-  SUNContext sunctx; // SUNDIALS context
+  SUNContext sunctx;  // SUNDIALS context
 
-  Array<double> xold; //!< Coordinates before taking a step
-  Array<double> gold; //!< Gradient before taking a step
-  Array<double> step; //!< Step size and direction
+  Array<double> xold;  //!< Coordinates before taking a step
+  Array<double> gold;  //!< Gradient before taking a step
+  Array<double> step;  //!< Step size and direction
   double
-      inv_sqrt_size; //!< The inverse square root the the number of components
+      inv_sqrt_size;  //!< The inverse square root the the number of components
   // Preconditioning
-  int T_; // number of steps after which the lowest eigenvalues are recalculated
-          // in the first phase
+  int T_;  // number of steps after which the lowest eigenvalues are
+           // recalculated in the first phase
   // std::shared_ptr<Eigen::ColPivHouseholderQR<Eigen::MatrixXd>> solver;
   // solver for H x = b
-  Eigen::VectorXd
-  update_solver(Eigen::VectorXd r); // updates the solver with the new hessian
+  Eigen::VectorXd update_solver(
+      Eigen::VectorXd r);  // updates the solver with the new hessian
 
   char uplo; /* We ask LAPACK for the lower diagonal matrix L */
   int info;  /* "Info" return value, used for error-checking */
@@ -125,7 +126,7 @@ private:
   // Need to refactor line searches
   BacktrackingLineSearch line_search_method;
 
-public:
+ public:
   /**
    * Constructor
    */
@@ -154,9 +155,9 @@ public:
   inline int get_n_phase_1_steps() { return n_phase_1_steps; }
   inline int get_n_phase_2_steps() { return n_phase_2_steps; }
 
-private:
-  bool hessian_calculated; // checks whether the hessian has been calculated for
-                           // updating.
+ private:
+  bool hessian_calculated;  // checks whether the hessian has been calculated
+                            // for updating.
   void compute_phase_1_step(Array<double> step);
 
   void compute_phase_2_step(Array<double> step);
@@ -172,6 +173,6 @@ private:
   double pf;
 };
 
-} // namespace pele
+}  // namespace pele
 
 #endif

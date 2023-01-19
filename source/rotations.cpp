@@ -1,4 +1,5 @@
 #include "pele/rotations.hpp"
+
 #include "pele/vecn.hpp"
 
 namespace pele {
@@ -7,7 +8,6 @@ namespace pele {
  * make a rotation matrix from an angle axis
  */
 MatrixNM<3, 3> aa_to_rot_mat(pele::VecN<3> const &p) {
-
   double theta2 = pele::dot<3>(p, p);
   MatrixNM<3, 3> rm;
   if (theta2 < 1e-12) {
@@ -41,8 +41,7 @@ MatrixNM<3, 3> aa_to_rot_mat(pele::VecN<3> const &p) {
   // in the paper]
   // rm  = np.eye(3) + [1. - ct] * esq + st * e
   rm.assign(0);
-  for (size_t i = 0; i < 3; ++i)
-    rm(i, i) = 1; // identiy matrix
+  for (size_t i = 0; i < 3; ++i) rm(i, i) = 1;  // identiy matrix
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
       rm(i, j) += (1. - ct) * esq(i, j) + st * e(i, j);
@@ -132,8 +131,7 @@ pele::VecN<4> aa_to_quaternion(pele::VecN<3> const &aa) {
   }
 
   // make sure to have normal form
-  if (q[0] < 0.0)
-    q *= -1;
+  if (q[0] < 0.0) q *= -1;
   return q;
 }
 
@@ -162,8 +160,7 @@ void rot_mat_derivatives_small_theta(pele::VecN<3> const &p,
   // Execute if the angle of rotation is zero
   // In this case the rotation matrix is the identity matrix
   rmat.assign(0);
-  for (size_t i = 0; i < 3; ++i)
-    rmat(i, i) = 1; // identity matrix
+  for (size_t i = 0; i < 3; ++i) rmat(i, i) = 1;  // identity matrix
 
   // vr274> first order corrections to rotation matrix
   rmat(0, 1) = -p[2];
@@ -268,8 +265,7 @@ void rot_mat_derivatives(pele::VecN<3> const &p, MatrixNM<3, 3> &rmat,
   // in the paper]
   // rm  = np.eye(3) + [1. - ct] * esq + st * e
   rmat.assign(0.);
-  for (size_t i = 0; i < 3; ++i)
-    rmat(i, i) = 1; // identiy matrix
+  for (size_t i = 0; i < 3; ++i) rmat(i, i) = 1;  // identiy matrix
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
       rmat(i, j) += (1. - ct) * esq(i, j) + st * e(i, j);
@@ -336,4 +332,4 @@ void rot_mat_derivatives(pele::VecN<3> const &p, MatrixNM<3, 3> &rmat,
   }
 }
 
-} // namespace pele
+}  // namespace pele

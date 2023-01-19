@@ -85,27 +85,20 @@ int MoreThuente::cvsrch(vector_t &x, scalar_t f, vector_t &g, scalar_t &stp,
     scalar_t dg = dot(g, s);
     scalar_t ftest1 = finit + stp * dgtest;
     // all possible convergence tests
-    if ((brackt & ((stp <= stmin) | (stp >= stmax))) | (infoc == 0))
-      info = 6;
+    if ((brackt & ((stp <= stmin) | (stp >= stmax))) | (infoc == 0)) info = 6;
 
-    if ((stp == stpmax) & (f <= ftest1) & (dg <= dgtest))
-      info = 5;
+    if ((stp == stpmax) & (f <= ftest1) & (dg <= dgtest)) info = 5;
 
-    if ((stp == stpmin) & ((f > ftest1) | (dg >= dgtest)))
-      info = 4;
+    if ((stp == stpmin) & ((f > ftest1) | (dg >= dgtest))) info = 4;
 
-    if (nfev >= maxfev)
-      info = 3;
+    if (nfev >= maxfev) info = 3;
 
-    if (brackt & (stmax - stmin <= xtol * stmax))
-      info = 2;
+    if (brackt & (stmax - stmin <= xtol * stmax)) info = 2;
 
-    if ((f <= ftest1) & (fabs(dg) <= gtol * (-dginit)))
-      info = 1;
+    if ((f <= ftest1) & (fabs(dg) <= gtol * (-dginit))) info = 1;
 
     // terminate when convergence reached
-    if (info != 0)
-      return -1;
+    if (info != 0) return -1;
 
     if (stage1 & (f <= ftest1) &
         (dg >= std::min<scalar_t>(ftol, gtol) * dginit))
@@ -133,8 +126,7 @@ int MoreThuente::cvsrch(vector_t &x, scalar_t f, vector_t &g, scalar_t &stp,
     }
 
     if (brackt) {
-      if (fabs(sty - stx) >= 0.66 * width1)
-        stp = stx + 0.5 * (sty - stx);
+      if (fabs(sty - stx) >= 0.66 * width1) stp = stx + 0.5 * (sty - stx);
       width1 = width;
       width = fabs(sty - stx);
     }
@@ -169,8 +161,7 @@ int MoreThuente::cstep(scalar_t &stx, scalar_t &fx, scalar_t &dx, scalar_t &sty,
     scalar_t theta = 3. * (fx - fp) / (stp - stx) + dx + dp;
     scalar_t s = std::max<scalar_t>(theta, std::max<scalar_t>(dx, dp));
     scalar_t gamma = s * sqrt((theta / s) * (theta / s) - (dx / s) * (dp / s));
-    if (stp < stx)
-      gamma = -gamma;
+    if (stp < stx) gamma = -gamma;
     scalar_t p = (gamma - dx) + theta;
     scalar_t q = ((gamma - dx) + gamma) + dp;
     scalar_t r = p / q;
@@ -187,8 +178,7 @@ int MoreThuente::cstep(scalar_t &stx, scalar_t &fx, scalar_t &dx, scalar_t &sty,
     scalar_t theta = 3 * (fx - fp) / (stp - stx) + dx + dp;
     scalar_t s = std::max<scalar_t>(theta, std::max<scalar_t>(dx, dp));
     scalar_t gamma = s * sqrt((theta / s) * (theta / s) - (dx / s) * (dp / s));
-    if (stp > stx)
-      gamma = -gamma;
+    if (stp > stx) gamma = -gamma;
     scalar_t p = (gamma - dp) + theta;
     scalar_t q = ((gamma - dp) + gamma) + dx;
     scalar_t r = p / q;
@@ -204,11 +194,10 @@ int MoreThuente::cstep(scalar_t &stx, scalar_t &fx, scalar_t &dx, scalar_t &sty,
     bound = 1;
     scalar_t theta = 3 * (fx - fp) / (stp - stx) + dx + dp;
     scalar_t s = std::max<scalar_t>(theta, std::max<scalar_t>(dx, dp));
-    scalar_t gamma = s * sqrt(std::max<scalar_t>(static_cast<scalar_t>(0.),
-                                                 (theta / s) * (theta / s) -
-                                                     (dx / s) * (dp / s)));
-    if (stp > stx)
-      gamma = -gamma;
+    scalar_t gamma = s * sqrt(std::max<scalar_t>(
+                             static_cast<scalar_t>(0.),
+                             (theta / s) * (theta / s) - (dx / s) * (dp / s)));
+    if (stp > stx) gamma = -gamma;
     scalar_t p = (gamma - dp) + theta;
     scalar_t q = (gamma + (dx - dp)) + gamma;
     scalar_t r = p / q;
@@ -241,8 +230,7 @@ int MoreThuente::cstep(scalar_t &stx, scalar_t &fx, scalar_t &dx, scalar_t &sty,
       scalar_t s = std::max<scalar_t>(theta, std::max<scalar_t>(dy, dp));
       scalar_t gamma =
           s * sqrt((theta / s) * (theta / s) - (dy / s) * (dp / s));
-      if (stp > sty)
-        gamma = -gamma;
+      if (stp > sty) gamma = -gamma;
 
       scalar_t p = (gamma - dp) + theta;
       scalar_t q = ((gamma - dp) + gamma) + dy;
@@ -304,4 +292,4 @@ double MoreThuente::line_search(Array<double> &x, Array<double> step) {
   opt_->set_rms(norm(g_) / sqrt(g_.size()));
   return alpha * opt_->compute_pot_norm(step);
 }
-} // namespace pele
+}  // namespace pele

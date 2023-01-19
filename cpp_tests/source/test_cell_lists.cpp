@@ -1,6 +1,14 @@
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <ctime>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <memory>
+#include <omp.h>
+#include <random>
+#include <stdexcept>
+#include <vector>
 
 #include "pele/array.hpp"
 #include "pele/base_potential.hpp"
@@ -16,26 +24,18 @@
 #include "pele/vecn.hpp"
 #include "test_utils.hpp"
 
-#include <algorithm>
-#include <ctime>
-#include <iostream>
-#include <memory>
-#include <omp.h>
-#include <random>
-#include <stdexcept>
-#include <vector>
-
 using namespace pele;
 
 static double const EPS = std::numeric_limits<double>::min();
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   EXPECT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
-template <size_t ndim> class stupid_counter {
-private:
+template <size_t ndim>
+class stupid_counter {
+ private:
   std::vector<size_t> m_count;
 
-public:
+ public:
   stupid_counter() {
 #ifdef _OPENMP
     m_count = std::vector<size_t>(omp_get_max_threads(), 0);
@@ -58,15 +58,16 @@ public:
   }
 };
 
-template <typename DIST_POL> class overlap_counter {
-private:
+template <typename DIST_POL>
+class overlap_counter {
+ private:
   const static size_t m_ndim = DIST_POL::_ndim;
   std::vector<size_t> m_count;
   pele::Array<double> m_coords;
   pele::Array<double> m_radii;
   std::shared_ptr<DIST_POL> m_dist;
 
-public:
+ public:
   overlap_counter(pele::Array<double> const &coords,
                   pele::Array<double> const &radii,
                   std::shared_ptr<DIST_POL> const &dist)
@@ -135,7 +136,7 @@ size_t get_direct_nr_unique_pairs(std::shared_ptr<distance_policy> dist,
 }
 
 class CellListsTest : public ::testing::Test {
-public:
+ public:
   double pow, eps, etrue, etrue_r, rcut, sca;
   Array<double> x, g, gnum, radii, boxvec;
   void SetUp() {
@@ -568,7 +569,7 @@ TEST_F(CellListsTest, Norm_SimpleTest) {
 }
 
 class CellListsTestHomogeneous3D : public ::testing::Test {
-public:
+ public:
   size_t nparticles;
   size_t boxdim;
   double boxlength;
@@ -669,7 +670,7 @@ TEST_F(CellListsTestHomogeneous3D, GridAndSpacingCartesian_Works) {
 }
 
 class CellListsTestHomogeneous2D : public ::testing::Test {
-public:
+ public:
   size_t nparticles;
   size_t boxdim;
   double boxlength;
@@ -740,7 +741,7 @@ TEST_F(CellListsTestHomogeneous2D, GridAndSpacingCartesian_Works) {
 }
 
 class LatticeNeighborsTest : public ::testing::Test {
-public:
+ public:
   static const size_t ndim = 3;
   typedef pele::periodic_distance<ndim> dist_t;
   Array<double> boxvec;
@@ -755,7 +756,7 @@ public:
     boxvec = Array<double>(3, 10);
     boxvec[1] += 1;
     boxvec[2] += 2;
-    rcut = 20.; // large rcut means all cells are neighbors
+    rcut = 20.;  // large rcut means all cells are neighbors
     dist = std::make_shared<dist_t>(boxvec);
     ncells_vec = Array<size_t>(ndim);
     ncells_vec[0] = 2;
@@ -828,7 +829,7 @@ TEST_F(LatticeNeighborsTest, LargeRcut_Works) {
 TEST_F(LatticeNeighborsTest, SmallRcut_Works2) {
   static size_t const ndim = 3;
   typedef pele::periodic_distance<ndim> dist_t;
-  rcut = .1; // small rcut means only adjacent cells are neighbors
+  rcut = .1;  // small rcut means only adjacent cells are neighbors
 
   pele::LatticeNeighbors<dist_t> lattice(dist, boxvec, rcut, ncells_vec);
 
@@ -869,7 +870,7 @@ TEST_F(LatticeNeighborsTest, SmallRcut_Works2) {
 
 TEST_F(LatticeNeighborsTest, NonPeriodic_Works2) {
   static size_t const ndim = 3;
-  double rcut = .1; // small rcut means only adjacent cells are neighbors
+  double rcut = .1;  // small rcut means only adjacent cells are neighbors
   typedef pele::cartesian_distance<ndim> dist_t;
   auto cart_dist = std::make_shared<dist_t>();
 
@@ -910,7 +911,7 @@ using pele::SimplePairwisePotential;
 template <size_t NDIM>
 class LJCutPeriodicN : public SimplePairwisePotential<lj_interaction_cut_smooth,
                                                       periodic_distance<NDIM>> {
-public:
+ public:
   LJCutPeriodicN(double C6, double C12, double rcut, Array<double> const boxvec)
       : SimplePairwisePotential<lj_interaction_cut_smooth,
                                 periodic_distance<NDIM>>(
@@ -1022,7 +1023,7 @@ TEST_F(LatticeNeighborsTest, RectangleWorks) {
 }
 
 class OpenMPCellListsTest : public ::testing::Test {
-public:
+ public:
   size_t seed;
   std::mt19937_64 generator;
   std::uniform_real_distribution<double> distribution;
@@ -1171,7 +1172,7 @@ TEST_F(OpenMPCellListsTest, HSWCAEnergyGradientHessianLeesEdwards_Works) {
 }
 
 class CellListsSpecificTest : public ::testing::Test {
-public:
+ public:
   size_t seed;
   std::mt19937_64 generator;
   std::uniform_real_distribution<double> distribution;
@@ -1280,11 +1281,12 @@ TEST_F(CellListsSpecificTest, Number_of_neighbors) {
 }
 
 template <typename distance_policy>
-size_t
-get_overlaps(Array<double> const &coords, std::vector<size_t> const &iatoms,
-             std::vector<double> const &old_coords, Array<double> const &radii,
-             pele::CellLists<distance_policy> &cl,
-             std::shared_ptr<distance_policy> const &dist) {
+size_t get_overlaps(Array<double> const &coords,
+                    std::vector<size_t> const &iatoms,
+                    std::vector<double> const &old_coords,
+                    Array<double> const &radii,
+                    pele::CellLists<distance_policy> &cl,
+                    std::shared_ptr<distance_policy> const &dist) {
   overlap_counter<distance_policy> counter(coords, radii, dist);
   cl.update_specific(coords, iatoms, old_coords);
   auto looper = cl.get_atom_pair_looper(counter);
@@ -1309,10 +1311,9 @@ TEST_F(CellListsSpecificTest, Number_of_overlaps) {
 
 // Tests for neighbors with non additive potentials
 TEST(CellLists, NeighborsWithNonAdditivity) {
-
   Array<double> radii = {1.0, 2.0};
   Array<double> boxvec = {
-      20., 20.}; // Make sure the periodicity of the box doesn't matter
+      20., 20.};  // Make sure the periodicity of the box doesn't matter
   double non_additivity = 0.2;
   double machine_epsilon = std::numeric_limits<double>::epsilon();
 
@@ -1357,7 +1358,7 @@ TEST(CellLists, NeighborsWithNonAdditivity) {
 }
 
 class CellListsHarmonicNonAdditive : public ::testing::Test {
-public:
+ public:
   std::shared_ptr<BasePotential> potential_with_cell_lists;
   std::shared_ptr<BasePotential> potential_without_cell_lists;
   Array<double> quenched_coordinates;
@@ -1448,10 +1449,9 @@ inline void test_energy_gradient(BasePotential &potential_with_cell_lists,
   }
 }
 
-inline void
-test_energy_gradient_hessian(BasePotential &potential_with_cell_lists,
-                             BasePotential &potential_without_cell_lists,
-                             Array<double> coordinates) {
+inline void test_energy_gradient_hessian(
+    BasePotential &potential_with_cell_lists,
+    BasePotential &potential_without_cell_lists, Array<double> coordinates) {
   Array<double> gradient_with_cell_lists(coordinates.size());
   Array<double> gradient_without_cell_lists(coordinates.size());
 
@@ -1503,7 +1503,7 @@ TEST_F(CellListsHarmonicNonAdditive, EnergyGradientHessian) {
 }
 
 class CellListsStillingerCutQuadNonAdditive : public ::testing::Test {
-public:
+ public:
   std::shared_ptr<BasePotential> potential_with_cell_lists;
   std::shared_ptr<BasePotential> potential_without_cell_lists;
   Array<double> quenched_coordinates;

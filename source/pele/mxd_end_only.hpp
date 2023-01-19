@@ -13,29 +13,30 @@
 #ifndef _PELE_MXD_END_ONLY_HPP
 #define _PELE_MXD_END_ONLY_HPP
 
-#include "base_potential.hpp"
-#include "pele/array.hpp"
-#include "pele/cvode.hpp"
-#include "pele/newton.hpp"
 #include <complex>
 #include <cstdint>
 #include <iostream>
 
+#include "base_potential.hpp"
+#include "pele/array.hpp"
+#include "pele/cvode.hpp"
+#include "pele/newton.hpp"
+
 namespace pele {
 
 class MixedDescentEndOnly : public GradientOptimizer {
-private:
+ private:
   double _tol;
   double _newton_step_tol;
   bool use_newton_step;
-  Array<double> particle_disp;  // Stores displacement for a single particle
-  double _max_dist;             // Maximum distance a single particle has moved
-  Array<uint8_t> _not_rattlers; // TODO: only because we need to save this
+  Array<double> particle_disp;   // Stores displacement for a single particle
+  double _max_dist;              // Maximum distance a single particle has moved
+  Array<uint8_t> _not_rattlers;  // TODO: only because we need to save this
 
   CVODEBDFOptimizer _cvode_optimizer;
   Newton _newton_optimizer;
 
-public:
+ public:
   MixedDescentEndOnly(std::shared_ptr<BasePotential> potential,
                       const pele::Array<double> x0, double tol = 1e-6,
                       double newton_step_tol = 1e-6, double rtol = 1e-6,
@@ -66,6 +67,6 @@ public:
     return Array<double>(step.data(), step.size());
   }
 };
-} // namespace pele
+}  // namespace pele
 
-#endif // _PELE_MXD_END_ONLY_HPP
+#endif  // _PELE_MXD_END_ONLY_HPP

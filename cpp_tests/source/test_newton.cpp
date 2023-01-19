@@ -1,12 +1,13 @@
 // Tests for Newton's method with singular values
-#include <gtest/gtest.h>
-#include "pele/array.hpp"
 #include <cstddef>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <pele/harmonic.hpp>
 #include <pele/newton.hpp>
 #include <pele/rosenbrock.hpp>
+
+#include "pele/array.hpp"
 
 using pele::Array;
 using std::cout;

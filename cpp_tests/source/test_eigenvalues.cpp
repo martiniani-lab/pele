@@ -1,8 +1,3 @@
-#include "pele/array.hpp"
-#include "pele/eigen_interface.hpp"
-#include "pele/inversepower.hpp"
-#include "pele/lbfgs.hpp"
-#include "pele/lowest_eig_potential.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <gtest/gtest.h>
@@ -11,9 +6,14 @@
 #include <stdexcept>
 #include <vector>
 
+#include "pele/array.hpp"
+#include "pele/eigen_interface.hpp"
+#include "pele/inversepower.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/lowest_eig_potential.hpp"
+
 using namespace Eigen;
 using namespace pele;
-
 
 void compute_lowest_eigenvalue(MatrixXd m) {
   // check whether the lowest eigenvalue is negative
@@ -28,7 +28,7 @@ void setup() {
   double rsca;
   double energy;
   //////////// parameters for inverse power potential at packing fraction 0.7 in
-  ///3d
+  /// 3d
   //////////// as generated from code params.py in basinerror library
 
   pele::Array<double> x;
@@ -106,6 +106,5 @@ void setup() {
 
   std::cout << lowesteigenvalue << "lowest eigenvalue from pele \n";
 }
-
 
 TEST(EIG, sym) { setup(); }

@@ -1,4 +1,5 @@
 #include "pele/pressure_tensor.hpp"
+
 #include "pele/simple_pairwise_potential.hpp"
 
 namespace pele {
@@ -54,4 +55,4 @@ double pressure_tensor(std::shared_ptr<pele::BasePotential> pot_,
   return traceP / ndim;
 }
 
-} // namespace pele
+}  // namespace pele

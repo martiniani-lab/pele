@@ -9,10 +9,6 @@
 #include "pele/modified_fire.hpp"
 
 // potential imports
-#include "pele/inversepower.hpp"
-#include "pele/rosenbrock.hpp"
-
-#include "pele/gradient_descent.hpp"
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -22,6 +18,10 @@
 #include <pele/modified_fire.hpp>
 #include <stdexcept>
 #include <vector>
+
+#include "pele/gradient_descent.hpp"
+#include "pele/inversepower.hpp"
+#include "pele/rosenbrock.hpp"
 
 using pele::Array;
 using std::cout;
@@ -243,5 +243,4 @@ TEST(EXTENDED_MXD, TEST_256_RUN_ITERATIVE) {
             << std::endl;
   std::cout << "n failed phase 2 steps"
             << optimizer_mxopt.get_n_failed_phase_2_steps() << std::endl;
-
 }

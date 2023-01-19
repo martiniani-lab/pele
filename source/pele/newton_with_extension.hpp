@@ -5,11 +5,6 @@
 #ifndef _PELE_NEWTON_WITH_EXTENSION_H_
 #define _PELE_NEWTON_WITH_EXTENSION_H_
 
-#include "array.hpp"
-#include "base_potential.hpp"
-#include "eigen_interface.hpp"
-#include "pele/backtracking.hpp"
-#include "pele/optimizer.hpp"
 #include <Eigen/Dense>
 #include <array>
 #include <cstddef>
@@ -17,10 +12,16 @@
 #include <memory>
 #include <pele/combine_potentials.hpp>
 
+#include "array.hpp"
+#include "base_potential.hpp"
+#include "eigen_interface.hpp"
+#include "pele/backtracking.hpp"
+#include "pele/optimizer.hpp"
+
 namespace pele {
 
 class NewtonWithExtendedPotential : public GradientOptimizer {
-private:
+ private:
   Eigen::MatrixXd _hessian;
   Eigen::VectorXd _gradient;
   Eigen::VectorXd _x;
@@ -43,7 +44,7 @@ private:
   // Sets the hessian
   bool hessian_calculated;
 
-public:
+ public:
   /**
    * @brief Newton method that ignores singular while calculating the inverse.
    * Uses a backtracking linesearch. If the hessian has singular values uses the
@@ -86,6 +87,6 @@ public:
   }
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // !_PELE_NEWTON_H_
+#endif  // !_PELE_NEWTON_H_

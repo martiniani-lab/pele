@@ -29,14 +29,14 @@ inline bool compare_degree(node_ptr u, node_ptr v) {
 }
 
 class NGT {
-public:
+ public:
   typedef std::map<std::pair<node_id, node_id>, double> rate_map_t;
 
   std::shared_ptr<Graph> _graph;
-  std::set<node_ptr> _A;             // the source nodes
-  std::set<node_ptr> _B;             // the sink nodes
-  std::list<node_ptr> intermediates; // this will an up to date list of nodes
-                                     // sorted by the node degree
+  std::set<node_ptr> _A;              // the source nodes
+  std::set<node_ptr> _B;              // the sink nodes
+  std::list<node_ptr> intermediates;  // this will an up to date list of nodes
+                                      // sorted by the node degree
   bool debug;
 
   /**
@@ -54,7 +54,7 @@ public:
   std::map<node_id, double> final_tau;
   std::map<node_id, double> final_committors;
   std::map<node_id, double>
-      weights; // normally these are equilibrium occupation probabilities
+      weights;  // normally these are equilibrium occupation probabilities
 
   ~NGT() {}
 
@@ -266,7 +266,7 @@ public:
    */
   void update_edge(node_ptr u, node_ptr v, edge_ptr ux, edge_ptr xv,
                    double omPxx) {
-    edge_ptr uv = u->get_successor_edge(v); // this is slow
+    edge_ptr uv = u->get_successor_edge(v);  // this is slow
     if (uv == NULL) {
       uv = add_edge(u, v);
     }
@@ -311,14 +311,12 @@ public:
          ++uxiter) {
       edge_ptr ux = *uxiter;
       node_ptr u = ux->tail();
-      if (u == x)
-        continue;
+      if (u == x) continue;
       for (auto xviter = x->out_edge_begin(); xviter != x->out_edge_end();
            ++xviter) {
         edge_ptr xv = *xviter;
         node_ptr v = xv->head();
-        if (v == x)
-          continue;
+        if (v == x) continue;
         //                if (u == v){
         //                    continue;
         //                }
@@ -623,5 +621,5 @@ public:
   }
 };
 
-} // namespace pele
+}  // namespace pele
 #endif

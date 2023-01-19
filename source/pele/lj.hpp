@@ -13,13 +13,14 @@
 #ifndef PYGMIN_LJ_H
 #define PYGMIN_LJ_H
 
+#include <memory>
+
 #include "atomlist_potential.hpp"
 #include "base_interaction.hpp"
 #include "distance.hpp"
 #include "frozen_atoms.hpp"
 #include "simple_pairwise_ilist.hpp"
 #include "simple_pairwise_potential.hpp"
-#include <memory>
 
 namespace pele {
 
@@ -27,15 +28,19 @@ namespace pele {
  * Pairwise interaction for lennard jones
  */
 struct lj_interaction : BaseInteraction {
-private:
+ private:
   double const _C6, _C12;
   double const _6C6, _12C12;
   double const _42C6, _156C12;
 
-public:
+ public:
   lj_interaction(double C6, double C12)
-      : _C6(C6), _C12(C12), _6C6(6. * _C6), _12C12(12. * _C12),
-        _42C6(42. * _C6), _156C12(156. * _C12) {}
+      : _C6(C6),
+        _C12(C12),
+        _6C6(6. * _C6),
+        _12C12(12. * _C12),
+        _42C6(42. * _C6),
+        _156C12(156. * _C12) {}
 
   /* calculate energy from distance squared */
   double inline energy(double r2, const double dij) const {
@@ -78,7 +83,7 @@ public:
  * Pairwise Lennard-Jones potential
  */
 class LJ : public SimplePairwisePotential<lj_interaction> {
-public:
+ public:
   LJ(double C6, double C12)
       : SimplePairwisePotential<lj_interaction>(
             std::make_shared<lj_interaction>(C6, C12)) {}
@@ -89,7 +94,7 @@ public:
  */
 class LJPeriodic
     : public SimplePairwisePotential<lj_interaction, periodic_distance<3>> {
-public:
+ public:
   LJPeriodic(double C6, double C12, Array<double> const boxvec)
       : SimplePairwisePotential<lj_interaction, periodic_distance<3>>(
             std::make_shared<lj_interaction>(C6, C12),
@@ -100,10 +105,10 @@ public:
  * Pairwise Lennard-Jones potential with interaction lists
  */
 class LJNeighborList : public SimplePairwiseNeighborList<lj_interaction> {
-public:
+ public:
   LJNeighborList(Array<size_t> &ilist, double C6, double C12)
       : SimplePairwiseNeighborList<lj_interaction>(
             std::make_shared<lj_interaction>(C6, C12), ilist) {}
 };
-} // namespace pele
+}  // namespace pele
 #endif

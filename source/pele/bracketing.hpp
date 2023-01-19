@@ -18,7 +18,7 @@ typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
 
 namespace pele {
 class BracketingLineSearch : LineSearch {
-public:
+ public:
   BracketingLineSearch(GradientOptimizer *opt, Scalar max_step_ = Scalar(1.0),
                        int m_ = 6, Scalar epsilon_ = Scalar(1e-5),
                        Scalar epsilon_rel_ = Scalar(1e-5), int past_ = 0,
@@ -28,9 +28,14 @@ public:
       : LineSearch(opt, max_step_),
         params(m_, epsilon_, epsilon_rel_, past_, delta_, max_linesearch_,
                min_step_, max_step_, ftol_, wolfe_),
-        xsize(opt->get_x().size()), xdum(opt->get_x().copy()), gdum(xsize),
-        xvec(xsize), gradvec(xsize), stpsize(Scalar(1.0)),
-        step_direction(xsize), xoldvec(xsize){};
+        xsize(opt->get_x().size()),
+        xdum(opt->get_x().copy()),
+        gdum(xsize),
+        xvec(xsize),
+        gradvec(xsize),
+        stpsize(Scalar(1.0)),
+        step_direction(xsize),
+        xoldvec(xsize){};
   virtual ~BracketingLineSearch(){};
   inline void set_xold_gold_(Array<double> &xold, Array<double> &gold) {
     gold_ = gold;
@@ -40,7 +45,7 @@ public:
   inline void set_g_f_ptr(Array<double> &g) { g_ = g; };
   double line_search(Array<double> &x, Array<double> step);
 
-private:
+ private:
   LBFGSParam params;
   int xsize;
   double func_grad_wrapper(Vector &x, Vector &grad);
@@ -48,7 +53,7 @@ private:
   void LSFunc(Scalar &fx, Vector &x, Vector &grad, Scalar &step,
               const Vector &drt, const Vector &xp, const LBFGSParam &param);
 
-private:
+ private:
   Array<double> g_;
   Array<double> xold_;
   Array<double> gold_;
@@ -61,6 +66,6 @@ private:
   Vector xoldvec;
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // end #ifndef PELE_LINE_SEARCH_BRACKETING_H
+#endif  // end #ifndef PELE_LINE_SEARCH_BRACKETING_H

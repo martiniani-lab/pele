@@ -5,17 +5,12 @@
 #include "pele/utils.hpp"
 // optimizer imports
 // #include "pele/extended_mixed_descent.hpp"
-#include "pele/generic_mixed_descent.hpp"
-
 #include "pele/cvode.hpp"
+#include "pele/generic_mixed_descent.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/modified_fire.hpp"
 
 // potential imports
-#include "pele/inversepower.hpp"
-#include "pele/rosenbrock.hpp"
-
-#include "pele/gradient_descent.hpp"
 #include <cmath>
 #include <complex>
 #include <cstddef>
@@ -29,6 +24,10 @@
 #include <pele/mxopt.hpp>
 #include <stdexcept>
 #include <vector>
+
+#include "pele/gradient_descent.hpp"
+#include "pele/inversepower.hpp"
+#include "pele/rosenbrock.hpp"
 
 using pele::Array;
 using std::cout;

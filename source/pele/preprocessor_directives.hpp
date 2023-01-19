@@ -20,4 +20,4 @@
  */
 #define PRINT_TO_FILE 1
 
-#endif // PELE_FLAGS
+#endif  // PELE_FLAGS
