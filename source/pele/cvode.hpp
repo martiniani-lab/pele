@@ -117,7 +117,8 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
                     double rtol = 1e-5, double atol = 1e-5,
                     HessianType hessian_type = DENSE,
                     bool use_newton_stop_criterion = false,
-                    bool save_trajectory = false);
+                    bool save_trajectory = false,
+                    int iterations_before_save = 1);
 
   ~CVODEBDFOptimizer();
 
