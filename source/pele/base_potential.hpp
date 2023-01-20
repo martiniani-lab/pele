@@ -37,7 +37,7 @@ class BasePotential {
    * to recalculate energies changed by those atoms.
    */
   virtual double get_energy_change(Array<double> const &, Array<double> const &,
-                                   std::vector<double> const &) {
+                                   std::vector<size_t> const &) {
     throw std::runtime_error(
         "BasePotential::get_energy_change must be overloaded");
   }
