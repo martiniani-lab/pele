@@ -1,10 +1,6 @@
 #ifndef _PELE_OPTIMIZER_H__
 #define _PELE_OPTIMIZER_H__
 
-#include "array.hpp"
-#include "base_potential.hpp"
-#include "preprocessor_directives.hpp"
-#include "xsum.h"
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -13,6 +9,11 @@
 #include <ostream>
 #include <stdexcept>
 #include <vector>
+
+#include "array.hpp"
+#include "base_potential.hpp"
+#include "preprocessor_directives.hpp"
+#include "xsum.h"
 
 namespace pele {
 
@@ -28,7 +29,7 @@ namespace pele {
  * should derive from this class.
  */
 class Optimizer {
-public:
+ public:
   /**
    * virtual destructor
    */
@@ -66,7 +67,7 @@ public:
  * should derive from this class.
  */
 class GradientOptimizer : public Optimizer {
-protected:
+ protected:
   // input parameters
   /**
    * A pointer to the object that computes the function and gradient
@@ -112,15 +113,31 @@ protected:
 
   bool save_trajectory_; /**< Whether to save the trajectory */
 
-public:
+  int iterations_before_save_; /**< How often to save the trajectory */
+
+ public:
   GradientOptimizer(std::shared_ptr<pele::BasePotential> potential,
                     const pele::Array<double> x0, double tol = 1e-4,
-                    bool save_trajectory = false)
-      : potential_(potential), tol_(tol), maxstep_(0.1), maxiter_(1000),
-        iprint_(-1), verbosity_(0), iter_number_(0), nfev_(0), nhev_(0),
-        x_(x0.copy()), f_(0.), g_(x0.size()), gradient_norm_(1e10),
-        func_initialized_(false), last_step_failed_(false), succeeded_(false),
-        save_trajectory_(save_trajectory) {}
+                    bool save_trajectory = false,
+                    int iterations_before_save = 1)
+      : potential_(potential),
+        tol_(tol),
+        maxstep_(0.1),
+        maxiter_(1000),
+        iprint_(-1),
+        verbosity_(0),
+        iter_number_(0),
+        nfev_(0),
+        nhev_(0),
+        x_(x0.copy()),
+        f_(0.),
+        g_(x0.size()),
+        gradient_norm_(1e10),
+        func_initialized_(false),
+        last_step_failed_(false),
+        succeeded_(false),
+        save_trajectory_(save_trajectory),
+        iterations_before_save_(iterations_before_save) {}
 
   virtual ~GradientOptimizer() {}
 
@@ -131,8 +148,9 @@ public:
   }
 
   GradientOptimizer() : Optimizer() {
-    throw std::runtime_error("GradientOptimizer default constructor not "
-                             "implemented. Check derived class function calls");
+    throw std::runtime_error(
+        "GradientOptimizer default constructor not "
+        "implemented. Check derived class function calls");
   }
 
   /**
@@ -153,10 +171,9 @@ public:
     // iterate until the stop criterion is satisfied or maximum number of
     // iterations is reached
     for (int i = 0; i < niter; ++i) {
-      if (stop_criterion_satisfied())
-        break;
+      if (stop_criterion_satisfied()) break;
       one_iteration();
-      if (save_trajectory_)
+      if (save_trajectory_ && (iter_number_ % iterations_before_save_ == 0))
         update_trajectory();
     }
   }
@@ -246,7 +263,7 @@ public:
     return false;
   }
 
-protected:
+ protected:
   // /**
   //  * Compute the func and gradient of the objective function
   //  */
@@ -259,9 +276,9 @@ protected:
   //     func = potential_->get_energy_gradient(x, gradient);
   // }
 
-  virtual void
-  compute_func_gradient(Array<double> x, double &func,
-                        std::vector<xsum_small_accumulator> &gradient) {
+  virtual void compute_func_gradient(
+      Array<double> x, double &func,
+      std::vector<xsum_small_accumulator> &gradient) {
     nfev_ += 1;
 
     // pass the arrays to the potential
@@ -283,7 +300,7 @@ protected:
         "GradientOptimizer::update_trajectory must be overloaded");
   }
 
-public:
+ public:
   /**
    * functions for LineSearch
    */
@@ -307,29 +324,29 @@ public:
  * @brief Abstract base class for optimizers with a concept of time.
  */
 class ODEBasedOptimizer : public GradientOptimizer {
-
-private:
+ private:
   // Need to include others
   std::vector<double> time_trajectory_;
   std::vector<double> gradient_norm_trajectory_;
 
-protected:
+ protected:
   double time_;
 
   void update_trajectory() {
-    if (save_trajectory_) {
-      // Basics for what we need at this point
-      // Maybe an optional saving mechanism for the trajectory helps
-      time_trajectory_.push_back(time_);
-      gradient_norm_trajectory_.push_back(gradient_norm_);
-    }
+    // Basics for what we need at this point
+    // Maybe an optional saving mechanism for the trajectory helps
+    time_trajectory_.push_back(time_);
+    gradient_norm_trajectory_.push_back(gradient_norm_);
   }
 
-public:
+ public:
   ODEBasedOptimizer(std::shared_ptr<pele::BasePotential> potential,
                     const pele::Array<double> x0, double tol = 1e-4,
-                    bool save_trajectory = false)
-      : GradientOptimizer(potential, x0, tol, save_trajectory), time_(0) {}
+                    bool save_trajectory = false,
+                    int iterations_before_save = 1)
+      : GradientOptimizer(potential, x0, tol, save_trajectory,
+                          iterations_before_save),
+        time_(0) {}
 
   virtual ~ODEBasedOptimizer() {}
 
@@ -340,14 +357,15 @@ public:
   }
 
   ODEBasedOptimizer() : GradientOptimizer() {
-    throw std::runtime_error("ODEBasedOptimizer default constructor not "
-                             "implemented. Check derived class function calls");
+    throw std::runtime_error(
+        "ODEBasedOptimizer default constructor not "
+        "implemented. Check derived class function calls");
   }
   std::vector<double> get_time_trajectory() { return time_trajectory_; }
   std::vector<double> get_gradient_norm_trajectory() {
     return gradient_norm_trajectory_;
   }
 };
-} // namespace pele
+}  // namespace pele
 
 #endif

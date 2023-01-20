@@ -1,12 +1,13 @@
 #ifndef _PELE_LOWEST_EIG_POTENTIAL_H
 #define _PELE_LOWEST_EIG_POTENTIAL_H
 
-#include "array.hpp"
-#include "base_potential.hpp"
 #include <algorithm>
 #include <cmath>
 #include <memory>
 #include <vector>
+
+#include "array.hpp"
+#include "base_potential.hpp"
 
 namespace pele {
 
@@ -15,7 +16,7 @@ inline void zero_modes_translational(std::vector<pele::Array<double>> &zev,
   double v = 1 / sqrt(natoms);
   size_t N = natoms * bdim;
   for (size_t i = 0; i < bdim; ++i) {
-    pele::Array<double> evec(N, 0); // initialize array of zeros
+    pele::Array<double> evec(N, 0);  // initialize array of zeros
     for (size_t j = i; j < N; j += bdim) {
       evec[j] = v;
     }
@@ -24,19 +25,19 @@ inline void zero_modes_translational(std::vector<pele::Array<double>> &zev,
 }
 
 class Orthogonalize {
-public:
+ public:
   virtual ~Orthogonalize(){};
   virtual void orthogonalize(Array<double> const &coords,
                              Array<double> &vector) = 0;
 };
 
 class OrthogonalizeTranslational : public Orthogonalize {
-protected:
+ protected:
   std::vector<pele::Array<double>> _tr_evec;
   size_t _natoms, _bdim, _ndim;
   double _d, _tol;
 
-public:
+ public:
   // OrthogonalizeTranslational(size_t natoms, size_t bdim, double tol=1e-6);
   OrthogonalizeTranslational(size_t natoms, size_t bdim, double tol = 1e-6)
       : _natoms(natoms), _bdim(bdim), _ndim(bdim * natoms), _tol(tol) {
@@ -78,7 +79,7 @@ public:
     }
   }
 
-}; // class OrthogonalizeTranslational
+};  // class OrthogonalizeTranslational
 
 /*
  * Lowest Eigenvalue Potential:
@@ -88,24 +89,30 @@ public:
  * */
 
 class LowestEigPotential : public BasePotential {
-protected:
+ protected:
   std::shared_ptr<pele::BasePotential> _potential;
   pele::Array<double> _coords, _coordsd, _g, _gd;
   size_t _bdim, _natoms;
   double _d;
   OrthogonalizeTranslational _orthog;
   pele::Array<double>
-      x_opt; //!< Points to the coordinates used in the optimizer
-public:
+      x_opt;  //!< Points to the coordinates used in the optimizer
+ public:
   // LowestEigPotential(std::shared_ptr<pele::BasePotential> potential,
   // pele::Array<double>
   //         coords, size_t bdim, double d=1e-6);
   /*constructor*/
   LowestEigPotential(std::shared_ptr<pele::BasePotential> potential,
                      pele::Array<double> coords, size_t bdim, double d = 1e-6)
-      : _potential(potential), _coords(coords.copy()), _coordsd(coords.size()),
-        _g(_coords.size()), _gd(_coords.size()), _bdim(bdim),
-        _natoms(_coords.size() / _bdim), _d(d), _orthog(_natoms, _bdim),
+      : _potential(potential),
+        _coords(coords.copy()),
+        _coordsd(coords.size()),
+        _g(_coords.size()),
+        _gd(_coords.size()),
+        _bdim(bdim),
+        _natoms(_coords.size() / _bdim),
+        _d(d),
+        _orthog(_natoms, _bdim),
         x_opt(coords) {
     _potential->get_energy_gradient(_coords, _g);
   }
@@ -124,7 +131,7 @@ public:
           "set_x_opt to pass a pointer.");
     }
     _orthog.orthogonalize(
-        _coords, x_opt); // takes care of orthogonalizing and normalizing x_opt
+        _coords, x_opt);  // takes care of orthogonalizing and normalizing x_opt
 
     for (size_t i = 0; i < x_opt.size(); i++) {
       _coordsd[i] = _coords[i] + _d * x_opt[i];
@@ -150,7 +157,7 @@ public:
           "Use set_x_opt to pass a pointer.");
     }
     _orthog.orthogonalize(
-        _coords, x_opt); // takes care of orthogonalizing and normalizing x_opt
+        _coords, x_opt);  // takes care of orthogonalizing and normalizing x_opt
 
     for (size_t i = 0; i < x_opt.size(); i++) {
       _coordsd[i] = _coords[i] + _d * x_opt[i];
@@ -173,6 +180,6 @@ public:
   }
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif //#ifndef _PELE_LOWEST_EIG_POTENTIAL_H
+#endif  //#ifndef _PELE_LOWEST_EIG_POTENTIAL_H

@@ -1,4 +1,8 @@
+#include <cmath>
+#include <fstream>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <stdexcept>
 
 #include "pele/array.hpp"
 #include "pele/base_interaction.hpp"
@@ -8,13 +12,8 @@
 #include "pele/wca.hpp"
 #include "test_utils.hpp"
 
-#include <cmath>
-#include <fstream>
-#include <iostream>
-#include <stdexcept>
-
 static double const EPS = std::numeric_limits<double>::min();
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   EXPECT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
 using pele::Array;
@@ -23,7 +22,7 @@ using pele::pos_int_pow;
 using pele::WCA;
 
 class WCATest : public PotentialTest {
-public:
+ public:
   double sig, eps;
   size_t natoms;
 
@@ -58,7 +57,7 @@ TEST_F(WCATest, EnergyGradientHessian_AgreesWithNumerical) {
 }
 
 class WCAAtomListTest : public WCATest {
-public:
+ public:
   virtual void setup_potential() {
     pele::Array<size_t> atoms(natoms);
     for (size_t i = 0; i < atoms.size(); ++i) {
@@ -81,7 +80,7 @@ TEST_F(WCAAtomListTest, EnergyGradientHessian_AgreesWithNumerical) {
  * HS_WCA tests
  */
 class HS_WCATest : public ::testing::Test {
-public:
+ public:
   double eps, sca, etrue;
   Array<double> x, g, gnum, radii;
   virtual void SetUp() {
@@ -115,10 +114,13 @@ TEST_F(HS_WCATest, Energy_Works) {
 }
 
 class OtherfHS_WCA {
-public:
+ public:
   OtherfHS_WCA(const double r_sum_, const double infinity_,
                const double epsilon_, const double alpha_)
-      : r_sum(r_sum_), infinity(infinity_), epsilon(epsilon_), alpha(alpha_),
+      : r_sum(r_sum_),
+        infinity(infinity_),
+        epsilon(epsilon_),
+        alpha(alpha_),
         r_sum_soft((1 + alpha) * r_sum) {}
   double operator()(const double r) const {
     if (r >= r_sum_soft) {
@@ -155,7 +157,7 @@ public:
     return sigma() / (pos_int_pow<2>(r) - pos_int_pow<2>(r_sum));
   }
 
-private:
+ private:
   const double r_sum;
   const double infinity;
   const double epsilon;
@@ -164,12 +166,16 @@ private:
 };
 
 class OthersfHS_WCA {
-public:
+ public:
   OthersfHS_WCA(const double r_sum_, const double epsilon_, const double alpha_,
                 const double delta_ = 1e-10)
-      : r_sum(r_sum_), epsilon(epsilon_), alpha(alpha_), delta(delta_),
+      : r_sum(r_sum_),
+        epsilon(epsilon_),
+        alpha(alpha_),
+        delta(delta_),
         fHS_WCA(r_sum, std::numeric_limits<double>::max(), epsilon, alpha),
-        r_sum_soft((1 + alpha) * r_sum), r_X(r_sum + delta) {}
+        r_sum_soft((1 + alpha) * r_sum),
+        r_X(r_sum + delta) {}
   double operator()(const double r) const {
     if (r > r_sum_soft) {
       return 0;
@@ -182,7 +188,7 @@ public:
     return fHS_WCA(r_X) + (r - r_X) * fHS_WCA.grad(r_X);
   }
 
-private:
+ private:
   const double r_sum;
   const double epsilon;
   const double alpha;
@@ -366,7 +372,7 @@ TEST_F(HS_WCATest, Norm_SimpleTest) {
 }
 
 class HS_WCA_StabilityTest : public ::testing::Test {
-public:
+ public:
   size_t nparticles;
   size_t ndim;
   size_t ndof;

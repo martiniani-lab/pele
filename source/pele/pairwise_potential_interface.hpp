@@ -1,9 +1,6 @@
 #ifndef PYGMIN_PAIRWISE_POTENTIAL_INTERFACE_H
 #define PYGMIN_PAIRWISE_POTENTIAL_INTERFACE_H
 
-#include "array.hpp"
-#include "base_potential.hpp"
-#include "utils.hpp"
 #include <bits/stdc++.h>
 #include <cassert>
 #include <cmath>
@@ -11,6 +8,10 @@
 #include <cstdint>
 #include <set>
 #include <vector>
+
+#include "array.hpp"
+#include "base_potential.hpp"
+#include "utils.hpp"
 using namespace std;
 
 namespace pele {
@@ -27,7 +28,7 @@ namespace pele {
  * @return double
  */
 class NonAdditiveCutoffCalculator {
-public:
+ public:
   NonAdditiveCutoffCalculator(double non_additivity, double cutoff_factor = 1.0)
       : _non_additivity(non_additivity), _cutoff_factor_(cutoff_factor) {}
   NonAdditiveCutoffCalculator() : _non_additivity(0) {}
@@ -39,13 +40,13 @@ public:
     return 2 * max_radius * _cutoff_factor_;
   }
 
-private:
+ private:
   double _non_additivity;
-  double _cutoff_factor_; // For the soft sphere potential defined in the paper
+  double _cutoff_factor_;  // For the soft sphere potential defined in the paper
 };
 
 class PairwisePotentialInterface : public BasePotential {
-protected:
+ protected:
   const Array<double> m_radii;
   const NonAdditiveCutoffCalculator m_cutoff_calculator;
   inline void initialize() {
@@ -70,7 +71,7 @@ protected:
     }
   }
 
-public:
+ public:
   PairwisePotentialInterface() : m_radii(0), m_cutoff_calculator(0) {}
   PairwisePotentialInterface(pele::Array<double> const &radii,
                              double non_additivity = 0)
@@ -137,18 +138,19 @@ public:
    */
   virtual inline double get_interaction_energy_gradient(double, double *,
                                                         size_t, size_t) const {
-    throw std::runtime_error("PairwisePotentialInterface::get_interaction_"
-                             "energy_gradient must be overloaded");
+    throw std::runtime_error(
+        "PairwisePotentialInterface::get_interaction_"
+        "energy_gradient must be overloaded");
   }
 
   /**
    * Return gradient and Hessian of interaction.
    */
-  virtual inline double
-  get_interaction_energy_gradient_hessian(double, double *, double *, size_t,
-                                          size_t) const {
-    throw std::runtime_error("PairwisePotentialInterface::get_interaction_"
-                             "energy_gradient_hessian must be overloaded");
+  virtual inline double get_interaction_energy_gradient_hessian(
+      double, double *, double *, size_t, size_t) const {
+    throw std::runtime_error(
+        "PairwisePotentialInterface::get_interaction_"
+        "energy_gradient_hessian must be overloaded");
   }
 
   /**
@@ -306,7 +308,7 @@ public:
           }
         }
       }
-    } // end while
+    }  // end while
     size_t n_stable_particles = n_particles - n_rattlers;
 
     size_t total_contacts = 0;
@@ -332,6 +334,6 @@ public:
   }
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // #ifndef PYGMIN_PAIRWISE_POTENTIAL_INTERFACE_H
+#endif  // #ifndef PYGMIN_PAIRWISE_POTENTIAL_INTERFACE_H

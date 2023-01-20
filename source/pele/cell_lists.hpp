@@ -19,12 +19,12 @@
 #include "vecn.hpp"
 
 #ifndef NDEBUG
-#define ASSERT_EX(condition, statement)                                        \
-  do {                                                                         \
-    if (!(condition)) {                                                        \
-      statement;                                                               \
-      assert(condition);                                                       \
-    }                                                                          \
+#define ASSERT_EX(condition, statement) \
+  do {                                  \
+    if (!(condition)) {                 \
+      statement;                        \
+      assert(condition);                \
+    }                                   \
   } while (false)
 #else
 #define ASSERT_EX(condition, statement) ((void)0)
@@ -38,8 +38,9 @@ using cell_t = std::vector<size_t>;
 /**
  * container for the cell lists
  */
-template <size_t ndim> class CellListsContainer {
-protected:
+template <size_t ndim>
+class CellListsContainer {
+ protected:
   /** Construct m_cell_atoms for each subdomain
    */
   void setup_cells(const size_t nsubdoms,
@@ -66,7 +67,7 @@ protected:
     }
   }
 
-public:
+ public:
   /**
    * m_cell_atoms is a vector of vectors with vectors of atom indices.
    *
@@ -170,12 +171,13 @@ inline double get_ncellx_scale(pele::Array<double> radii,
   return ncellsx_scale;
 }
 
-} // namespace pele
+}  // namespace pele
 
 namespace pele {
 
-template <typename distance_policy> class LatticeNeighbors {
-protected:
+template <typename distance_policy>
+class LatticeNeighbors {
+ protected:
   /** Calculate number of cells of each subdomain in the split direction (y)
    */
   void calc_subdom_stats() {
@@ -218,30 +220,33 @@ protected:
 #endif
   }
 
-public:
+ public:
   static const size_t ndim = distance_policy::_ndim;
-  const std::shared_ptr<distance_policy> m_dist; //!< the distance function
+  const std::shared_ptr<distance_policy> m_dist;  //!< the distance function
 
   typedef VecN<ndim, size_t> cell_vec_t;
   pele::VecN<ndim> m_boxvec;
-  pele::VecN<ndim> m_inv_boxvec; //!< inverse of boxvec
+  pele::VecN<ndim> m_inv_boxvec;  //!< inverse of boxvec
   double m_rcut;
-  cell_vec_t m_ncells_vec;      //!< the number of cells in each dimension
-  pele::VecN<ndim> m_rcell_vec; //!< the cell length in each dimension
+  cell_vec_t m_ncells_vec;       //!< the number of cells in each dimension
+  pele::VecN<ndim> m_rcell_vec;  //!< the cell length in each dimension
   size_t m_ncells;
   size_t m_nsubdoms;
-  std::vector<size_t> m_subdom_limits; //!< boundary indices of each subdomain
-                                       //!< in the split direction (y)
-  std::vector<size_t> m_subdom_ncells; //!< number of cells of each subdomain
-  bool m_subdoms_balanced; //!< true if all subdomains have the same number of
-                           //!< cells
-  size_t m_subdom_avg_len; //!< Average subdomain length. Only used in balanced
-                           //!< case, therefore integer.
+  std::vector<size_t> m_subdom_limits;  //!< boundary indices of each subdomain
+                                        //!< in the split direction (y)
+  std::vector<size_t> m_subdom_ncells;  //!< number of cells of each subdomain
+  bool m_subdoms_balanced;  //!< true if all subdomains have the same number of
+                            //!< cells
+  size_t m_subdom_avg_len;  //!< Average subdomain length. Only used in balanced
+                            //!< case, therefore integer.
 
   LatticeNeighbors(std::shared_ptr<distance_policy> const &dist,
                    pele::Array<double> const &boxvec, const double rcut,
                    pele::Array<size_t> const &ncells_vec)
-      : m_dist(dist), m_boxvec(boxvec), m_rcut(rcut), m_ncells_vec(ncells_vec),
+      : m_dist(dist),
+        m_boxvec(boxvec),
+        m_rcut(rcut),
+        m_ncells_vec(ncells_vec),
         m_inv_boxvec(ndim) {
 #ifdef _OPENMP
     m_nsubdoms = omp_get_max_threads();
@@ -453,7 +458,7 @@ public:
     auto lower_left2 = cell_vec_to_position(v2);
     pele::VecN<ndim> ll1, ll2, dr;
     pele::VecN<ndim>
-        minimum_dist; // the minimum possible distance in each direction
+        minimum_dist;  // the minimum possible distance in each direction
     for (size_t i = 0; i < ndim; ++i) {
       double min_dist = std::numeric_limits<double>::max();
       double dri;
@@ -601,14 +606,15 @@ public:
         global_ind_to_local_ind(global_jcell, local_jcell, jsubdom);
         cell_neighbors[global_icell].push_back(&cells[jsubdom][local_jcell]);
         if (isubdom == jsubdom) {
-          if (local_jcell >= local_icell) { // avoid duplicates
+          if (local_jcell >= local_icell) {  // avoid duplicates
             std::array<cell_t *, 2> neighbors = {&cells[isubdom][local_icell],
                                                  &cells[jsubdom][local_jcell]};
             neighbor_pairs_inner.push_back(neighbors);
           }
         } else {
-          if (pos_direction_y(global_icell,
-                              global_jcell)) { // avoid duplicates, balance load
+          if (pos_direction_y(
+                  global_icell,
+                  global_jcell)) {  // avoid duplicates, balance load
             std::array<cell_t *, 2> neighbors = {&cells[isubdom][local_icell],
                                                  &cells[jsubdom][local_jcell]};
             neighbor_pairs_boundary.push_back(neighbors);
@@ -651,16 +657,16 @@ public:
  */
 template <class visitor_t, typename distance_policy = periodic_distance<3>>
 class CellListsLoop {
-protected:
+ protected:
   static const size_t m_ndim = distance_policy::_ndim;
   typedef VecN<m_ndim, size_t> cell_vec_t;
   visitor_t &m_visitor;
   CellListsContainer<m_ndim> const &m_container;
   LatticeNeighbors<distance_policy> m_lattice_tool;
 
-  virtual void
-  loop_cell_pairs(std::vector<std::array<cell_t *, 2>> const &neighbor_pairs,
-                  const size_t isubdom) {
+  virtual void loop_cell_pairs(
+      std::vector<std::array<cell_t *, 2>> const &neighbor_pairs,
+      const size_t isubdom) {
     for (auto const &ijpair : neighbor_pairs) {
       cell_t *icell = ijpair[0];
       cell_t *jcell = ijpair[1];
@@ -689,10 +695,11 @@ protected:
     }
   }
 
-public:
+ public:
   CellListsLoop(visitor_t &visitor, CellListsContainer<m_ndim> const &container,
                 pele::LatticeNeighbors<distance_policy> lattice_tool)
-      : m_visitor(visitor), m_container(container),
+      : m_visitor(visitor),
+        m_container(container),
         m_lattice_tool(lattice_tool) {}
 
   void loop_through_atom_pairs() {
@@ -737,13 +744,14 @@ public:
  * element. This adds room for errors so in this first implementation we do not
  * account for that scenario
  */
-template <typename distance_policy = periodic_distance<3>> class CellLists {
-public:
+template <typename distance_policy = periodic_distance<3>>
+class CellLists {
+ public:
   static const size_t m_ndim = distance_policy::_ndim;
 
-protected:
-  bool m_initialized; // flag for whether the cell lists have been initialized
-                      // with coordinates
+ protected:
+  bool m_initialized;  // flag for whether the cell lists have been initialized
+                       // with coordinates
   pele::LatticeNeighbors<distance_policy> m_lattice_tool;
   std::vector<SafePushQueue<std::array<size_t, 2>>> add_atom_queue;
 
@@ -754,7 +762,7 @@ protected:
    */
   CellListsContainer<m_ndim> m_container;
 
-public:
+ public:
   ~CellLists() {}
 
   /**
@@ -771,8 +779,8 @@ public:
    * return the class which loops over the atom pairs with a callback function
    */
   template <class callback_class>
-  inline CellListsLoop<callback_class, distance_policy>
-  get_atom_pair_looper(callback_class &callback) const {
+  inline CellListsLoop<callback_class, distance_policy> get_atom_pair_looper(
+      callback_class &callback) const {
     return CellListsLoop<callback_class, distance_policy>(callback, m_container,
                                                           m_lattice_tool);
   }
@@ -810,7 +818,7 @@ public:
                        std::vector<size_t> const &iatoms,
                        std::vector<double> const &old_coords);
 
-protected:
+ protected:
   void print_warnings(const size_t natoms);
   void build_cell_neighbors_list();
   void reset_container(pele::Array<double> const &coords);
@@ -819,7 +827,7 @@ protected:
                                  std::vector<size_t> const &iatoms,
                                  std::vector<double> const &old_coords);
 
-private:
+ private:
   static Array<size_t> get_ncells_vec(Array<double> const &boxv,
                                       const double rcut,
                                       const double ncellx_scale,
@@ -844,8 +852,9 @@ CellLists<distance_policy>::CellLists(
         "(due to the split of subdomains in y-dimension)");
   }
   if (boxv.size() != m_ndim) {
-    throw std::runtime_error("CellLists::CellLists: distance policy boxv and "
-                             "cell list boxv differ in size");
+    throw std::runtime_error(
+        "CellLists::CellLists: distance policy boxv and "
+        "cell list boxv differ in size");
   }
   if (*std::min_element(boxv.begin(), boxv.end()) < rcut) {
     throw std::runtime_error("CellLists::CellLists: illegal rcut");
@@ -863,8 +872,9 @@ CellLists<distance_policy>::CellLists(
 #ifdef _OPENMP
   if (std::floor(ncellx_scale) != ncellx_scale && ncellx_scale > 1 &&
       omp_get_max_threads() > 1) {
-    throw std::runtime_error("CellLists::CellLists: Non-integer values > 1 of "
-                             "ncellx_scale can break the parallelization!");
+    throw std::runtime_error(
+        "CellLists::CellLists: Non-integer values > 1 of "
+        "ncellx_scale can break the parallelization!");
   }
 #endif
   size_t ncell_min = *std::min_element(m_lattice_tool.m_ncells_vec.begin(),
@@ -896,9 +906,10 @@ Array<size_t> CellLists<distance_policy>::get_ncells_vec(
   }
 #ifdef _OPENMP
   if (omp_get_max_threads() > res[1]) {
-    throw std::runtime_error("More threads than cells in y-direction. "
-                             "Reduce the number of threads "
-                             "(environment variable OMP_NUM_THREADS)!");
+    throw std::runtime_error(
+        "More threads than cells in y-direction. "
+        "Reduce the number of threads "
+        "(environment variable OMP_NUM_THREADS)!");
   }
   if (balance_omp) {
     res[1] = (res[1] / omp_get_max_threads()) * omp_get_max_threads();
@@ -1066,6 +1077,6 @@ void CellLists<distance_policy>::update_container_specific(
   }
 }
 
-} // namespace pele
+}  // namespace pele
 
-#endif // #ifndef _PELE_CELL_LISTS_H_
+#endif  // #ifndef _PELE_CELL_LISTS_H_

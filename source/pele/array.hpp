@@ -17,7 +17,8 @@ namespace pele {
  * This manages the data of the Array class.  This can act as a simple wrapper
  * for a vector, or wrap an externally allocated block of memory.
  */
-template <typename dtype> class _ArrayMemory {
+template <typename dtype>
+class _ArrayMemory {
   std::vector<dtype> _vector;
   dtype
       *_data; /** _data will either point to the beginning of _vector, or to the
@@ -26,7 +27,7 @@ template <typename dtype> class _ArrayMemory {
   size_t _size; /** the size of the block of memory, whether in vector or
                    external. */
 
-public:
+ public:
   _ArrayMemory() : _vector(), _data(_vector.data()), _size(_vector.size()) {}
 
   _ArrayMemory(size_t size)
@@ -58,32 +59,36 @@ public:
  * This copy constructor and assignment operator act to wrap existing
  * memory rather than copy the memory.
  */
-template <typename dtype> class Array {
-protected:
+template <typename dtype>
+class Array {
+ protected:
   std::shared_ptr<_ArrayMemory<dtype>> _memory;
   dtype *_data; /**< _data will usually be a copy of memory->data().  If this
                    is a view of another array then _data will be
                    _memory->data() + ibegin */
   size_t _size; /**< The size of the array. */
-public:
+ public:
   /** create an array of size 0
    */
   Array()
-      : _memory(new _ArrayMemory<dtype>()), _data(_memory->data()),
+      : _memory(new _ArrayMemory<dtype>()),
+        _data(_memory->data()),
         _size(_memory->size()) {}
 
   /**
    * construct an array with a given size
    */
   Array(size_t size)
-      : _memory(new _ArrayMemory<dtype>(size)), _data(_memory->data()),
+      : _memory(new _ArrayMemory<dtype>(size)),
+        _data(_memory->data()),
         _size(_memory->size()) {}
 
   /**
    * construct an array with a given size, each element is a copy of val
    */
   Array(size_t size, dtype const &val)
-      : _memory(new _ArrayMemory<dtype>(size, val)), _data(_memory->data()),
+      : _memory(new _ArrayMemory<dtype>(size, val)),
+        _data(_memory->data()),
         _size(_memory->size())
 
   {}
@@ -92,7 +97,8 @@ public:
    * construct an array from an initializer list
    */
   Array(std::initializer_list<dtype> data)
-      : _memory(new _ArrayMemory<dtype>(data.size())), _data(_memory->data()),
+      : _memory(new _ArrayMemory<dtype>(data.size())),
+        _data(_memory->data()),
         _size(_memory->size()) {
     std::copy(data.begin(), data.end(), _data);
   }
@@ -101,7 +107,8 @@ public:
    * wrap some data that is passed.  Do not take ownership of the data.
    */
   Array(dtype *data, size_t size)
-      : _memory(new _ArrayMemory<dtype>(data, size)), _data(_memory->data()),
+      : _memory(new _ArrayMemory<dtype>(data, size)),
+        _data(_memory->data()),
         _size(_memory->size()) {}
 
   /**
@@ -109,14 +116,16 @@ public:
    */
   Array(dtype *data_begin, dtype *data_end)
       : _memory(new _ArrayMemory<dtype>(data_begin, data_end - data_begin)),
-        _data(_memory->data()), _size(_memory->size()) {}
+        _data(_memory->data()),
+        _size(_memory->size()) {}
 
   /**
    * wrap the data in a vector.  This memory should never be deleted.
    */
   Array(std::vector<dtype> &x)
       : _memory(new _ArrayMemory<dtype>(x.data(), x.size())),
-        _data(_memory->data()), _size(_memory->size()) {}
+        _data(_memory->data()),
+        _size(_memory->size()) {}
 
   /**
    * wrap another array is implemented by shared_ptr parent class
@@ -408,8 +417,9 @@ public:
    */
   dtype prod() const {
     if (empty()) {
-      throw std::runtime_error("array::prod(): array is empty, can't take "
-                               "product of array elements");
+      throw std::runtime_error(
+          "array::prod(): array is empty, can't take "
+          "product of array elements");
     }
     return std::accumulate(begin(), end(), dtype(1), std::multiplies<dtype>());
   }
@@ -441,8 +451,7 @@ public:
 template <class dtype>
 inline std::ostream &operator<<(std::ostream &out, const Array<dtype> &a) {
   for (size_t i = 0; i < a.size(); ++i) {
-    if (i > 0)
-      out << ", ";
+    if (i > 0) out << ", ";
     out << a[i];
   }
   out << std::endl;
@@ -468,6 +477,6 @@ Array<T> operator*(const U rhs, const Array<T> &lhs) {
   return (result *= rhs).copy();
 }
 
-} // namespace pele
+}  // namespace pele
 
-#endif // #ifndef PYGMIN_ARRAY_H
+#endif  // #ifndef PYGMIN_ARRAY_H

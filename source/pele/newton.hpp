@@ -4,20 +4,21 @@
 #ifndef _PELE_NEWTON_H_
 #define _PELE_NEWTON_H_
 
-#include "array.hpp"
-#include "base_potential.hpp"
-#include "eigen_interface.hpp"
-#include "pele/backtracking.hpp"
-#include "pele/optimizer.hpp"
 #include <Eigen/Dense>
 #include <array>
 #include <cstddef>
 #include <cstdint>
 
+#include "array.hpp"
+#include "base_potential.hpp"
+#include "eigen_interface.hpp"
+#include "pele/backtracking.hpp"
+#include "pele/optimizer.hpp"
+
 namespace pele {
 
 class Newton : public GradientOptimizer {
-private:
+ private:
   Eigen::MatrixXd _hessian;
   Eigen::VectorXd _gradient;
   Eigen::VectorXd _x;
@@ -34,7 +35,7 @@ private:
   bool _jammed;
   bool _rattlers_found;
 
-public:
+ public:
   /**
    * @brief Newton method that ignores singular while calculating the inverse.
    * Uses a backtracking linesearch. If the hessian has singular values uses the
@@ -90,6 +91,6 @@ public:
                              Array<double> gradient);
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // !_PELE_NEWTON_H_
+#endif  // !_PELE_NEWTON_H_

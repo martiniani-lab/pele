@@ -7,14 +7,15 @@
 
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
-#include "eigen_interface.hpp"
-#include "pele/combine_potentials.hpp"
-#include "pele/lbfgs.hpp"
 #include <Eigen/Dense>
 #include <array>
 #include <fstream>
 #include <memory>
 #include <sundials/sundials_context.h>
+
+#include "eigen_interface.hpp"
+#include "pele/combine_potentials.hpp"
+#include "pele/lbfgs.hpp"
 
 // Lapack for cholesky
 extern "C" {
@@ -22,6 +23,11 @@ extern "C" {
 }
 
 // line search methods
+#include <cvode/cvode.h>               /* access to CVODE                 */
+#include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
+#include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
+#include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
+
 #include "backtracking.hpp"
 #include "bracketing.hpp"
 #include "cvode.hpp"
@@ -30,11 +36,6 @@ extern "C" {
 #include "nwpele.hpp"
 #include "optimizer.hpp"
 
-#include <cvode/cvode.h>               /* access to CVODE                 */
-#include <nvector/nvector_serial.h>    /* access to serial N_Vector       */
-#include <sunlinsol/sunlinsol_dense.h> /* access to dense SUNLinearSolver */
-#include <sunmatrix/sunmatrix_dense.h> /* access to dense SUNMatrix       */
-
 extern "C" {
 #include "xsum.h"
 }
@@ -42,7 +43,7 @@ extern "C" {
 namespace pele {
 
 class ExtendedMixedOptimizer : public GradientOptimizer {
-private:
+ private:
   /**
    * H0 is the initial estimate for the inverse hessian. This is as small as
    * possible, for making a good inverse hessian estimate next time.
@@ -74,32 +75,32 @@ private:
    */
   std::shared_ptr<pele::ExtendedPotential> extended_potential;
 
-  Array<double> xold; //!< Coordinates before taking a step
-  Array<double> gold; //!< Gradient before taking a step
-  Array<double> step; //!< Step size and direction
+  Array<double> xold;  //!< Coordinates before taking a step
+  Array<double> gold;  //!< Gradient before taking a step
+  Array<double> step;  //!< Step size and direction
 
   /**
    * Coordinate for phase 1. Helps us revert back if newton fails.
    */
-  Array<double> xold_old; //!< Save for backtracking if newton fails. TODO:
-                          //!< think of better name
+  Array<double> xold_old;  //!< Save for backtracking if newton fails. TODO:
+                           //!< think of better name
 
   /**
    * @brief Last CVODE position to return to if newton fails.
    */
   Array<double> x_last_cvode;
 
-  double inv_sqrt_size; //!< The inverse square root the the number of
-                        //!< components
+  double inv_sqrt_size;  //!< The inverse square root the the number of
+                         //!< components
   // Preconditioning
-  int T_; // number of steps after which the lowest eigenvalues are recalculated
-          // in the first phase
+  int T_;  // number of steps after which the lowest eigenvalues are
+           // recalculated in the first phase
   // std::shared_ptr<Eigen::ColPivHouseholderQR<Eigen::MatrixXd>> solver;
   // solver for H x = b
-  Eigen::VectorXd
-  update_solver(Eigen::VectorXd r); // updates the solver with the new hessian
-  char uplo; /* We ask LAPACK for the lower diagonal matrix L */
-  int info;  /* "Info" return value, used for error-checking */
+  Eigen::VectorXd update_solver(
+      Eigen::VectorXd r);  // updates the solver with the new hessian
+  char uplo;               /* We ask LAPACK for the lower diagonal matrix L */
+  int info;                /* "Info" return value, used for error-checking */
 
   // Calculates hess + delta I where delta makes the new eigenvalue positive
   Eigen::MatrixXd hessian;
@@ -107,8 +108,8 @@ private:
 
   double *hess_data;
   bool use_phase_1;
-  bool phase_2_failed_; // if true, we've failed in phase 2 and need to revert
-                        // back to where we were in phase 1
+  bool phase_2_failed_;  // if true, we've failed in phase 2 and need to revert
+                         // back to where we were in phase 1
   // what phase was used in previous step
   bool prev_phase_is_phase1;
   /**
@@ -133,8 +134,8 @@ private:
   // Need to refactor line searches
   BacktrackingLineSearch line_search_method;
 
-  bool iterative_; // if true, use iterative solver for hessian solve
-public:
+  bool iterative_;  // if true, use iterative solver for hessian solve
+ public:
   /**
    * Constructor
    */
@@ -142,8 +143,8 @@ public:
       std::shared_ptr<pele::BasePotential> potential,
       std::shared_ptr<pele::BasePotential> potential_extension,
       const pele::Array<double> x0, double tol = 1e-4, int T = 10,
-      double step = 1, double conv_tol = 1e-8,
-      double rtol = 1e-5, double atol = 1e-5, bool iterative = false);
+      double step = 1, double conv_tol = 1e-8, double rtol = 1e-5,
+      double atol = 1e-5, bool iterative = false);
   /**
    * Destructor
    */
@@ -170,9 +171,9 @@ public:
   inline int get_n_phase_2_steps() { return n_phase_2_steps; }
   inline int get_n_failed_phase_2_steps() { return n_failed_phase_2_steps; }
 
-private:
-  bool hessian_calculated; // checks whether the hessian has been calculated for
-                           // updating.
+ private:
+  bool hessian_calculated;  // checks whether the hessian has been calculated
+                            // for updating.
   void compute_phase_1_step(Array<double> step);
   void compute_phase_2_step(Array<double> step);
   bool convexity_check();
@@ -183,6 +184,6 @@ private:
                   Array<double> x_new, Array<double> &g_new);
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // _PELE_EXTENDED_MIXED_DESCENT_H__
+#endif  // _PELE_EXTENDED_MIXED_DESCENT_H__

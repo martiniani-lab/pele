@@ -30,11 +30,12 @@
 #ifndef INCLUDE_CPPOPTLIB_LINESEARCH_MORE_THUENTE_H_
 #define INCLUDE_CPPOPTLIB_LINESEARCH_MORE_THUENTE_H_
 
-#include "eigen_interface.hpp"
-#include "linesearch.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <iostream>
+
+#include "eigen_interface.hpp"
+#include "linesearch.hpp"
 
 namespace pele {
 
@@ -43,16 +44,22 @@ using scalar_t = double;
 using vector_t = Array<double>;
 
 class MoreThuente : public LineSearch {
-public:
+ public:
   MoreThuente(GradientOptimizer *opt, double alpha_max = 1e15,
               double alpha_min = 1e-15, double x_tol = 1e-15,
               double f_tol = 1e-10, double g_tol = 1e-4, double x_trapf = 4,
               double max_fev = 40, double alphainit = 1.0)
-      : LineSearch(opt, alpha_max), xtol(x_tol), ftol(f_tol), gtol(g_tol),
-        xtrapf(x_trapf), maxfev(max_fev), alphamin(alpha_min),
-        alphamax(alpha_max), alpha_init(alphainit)
+      : LineSearch(opt, alpha_max),
+        xtol(x_tol),
+        ftol(f_tol),
+        gtol(g_tol),
+        xtrapf(x_trapf),
+        maxfev(max_fev),
+        alphamin(alpha_min),
+        alphamax(alpha_max),
+        alpha_init(alphainit)
 
-                                 {};
+            {};
 
   ~MoreThuente(){};
   // interfaced line search the line search assumes relevant variables are
@@ -60,7 +67,7 @@ public:
   double line_search(Array<double> &x, Array<double> step);
 
   // interfacing methods lbfgs
-public:
+ public:
   void inline set_xold_gold_(Array<double> &xold, Array<double> &gold) {
     gold_ = gold;
     xold_ = xold;
@@ -69,7 +76,7 @@ public:
   void inline set_g_f_ptr(Array<double> &g) { g_ = g; };
 
   // input variables
-private:
+ private:
   // info about the More Thuente Line search
 
   scalar_t alpha_init;
@@ -93,7 +100,7 @@ private:
   bool desdir;
 
   // methods
-public:
+ public:
   inline scalar_t search(const vector_t &x, const vector_t &search_direction) {
     // Assumed step width.
     scalar_t ak = alpha_init;
@@ -122,6 +129,6 @@ public:
             int &info);
 };
 
-}; // namespace pele
+};  // namespace pele
 
-#endif // INCLUDE_CPPOPTLIB_LINESEARCH_MORE_THUENTE_H_
+#endif  // INCLUDE_CPPOPTLIB_LINESEARCH_MORE_THUENTE_H_

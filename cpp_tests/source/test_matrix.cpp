@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
-
-#include "pele/matrix.hpp"
-#include "pele/vecn.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+
+#include "pele/matrix.hpp"
+#include "pele/vecn.hpp"
 
 using pele::Array;
 using pele::MatrixAdapter;

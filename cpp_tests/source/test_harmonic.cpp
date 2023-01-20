@@ -1,26 +1,24 @@
 #include <cassert>
 #include <cmath>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
 
-#include <gtest/gtest.h>
-
 #include "pele/harmonic.hpp"
 #include "pele/meta_pow.hpp"
-
 #include "test_utils.hpp"
 
 using pele::Array;
 using pele::pos_int_pow;
 
 static double const EPS = std::numeric_limits<double>::min();
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   EXPECT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
 class HarmonicTest : public ::testing::Test {
-public:
+ public:
   size_t nr_particles;
   size_t box_dimension;
   size_t nr_dof;
@@ -85,7 +83,7 @@ TEST_F(HarmonicTest, COM_Works) {
 }
 
 class HarmonicAtomListTest : public PotentialTest {
-public:
+ public:
   double natoms;
   double k;
 
@@ -130,7 +128,7 @@ TEST_F(HarmonicAtomListTest, EnergyGradientHessian_AgreesWithNumerical) {
 }
 
 class HarmonicNeighborListTest : public HarmonicAtomListTest {
-public:
+ public:
   virtual void setup_potential() {
     pele::Array<size_t> nlist(natoms * (natoms - 1));
     size_t count = 0;

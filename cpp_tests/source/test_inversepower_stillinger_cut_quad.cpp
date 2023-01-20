@@ -7,11 +7,11 @@
 #include "pele/inversepower_stillinger_cut_quad.hpp"
 #include "test_utils.hpp"
 
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   EXPECT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
 class BasicIPSCutQuadTest : public ::testing::Test {
-public:
+ public:
   size_t ndim;
   size_t ndof;
   size_t npart;
@@ -83,8 +83,6 @@ TEST_F(BasicIPSCutQuadTest, Pow_Works) {
   }
 }
 
-
-
 TEST_F(BasicIPSCutQuadTest, Energy_WorksIntPower12) {
   // TODO: Figure out how to do a constexpr loop
   constexpr size_t power = 12;
@@ -121,14 +119,13 @@ TEST_F(BasicIPSCutQuadTest, zero_at_cutoff) {
   }
 }
 
-
 /*
-* Base class for testing variants of the InversePowerStillingerCutQuad
-* potential. The potential should the same but different optimizations are 
-* made based on information available at compile time
-*/
-class BaseTestInversePowerStillingerCutQuadAuto  : public PotentialTest {
-protected:
+ * Base class for testing variants of the InversePowerStillingerCutQuad
+ * potential. The potential should the same but different optimizations are
+ * made based on information available at compile time
+ */
+class BaseTestInversePowerStillingerCutQuadAuto : public PotentialTest {
+ protected:
   size_t ndim;
   size_t ndof;
   size_t npart;
@@ -140,7 +137,7 @@ protected:
 
   double v0, cutoff_factor, expected_cutoff;
 
-    // Expected energy for a pair of particles with distance dr
+  // Expected energy for a pair of particles with distance dr
   // Expected energy for a pair of particles with distance dr
   double get_test_energy(double dr, double cutoff_factor, double v0, int pow,
                          Array<double> radii) {
@@ -176,11 +173,10 @@ protected:
     double dr = std::sqrt(std::pow(x[0] - x[2], 2) + std::pow(x[1] - x[3], 2));
     etrue = get_test_energy(dr, cutoff_factor, v0, exponent, radii);
   }
-
 };
 
-class TestInversePowerStillingerCutQuadAuto : public BaseTestInversePowerStillingerCutQuadAuto {
-
+class TestInversePowerStillingerCutQuadAuto
+    : public BaseTestInversePowerStillingerCutQuadAuto {
   virtual void SetUp() {
     init_potential_parameters();
     pot = std::make_shared<pele::InversePowerStillingerCutQuad<2>>(
@@ -200,9 +196,8 @@ TEST_F(TestInversePowerStillingerCutQuadAuto,
   test_energy_gradient_hessian();
 }
 
-
-class TestInversePowerStillingerCutQuadAutoInt : public BaseTestInversePowerStillingerCutQuadAuto {
-
+class TestInversePowerStillingerCutQuadAutoInt
+    : public BaseTestInversePowerStillingerCutQuadAuto {
   virtual void SetUp() {
     init_potential_parameters();
     pot = std::make_shared<pele::InversePowerStillingerCutQuadInt<2, exponent>>(
@@ -221,5 +216,3 @@ TEST_F(TestInversePowerStillingerCutQuadAutoInt,
        EnergyGradientHessian_AgreesWithNumerical) {
   test_energy_gradient_hessian();
 }
-
-

@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include <limits>
+#include <memory>
 
 #include "pele/aatopology.hpp"
 #include "pele/distance.hpp"
 #include "pele/lj.hpp"
 #include "pele/matrix.hpp"
 #include "pele/vecn.hpp"
-#include <memory>
 using pele::Array;
 using pele::CoordsAdaptor;
 using pele::MatrixNM;
@@ -14,11 +14,11 @@ using pele::norm;
 using pele::VecN;
 
 static double const EPS = std::numeric_limits<double>::min();
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   ASSERT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
 class AATopologyTest : public ::testing::Test {
-public:
+ public:
   Array<double> x0;
   size_t nrigid;
   std::shared_ptr<pele::RBTopology> rbtopology;
@@ -81,8 +81,7 @@ public:
       auto p = x0.view(3 * nrigid + 3 * i, 3 * nrigid + 3 * i + 3);
       p /= norm(p);
     }
-    for (size_t i = 0; i < 3; ++i)
-      p0[i] = i + 1;
+    for (size_t i = 0; i < 3; ++i) p0[i] = i + 1;
     p0 /= norm(p0);
     rbtopology = std::make_shared<pele::RBTopology>();
     for (size_t i = 0; i < nrigid; ++i) {
@@ -243,8 +242,7 @@ TEST_F(AATopologyTest, TransformRotate_Works) {
   pele::TransformAACluster transform(rbtopology.get());
 
   VecN<3> p;
-  for (size_t i = 0; i < p.size(); ++i)
-    p[i] = i + 1;
+  for (size_t i = 0; i < p.size(); ++i) p[i] = i + 1;
   p /= norm<3>(p);
 
   transform.rotate(x, pele::aa_to_rot_mat(p));

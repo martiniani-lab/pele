@@ -48,7 +48,7 @@ namespace md {
    LJ potential.
 */
 class EvaluatorPairForceShiftedLJ {
-public:
+ public:
   //! Define the parameter type used by this pair potential evaluator
   typedef EvaluatorPairLJ::param_type param_type;
 
@@ -69,7 +69,8 @@ public:
   */
   DEVICE EvaluatorPairForceShiftedLJ(Scalar _rsq, Scalar _rcutsq,
                                      const param_type &_params)
-      : rsq(_rsq), rcutsq(_rcutsq),
+      : rsq(_rsq),
+        rcutsq(_rcutsq),
         lj1(_params.epsilon_x_4 * _params.sigma_6 * _params.sigma_6),
         lj2(_params.epsilon_x_4 * _params.sigma_6) {}
 
@@ -112,8 +113,7 @@ public:
       Scalar rcut2inv = Scalar(1.0) / rcutsq;
       Scalar rcut6inv = rcut2inv * rcut2inv * rcut2inv;
 
-      if (energy_shift)
-        pair_eng -= rcut6inv * (lj1 * rcut6inv - lj2);
+      if (energy_shift) pair_eng -= rcut6inv * (lj1 * rcut6inv - lj2);
 
       // shift force and add linear term to potential
       Scalar rcut_r_inv = fast::rsqrt(rsq * rcutsq);
@@ -143,16 +143,16 @@ public:
   }
 #endif
 
-protected:
-  Scalar rsq;    //!< Stored rsq from the constructor
-  Scalar rcutsq; //!< Stored rcutsq from the constructor
-  Scalar lj1;    //!< lj1 parameter extracted from the params passed to the
-                 //!< constructor
-  Scalar lj2;    //!< lj2 parameter extracted from the params passed to the
-                 //!< constructor
+ protected:
+  Scalar rsq;     //!< Stored rsq from the constructor
+  Scalar rcutsq;  //!< Stored rcutsq from the constructor
+  Scalar lj1;     //!< lj1 parameter extracted from the params passed to the
+                  //!< constructor
+  Scalar lj2;     //!< lj2 parameter extracted from the params passed to the
+                  //!< constructor
 };
 
-} // end namespace md
-} // end namespace hoomd_pele
+}  // end namespace md
+}  // end namespace hoomd_pele
 
-#endif // __PAIR_EVALUATOR_FORCE_SHIFTED_LJ_H__
+#endif  // __PAIR_EVALUATOR_FORCE_SHIFTED_LJ_H__

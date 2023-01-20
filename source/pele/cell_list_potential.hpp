@@ -58,13 +58,14 @@ inline size_t thread() {
 }
 
 // class containing r2, dij, dr, , xi_off, xj_off
-template <size_t ndim> class DistanceData {
-public:
-  double r2;                   // r2 = dr * dr
-  double dij;                  // cutoff distance between particles i and j
-  size_t xi_off;               // offset of particle i in the x array
-  size_t xj_off;               // offset of particle j in the x array
-  pele::VecN<ndim, double> dr; // vector from particle i to particle j
+template <size_t ndim>
+class DistanceData {
+ public:
+  double r2;                    // r2 = dr * dr
+  double dij;                   // cutoff distance between particles i and j
+  size_t xi_off;                // offset of particle i in the x array
+  size_t xj_off;                // offset of particle j in the x array
+  pele::VecN<ndim, double> dr;  // vector from particle i to particle j
   DistanceData() : r2(0), dij(0), xi_off(0), xj_off(0), dr() {}
   inline void reset() {
     r2 = 0;
@@ -75,8 +76,8 @@ public:
   }
 };
 template <size_t ndim>
-inline void
-init_distance_datas(std::vector<DistanceData<ndim>> &distance_datas) {
+inline void init_distance_datas(
+    std::vector<DistanceData<ndim>> &distance_datas) {
 #ifdef _OPENMP
   distance_datas = std::vector<DistanceData<ndim>>(omp_get_max_threads());
 #else
@@ -148,7 +149,7 @@ inline void accumulate_hessian(pele::Array<double> &hessian, const double hij,
  */
 template <typename pairwise_interaction, typename distance_policy>
 class BaseAccumulator {
-protected:
+ protected:
   const static size_t m_ndim = distance_policy::_ndim;
   std::shared_ptr<pairwise_interaction> m_interaction;
   std::shared_ptr<distance_policy> m_dist;
@@ -156,16 +157,19 @@ protected:
   const Array<double> m_radii;
   NonAdditiveCutoffCalculator m_cutoff;
   std::vector<DistanceData<distance_policy::_ndim>>
-      m_distance_datas; // distance data for every thread. Prevents being
-                        // overwritten by other threads
+      m_distance_datas;  // distance data for every thread. Prevents being
+                         // overwritten by other threads
 
-public:
+ public:
   BaseAccumulator(
       std::shared_ptr<pairwise_interaction> pairwise_interaction_ptr,
       std::shared_ptr<distance_policy> distance_policy_ptr,
       pele::Array<double> const &radii, NonAdditiveCutoffCalculator cutoff)
-      : m_interaction(pairwise_interaction_ptr), m_dist(distance_policy_ptr),
-        m_coords(nullptr), m_radii(radii), m_cutoff(cutoff),
+      : m_interaction(pairwise_interaction_ptr),
+        m_dist(distance_policy_ptr),
+        m_coords(nullptr),
+        m_radii(radii),
+        m_cutoff(cutoff),
         m_distance_datas(0) {
     init_distance_datas(m_distance_datas);
   }
@@ -177,11 +181,10 @@ public:
    * variables in the subdomain
    *
    */
-  inline void
-  calculate_distance_data(DistanceData<distance_policy::_ndim> &dist_data,
-                          const pele::Array<double> &coords,
-                          const size_t atom_i, const size_t atom_j) {
-
+  inline void calculate_distance_data(
+      DistanceData<distance_policy::_ndim> &dist_data,
+      const pele::Array<double> &coords, const size_t atom_i,
+      const size_t atom_j) {
     dist_data.xi_off = m_ndim * atom_i;
     dist_data.xj_off = m_ndim * atom_j;
     m_dist->get_rij(dist_data.dr.data(), m_coords->data() + dist_data.xi_off,
@@ -215,7 +218,7 @@ class EnergyAccumulator
     : public BaseAccumulator<pairwise_interaction, distance_policy> {
   std::vector<double> m_energies;
 
-public:
+ public:
   ~EnergyAccumulator() {}
 
   EnergyAccumulator(
@@ -244,7 +247,7 @@ public:
   }
   double get_energy() {
     return std::reduce(m_energies.begin(),
-                       m_energies.end()); // reduce sums up energies
+                       m_energies.end());  // reduce sums up energies
   }
 };
 
@@ -257,7 +260,7 @@ class EnergyGradientAccumulator
     : public BaseAccumulator<pairwise_interaction, distance_policy> {
   std::vector<double> m_energies;
 
-public:
+ public:
   pele::Array<double> *m_gradient;
   ~EnergyGradientAccumulator() {}
   EnergyGradientAccumulator(
@@ -303,7 +306,7 @@ class EnergyGradientHessianAccumulator
     : public BaseAccumulator<pairwise_interaction, distance_policy> {
   std::vector<double> m_energies;
 
-public:
+ public:
   pele::Array<double> *m_gradient;
   pele::Array<double> *m_hessian;
 
@@ -357,7 +360,7 @@ class EnergyHessianAccumulator
   std::vector<double> m_energies;
   pele::Array<double> *m_hessian;
 
-public:
+ public:
   ~EnergyHessianAccumulator() {}
 
   EnergyHessianAccumulator(
@@ -407,7 +410,7 @@ class EnergyAccumulatorExact {
   const pele::Array<double> m_radii;
   std::vector<xsum_large_accumulator> m_energies;
 
-public:
+ public:
   ~EnergyAccumulatorExact() {
     // for(auto & energy : m_energies) {
     //   delete energy;
@@ -483,7 +486,7 @@ class EnergyGradientAccumulatorExact {
   const pele::Array<double> m_radii;
   std::vector<xsum_large_accumulator> m_energies;
 
-public:
+ public:
   std::shared_ptr<std::vector<xsum_small_accumulator>> m_gradient;
   ~EnergyGradientAccumulatorExact() {
     // for(auto & energy : m_energies) {
@@ -506,9 +509,9 @@ public:
 #endif
   }
 
-  void
-  reset_data(const pele::Array<double> *coords,
-             std::shared_ptr<std::vector<xsum_small_accumulator>> &gradient) {
+  void reset_data(
+      const pele::Array<double> *coords,
+      std::shared_ptr<std::vector<xsum_small_accumulator>> &gradient) {
     m_coords = coords;
 #ifdef _OPENMP
 #pragma omp parallel
@@ -572,7 +575,7 @@ class EnergyGradientHessianAccumulatorExact {
   const pele::Array<double> m_radii;
   std::vector<double *> m_energies;
 
-public:
+ public:
   pele::Array<double> *m_gradient;
   pele::Array<double> *m_hessian;
 
@@ -694,7 +697,7 @@ class NeighborAccumulator {
   const double m_cutoff_sca;
   const pele::Array<short> m_include_atoms;
 
-public:
+ public:
   pele::Array<std::vector<size_t>> m_neighbor_indexes;
   pele::Array<std::vector<std::vector<double>>> m_neighbor_displacements;
 
@@ -704,9 +707,14 @@ public:
                       pele::Array<double> const &coords,
                       pele::Array<double> const &radii, const double cutoff_sca,
                       pele::Array<short> const &include_atoms)
-      : m_pot(pot), m_interaction(interaction), m_dist(dist), m_coords(coords),
-        m_radii(radii), m_cutoff_sca(cutoff_sca),
-        m_include_atoms(include_atoms), m_neighbor_indexes(radii.size()),
+      : m_pot(pot),
+        m_interaction(interaction),
+        m_dist(dist),
+        m_coords(coords),
+        m_radii(radii),
+        m_cutoff_sca(cutoff_sca),
+        m_include_atoms(include_atoms),
+        m_neighbor_indexes(radii.size()),
         m_neighbor_displacements(radii.size()) {}
 
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
@@ -747,14 +755,16 @@ class OverlapAccumulator {
   const pele::Array<double> m_coords;
   const pele::Array<double> m_radii;
 
-public:
+ public:
   std::vector<size_t> m_overlap_inds;
 
   OverlapAccumulator(std::shared_ptr<pairwise_interaction> &interaction,
                      std::shared_ptr<distance_policy> &dist,
                      pele::Array<double> const &coords,
                      pele::Array<double> const &radii)
-      : m_interaction(interaction), m_dist(dist), m_coords(coords),
+      : m_interaction(interaction),
+        m_dist(dist),
+        m_coords(coords),
         m_radii(radii) {}
 
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
@@ -788,7 +798,7 @@ public:
  */
 template <typename pairwise_interaction, typename distance_policy>
 class CellListPotential : public PairwisePotentialInterface {
-protected:
+ protected:
   const static size_t m_ndim = distance_policy::_ndim;
   pele::CellLists<distance_policy> m_cell_lists;
   std::shared_ptr<pairwise_interaction> m_interaction;
@@ -812,7 +822,7 @@ protected:
   EnergyGradientHessianAccumulatorExact<pairwise_interaction, distance_policy>
       *m_eghAccExact;
 
-public:
+ public:
   ~CellListPotential() {
     if (exact_sum) {
       delete m_eAccExact;
@@ -827,15 +837,19 @@ public:
 
   CellListPotential(std::shared_ptr<pairwise_interaction> interaction,
                     std::shared_ptr<distance_policy> dist,
-                    pele::Array<double> const &boxvec,
-                    double ncellx_scale, const pele::Array<double> radii,
+                    pele::Array<double> const &boxvec, double ncellx_scale,
+                    const pele::Array<double> radii,
                     NonAdditiveCutoffCalculator cutoff_calculator,
                     const double radii_sca = 0.0, const bool balance_omp = true,
                     const bool exact_sum = false)
       : PairwisePotentialInterface(radii, cutoff_calculator),
-        m_cell_lists(dist, boxvec, this->get_max_cutoff(), ncellx_scale, balance_omp),
-        m_interaction(interaction), m_dist(dist), m_radii_sca(radii_sca),
-        exact_gradient_initialized(false), exact_sum(exact_sum) {
+        m_cell_lists(dist, boxvec, this->get_max_cutoff(), ncellx_scale,
+                     balance_omp),
+        m_interaction(interaction),
+        m_dist(dist),
+        m_radii_sca(radii_sca),
+        exact_gradient_initialized(false),
+        exact_sum(exact_sum) {
     if (exact_sum) {
       std::cout
           << "WARNING: Exact sum is not being maintained and will be removed"
@@ -879,8 +893,11 @@ public:
                     const double non_additivity = 0.0)
       : PairwisePotentialInterface(radii, non_additivity),
         m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
-        m_interaction(interaction), m_dist(dist), m_radii_sca(radii_sca),
-        exact_gradient_initialized(false), exact_sum(exact_sum) {
+        m_interaction(interaction),
+        m_dist(dist),
+        m_radii_sca(radii_sca),
+        exact_gradient_initialized(false),
+        exact_sum(exact_sum) {
     if (exact_sum) {
       std::cout
           << "WARNING: Exact sum is not being maintained and will be removed"
@@ -925,8 +942,11 @@ public:
                     double ncellx_scale, const bool balance_omp = true,
                     const bool exact_sum = false)
       : m_cell_lists(dist, boxvec, rcut, ncellx_scale, balance_omp),
-        m_interaction(interaction), m_dist(dist), m_radii_sca(0.0),
-        exact_gradient_initialized(false), exact_sum(exact_sum) {
+        m_interaction(interaction),
+        m_dist(dist),
+        m_radii_sca(0.0),
+        exact_gradient_initialized(false),
+        exact_sum(exact_sum) {
     if (exact_sum) {
       m_eAccExact =
           new EnergyAccumulatorExact<pairwise_interaction, distance_policy>(
@@ -934,8 +954,10 @@ public:
       m_egAccExact = new EnergyGradientAccumulatorExact<pairwise_interaction,
                                                         distance_policy>(
           m_interaction, m_dist);
-      m_eghAccExact = new EnergyGradientHessianAccumulatorExact<
-          pairwise_interaction, distance_policy>(m_interaction, m_dist);
+      m_eghAccExact =
+          new EnergyGradientHessianAccumulatorExact<pairwise_interaction,
+                                                    distance_policy>(
+              m_interaction, m_dist);
       std::cout << "Warning: exact sum not implemented for get_hessian"
                 << std::endl;
       m_ehAcc =
@@ -959,7 +981,6 @@ public:
   virtual size_t get_ndim() { return m_ndim; }
 
   virtual double get_energy(Array<double> const &coords) {
-
     const size_t natoms = coords.size() / m_ndim;
     if (m_ndim * natoms != coords.size()) {
       throw std::runtime_error(
@@ -1094,7 +1115,6 @@ public:
   }
 
   double get_energy_hessian(Array<double> const &coords, Array<double> &hess) {
-
     const size_t natoms = coords.size() / m_ndim;
     if (m_ndim * natoms != coords.size()) {
       throw std::runtime_error(
@@ -1181,8 +1201,9 @@ public:
           "include_atoms.size() is not equal to the number of atoms");
     }
     if (m_radii.size() == 0) {
-      throw std::runtime_error("Can't calculate neighbors, because the "
-                               "used interaction doesn't use radii. ");
+      throw std::runtime_error(
+          "Can't calculate neighbors, because the "
+          "used interaction doesn't use radii. ");
     }
 
     if (!std::isfinite(coords[0]) ||
@@ -1209,8 +1230,9 @@ public:
           "coords.size() is not divisible by the number of dimensions");
     }
     if (m_radii.size() == 0) {
-      throw std::runtime_error("Can't calculate neighbors, because the "
-                               "used interaction doesn't use radii. ");
+      throw std::runtime_error(
+          "Can't calculate neighbors, because the "
+          "used interaction doesn't use radii. ");
     }
 
     if (!std::isfinite(coords[0]) ||
@@ -1260,9 +1282,8 @@ public:
     return energy;
   }
 
-  virtual inline double
-  get_interaction_energy_gradient_hessian(double r2, double *gij, double *hij,
-                                          size_t atom_i, size_t atom_j) const {
+  virtual inline double get_interaction_energy_gradient_hessian(
+      double r2, double *gij, double *hij, size_t atom_i, size_t atom_j) const {
     double energy = m_interaction->energy_gradient_hessian(
         r2, gij, hij, get_non_additive_cutoff(atom_i, atom_j));
     *gij *= sqrt(r2);
@@ -1285,12 +1306,12 @@ public:
     return sqrt(max_x);
   }
 
-protected:
+ protected:
   void update_iterator(Array<double> const &coords) {
     m_cell_lists.update(coords);
   }
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif //#ifndef _PELE_CELL_LIST_POTENTIAL_H
+#endif  //#ifndef _PELE_CELL_LIST_POTENTIAL_H

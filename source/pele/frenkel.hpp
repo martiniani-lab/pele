@@ -8,12 +8,13 @@
 #ifndef PYGMIN_FRENKEL_H
 #define PYGMIN_FRENKEL_H
 
+#include <memory>
+
 #include "atomlist_potential.hpp"
 #include "base_interaction.hpp"
 #include "cell_list_potential.hpp"
 #include "distance.hpp"
 #include "simple_pairwise_potential.hpp"
-#include <memory>
 
 namespace pele {
 
@@ -27,7 +28,9 @@ struct frenkel_interaction : BaseInteraction {
   double const _rcut2;
   double const _prefactor;
   frenkel_interaction(double sig, double eps, double rcut)
-      : _eps(eps), _sig2(sig * sig), _rcut2(rcut * rcut),
+      : _eps(eps),
+        _sig2(sig * sig),
+        _rcut2(rcut * rcut),
         _prefactor(2 * _eps * (_rcut2 / _sig2) *
                    pow(3 / (2 * ((_rcut2 / _sig2) - 1)), 3)) {}
 
@@ -44,8 +47,7 @@ struct frenkel_interaction : BaseInteraction {
 
   /* calculate energy and gradient from distance squared, gradient is in
    * |g|/|rij| */
-  double inline energy_gradient(double r2, double *gij,
-                                double dij) const {
+  double inline energy_gradient(double r2, double *gij, double dij) const {
     double ir2 = 1.0 / r2;
     double cutoff_factor = _rcut2 * ir2 - 1;
     double sigma_factor = _sig2 * ir2 - 1;
@@ -76,7 +78,7 @@ struct frenkel_interaction : BaseInteraction {
 };
 
 class Frenkel : public pele::SimplePairwisePotential<frenkel_interaction> {
-public:
+ public:
   Frenkel(double sig, double eps, double rcut)
       : SimplePairwisePotential<frenkel_interaction>(
             std::make_shared<frenkel_interaction>(sig, eps, rcut)) {}
@@ -84,7 +86,7 @@ public:
 
 class FrenkelPeriodic : public SimplePairwisePotential<frenkel_interaction,
                                                        periodic_distance<3>> {
-public:
+ public:
   FrenkelPeriodic(double sig, double eps, double rcut,
                   Array<double> const boxvec)
       : SimplePairwisePotential<frenkel_interaction, periodic_distance<3>>(
@@ -100,7 +102,7 @@ public:
 template <size_t ndim>
 class FrenkelPeriodicCellLists
     : public CellListPotential<frenkel_interaction, periodic_distance<ndim>> {
-public:
+ public:
   FrenkelPeriodicCellLists(double sig, double eps, double rcut,
                            Array<double> const boxvec, double ncellx_scale)
       : CellListPotential<frenkel_interaction, periodic_distance<ndim>>(
@@ -109,7 +111,7 @@ public:
             ncellx_scale) {}
 };
 
-} // namespace pele
+}  // namespace pele
 
 #endif
 

@@ -19,7 +19,7 @@ typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
 
 namespace pele {
 class BacktrackingLineSearch : LineSearch {
-public:
+ public:
   BacktrackingLineSearch(GradientOptimizer *opt,
                          Scalar inital_stpsize_ = Scalar(1.0),
                          Scalar max_step_ = Scalar(10.0), int m_ = 6,
@@ -32,9 +32,14 @@ public:
       : LineSearch(opt, max_step_),
         params(m_, epsilon_, epsilon_rel_, past_, delta_, max_linesearch_,
                min_step_, max_step_, ftol_, wolfe_, lstype_),
-        xsize(opt->get_x().size()), xdum(opt->get_x().copy()), gdum(xsize),
-        xvec(xsize), gradvec(xsize), initial_stpsize(inital_stpsize_),
-        step_direction(xsize), xoldvec(xsize),
+        xsize(opt->get_x().size()),
+        xdum(opt->get_x().copy()),
+        gdum(xsize),
+        xvec(xsize),
+        gradvec(xsize),
+        initial_stpsize(inital_stpsize_),
+        step_direction(xsize),
+        xoldvec(xsize),
         step_moving_away_from_min(false) {
     std::cout << inital_stpsize_ << "stpsize \n";
     std::cout << max_step_ << "max step \n";
@@ -50,7 +55,7 @@ public:
   inline double get_initial_stpsize() { return initial_stpsize; };
   bool get_step_moving_away_from_min() { return step_moving_away_from_min; };
 
-private:
+ private:
   LBFGSParam params;
   int xsize;
   double func_grad_wrapper(Vector &x, Vector &grad);
@@ -58,7 +63,7 @@ private:
   void LSFunc(Scalar &fx, Vector &x, Vector &grad, Scalar &step,
               const Vector &drt, const Vector &xp, const LBFGSParam &param);
 
-private:
+ private:
   Array<double> g_;
   Array<double> xold_;
   Array<double> gold_;
@@ -69,9 +74,9 @@ private:
   Scalar initial_stpsize;
   Vector step_direction;
   Vector xoldvec;
-  bool step_moving_away_from_min; // flag to inform the optimizer whether the
-                                  // step is moving to the minimum or not
+  bool step_moving_away_from_min;  // flag to inform the optimizer whether the
+                                   // step is moving to the minimum or not
 };
-} // namespace pele
+}  // namespace pele
 
-#endif // end #ifndef PELE_LINE_SEARCH_BACKTRACKING_H
+#endif  // end #ifndef PELE_LINE_SEARCH_BACKTRACKING_H

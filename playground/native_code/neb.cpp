@@ -42,4 +42,4 @@ void NEB::interpolate(Array &x1, Array &x2, Array &xout, double t) {
 void test_array(Array a) { std::cout << a << std::endl; }
 
 void test_py(void) { std::cout << "hello world\n"; }
-} // namespace pele
+}  // namespace pele

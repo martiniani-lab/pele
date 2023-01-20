@@ -46,5 +46,5 @@ void rot_mat_derivatives(pele::VecN<3> const &p, pele::MatrixNM<3, 3> &rmat,
                          pele::MatrixNM<3, 3> &drm1, pele::MatrixNM<3, 3> &drm2,
                          pele::MatrixNM<3, 3> &drm3);
 
-} // namespace pele
+}  // namespace pele
 #endif

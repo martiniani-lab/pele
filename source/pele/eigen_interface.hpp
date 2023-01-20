@@ -6,8 +6,9 @@
  */
 // #define EIGEN_USE_MKL_ALL
 
-#include "array.hpp"
 #include <Eigen/Dense>
+
+#include "array.hpp"
 
 namespace pele {
 // implicitly assumes that the arrays of same size
@@ -48,5 +49,5 @@ inline Eigen::VectorXd eig_eq_pele_data(Array<double> &x) {
   Eigen::Map<Eigen::VectorXd> vec(data, x.size());
   return vec;
 }
-} // end namespace pele
-#endif // end #ifndef _PELE_TO_EIG_H__
+}  // end namespace pele
+#endif  // end #ifndef _PELE_TO_EIG_H__

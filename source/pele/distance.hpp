@@ -56,7 +56,8 @@ namespace pele {
 /**
  * compute the cartesian distance
  */
-template <size_t IDX> struct meta_dist {
+template <size_t IDX>
+struct meta_dist {
   static void f(double *const r_ij, double const *const r1,
                 double const *const r2) {
     const static size_t k = IDX - 1;
@@ -65,14 +66,16 @@ template <size_t IDX> struct meta_dist {
   }
 };
 
-template <> struct meta_dist<1> {
+template <>
+struct meta_dist<1> {
   static void f(double *const r_ij, double const *const r1,
                 double const *const r2) {
     r_ij[0] = r1[0] - r2[0];
   }
 };
 
-template <size_t ndim> struct cartesian_distance {
+template <size_t ndim>
+struct cartesian_distance {
   static const size_t _ndim = ndim;
   inline void get_rij(double *const r_ij, double const *const r1,
                       double const *const r2) const {
@@ -85,15 +88,15 @@ template <size_t ndim> struct cartesian_distance {
       xnew[i] = x[i];
     }
   }
-  inline void put_atom_in_box(double *const x) const {
-  }
+  inline void put_atom_in_box(double *const x) const {}
 };
 
 /**
  * periodic boundary conditions in rectangular box
  */
 
-template <size_t IDX> struct meta_periodic_distance {
+template <size_t IDX>
+struct meta_periodic_distance {
   static void f(double *const r_ij, double const *const r1,
                 double const *const r2, const double *box, const double *ibox) {
     const static size_t k = IDX - 1;
@@ -103,7 +106,8 @@ template <size_t IDX> struct meta_periodic_distance {
   }
 };
 
-template <> struct meta_periodic_distance<1> {
+template <>
+struct meta_periodic_distance<1> {
   static void f(double *const r_ij, double const *const r1,
                 double const *const r2, const double *box, const double *ibox) {
     r_ij[0] = r1[0] - r2[0];
@@ -127,7 +131,8 @@ template <> struct meta_periodic_distance<1> {
  * round_fast(x[k] * ibox[k]) == -1 and finally
  * (x[k] -= -1 * box[k]) == 0.3 * box[k]
  */
-template <size_t IDX> struct meta_image {
+template <size_t IDX>
+struct meta_image {
   static void f(double *const xnew, const double *x, const double *ibox,
                 const double *box) {
     const static size_t k = IDX - 1;
@@ -154,7 +159,8 @@ template <size_t IDX> struct meta_image {
   }
 };
 
-template <> struct meta_image<1> {
+template <>
+struct meta_image<1> {
   static void f(double *const xnew, const double *x, const double *ibox,
                 const double *box) {
     xnew[0] = x[0] - round_fast(x[0] * ibox[0]) * box[0];
@@ -175,8 +181,9 @@ template <> struct meta_image<1> {
   }
 };
 
-template <size_t ndim> class periodic_distance {
-public:
+template <size_t ndim>
+class periodic_distance {
+ public:
   static const size_t _ndim = ndim;
   double m_box[ndim];
   double m_ibox[ndim];
@@ -224,7 +231,8 @@ public:
  * periodic boundary conditions in rectangular box, where the upper and lower
  * are moved in x-direction by dx
  */
-template <size_t IDX> struct meta_leesedwards_distance {
+template <size_t IDX>
+struct meta_leesedwards_distance {
   static void f(double *const r_ij, double const *const r1,
                 double const *const r2, const double *box, const double *ibox,
                 const double &dx) {
@@ -235,7 +243,8 @@ template <size_t IDX> struct meta_leesedwards_distance {
   }
 };
 
-template <> struct meta_leesedwards_distance<2> {
+template <>
+struct meta_leesedwards_distance<2> {
   static void f(double *const r_ij, double const *const r1,
                 double const *const r2, const double *box, const double *ibox,
                 const double &dx) {
@@ -257,7 +266,8 @@ template <> struct meta_leesedwards_distance<2> {
  * meta_leesedwards_image applies the nearest Lees-Edwards image convention to
  * the coordinates of one particle, just like meta_image.
  */
-template <size_t IDX> struct meta_leesedwards_image {
+template <size_t IDX>
+struct meta_leesedwards_image {
   static void f(double *const xnew, const double *x, const double *ibox,
                 const double *box, const double dx) {
     const static size_t k = IDX - 1;
@@ -285,7 +295,8 @@ template <size_t IDX> struct meta_leesedwards_image {
   }
 };
 
-template <> struct meta_leesedwards_image<2> {
+template <>
+struct meta_leesedwards_image<2> {
   static void f(double *const xnew, const double *x, const double *ibox,
                 const double *box, const double dx) {
     // Apply Lees-Edwards boundary conditions in y-direction
@@ -335,19 +346,22 @@ template <> struct meta_leesedwards_image<2> {
  * periodic boundary conditions in rectangular box, where the upper and lower
  * periodic images are moved in x-direction by dx
  */
-template <size_t ndim> class leesedwards_distance {
-private:
-  double m_box[ndim];  //!< Box size
-  double m_ibox[ndim]; //!< Inverse box size
-  double m_dx; //!< Distance the ghost cells are moved by (i.e. amount of shear)
+template <size_t ndim>
+class leesedwards_distance {
+ private:
+  double m_box[ndim];   //!< Box size
+  double m_ibox[ndim];  //!< Inverse box size
+  double
+      m_dx;  //!< Distance the ghost cells are moved by (i.e. amount of shear)
 
-public:
-  static const size_t _ndim = ndim; //!< Number of box dimensions
+ public:
+  static const size_t _ndim = ndim;  //!< Number of box dimensions
 
   leesedwards_distance(Array<double> const box, const double shear)
       : m_dx(fmod(shear, 1.0) * box[1]) {
-    static_assert(ndim >= 2, "box dimension must be at least 2 for "
-                             "lees-edwards boundary conditions");
+    static_assert(ndim >= 2,
+                  "box dimension must be at least 2 for "
+                  "lees-edwards boundary conditions");
     if (box.size() != ndim) {
       throw std::invalid_argument("box.size() must be equal to ndim");
     }
@@ -358,8 +372,9 @@ public:
   }
 
   leesedwards_distance() {
-    static_assert(ndim >= 2, "box dimension must be at least 2 for "
-                             "lees-edwards boundary conditions");
+    static_assert(ndim >= 2,
+                  "box dimension must be at least 2 for "
+                  "lees-edwards boundary conditions");
     throw std::runtime_error(
         "The empty constructor is not available for Lees-Edwards boundaries.");
   }
@@ -391,8 +406,8 @@ public:
  */
 
 class DistanceInterface {
-protected:
-public:
+ protected:
+ public:
   virtual void get_rij(double *const r_ij, double const *const r1,
                        double const *const r2) const = 0;
   virtual ~DistanceInterface() {}
@@ -400,10 +415,10 @@ public:
 
 template <size_t ndim>
 class CartesianDistanceWrapper : public DistanceInterface {
-protected:
+ protected:
   cartesian_distance<ndim> _dist;
 
-public:
+ public:
   static const size_t _ndim = ndim;
   inline void get_rij(double *const r_ij, double const *const r1,
                       double const *const r2) const {
@@ -413,10 +428,10 @@ public:
 
 template <size_t ndim>
 class PeriodicDistanceWrapper : public DistanceInterface {
-protected:
+ protected:
   periodic_distance<ndim> _dist;
 
-public:
+ public:
   static const size_t _ndim = ndim;
   PeriodicDistanceWrapper(Array<double> const box) : _dist(box){};
 
@@ -428,10 +443,10 @@ public:
 
 template <size_t ndim>
 class LeesEdwardsDistanceWrapper : public DistanceInterface {
-protected:
+ protected:
   leesedwards_distance<ndim> _dist;
 
-public:
+ public:
   static const size_t _ndim = ndim;
   LeesEdwardsDistanceWrapper(Array<double> const box, const double shear)
       : _dist(box, shear){};
@@ -442,5 +457,5 @@ public:
   }
 };
 
-} // namespace pele
-#endif // #ifndef _PELE_DISTANCE_H
+}  // namespace pele
+#endif  // #ifndef _PELE_DISTANCE_H

@@ -1,8 +1,9 @@
 #include "pele/newton_with_extension.hpp"
+#include <memory>
+
 #include "pele/array.hpp"
 #include "pele/eigen_interface.hpp"
 #include "pele/optimizer.hpp"
-#include <memory>
 // Lapack for cholesky
 extern "C" {
 #include <lapacke.h>
@@ -20,16 +21,21 @@ NewtonWithExtendedPotential::NewtonWithExtendedPotential(
     double tol, std::shared_ptr<BasePotential> potential_extension,
     double translation_offset, double max_step)
     : GradientOptimizer(potential, x0, tol),
-      _translation_offset(translation_offset), _max_step(max_step),
-      _potential_extension(potential_extension), _hessian(x0.size(), x0.size()),
-      _gradient(x0.size()), _x(x0.size()), _line_search(this, 1.0),
-      _x_old(x0.size()), _gradient_old(x0.size()) {
+      _translation_offset(translation_offset),
+      _max_step(max_step),
+      _potential_extension(potential_extension),
+      _hessian(x0.size(), x0.size()),
+      _gradient(x0.size()),
+      _x(x0.size()),
+      _line_search(this, 1.0),
+      _x_old(x0.size()),
+      _gradient_old(x0.size()) {
   // Setup the extended potential
   _potential_extension = potential_extension;
   _extended_potential_wrapper =
       std::make_shared<ExtendedPotential>(potential, potential_extension);
   set_potential(
-      _potential_extension); // write pele array data into the Eigen array
+      _potential_extension);  // write pele array data into the Eigen array
 
   // Save coordinates as an Eigen vector
   for (size_t i = 0; i < x0.size(); ++i) {
@@ -38,7 +44,6 @@ NewtonWithExtendedPotential::NewtonWithExtendedPotential(
 }
 
 void NewtonWithExtendedPotential::reset(pele::Array<double> x) {
-
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x.size(); ++i) {
     _x(i) = x[i];
@@ -85,8 +90,9 @@ void NewtonWithExtendedPotential::one_iteration() {
   double stepnorm = _line_search.line_search(x_pele, step_pele);
 
   if (stepnorm / starting_norm < 1e-10) {
-    throw std::runtime_error("rescaled step decreased by too much. Newton "
-                             "might be in the wrong direction");
+    throw std::runtime_error(
+        "rescaled step decreased by too much. Newton "
+        "might be in the wrong direction");
   }
   // Careful about assignment
   x_.assign(x_pele);
@@ -95,4 +101,4 @@ void NewtonWithExtendedPotential::one_iteration() {
   iter_number_ += 1;
 }
 
-} // namespace pele
+}  // namespace pele

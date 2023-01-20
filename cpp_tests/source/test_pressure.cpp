@@ -1,5 +1,4 @@
 #include <cmath>
-
 #include <gtest/gtest.h>
 
 #include "pele/inversepower.hpp"

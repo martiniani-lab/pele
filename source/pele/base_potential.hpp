@@ -1,13 +1,14 @@
 #ifndef PYGMIN_POTENTIAL_H
 #define PYGMIN_POTENTIAL_H
 
-#include "array.hpp"
 #include <assert.h>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+
+#include "array.hpp"
 
 extern "C" {
 #include "xsum.h"
@@ -19,7 +20,7 @@ namespace pele {
  * basic potential interface for native potentials
  */
 class BasePotential {
-public:
+ public:
   virtual ~BasePotential() {}
 
   /**
@@ -61,9 +62,8 @@ public:
     return energy;
   }
 
-  virtual double
-  get_energy_gradient(Array<double> const &x,
-                      std::vector<xsum_small_accumulator> &exact_grad) {
+  virtual double get_energy_gradient(
+      Array<double> const &x, std::vector<xsum_small_accumulator> &exact_grad) {
     throw std::runtime_error(
         "A numerical version for the exact gradient has not been written");
   }
@@ -96,12 +96,12 @@ public:
     return energy;
   }
 
-  virtual double
-  get_energy_gradient_hessian_rattlers(Array<double> const &x,
-                                       Array<double> &grad, Array<double> &hess,
-                                       Array<uint8_t> not_rattlers) {
-    throw std::runtime_error("BasePotential::get_energy_gradient_hessian with "
-                             "rattlers must be overloaded");
+  virtual double get_energy_gradient_hessian_rattlers(
+      Array<double> const &x, Array<double> &grad, Array<double> &hess,
+      Array<uint8_t> not_rattlers) {
+    throw std::runtime_error(
+        "BasePotential::get_energy_gradient_hessian with "
+        "rattlers must be overloaded");
   }
 
   virtual double get_energy_gradient(Array<double> const &x,
@@ -188,6 +188,6 @@ public:
    */
   virtual double compute_norm(pele::Array<double> const &x) { return norm(x); }
 };
-} // namespace pele
+}  // namespace pele
 
 #endif

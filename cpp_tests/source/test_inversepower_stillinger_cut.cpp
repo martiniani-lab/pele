@@ -1,15 +1,14 @@
 #include <gtest/gtest.h>
 
 #include "pele/inversepower_stillinger_cut.hpp"
-
 #include "test_utils.hpp"
 
 static double const EPS = std::numeric_limits<double>::min();
-#define EXPECT_NEAR_RELATIVE(A, B, T)                                          \
+#define EXPECT_NEAR_RELATIVE(A, B, T) \
   EXPECT_NEAR(A / (fabs(A) + fabs(B) + EPS), B / (fabs(A) + fabs(B) + EPS), T)
 
 class BasicIPSCutTest : public ::testing::Test {
-public:
+ public:
   size_t ndim;
   size_t ndof;
   size_t npart;

@@ -6,14 +6,16 @@
  * ill conditioned problems
  */
 
-#include "array.hpp"
-#include "base_potential.hpp"
 #include <memory>
 #include <vector>
 
+#include "array.hpp"
+#include "base_potential.hpp"
+
 // Eigen linear algebra library
-#include "eigen_interface.hpp"
 #include <Eigen/Dense>
+
+#include "eigen_interface.hpp"
 
 // line search methods
 #include "backtracking.hpp"
@@ -30,11 +32,11 @@ namespace pele {
  */
 
 class Steepest_Descent : public GradientOptimizer {
-private:
-  double m_initial_step; // initial step size for steepest descent
+ private:
+  double m_initial_step;  // initial step size for steepest descent
   std::shared_ptr<LineSearch> line_search_method;
 
-public:
+ public:
   Steepest_Descent(std::shared_ptr<pele::BasePotential> potential,
                    const pele::Array<double> x0, double tol = 1e-4,
                    double initial_step = 1)
@@ -44,6 +46,6 @@ public:
   virtual ~Steepest_Descent(){};
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // end _PELE_STEEPEST_DESCENT_H__
+#endif  // end _PELE_STEEPEST_DESCENT_H__

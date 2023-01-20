@@ -1,13 +1,14 @@
 #ifndef _PELE_LBFGS_H__
 #define _PELE_LBFGS_H__
 
-#include "array.hpp"
-#include "base_potential.hpp"
-#include "optimizer.hpp"
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <vector>
+
+#include "array.hpp"
+#include "base_potential.hpp"
+#include "optimizer.hpp"
 
 namespace pele {
 
@@ -16,7 +17,7 @@ namespace pele {
  * Implementation uses a backtracking linesearch.
  */
 class LBFGS : public GradientOptimizer {
-private:
+ private:
   int M_;               /**< The length of the LBFGS memory */
   double max_f_rise_;   /**< The maximum the function is allowed to rise in a
                          * given step.  This is the criterion for the
@@ -44,18 +45,18 @@ private:
   double H0_;
   int k_; /**< Counter for how many times the memory has been updated */
 
-  Array<double> alpha; //!< Alpha used when looping through LBFGS memory
+  Array<double> alpha;  //!< Alpha used when looping through LBFGS memory
 
-  Array<double> xold; //!< Coordinates before taking a step
-  Array<double> gold; //!< Gradient before taking a step
-  Array<double> step; //!< Step size and direction
+  Array<double> xold;  //!< Coordinates before taking a step
+  Array<double> gold;  //!< Gradient before taking a step
+  Array<double> step;  //!< Step size and direction
   double
-      inv_sqrt_size; //!< The inverse square root the the number of components
+      inv_sqrt_size;  //!< The inverse square root the the number of components
 #if PRINT_TO_FILE == 1
   std::ofstream trajectory_file;
 #endif
 
-public:
+ public:
   /**
    * Constructor
    */
@@ -100,7 +101,7 @@ public:
    */
   virtual void reset(pele::Array<double> &x0);
 
-private:
+ private:
   /**
    * Add a step to the LBFGS Memory
    * This updates s_, y_, rho_, H0_, and k_
@@ -120,6 +121,6 @@ private:
    */
   double backtracking_linesearch(Array<double> step);
 };
-} // namespace pele
+}  // namespace pele
 
 #endif

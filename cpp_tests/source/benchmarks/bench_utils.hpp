@@ -12,7 +12,7 @@
 #include "pele/matrix.hpp"
 
 class Timer {
-public:
+ public:
   double tstart, tstop;
 
   void start() { tstart = clock(); }
@@ -56,8 +56,7 @@ double bench_potential(std::shared_ptr<pele::BasePotential> pot,
   for (size_t i = 0; i < neval; ++i) {
     // change x by some amount and recompute the energy
     double dx = .1;
-    if (i % 5 == 0)
-      dx *= -1;
+    if (i % 5 == 0) dx *= -1;
     x[i % x.size()] += dx;
     pot->get_energy_gradient(x, grad);
     //        if (i % 500 == 0) {
@@ -72,7 +71,7 @@ double bench_potential(std::shared_ptr<pele::BasePotential> pot,
 template <class PotentialMaker>
 double bench_potential_natoms(PotentialMaker &pot_maker, size_t natoms,
                               size_t neval) {
-  std::cout << std::endl; // flush the output
+  std::cout << std::endl;  // flush the output
   std::cout << "======================================================\n";
   std::cout << "benchmarking " << neval << " energy evaluations for " << natoms
             << " atoms\n";

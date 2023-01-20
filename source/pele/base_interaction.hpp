@@ -20,6 +20,6 @@ struct BaseInteraction {
   }
 };
 
-} // namespace pele
+}  // namespace pele
 
-#endif // PYGMIN_BASE_INTERACTION_H
+#endif  // PYGMIN_BASE_INTERACTION_H

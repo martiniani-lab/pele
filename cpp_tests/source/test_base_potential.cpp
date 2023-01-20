@@ -1,17 +1,17 @@
-#include "pele/array.hpp"
-#include "pele/base_potential.hpp"
-
 #include <cmath>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 
+#include "pele/array.hpp"
+#include "pele/base_potential.hpp"
+
 using pele::Array;
 using pele::BasePotential;
 
 class HarmonicE : public pele::BasePotential {
-public:
+ public:
   size_t call_count;
   HarmonicE() : call_count(0) {}
 
@@ -26,7 +26,7 @@ public:
 };
 
 class BasePotentialTest : public ::testing::Test {
-public:
+ public:
   double etrue;
   Array<double> x, g, gtrue, hess, htrue;
   virtual void SetUp() {

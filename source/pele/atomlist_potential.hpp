@@ -1,15 +1,16 @@
 #ifndef _ATOMLIST_POTENTIAL_H_
 #define _ATOMLIST_POTENTIAL_H_
 
+#include <iostream>
+
 #include "array.hpp"
 #include "pairwise_potential_interface.hpp"
-#include <iostream>
 
 namespace pele {
 
 template <typename pairwise_interaction, typename distance_policy>
 class AtomListPotential : public PairwisePotentialInterface {
-protected:
+ protected:
   std::shared_ptr<pairwise_interaction> _interaction;
   std::shared_ptr<distance_policy> _dist;
   Array<size_t> _atoms1;
@@ -21,23 +22,32 @@ protected:
                     std::shared_ptr<distance_policy> dist,
                     Array<size_t> &atoms1, Array<size_t> &atoms2,
                     const Array<double> radii)
-      : PairwisePotentialInterface(radii), _interaction(interaction),
-        _dist(dist), _atoms1(atoms1.copy()), _atoms2(atoms2.copy()),
+      : PairwisePotentialInterface(radii),
+        _interaction(interaction),
+        _dist(dist),
+        _atoms1(atoms1.copy()),
+        _atoms2(atoms2.copy()),
         _one_list(false) {}
 
   AtomListPotential(std::shared_ptr<pairwise_interaction> interaction,
                     std::shared_ptr<distance_policy> dist,
                     Array<size_t> &atoms1, Array<size_t> &atoms2)
-      : _interaction(interaction), _dist(dist), _atoms1(atoms1.copy()),
-        _atoms2(atoms2.copy()), _one_list(false) {}
+      : _interaction(interaction),
+        _dist(dist),
+        _atoms1(atoms1.copy()),
+        _atoms2(atoms2.copy()),
+        _one_list(false) {}
 
   AtomListPotential(std::shared_ptr<pairwise_interaction> interaction,
                     std::shared_ptr<distance_policy> dist,
                     Array<size_t> &atoms1)
-      : _interaction(interaction), _dist(dist), _atoms1(atoms1.copy()),
-        _atoms2(_atoms1), _one_list(true) {}
+      : _interaction(interaction),
+        _dist(dist),
+        _atoms1(atoms1.copy()),
+        _atoms2(_atoms1),
+        _one_list(true) {}
 
-public:
+ public:
   virtual inline double get_energy(Array<double> const &x) {
     double e = 0.;
     size_t jstart = 0;
@@ -46,8 +56,7 @@ public:
     for (size_t i = 0; i < _atoms1.size(); ++i) {
       size_t atom1 = _atoms1[i];
       size_t i1 = _ndim * atom1;
-      if (_one_list)
-        jstart = i + 1;
+      if (_one_list) jstart = i + 1;
       for (size_t j = jstart; j < _atoms2.size(); ++j) {
         size_t atom2 = _atoms2[j];
         size_t i2 = _ndim * atom2;
@@ -92,11 +101,10 @@ public:
           r2 += dr[k] * dr[k];
         }
 
-        e += _interaction->energy_gradient(r2, &gij, get_non_additive_cutoff(atom1, atom2));
-        for (size_t k = 0; k < _ndim; ++k)
-          grad[i1 + k] -= gij * dr[k];
-        for (size_t k = 0; k < _ndim; ++k)
-          grad[i2 + k] += gij * dr[k];
+        e += _interaction->energy_gradient(
+            r2, &gij, get_non_additive_cutoff(atom1, atom2));
+        for (size_t k = 0; k < _ndim; ++k) grad[i1 + k] -= gij * dr[k];
+        for (size_t k = 0; k < _ndim; ++k) grad[i2 + k] += gij * dr[k];
       }
     }
 
@@ -136,12 +144,10 @@ public:
           r2 += dr[k] * dr[k];
         }
 
-        e += _interaction->energy_gradient_hessian(r2, &gij, &hij,
-                                                   get_non_additive_cutoff(atom1, atom2));
-        for (size_t k = 0; k < _ndim; ++k)
-          grad[i1 + k] -= gij * dr[k];
-        for (size_t k = 0; k < _ndim; ++k)
-          grad[i2 + k] += gij * dr[k];
+        e += _interaction->energy_gradient_hessian(
+            r2, &gij, &hij, get_non_additive_cutoff(atom1, atom2));
+        for (size_t k = 0; k < _ndim; ++k) grad[i1 + k] -= gij * dr[k];
+        for (size_t k = 0; k < _ndim; ++k) grad[i2 + k] += gij * dr[k];
 
         for (size_t k = 0; k < _ndim; ++k) {
           // diagonal block - diagonal terms
@@ -173,6 +179,6 @@ public:
     return e;
   }
 };
-} // namespace pele
+}  // namespace pele
 
 #endif

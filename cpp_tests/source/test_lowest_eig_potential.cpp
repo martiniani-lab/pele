@@ -1,20 +1,20 @@
-#include <gtest/gtest.h>
-#include "pele/array.hpp"
-#include "pele/lbfgs.hpp"
-#include "pele/lj.hpp"
-#include "pele/lowest_eig_potential.hpp"
-
 #include <cmath>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
 
+#include "pele/array.hpp"
+#include "pele/lbfgs.hpp"
+#include "pele/lj.hpp"
+#include "pele/lowest_eig_potential.hpp"
+
 using pele::Array;
 using pele::BasePotential;
 
 class LowestEigPotentialTest : public ::testing::Test {
-public:
+ public:
   std::shared_ptr<pele::BasePotential> _potential;
   std::shared_ptr<pele::LowestEigPotential> _lowesteigpot;
   std::shared_ptr<pele::GradientOptimizer> _lbfgs;
@@ -49,12 +49,9 @@ public:
     ev1.assign(0.0);
     ev2.assign(0.0);
     double v = 1 / sqrt(_natoms);
-    for (size_t j = 0; j < _ndim; j += _bdim)
-      ev0[j] = v;
-    for (size_t j = 1; j < _ndim; j += _bdim)
-      ev1[j] = v;
-    for (size_t j = 2; j < _ndim; j += _bdim)
-      ev2[j] = v;
+    for (size_t j = 0; j < _ndim; j += _bdim) ev0[j] = v;
+    for (size_t j = 1; j < _ndim; j += _bdim) ev1[j] = v;
+    for (size_t j = 2; j < _ndim; j += _bdim) ev2[j] = v;
     // setup potential
     _potential = std::shared_ptr<pele::BasePotential>(new pele::LJ(_c6, _c12));
     // setup LBFGS
@@ -64,8 +61,7 @@ public:
     // setup lowesteigtest
     _g = Array<double>(_ndim);
     _ranvec = Array<double>(_ndim);
-    for (size_t j = 0; j < _ndim; ++j)
-      _ranvec[j] = (double)j;
+    for (size_t j = 0; j < _ndim; ++j) _ranvec[j] = (double)j;
     _ranvec /= norm(_ranvec);
   }
 };
@@ -133,7 +129,7 @@ TEST_F(LowestEigPotentialTest, LowestEig_ranvecorth) {
 }
 
 class OrthogonalizeTranslationalTest : public ::testing::Test {
-public:
+ public:
   pele::Array<double> ev0, ev1, ev2, _vector, _coords;
   size_t _natoms, _bdim, _ndim;
   std::shared_ptr<pele::Orthogonalize> _orthog;
@@ -151,16 +147,12 @@ public:
     ev1.assign(0.0);
     ev2.assign(0.0);
     double v = 1 / sqrt(_natoms);
-    for (size_t j = 0; j < _ndim; j += _bdim)
-      ev0[j] = v;
-    for (size_t j = 1; j < _ndim; j += _bdim)
-      ev1[j] = v;
-    for (size_t j = 2; j < _ndim; j += _bdim)
-      ev2[j] = v;
+    for (size_t j = 0; j < _ndim; j += _bdim) ev0[j] = v;
+    for (size_t j = 1; j < _ndim; j += _bdim) ev1[j] = v;
+    for (size_t j = 2; j < _ndim; j += _bdim) ev2[j] = v;
     _vector = Array<double>(_ndim);
     _coords = Array<double>(_ndim);
-    for (size_t j = 0; j < _ndim; ++j)
-      _vector[j] = (double)j;
+    for (size_t j = 0; j < _ndim; ++j) _vector[j] = (double)j;
     _vector /= norm(_vector);
     _coords.assign(10);
   };
@@ -186,6 +178,5 @@ TEST_F(OrthogonalizeTranslationalTest, orthogonalize_works2) {
 
 TEST_F(OrthogonalizeTranslationalTest, orthogonalize_works3) {
   _orthog->orthogonalize(_coords, _vector);
-  for (size_t i = 0; i < _ndim; ++i)
-    ASSERT_EQ(_coords[i], 10);
+  for (size_t i = 0; i < _ndim; ++i) ASSERT_EQ(_coords[i], 10);
 }

@@ -1,15 +1,13 @@
-#include <memory>
-
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "pele/array.hpp"
 #include "pele/gaussianpot.hpp"
 #include "pele/modified_fire.hpp"
-
 #include "test_utils.hpp"
 
 class TestGaussianPot : public ::testing::Test {
-public:
+ public:
   size_t ndim, npot, ndof;
   virtual void SetUp() {
     ndim = 2;
@@ -86,7 +84,7 @@ TEST_F(TestGaussianPot, OneGaussWorksNonZero) {
 }
 
 class TestGaussianPotAuto : public PotentialTest {
-public:
+ public:
   size_t ndim, npot, ndof;
   pele::Array<double> mean, cov;
   virtual void SetUp() {

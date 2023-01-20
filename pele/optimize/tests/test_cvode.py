@@ -1,5 +1,7 @@
-"""
-Tests whether the CVODE results through the python wrapper match with the C++ results.
+"""Test for CVODE.
+
+Tests whether the CVODE results through the python wrapper match with the C++
+results.
 
 TODO: The results are hardcoded for the current test_cvode.py.
       We need to later ensure that we automate the comparison.

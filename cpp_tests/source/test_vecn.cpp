@@ -1,10 +1,11 @@
 #include <gtest/gtest.h>
-#include "pele/aatopology.hpp"
-#include "pele/matrix.hpp"
-#include "pele/vecn.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+
+#include "pele/aatopology.hpp"
+#include "pele/matrix.hpp"
+#include "pele/vecn.hpp"
 
 using pele::MatrixNM;
 using pele::VecN;
@@ -70,8 +71,7 @@ TEST(VecNTest, RangeBasedFor_Works) {
 TEST(VecNTest, SumOperator_VecN) {
   pele::VecN<3> v(-1);
   pele::VecN<3> v2(1);
-  for (size_t i = 0; i < v2.size(); ++i)
-    v2[i] = 1;
+  for (size_t i = 0; i < v2.size(); ++i) v2[i] = 1;
   v += v2;
   EXPECT_NE(v.data(), v2.data());
   for (int i = 0; i < 3; ++i) {
