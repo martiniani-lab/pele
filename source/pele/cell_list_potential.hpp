@@ -41,9 +41,10 @@ inline void reset_energies(vector<double> &energies) {
 #endif
 }
 
-inline void accumulate_energies_omp(vector<double> &energies, double energy) {
+inline void accumulate_energies_omp(vector<double> &energies, double energy,
+                                    const size_t isubdom) {
 #ifdef _OPENMP
-  energies[omp_get_thread_num()] += energy;
+  energies[isubdom] += energy;
 #else
   energies[0] += energy;
 #endif
@@ -241,9 +242,9 @@ class EnergyAccumulator
                         const size_t isubdom) {
     this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j);
     double energy =
-        this->m_interaction->energy(this->m_distance_datas[thread()].r2,
-                                    this->m_distance_datas[thread()].dij);
-    accumulate_energies_omp(m_energies, energy);
+        this->m_interaction->energy(this->m_distance_datas[isubdom].r2,
+                                    this->m_distance_datas[isubdom].dij);
+    accumulate_energies_omp(m_energies, energy, isubdom);
   }
   double get_energy() {
     return std::reduce(m_energies.begin(),
@@ -286,10 +287,10 @@ class EnergyGradientAccumulator
     this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j);
     double gij;
     double energy = this->m_interaction->energy_gradient(
-        this->m_distance_datas[thread()].r2, &gij,
-        this->m_distance_datas[thread()].dij);
-    accumulate_energies_omp(m_energies, energy);
-    accumulate_gradient(*m_gradient, gij, this->m_distance_datas[thread()]);
+        this->m_distance_datas[isubdom].r2, &gij,
+        this->m_distance_datas[isubdom].dij);
+    accumulate_energies_omp(m_energies, energy, isubdom);
+    accumulate_gradient(*m_gradient, gij, this->m_distance_datas[isubdom]);
   }
 
   double get_energy() {
@@ -335,12 +336,12 @@ class EnergyGradientHessianAccumulator
     this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j);
     double gij, hij;
     double energy = this->m_interaction->energy_gradient_hessian(
-        this->m_distance_datas[thread()].r2, &gij, &hij,
-        this->m_distance_datas[thread()].dij);
+        this->m_distance_datas[isubdom].r2, &gij, &hij,
+        this->m_distance_datas[isubdom].dij);
 
-    accumulate_energies_omp(m_energies, energy);
-    accumulate_gradient(*m_gradient, gij, this->m_distance_datas[thread()]);
-    accumulate_hessian(*m_hessian, hij, gij, this->m_distance_datas[thread()],
+    accumulate_energies_omp(m_energies, energy, isubdom);
+    accumulate_gradient(*m_gradient, gij, this->m_distance_datas[isubdom]);
+    accumulate_hessian(*m_hessian, hij, gij, this->m_distance_datas[isubdom],
                        m_gradient->size());
   }
   double get_energy() {
@@ -386,11 +387,11 @@ class EnergyHessianAccumulator
     this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j);
     double gij, hij;
     double energy = this->m_interaction->energy_gradient_hessian(
-        this->m_distance_datas[thread()].r2, &gij, &hij,
-        this->m_distance_datas[thread()].dij);
+        this->m_distance_datas[isubdom].r2, &gij, &hij,
+        this->m_distance_datas[isubdom].dij);
 
-    accumulate_energies_omp(m_energies, energy);
-    accumulate_hessian(*m_hessian, hij, gij, this->m_distance_datas[thread()],
+    accumulate_energies_omp(m_energies, energy, isubdom);
+    accumulate_hessian(*m_hessian, hij, gij, this->m_distance_datas[isubdom],
                        this->m_coords->size());
   }
   double get_energy() {
