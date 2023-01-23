@@ -39,10 +39,12 @@ class SimplePairwisePotential : public PairwisePotentialInterface {
   /**
    * compute the energy and gradient for a single pair of atoms
    */
-  inline void accumulate_pair_energy(double &energy_acc, Array<double> coords,
-                                     size_t coords_i, size_t coords_j,
-                                     size_t atom_i, size_t atom_j,
-                                     double *dr_cache, size_t m_ndim);
+  inline void accumulate_pair_energy(double &energy_acc,
+                                     Array<double> const &coords,
+                                     const size_t coords_i,
+                                     const size_t coords_j, const size_t atom_i,
+                                     const size_t atom_j, double *dr_cache,
+                                     const size_t m_ndim);
 
  protected:
   static const size_t m_ndim = distance_policy::_ndim;
@@ -692,9 +694,11 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian(
 
 template <typename pairwise_interaction, typename distance_policy>
 inline void SimplePairwisePotential<pairwise_interaction, distance_policy>::
-    accumulate_pair_energy(double &energy_accumulator, Array<double> coords,
-                           size_t coords_i, size_t coords_j, size_t atom_i,
-                           size_t atom_j, double *dr_cache, size_t m_ndim) {
+    accumulate_pair_energy(double &energy_accumulator,
+                           Array<double> const &coords, const size_t coords_i,
+                           const size_t coords_j, const size_t atom_i,
+                           const size_t atom_j, double *dr_cache,
+                           const size_t m_ndim) {
   _dist->get_rij(dr_cache, &coords[coords_i], &coords[coords_j]);
   double r2 = 0;
 #pragma GCC unroll 3
