@@ -41,9 +41,10 @@ inline void reset_energies(vector<double> &energies) {
 #endif
 }
 
-inline void accumulate_energies_omp(vector<double> &energies, double energy) {
+inline void accumulate_energies_omp(vector<double> &energies, double energy,
+                                    const size_t isubdom) {
 #ifdef _OPENMP
-  energies[omp_get_thread_num()] += energy;
+  energies[isubdom] += energy;
 #else
   energies[0] += energy;
 #endif
@@ -241,9 +242,9 @@ class EnergyAccumulator
                         const size_t isubdom) {
     this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j);
     double energy =
-        this->m_interaction->energy(this->m_distance_datas[thread()].r2,
-                                    this->m_distance_datas[thread()].dij);
-    accumulate_energies_omp(m_energies, energy);
+        this->m_interaction->energy(this->m_distance_datas[isubdom].r2,
+                                    this->m_distance_datas[isubdom].dij);
+    accumulate_energies_omp(m_energies, energy, isubdom);
   }
   double get_energy() {
     return std::reduce(m_energies.begin(),
@@ -286,10 +287,10 @@ class EnergyGradientAccumulator
     this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j);
     double gij;
     double energy = this->m_interaction->energy_gradient(
-        this->m_distance_datas[thread()].r2, &gij,
-        this->m_distance_datas[thread()].dij);
-    accumulate_energies_omp(m_energies, energy);
-    accumulate_gradient(*m_gradient, gij, this->m_distance_datas[thread()]);
+        this->m_distance_datas[isubdom].r2, &gij,
+        this->m_distance_datas[isubdom].dij);
+    accumulate_energies_omp(m_energies, energy, isubdom);
+    accumulate_gradient(*m_gradient, gij, this->m_distance_datas[isubdom]);
   }
 
   double get_energy() {
@@ -335,12 +336,12 @@ class EnergyGradientHessianAccumulator
     this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j);
     double gij, hij;
     double energy = this->m_interaction->energy_gradient_hessian(
-        this->m_distance_datas[thread()].r2, &gij, &hij,
-        this->m_distance_datas[thread()].dij);
+        this->m_distance_datas[isubdom].r2, &gij, &hij,
+        this->m_distance_datas[isubdom].dij);
 
-    accumulate_energies_omp(m_energies, energy);
-    accumulate_gradient(*m_gradient, gij, this->m_distance_datas[thread()]);
-    accumulate_hessian(*m_hessian, hij, gij, this->m_distance_datas[thread()],
+    accumulate_energies_omp(m_energies, energy, isubdom);
+    accumulate_gradient(*m_gradient, gij, this->m_distance_datas[isubdom]);
+    accumulate_hessian(*m_hessian, hij, gij, this->m_distance_datas[isubdom],
                        m_gradient->size());
   }
   double get_energy() {
@@ -386,11 +387,11 @@ class EnergyHessianAccumulator
     this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j);
     double gij, hij;
     double energy = this->m_interaction->energy_gradient_hessian(
-        this->m_distance_datas[thread()].r2, &gij, &hij,
-        this->m_distance_datas[thread()].dij);
+        this->m_distance_datas[isubdom].r2, &gij, &hij,
+        this->m_distance_datas[isubdom].dij);
 
-    accumulate_energies_omp(m_energies, energy);
-    accumulate_hessian(*m_hessian, hij, gij, this->m_distance_datas[thread()],
+    accumulate_energies_omp(m_energies, energy, isubdom);
+    accumulate_hessian(*m_hessian, hij, gij, this->m_distance_datas[isubdom],
                        this->m_coords->size());
   }
   double get_energy() {
@@ -1004,6 +1005,40 @@ class CellListPotential : public PairwisePotentialInterface {
       looper.loop_through_atom_pairs();
       return m_eAcc->get_energy();
     }
+  }
+
+  /*
+   * Get energy change due to a change in the coordinates of a subset of atoms
+   */
+  virtual double get_energy_change(Array<double> const &old_coords,
+                                   Array<double> const &new_coords,
+                                   std::vector<size_t> const &changed_atoms) {
+    assert(old_coords.size() == new_coords.size());
+    assert(old_coords.size() % m_ndim == 0);
+    double energy_change = 0;
+    // Updates the cell lists, but does not fully recalculate them every time
+    update_iterator(old_coords);
+    m_eAcc->reset_data(&old_coords);
+    auto looper = m_cell_lists.get_atom_pair_looper(*m_eAcc);
+
+    // TODO: Loop cell pairs specific loops over all atoms,
+    // Not just those in the neighborhood of the changed atoms
+    // As we would expect from cell lists
+    looper.loop_through_unique_pairs_containing_iatoms(old_coords,
+                                                       changed_atoms);
+
+    // Subtract the old energy contribution due to atoms
+    energy_change -= m_eAcc->get_energy();
+
+    // Calculate energy contributions of the new atoms and add them
+    update_iterator(new_coords);
+    m_eAcc->reset_data(&new_coords);
+    auto new_looper = m_cell_lists.get_atom_pair_looper(*m_eAcc);
+    new_looper.loop_through_unique_pairs_containing_iatoms(new_coords,
+                                                           changed_atoms);
+
+    energy_change += m_eAcc->get_energy();
+    return energy_change;
   }
 
   virtual double get_energy_gradient(Array<double> const &coords,

@@ -46,6 +46,9 @@ class NonAdditiveCutoffCalculator {
 };
 
 class PairwisePotentialInterface : public BasePotential {
+ private:
+  const bool m_radii_size_is_zero;
+
  protected:
   const Array<double> m_radii;
   const NonAdditiveCutoffCalculator m_cutoff_calculator;
@@ -72,15 +75,20 @@ class PairwisePotentialInterface : public BasePotential {
   }
 
  public:
-  PairwisePotentialInterface() : m_radii(0), m_cutoff_calculator(0) {}
+  PairwisePotentialInterface()
+      : m_radii_size_is_zero(true), m_radii(0), m_cutoff_calculator() {}
   PairwisePotentialInterface(pele::Array<double> const &radii,
                              double non_additivity = 0)
-      : m_radii(radii.copy()), m_cutoff_calculator(non_additivity) {
+      : m_radii_size_is_zero(radii.size() == 0),
+        m_radii(radii.copy()),
+        m_cutoff_calculator(non_additivity) {
     initialize();
   }
   PairwisePotentialInterface(pele::Array<double> const &radii,
                              NonAdditiveCutoffCalculator cutoff_calculator)
-      : m_radii(radii.copy()), m_cutoff_calculator(cutoff_calculator) {
+      : m_radii_size_is_zero(radii.size() == 0),
+        m_radii(radii.copy()),
+        m_cutoff_calculator(cutoff_calculator) {
     initialize();
   }
 
@@ -97,7 +105,9 @@ class PairwisePotentialInterface : public BasePotential {
    */
   inline double get_non_additive_cutoff(const std::size_t atom_i,
                                         const std::size_t atom_j) const {
-    if (m_radii.size() == 0) {
+    // TODO: this if statement actually takes a sizeable amount of time, for
+    // something that is known at class instantiation.
+    if (m_radii_size_is_zero) {
       return 0;
     } else {
       // uses the diameters being twice the radii
@@ -106,7 +116,7 @@ class PairwisePotentialInterface : public BasePotential {
   }
 
   inline double get_max_cutoff() const {
-    if (m_radii.size() == 0) {
+    if (m_radii_size_is_zero) {
       return 0;
     } else {
       // uses the diameters being twice the radii

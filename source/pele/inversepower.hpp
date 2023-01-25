@@ -352,7 +352,10 @@ class InverseIntPowerPeriodicCellLists
                           periodic_distance<ndim>>(
             std::make_shared<InverseIntPower_interaction<POW>>(eps),
             std::make_shared<periodic_distance<ndim>>(boxvec), boxvec,
-            2.0 * (*std::max_element(radii.begin(), radii.end())),  // rcut,
+            2.0 * (*std::max_element(
+                      radii.begin(),
+                      radii.end())),  // rcut, Note if boxvec or radii are of
+                                      // size 0 this can lead to a segfault
             ncellx_scale, radii, 0.0, true, exact_sum, non_additivity) {}
 };
 

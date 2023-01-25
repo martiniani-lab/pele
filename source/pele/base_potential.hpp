@@ -31,6 +31,17 @@ class BasePotential {
     throw std::runtime_error("BasePotential::get_energy must be overloaded");
   }
 
+  /**
+   * Return the change in energy when configuration A is changed to
+   * configuration B.  It also takes in the vector of indices of atoms changed
+   * to recalculate energies changed by those atoms.
+   */
+  virtual double get_energy_change(Array<double> const &, Array<double> const &,
+                                   std::vector<size_t> const &) {
+    throw std::runtime_error(
+        "BasePotential::get_energy_change must be overloaded");
+  }
+
   virtual size_t get_ndim() const {
     throw std::runtime_error("BasePotential::get_ndim must be overloaded");
   }

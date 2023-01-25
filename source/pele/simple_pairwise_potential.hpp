@@ -2,6 +2,8 @@
 #define PYGMIN_SIMPLE_PAIRWISE_POTENTIAL_H
 
 #include <array>
+#include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <exception>
@@ -33,6 +35,17 @@ namespace pele {
 template <typename pairwise_interaction,
           typename distance_policy = cartesian_distance<3>>
 class SimplePairwisePotential : public PairwisePotentialInterface {
+ private:
+  /**
+   * compute the energy and gradient for a single pair of atoms
+   */
+  inline void accumulate_pair_energy(double &energy_acc,
+                                     Array<double> const &coords,
+                                     const size_t coords_i,
+                                     const size_t coords_j, const size_t atom_i,
+                                     const size_t atom_j, double *dr_cache,
+                                     const size_t m_ndim);
+
  protected:
   static const size_t m_ndim = distance_policy::_ndim;
   std::shared_ptr<pairwise_interaction> _interaction;
@@ -86,6 +99,9 @@ class SimplePairwisePotential : public PairwisePotentialInterface {
   virtual ~SimplePairwisePotential() {}
   virtual inline size_t get_ndim() const { return m_ndim; }
   virtual double get_energy(Array<double> const &x);
+  virtual double get_energy_change(Array<double> const &old_coords,
+                                   Array<double> const &new_coords,
+                                   std::vector<size_t> const &changed_atoms);
   virtual double get_energy_gradient(Array<double> const &x,
                                      Array<double> &grad) {
     grad.assign(0);
@@ -130,6 +146,7 @@ class SimplePairwisePotential : public PairwisePotentialInterface {
     hess.assign(0);
     add_hessian(x, hess);
   }
+
   virtual double add_energy_gradient(Array<double> const &x,
                                      Array<double> &grad);
 
@@ -269,7 +286,6 @@ inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
         for (size_t k = 0; k < m_ndim; ++k) {
           r2 += dr[k] * dr[k];
         }
-        const double dij = get_non_additive_cutoff(atom_i, atom_j);
         e += _interaction->energy_gradient(
             r2, &gij, get_non_additive_cutoff(atom_i, atom_j));
 
@@ -677,35 +693,118 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::add_hessian(
 }
 
 template <typename pairwise_interaction, typename distance_policy>
+inline void SimplePairwisePotential<pairwise_interaction, distance_policy>::
+    accumulate_pair_energy(double &energy_accumulator,
+                           Array<double> const &coords, const size_t coords_i,
+                           const size_t coords_j, const size_t atom_i,
+                           const size_t atom_j, double *dr_cache,
+                           const size_t m_ndim) {
+  _dist->get_rij(dr_cache, &coords[coords_i], &coords[coords_j]);
+  double r2 = 0;
+#pragma GCC unroll 3
+  for (size_t k = 0; k < m_ndim; ++k) {
+    r2 += dr_cache[k] * dr_cache[k];
+  }
+  double e_ij =
+      _interaction->energy(r2, get_non_additive_cutoff(atom_i, atom_j));
+  energy_accumulator += e_ij;
+}
+
+template <typename pairwise_interaction, typename distance_policy>
 inline double
 SimplePairwisePotential<pairwise_interaction, distance_policy>::get_energy(
-    Array<double> const &x) {
-  const size_t natoms = x.size() / m_ndim;
+    Array<double> const &coords) {
+  const size_t natoms = coords.size() / m_ndim;
 
-  if (m_ndim * natoms != x.size()) {
+  if (m_ndim * natoms != coords.size()) {
     throw std::runtime_error(
-        "x.size() is not divisible by the number of dimensions");
+        "x.size() is not divisible by "
+        "the number of dimensions");
   }
-  double e = 0.;
-  double dr[m_ndim];
+  double energy_accumulator = 0.;
+  double dr_cache[m_ndim];
   for (size_t atom_i = 0; atom_i < natoms; ++atom_i) {
-    size_t i1 = m_ndim * atom_i;
+    size_t coords_i = m_ndim * atom_i;
     for (size_t atom_j = 0; atom_j < atom_i; ++atom_j) {
-      size_t j1 = m_ndim * atom_j;
-      _dist->get_rij(dr, &x[i1], &x[j1]);
-      double r2 = 0;
-#pragma GCC unroll 3
-      for (size_t k = 0; k < m_ndim; ++k) {
-        r2 += dr[k] * dr[k];
-      }
-      double e_ij =
-          _interaction->energy(r2, get_non_additive_cutoff(atom_i, atom_j));
-      e += e_ij;
-      if (e_ij != 0) {
+      size_t coords_j = m_ndim * atom_j;
+      accumulate_pair_energy(energy_accumulator, coords, coords_i, coords_j,
+                             atom_i, atom_j, dr_cache, m_ndim);
+    }
+  }
+  return energy_accumulator;
+}
+
+template <typename pairwise_interaction, typename distance_policy>
+inline double SimplePairwisePotential<pairwise_interaction, distance_policy>::
+    get_energy_change(Array<double> const &old_coords,
+                      Array<double> const &new_coords,
+                      const std::vector<size_t> &changed_atoms) {
+  assert(old_coords.size() == new_coords.size());
+  const size_t natoms = old_coords.size() / m_ndim;
+
+  if (m_ndim * natoms != old_coords.size()) {
+    throw std::runtime_error(
+        "x.size() is not divisible by "
+        "the number of dimensions");
+  }
+  double energy_contribution = 0.;
+  double dr_cache[m_ndim];
+
+  // First, calculate energy contributions of all atoms not in changed_atoms in
+  // the old configuration
+  for (auto atom_i : changed_atoms) {
+    size_t coords_i = m_ndim * atom_i;
+    for (size_t atom_j = 0; atom_j < natoms; ++atom_j) {
+      if (std::find(changed_atoms.begin(), changed_atoms.end(), atom_j) ==
+          changed_atoms.end()) {
+        size_t coords_j = m_ndim * atom_j;
+        accumulate_pair_energy(energy_contribution, old_coords, coords_i,
+                               coords_j, atom_i, atom_j, dr_cache, m_ndim);
       }
     }
   }
-  return e;
+  // Now, calculate energy contributions of atom_i, atom_j pairs
+  for (auto atom_i : changed_atoms) {
+    size_t coords_i = m_ndim * atom_i;
+    for (auto atom_j : changed_atoms) {
+      // Keep pairs unique
+      if (atom_j < atom_i) {
+        size_t coords_j = m_ndim * atom_j;
+        accumulate_pair_energy(energy_contribution, old_coords, coords_i,
+                               coords_j, atom_i, atom_j, dr_cache, m_ndim);
+      }
+    }
+  }
+  // because old energy is subtracted from the new energy contribution
+  energy_contribution = -energy_contribution;
+
+  // Now Accumulate the new energy contribution
+  // First, calculate energy contributions of all atoms not in changed_atoms in
+  // the old configuration
+  for (auto atom_i : changed_atoms) {
+    size_t coords_i = m_ndim * atom_i;
+    for (size_t atom_j = 0; atom_j < natoms; ++atom_j) {
+      if (std::find(changed_atoms.begin(), changed_atoms.end(), atom_j) ==
+          changed_atoms.end()) {
+        size_t coords_j = m_ndim * atom_j;
+        accumulate_pair_energy(energy_contribution, new_coords, coords_i,
+                               coords_j, atom_i, atom_j, dr_cache, m_ndim);
+      }
+    }
+  }
+  // Now, calculate energy contributions of atom_i, atom_j pairs
+  for (auto atom_i : changed_atoms) {
+    size_t coords_i = m_ndim * atom_i;
+    for (auto atom_j : changed_atoms) {
+      // Keep pairs unique
+      if (atom_j < atom_i) {
+        size_t coords_j = m_ndim * atom_j;
+        accumulate_pair_energy(energy_contribution, new_coords, coords_i,
+                               coords_j, atom_i, atom_j, dr_cache, m_ndim);
+      }
+    }
+  }
+  return energy_contribution;
 }
 
 template <typename pairwise_interaction, typename distance_policy>
@@ -732,16 +831,20 @@ void SimplePairwisePotential<pairwise_interaction, distance_policy>::
   const size_t natoms = coords.size() / m_ndim;
   if (m_ndim * natoms != coords.size()) {
     throw std::runtime_error(
-        "coords.size() is not divisible by the number of dimensions");
+        "coords.size() is not divisible "
+        "by the number of dimensions");
   }
   if (natoms != include_atoms.size()) {
     throw std::runtime_error(
-        "include_atoms.size() is not equal to the number of atoms");
+        "include_atoms.size() is not "
+        "equal to the number of atoms");
   }
   if (m_radii.size() == 0) {
     throw std::runtime_error(
-        "Can't calculate neighbors, because the "
-        "used interaction doesn't use radii. ");
+        "Can't calculate neighbors, "
+        "because the "
+        "used interaction doesn't use "
+        "radii. ");
   }
   std::vector<double> dr(m_ndim);
   std::vector<double> neg_dr(m_ndim);
@@ -787,12 +890,15 @@ SimplePairwisePotential<pairwise_interaction, distance_policy>::get_overlaps(
   const size_t natoms = coords.size() / m_ndim;
   if (m_ndim * natoms != coords.size()) {
     throw std::runtime_error(
-        "coords.size() is not divisible by the number of dimensions");
+        "coords.size() is not divisible "
+        "by the number of dimensions");
   }
   if (m_radii.size() == 0) {
     throw std::runtime_error(
-        "Can't calculate neighbors, because the "
-        "used interaction doesn't use radii. ");
+        "Can't calculate neighbors, "
+        "because the "
+        "used interaction doesn't use "
+        "radii. ");
   }
   pele::VecN<m_ndim, double> dr;
   std::vector<size_t> overlap_inds;
