@@ -1007,6 +1007,38 @@ class CellListPotential : public PairwisePotentialInterface {
     }
   }
 
+  /*
+   * Get energy change due to a change in the coordinates of a subset of atoms
+   */
+  virtual double get_energy_change(Array<double> const &old_coords,
+                                   Array<double> const &new_coords,
+                                   std::vector<size_t> const &changed_atoms) {
+    assert(old_coords.size() == new_coords.size());
+    assert(old_coords.size() % m_ndim == 0);
+    double energy_change = 0;
+    // Updates the cell lists, but does not fully recalculate them every time
+    update_iterator(old_coords);
+    m_eAcc->reset_data(&old_coords);
+    auto looper = m_cell_lists.get_atom_pair_looper(*m_eAcc);
+
+    // TODO: Loop cell pairs specific loops over all atoms,
+    // Not just those in the neighborhood of the changed atoms
+    // As we would expect from cell lists
+    looper.loop_through_atom_pairs_specific(old_coords, changed_atoms);
+
+    // Subtract the old energy contribution due to atoms
+    energy_change -= m_eAcc->get_energy();
+
+    // Calculate energy contributions of the new atoms and add them
+    update_iterator(new_coords);
+    m_eAcc->reset_data(&new_coords);
+    auto new_looper = m_cell_lists.get_atom_pair_looper(*m_eAcc);
+    new_looper.loop_through_atom_pairs_specific(new_coords, changed_atoms);
+
+    energy_change += m_eAcc->get_energy();
+    return energy_change;
+  }
+
   virtual double get_energy_gradient(Array<double> const &coords,
                                      Array<double> &grad) {
     const size_t natoms = coords.size() / m_ndim;
