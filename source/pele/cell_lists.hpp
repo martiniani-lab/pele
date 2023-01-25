@@ -694,6 +694,24 @@ class CellListsLoop {
       }
     }
   }
+  virtual void loop_through_cell_neighbors_for_unique_pairs(
+      size_t cell_containing_iatom, size_t iatom,
+      std::vector<size_t> const &iatoms) {
+    size_t isubdom = m_lattice_tool.get_subdomain(cell_containing_iatom);
+    bool atom_in_iatoms = false;
+    for (cell_t *jcell : m_container.m_cell_neighbors[cell_containing_iatom]) {
+      for (auto jatom = jcell->begin(); jatom != jcell->end(); ++jatom) {
+        if (iatom != *jatom) {
+          atom_in_iatoms =
+              std::find(iatoms.begin(), iatoms.end(), *jatom) != iatoms.end();
+          // Conditional to avoid double counting
+          if ((atom_in_iatoms && iatom < *jatom) || (!atom_in_iatoms)) {
+            m_visitor.insert_atom_pair(iatom, *jatom, isubdom);
+          }
+        }
+      }
+    }
+  }
 
  public:
   CellListsLoop(visitor_t &visitor, CellListsContainer<m_ndim> const &container,
@@ -732,6 +750,27 @@ class CellListsLoop {
                                             icells[i]);
     }
     loop_cell_pairs_specific(icells, iatoms);
+  }
+
+  /**
+   * @brief loop through unique pairs that contain elements of iatoms
+   * @details for each iatom, this function loops through unique {iatom, jatom}
+   * pairs where jatom is an belongs to the cell or neighboring cells of iatom.
+   * This is useful to calculate energy changes when atoms corresponding to
+   * iatoms are moved.
+   *
+   * @param coords the coordinates of the atoms
+   * @param iatoms list of indices (iatoms)
+   */
+  void loop_through_unique_pairs_containing_iatoms(
+      pele::Array<double> const &coords, std::vector<size_t> const &iatoms) {
+    size_t cell_containing_iatom;
+    for (size_t i = 0; i < iatoms.size(); ++i) {
+      m_lattice_tool.position_to_global_ind(coords.data() + m_ndim * iatoms[i],
+                                            cell_containing_iatom);
+      loop_through_cell_neighbors_for_unique_pairs(cell_containing_iatom,
+                                                   iatoms[i], iatoms);
+    }
   }
 };
 
