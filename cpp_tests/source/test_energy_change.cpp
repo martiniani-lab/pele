@@ -104,7 +104,7 @@ class EnergyChangeCellLists : public EnergyChangeSimplePairwise {
     EnergyChangeSimplePairwise::SetUp();
     // Make the same potential but with cell lists
     potential = std::make_shared<InverseIntPowerPeriodicCellLists<dim, pow>>(
-        A eps, radii, boxvec, ncellx_scale, exact_sum, non_additivity);
+        eps, radii, boxvec, ncellx_scale, exact_sum, non_additivity);
   }
 };
 
