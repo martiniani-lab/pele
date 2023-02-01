@@ -1021,9 +1021,6 @@ class CellListPotential : public PairwisePotentialInterface {
     m_eAcc->reset_data(&old_coords);
     auto looper = m_cell_lists.get_atom_pair_looper(*m_eAcc);
 
-    // TODO: Loop cell pairs specific loops over all atoms,
-    // Not just those in the neighborhood of the changed atoms
-    // As we would expect from cell lists
     looper.loop_through_unique_pairs_containing_iatoms(old_coords,
                                                        changed_atoms);
 
