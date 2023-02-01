@@ -50,13 +50,6 @@ inline void accumulate_energies_omp(vector<double> &energies, double energy,
 #endif
 }
 
-inline size_t thread() {
-#ifdef _OPENMP
-  return omp_get_thread_num();
-#else
-  return 0;
-#endif
-}
 
 // class containing r2, dij, dr, , xi_off, xj_off
 template <size_t ndim>
