@@ -30,26 +30,26 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     const pele::Array<double> x0, double tol, int T, double step,
     double conv_tol, double rtol, double atol, bool iterative)
     : GradientOptimizer(potential, x0, tol),
-      extended_potential(
-          std::make_shared<ExtendedPotential>(potential, potential_extension)),
       N_size(x_.size()),
       t0(0),
       tN(100.0),
       rtol(rtol),
       atol(atol),
+      extended_potential(
+          std::make_shared<ExtendedPotential>(potential, potential_extension)),
       xold(x_.size()),
       gold(x_.size()),
       step(x_.size()),
       xold_old(x_.size()),
+      x_last_cvode(x_.size()),
       T_(T),
+      hessian(x_.size(), x_.size()),
+      hessian_copy_for_cholesky(x_.size(), x_.size()),
       use_phase_1(true),
-      conv_tol_(conv_tol),
       n_phase_1_steps(0),
       n_phase_2_steps(0),
       n_failed_phase_2_steps(0),
-      hessian(x_.size(), x_.size()),
-      x_last_cvode(x_.size()),
-      hessian_copy_for_cholesky(x_.size(), x_.size()),
+      conv_tol_(conv_tol),
       line_search_method(this, step),
       iterative_(iterative) {
   SUNContext_Create(NULL, &sunctx);
@@ -83,8 +83,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     throw std::runtime_error("ExtendedMixedOptimizer: potential is null");
   }
   if (!potential_extension) {
-    throw std::runtime_error(
-        "ExtendedMixedOptimizer: potential_extension is null");
+    std::cout << "No potential extension being used" << std::endl;
   }
   set_potential(
       extended_potential);  // because we can only create the extended potential
