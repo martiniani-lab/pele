@@ -39,8 +39,6 @@ cdef class _Cdef_ExtendedMixedOptimizer_CPP(_pele_opt.GradientOptimizer):
     def __cinit__(self, potential, x0, potential_extension=None, double tol=1e-5,
                   int T=1, double step=1, double conv_tol = 1e-1,
                   double rtol=1e-3, double atol=1e-3, int nsteps=10000, bool iterative=False):
-        if potential_extension is None:
-            raise Exception("potential_extension is required")
         potential = as_cpp_potential(potential, verbose=True)
         
         self.pot = potential

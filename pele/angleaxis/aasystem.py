@@ -132,7 +132,9 @@ class RBSystem(AASystem):
             for i1, i2 in self.draw_bonds:
                 draw_cylinder(coords[i1], coords[i2], color=color)
 
-    def load_coords_pymol(self, coordslist, oname, index=1):  # pragma: no cover
+    def load_coords_pymol(
+        self, coordslist, oname, index=1
+    ):  # pragma: no cover
         """load the coords into pymol
 
         the new object must be named oname so we can manipulate it later
@@ -144,8 +146,8 @@ class RBSystem(AASystem):
             the new pymol object must be named oname so it can be manipulated
             later
         index : int
-            we can have more than one molecule on the screen at one time.  index tells
-            which one to draw.  They are viewed at the same time, so should be
+            we can have more than one molecule on the screen at one time.
+            index tells which one to draw.  They are viewed at the same time, so should be
             visually distinct, e.g. different colors.  accepted values are 1 or 2
 
         Notes
