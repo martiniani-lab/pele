@@ -36,10 +36,15 @@ class BasePotential {
    * configuration B.  It also takes in the vector of indices of atoms changed
    * to recalculate energies changed by those atoms.
    */
-  virtual double get_energy_change(Array<double> const &, Array<double> const &,
+  virtual double get_energy_change(Array<double> const &old_coords,
+                                   Array<double> const &new_coords,
                                    std::vector<size_t> const &) {
-    throw std::runtime_error(
-        "BasePotential::get_energy_change must be overloaded");
+    std::cout
+        << "WARNING: get_energy_change not implemented. defaulting to \n "
+           "calculating energy differences by calling get_energy on old \n "
+           "coords and new coords and subtracting the difference. \n "
+        << std::endl;
+    return get_energy(new_coords) - get_energy(old_coords);
   }
 
   virtual size_t get_ndim() const {

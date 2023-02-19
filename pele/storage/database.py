@@ -474,9 +474,9 @@ class Database(object):
     def _is_pele_database(self):
         conn = self.engine.connect()
         result = True
-        if not self.engine.has_table("tbl_minima") or not self.engine.has_table(
-            "tbl_transition_states"
-        ):
+        if not self.engine.has_table(
+            "tbl_minima"
+        ) or not self.engine.has_table("tbl_transition_states"):
             result = False
         conn.close()
         return result

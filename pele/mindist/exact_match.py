@@ -123,7 +123,11 @@ class StandardClusterAlignment(object):
             self.idx2_1 = next(self.iter1)
 
         # toggle inversion if inversion is possible
-        if self.can_invert and self.invert == False and self.idx2_2 is not None:
+        if (
+            self.can_invert
+            and self.invert == False
+            and self.idx2_2 is not None
+        ):
             self.invert = True
         else:
             # determine next pair of indices

@@ -61,9 +61,7 @@ class LJCluster(AtomicCluster):
         """
         from ._opengl_tools import draw_atomic_single_atomtype
 
-        draw_atomic_single_atomtype(
-            coordslinear, index, subtract_com=subtract_com
-        )
+        draw_atomic_single_atomtype(coordslinear, index, subtract_com=subtract_com)
 
     def load_coords_pymol(self, coordslist, oname, index=1):  # pragma: no cover
         """load the coords into pymol

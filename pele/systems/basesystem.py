@@ -52,15 +52,13 @@ class Parameters(BaseParameters):
         self.double_ended_connect = BaseParameters()
         self.double_ended_connect.local_connect_params = BaseParameters()
 
-        self.double_ended_connect.local_connect_params.pushoff_params = (
-            BaseParameters()
-        )
+        self.double_ended_connect.local_connect_params.pushoff_params = BaseParameters()
 
-        self.double_ended_connect.local_connect_params.tsSearchParams = (
-            BaseParameters(FindTransitionState.params())
+        self.double_ended_connect.local_connect_params.tsSearchParams = BaseParameters(
+            FindTransitionState.params()
         )
-        self.double_ended_connect.local_connect_params.NEBparams = (
-            BaseParameters(NEBDriver.params())
+        self.double_ended_connect.local_connect_params.NEBparams = BaseParameters(
+            NEBDriver.params()
         )
 
 
@@ -172,9 +170,7 @@ class BaseSystem(object):
         pele.optimize
         """
         pot = self.get_potential()
-        kwargs = dict_copy_update(
-            self.params["structural_quench_params"], kwargs
-        )
+        kwargs = dict_copy_update(self.params["structural_quench_params"], kwargs)
         return lambda coords: lbfgs_cpp(coords, pot, **kwargs)
 
     def get_compare_exact(self):
@@ -217,9 +213,7 @@ class BaseSystem(object):
         # create a new database by passing the filename as the first arg,
         # not as a kwarg.
         if len(args) > 1:
-            raise ValueError(
-                "create_database can only take one non-keyword argument"
-            )
+            raise ValueError("create_database can only take one non-keyword argument")
         if len(args) == 1:
             if "db" not in kwargs:
                 kwargs["db"] = args[0]
@@ -243,9 +237,7 @@ class BaseSystem(object):
 
         db = Database(**kwargs)
 
-        db.add_properties(
-            self.get_system_properties(), overwrite=overwrite_properties
-        )
+        db.add_properties(self.get_system_properties(), overwrite=overwrite_properties)
         return db
 
     def get_takestep(self, **kwargs):
@@ -403,17 +395,13 @@ class BaseSystem(object):
                 tssp = lcp["tsSearchParams"] = BaseParameters()
 
             if not "orthogZeroEigs" in tssp:
-                tssp[
-                    "orthogZeroEigs"
-                ] = self.get_orthogonalize_to_zero_eigenvectors()
+                tssp["orthogZeroEigs"] = self.get_orthogonalize_to_zero_eigenvectors()
 
         try:
             kwargs["local_connect_params"]["pushoff_params"]["quench"]
         except Exception:
             if not "pushoff_params" in kwargs["local_connect_params"]:
-                kwargs["local_connect_params"][
-                    "pushoff_params"
-                ] = BaseParameters()
+                kwargs["local_connect_params"]["pushoff_params"] = BaseParameters()
             kwargs["local_connect_params"]["pushoff_params"][
                 "quench"
             ] = self.get_minimizer()
@@ -605,9 +593,7 @@ class BaseSystem(object):
             )
         except (KeyError, AttributeError):
             interpolator = None
-        return smooth_path(
-            images, self.get_mindist(), interpolator=interpolator
-        )
+        return smooth_path(images, self.get_mindist(), interpolator=interpolator)
 
     def createNEB(self, coords1, coords2, **kwargs):
         """return an NEB object to find a minimum energy path from coords1 to coords2"""

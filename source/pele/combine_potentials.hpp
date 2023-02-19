@@ -113,7 +113,9 @@ class ExtendedPotential : public CombinedPotential {
                     std::shared_ptr<BasePotential> extension_potential)
       : CombinedPotential() {
     add_potential(main_potential);
-    add_potential(extension_potential);
+    if (extension_potential != nullptr) {
+      add_potential(extension_potential);
+    }
     use_extended_potential_ = false;
   };
 
