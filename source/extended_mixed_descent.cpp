@@ -26,9 +26,9 @@ namespace pele {
 
 ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
-    std::shared_ptr<pele::BasePotential> potential_extension,
-    const pele::Array<double> x0, double tol, int T, double step,
-    double conv_tol, double rtol, double atol, bool iterative)
+    const pele::Array<double> x0,
+    std::shared_ptr<pele::BasePotential> potential_extension, double tol, int T,
+    double step, double conv_tol, double rtol, double atol, bool iterative)
     : GradientOptimizer(potential, x0, tol),
       N_size(x_.size()),
       t0(0),
