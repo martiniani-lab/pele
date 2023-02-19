@@ -192,7 +192,7 @@ void ExtendedMixedOptimizer::one_iteration() {
 
     // find abs max of the step
     double max_step = 0;
-    for (int i = 0; i < step.size(); i++) {
+    for (size_t i = 0; i < step.size(); i++) {
       if (abs(step[i]) > max_step) {
         max_step = abs(step[i]);
       }
