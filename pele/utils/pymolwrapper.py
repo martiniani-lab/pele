@@ -9,10 +9,10 @@ def start():
     pymol.finish_launching()
 
 
-def draw_spheres(coords, model, frame, radius=0.5):
+def draw_spheres(coords, model, frame, radius=0.5, color=[1.0, 0.0, 0.0]):
     spheres = []
     for x in coords.reshape(old_div(coords.size, 3), 3):
-        spheres.extend([cgo.COLOR, 1.0, 0.0, 0.0])
+        spheres.extend([cgo.COLOR, color[0], color[1], color[2]])
         spheres.extend([cgo.SPHERE, x[0], x[1], x[2], radius])
 
     cmd.load_cgo(spheres, model, frame)
