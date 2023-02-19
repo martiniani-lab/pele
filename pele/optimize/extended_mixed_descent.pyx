@@ -15,14 +15,16 @@ cimport pele.optimize._pele_opt as _pele_opt
 from pele.optimize._pele_opt cimport shared_ptr
 cimport cython
 
-from libcpp cimport bool
+from libcpp cimport bool, nullptr
+from libcpp.cast cimport static_cast
 
 cdef extern from "pele/extended_mixed_descent.hpp" namespace "pele":
     cdef cppclass cppExtendedMixedOptimizer "pele::ExtendedMixedOptimizer":
-        cppExtendedMixedOptimizer(shared_ptr[_pele.cBasePotential], shared_ptr[_pele.cBasePotential], _pele.Array[double],
-                          double, int,
-                          double, double,
-                          double, double, bool) except +
+        cppExtendedMixedOptimizer(shared_ptr[_pele.cBasePotential], _pele.Array[double],
+                                  shared_ptr[_pele.cBasePotential],
+                                  double, int,
+                                  double, double,
+                                  double, double, bool) except +
         int get_nhev() except +
         int get_n_phase_1_steps() except +
         int get_n_phase_2_steps() except +
@@ -33,20 +35,27 @@ cdef class _Cdef_ExtendedMixedOptimizer_CPP(_pele_opt.GradientOptimizer):
     """
     cdef _pele.BasePotential pot
     cdef _pele.BasePotential pot_ext
+    cdef shared_ptr[_pele.cBasePotential] pot_ext_ptr
     def __cinit__(self, potential, x0, potential_extension=None, double tol=1e-5,
                   int T=1, double step=1, double conv_tol = 1e-1,
                   double rtol=1e-3, double atol=1e-3, int nsteps=10000, bool iterative=False):
         if potential_extension is None:
             raise Exception("potential_extension is required")
         potential = as_cpp_potential(potential, verbose=True)
-        pot_ext = as_cpp_potential(potential_extension, verbose=True)
+        
         self.pot = potential
-        self.pot_ext = pot_ext
+        if potential_extension is not None:
+            pot_ext = as_cpp_potential(potential_extension, verbose=True)
+            self.pot_ext = pot_ext
+            self.pot_ext_ptr = self.pot_ext.thisptr
+        else:
+            self.pot_ext_ptr = static_cast[shared_ptr[_pele.cBasePotential]](nullptr)
         cdef np.ndarray[double, ndim=1] x0c = np.array(x0, dtype=float)
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
-                new cppExtendedMixedOptimizer(self.pot.thisptr, self.pot_ext.thisptr,
-                             _pele.Array[double](<double*> x0c.data, x0c.size),
-                                tol, T, step, conv_tol, rtol, atol, iterative))
+                new cppExtendedMixedOptimizer(self.pot.thisptr,
+                                              _pele.Array[double](<double*> x0c.data, x0c.size), 
+                                              self.pot_ext_ptr,
+                                              tol, T, step, conv_tol, rtol, atol, iterative))
         cdef cppExtendedMixedOptimizer* mxopt_ptr = <cppExtendedMixedOptimizer*> self.thisptr.get()
     
     def get_result(self):
