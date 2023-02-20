@@ -14,6 +14,7 @@
 
 #include <Eigen/Dense>
 #include <cstddef>
+#include <pele/array.hpp>
 #include <stdexcept>
 #include <vector>
 
@@ -123,6 +124,27 @@ void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset) {
     }
   }
   hessian.diagonal().array() += offset;
+}
+
+/**
+ * @brief  adds a translation offset to the hessian. This should take care of
+ * translational symmetries. offset[i * hessian.rows() + j] is the offset at the
+ * i, jth element, only the upper triangle is added since
+ * the hessian is symmetric
+ * @param  hessian the hessian to be modified
+ * @param  offset the offset to be added this is a pele array in this case
+ */
+inline void add_symmetry_offset(Eigen::MatrixXd &hessian,
+                                Array<double> &offset) {
+  for (size_t i = 0; i < hessian.rows(); ++i) {
+    for (size_t j = i + 1; j < hessian.cols(); ++j) {
+      hessian(i, j) += offset[i * hessian.rows() + j];
+      hessian(j, i) += offset[i * hessian.rows() + j];
+    }
+  }
+  for (size_t i = 0; i < hessian.rows(); ++i) {
+    hessian(i, i) += offset[i * hessian.rows() + i];
+  }
 }
 
 }  // namespace pele

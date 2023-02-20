@@ -305,7 +305,13 @@ bool ExtendedMixedOptimizer::convexity_check() {
   // Eigen::ComputationInfo info = hessian_shifted.llt().info();
   // std::cout << info << " success info of cholesky decomposition \n";
   // add translation to ensure that the hessian is positive definite
-  add_translation_offset_2d(hessian, 1);
+
+  if (m_global_symmetry_offset.size() == 0) {
+    add_translation_offset_2d(hessian, 1);
+  } else {
+    // add translation offset to hessian data
+    add_symmetry_offset(hessian, m_global_symmetry_offset);
+  }
 
   // add negative diagonal offset to ensure hessian is sufficiently positive
 
