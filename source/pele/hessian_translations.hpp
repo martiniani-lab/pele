@@ -135,15 +135,11 @@ void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset) {
  * @param  offset the offset to be added this is a pele array in this case
  */
 inline void add_symmetry_offset(Eigen::MatrixXd &hessian,
-                                Array<double> &offset) {
+                                const Array<double> &offset) {
   for (size_t i = 0; i < hessian.rows(); ++i) {
-    for (size_t j = i + 1; j < hessian.cols(); ++j) {
+    for (size_t j = 0; j < hessian.cols(); ++j) {
       hessian(i, j) += offset[i * hessian.rows() + j];
-      hessian(j, i) += offset[i * hessian.rows() + j];
     }
-  }
-  for (size_t i = 0; i < hessian.rows(); ++i) {
-    hessian(i, i) += offset[i * hessian.rows() + i];
   }
 }
 

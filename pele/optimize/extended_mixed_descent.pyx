@@ -41,7 +41,8 @@ cdef class _Cdef_ExtendedMixedOptimizer_CPP(_pele_opt.GradientOptimizer):
                   double rtol=1e-3, double atol=1e-3, int nsteps=10000, bool iterative=False):
         potential = as_cpp_potential(potential, verbose=True)
         global_symmetry_offset = np.array(global_symmetry_offset, dtype=float)
-        
+        if len(global_symmetry_offset.shape) == 2:
+            global_symmetry_offset = global_symmetry_offset.flatten()
         cdef np.ndarray[double, ndim=1] global_symmetry_offset_c = np.array(global_symmetry_offset, dtype=float)
         self.pot = potential
         if potential_extension is not None:

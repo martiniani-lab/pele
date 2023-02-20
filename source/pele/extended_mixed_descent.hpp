@@ -136,7 +136,7 @@ class ExtendedMixedOptimizer : public GradientOptimizer {
 
   bool iterative_;  // if true, use iterative solver for hessian solve
 
-  Array<double>
+  const Array<double>
       m_global_symmetry_offset;  // global symmetry offset for hessian
                                  // to account for numerical issues with
                                  // cholesky finding negative eigenvalues

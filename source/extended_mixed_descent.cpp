@@ -1,4 +1,5 @@
 #include "pele/extended_mixed_descent.hpp"
+#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <complex>
 #include <cstddef>
@@ -29,7 +30,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     const pele::Array<double> x0,
     std::shared_ptr<pele::BasePotential> potential_extension, double tol, int T,
     double step, double conv_tol, double rtol, double atol, bool iterative,
-    Array<double> global_symmetry_offset)
+    const Array<double> global_symmetry_offset)
     : GradientOptimizer(potential, x0, tol),
       N_size(x_.size()),
       t0(0),
@@ -53,7 +54,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       conv_tol_(conv_tol),
       line_search_method(this, step),
       iterative_(iterative),
-      m_global_symmetry_offset(global_symmetry_offset) {
+      m_global_symmetry_offset(global_symmetry_offset.copy()) {
   SUNContext_Create(NULL, &sunctx);
   cvode_mem = CVodeCreate(CV_BDF, sunctx);
   if (T <= 1) {
@@ -310,12 +311,9 @@ bool ExtendedMixedOptimizer::convexity_check() {
     add_translation_offset_2d(hessian, 1);
   } else {
     // add translation offset to hessian data
+    // wrap global symmetry data in a eigen matrix
     add_symmetry_offset(hessian, m_global_symmetry_offset);
   }
-
-  // add negative diagonal offset to ensure hessian is sufficiently positive
-
-  // hessian.diagonal().array() -= 1e-9;
 
   int N_int = x_.size();
 
