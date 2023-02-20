@@ -1,4 +1,5 @@
 #include "pele/extended_mixed_descent.hpp"
+#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <complex>
 #include <cstddef>
@@ -28,7 +29,8 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0,
     std::shared_ptr<pele::BasePotential> potential_extension, double tol, int T,
-    double step, double conv_tol, double rtol, double atol, bool iterative)
+    double step, double conv_tol, double rtol, double atol, bool iterative,
+    const Array<double> global_symmetry_offset)
     : GradientOptimizer(potential, x0, tol),
       N_size(x_.size()),
       t0(0),
@@ -51,7 +53,8 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       n_failed_phase_2_steps(0),
       conv_tol_(conv_tol),
       line_search_method(this, step),
-      iterative_(iterative) {
+      iterative_(iterative),
+      m_global_symmetry_offset(global_symmetry_offset.copy()) {
   SUNContext_Create(NULL, &sunctx);
   cvode_mem = CVodeCreate(CV_BDF, sunctx);
   if (T <= 1) {
@@ -303,11 +306,14 @@ bool ExtendedMixedOptimizer::convexity_check() {
   // Eigen::ComputationInfo info = hessian_shifted.llt().info();
   // std::cout << info << " success info of cholesky decomposition \n";
   // add translation to ensure that the hessian is positive definite
-  add_translation_offset_2d(hessian, 1);
 
-  // add negative diagonal offset to ensure hessian is sufficiently positive
-
-  // hessian.diagonal().array() -= 1e-9;
+  if (m_global_symmetry_offset.size() == 0) {
+    add_translation_offset_2d(hessian, 1);
+  } else {
+    // add translation offset to hessian data
+    // wrap global symmetry data in a eigen matrix
+    add_symmetry_offset(hessian, m_global_symmetry_offset);
+  }
 
   int N_int = x_.size();
 

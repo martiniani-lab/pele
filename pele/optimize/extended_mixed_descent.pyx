@@ -24,7 +24,7 @@ cdef extern from "pele/extended_mixed_descent.hpp" namespace "pele":
                                   shared_ptr[_pele.cBasePotential],
                                   double, int,
                                   double, double,
-                                  double, double, bool) except +
+                                  double, double, bool, _pele.Array[double]) except +
         int get_nhev() except +
         int get_n_phase_1_steps() except +
         int get_n_phase_2_steps() except +
@@ -36,11 +36,14 @@ cdef class _Cdef_ExtendedMixedOptimizer_CPP(_pele_opt.GradientOptimizer):
     cdef _pele.BasePotential pot
     cdef _pele.BasePotential pot_ext
     cdef shared_ptr[_pele.cBasePotential] pot_ext_ptr
-    def __cinit__(self, potential, x0, potential_extension=None, double tol=1e-5,
+    def __cinit__(self, potential, x0, potential_extension=None, global_symmetry_offset=[], double tol=1e-5,
                   int T=1, double step=1, double conv_tol = 1e-1,
                   double rtol=1e-3, double atol=1e-3, int nsteps=10000, bool iterative=False):
         potential = as_cpp_potential(potential, verbose=True)
-        
+        global_symmetry_offset = np.array(global_symmetry_offset, dtype=float)
+        if len(global_symmetry_offset.shape) == 2:
+            global_symmetry_offset = global_symmetry_offset.flatten()
+        cdef np.ndarray[double, ndim=1] global_symmetry_offset_c = np.array(global_symmetry_offset, dtype=float)
         self.pot = potential
         if potential_extension is not None:
             pot_ext = as_cpp_potential(potential_extension, verbose=True)
@@ -53,7 +56,9 @@ cdef class _Cdef_ExtendedMixedOptimizer_CPP(_pele_opt.GradientOptimizer):
                 new cppExtendedMixedOptimizer(self.pot.thisptr,
                                               _pele.Array[double](<double*> x0c.data, x0c.size), 
                                               self.pot_ext_ptr,
-                                              tol, T, step, conv_tol, rtol, atol, iterative))
+                                              tol, T, step, conv_tol, rtol, atol, iterative,
+                                              _pele.Array[double](<double*> global_symmetry_offset_c.data,
+                                                                  global_symmetry_offset_c.size)))
         cdef cppExtendedMixedOptimizer* mxopt_ptr = <cppExtendedMixedOptimizer*> self.thisptr.get()
     
     def get_result(self):

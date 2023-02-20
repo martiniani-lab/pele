@@ -67,9 +67,6 @@ void CVODEBDFOptimizer::setup_cvode() {
     case HessianType::DENSE:
       std::cout << "hessian_type: DENSE" << std::endl;
       break;
-    case HessianType::SPARSE:
-      std::cout << "hessian_type: SPARSE" << std::endl;
-      break;
     case HessianType::ITERATIVE:
       std::cout << "hessian_type: ITERATIVE" << std::endl;
       break;
