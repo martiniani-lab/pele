@@ -135,6 +135,16 @@ class ExtendedMixedOptimizer : public GradientOptimizer {
   BacktrackingLineSearch line_search_method;
 
   bool iterative_;  // if true, use iterative solver for hessian solve
+
+  Array<double>
+      m_global_symmetry_offset;  // global symmetry offset for hessian
+                                 // to account for numerical issues with
+                                 // cholesky finding negative eigenvalues
+                                 // If size zero defaults to using 2d
+                                 // translational symmetries to maintain
+                                 // backwards compatibility TODO: deprecate
+                                 // this default
+
  public:
   /**
    * Constructor
@@ -144,7 +154,8 @@ class ExtendedMixedOptimizer : public GradientOptimizer {
       const pele::Array<double> x0,
       std::shared_ptr<pele::BasePotential> potential_extension = nullptr,
       double tol = 1e-4, int T = 10, double step = 1, double conv_tol = 1e-8,
-      double rtol = 1e-5, double atol = 1e-5, bool iterative = false);
+      double rtol = 1e-5, double atol = 1e-5, bool iterative = false,
+      Array<double> global_symmetry_offset = Array<double>(0));
   /**
    * Destructor
    */

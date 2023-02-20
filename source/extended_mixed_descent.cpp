@@ -28,7 +28,8 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0,
     std::shared_ptr<pele::BasePotential> potential_extension, double tol, int T,
-    double step, double conv_tol, double rtol, double atol, bool iterative)
+    double step, double conv_tol, double rtol, double atol, bool iterative,
+    Array<double> global_symmetry_offset)
     : GradientOptimizer(potential, x0, tol),
       N_size(x_.size()),
       t0(0),
@@ -51,7 +52,8 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       n_failed_phase_2_steps(0),
       conv_tol_(conv_tol),
       line_search_method(this, step),
-      iterative_(iterative) {
+      iterative_(iterative),
+      m_global_symmetry_offset(global_symmetry_offset) {
   SUNContext_Create(NULL, &sunctx);
   cvode_mem = CVodeCreate(CV_BDF, sunctx);
   if (T <= 1) {
