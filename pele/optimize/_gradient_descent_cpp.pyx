@@ -29,6 +29,11 @@ cdef extern from "pele/gradient_descent.hpp" namespace "pele":
         void set_verbosity(int) except +
         vector[double] get_time_trajectory() except +
         vector[double] get_gradient_norm_trajectory() except +
+        vector[double] get_distance_trajectory() except +
+        vector[double] get_energy_trajectory() except +
+        vector[double] get_costly_time_trajectory() except +
+        vector[vector[double]] get_coordinate_trajectory() except +
+        vector[vector[double]] get_gradient_trajectory() except +
 
 
 cdef class _Cdef_GradientDescent_CPP(_pele_opt.GradientOptimizer):
@@ -70,6 +75,12 @@ cdef class _Cdef_GradientDescent_CPP(_pele_opt.GradientOptimizer):
         if self.save_trajectory:
             result.time_trajectory = np.array(gd_ptr.get_time_trajectory())
             result.gradient_norm_trajectory = np.array(gd_ptr.get_gradient_norm_trajectory())
+            result.distance_trajectory = np.array(gd_ptr.get_distance_trajectory())
+            result.energy_trajectory = np.array(gd_ptr.get_energy_trajectory())
+            # costly trajectories
+            result.costly_time_trajectory = np.array(gd_ptr.get_costly_time_trajectory())
+            result.coordinate_trajectory = np.array(gd_ptr.get_coordinate_trajectory())
+            result.gradient_trajectory = np.array(gd_ptr.get_gradient_trajectory())
         return result
 
 

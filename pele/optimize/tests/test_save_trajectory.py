@@ -99,5 +99,7 @@ def test_skipping_trajectory_saving(potential_initial_and_final_conditions):
     for key, optimizer in optimizer_dict.items():
         print("Testing optimizer: ", key)
         res = optimizer.run(100)
-        assert len(res.time_trajectory) == res.nsteps // skip
-        assert len(res.gradient_norm_trajectory) == res.nsteps // skip
+        assert len(res.time_trajectory) == res.nsteps
+        assert len(res.gradient_norm_trajectory) == res.nsteps
+        assert res.coordinate_trajectory.shape == (res.nsteps // skip, 32)
+        assert res.gradient_trajectory.shape == (res.nsteps // skip, 32)
