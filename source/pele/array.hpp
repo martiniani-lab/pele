@@ -424,6 +424,13 @@ class Array {
     return std::accumulate(begin(), end(), dtype(1), std::multiplies<dtype>());
   }
 
+  std::vector<dtype> to_std_vector_copy() const {
+    // copy the data into a new std::vector
+    std::vector<dtype> std_vec(_size);
+    std::copy(begin(), end(), std_vec.begin());
+    return std_vec;
+  }
+
   /**
    * return an array that wraps the data from index ibegin to index iend-1.
    */
