@@ -44,6 +44,8 @@ def test_cvode_compare_with_cpp(potential_initial_and_final_conditions):
     assert res.nsteps == N_CVODE_CPP_STEPS
     assert len(res.time_trajectory) == res.nsteps
     assert len(res.gradient_norm_trajectory) == res.nsteps
+    assert res.coordinate_trajectory.shape == (N_CVODE_CPP_STEPS, 32)
+    assert res.gradient_trajectory.shape == (N_CVODE_CPP_STEPS, 32)
     return True
 
 

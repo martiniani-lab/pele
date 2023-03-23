@@ -173,8 +173,13 @@ class GradientOptimizer : public Optimizer {
     for (int i = 0; i < niter; ++i) {
       if (stop_criterion_satisfied()) break;
       one_iteration();
-      if (save_trajectory_ && (iter_number_ % iterations_before_save_ == 0))
-        update_trajectory();
+      if (save_trajectory_) {
+        // costly info takes up more memory, so only save when necessary
+        if (iter_number_ % iterations_before_save_ == 0)
+          update_costly_trajectory_info();
+        // cheap info takes up less memory, so save every iteration
+        update_cheap_trajectory_info();
+      }
     }
   }
 
@@ -295,9 +300,13 @@ class GradientOptimizer : public Optimizer {
     func_initialized_ = true;
   }
 
-  virtual void update_trajectory() {
+  virtual void update_costly_trajectory_info() {
     throw std::runtime_error(
-        "GradientOptimizer::update_trajectory must be overloaded");
+        "GradientOptimizer::update_costly_trajectory_info must be overloaded");
+  }
+  virtual void update_cheap_trajectory_info() {
+    throw std::runtime_error(
+        "GradientOptimizer::update_costly_trajectory_info must be overloaded");
   }
 
  public:
@@ -326,17 +335,32 @@ class GradientOptimizer : public Optimizer {
 class ODEBasedOptimizer : public GradientOptimizer {
  private:
   // Need to include others
-  std::vector<double> time_trajectory_;
-  std::vector<double> gradient_norm_trajectory_;
+  std::vector<double> cheap_times;  // times at which we save the cheap info
+  std::vector<double> gradient_norms;
+  std::vector<double> distances;
+  std::vector<double> energies;
+
+  std::vector<double> costly_times;  // times at which we save the costly info
+  std::vector<std::vector<double>> coordinates;
+  std::vector<std::vector<double>> gradients;
 
  protected:
   double time_;
 
-  void update_trajectory() {
-    // Basics for what we need at this point
-    // Maybe an optional saving mechanism for the trajectory helps
-    time_trajectory_.push_back(time_);
-    gradient_norm_trajectory_.push_back(gradient_norm_);
+  void update_costly_trajectory_info() {
+    costly_times.push_back(time_);
+
+    // we change these to std::vector<double> to
+    // convert easily from the cython side
+    gradients.push_back(g_.to_std_vector_copy());
+    coordinates.push_back(x_.to_std_vector_copy());
+  }
+
+  void update_cheap_trajectory_info() {
+    cheap_times.push_back(time_);
+    gradient_norms.push_back(gradient_norm_);
+    distances.push_back(compute_pot_norm(x_));
+    energies.push_back(f_);
   }
 
  public:
@@ -361,9 +385,17 @@ class ODEBasedOptimizer : public GradientOptimizer {
         "ODEBasedOptimizer default constructor not "
         "implemented. Check derived class function calls");
   }
-  std::vector<double> get_time_trajectory() { return time_trajectory_; }
-  std::vector<double> get_gradient_norm_trajectory() {
-    return gradient_norm_trajectory_;
+  std::vector<double> get_time_trajectory() { return cheap_times; }
+  std::vector<double> get_gradient_norm_trajectory() { return gradient_norms; }
+  std::vector<double> get_distance_trajectory() { return distances; }
+  std::vector<double> get_energy_trajectory() { return energies; }
+
+  std::vector<double> get_costly_time_trajectory() { return costly_times; }
+  std::vector<std::vector<double>> get_coordinate_trajectory() {
+    return coordinates;
+  }
+  std::vector<std::vector<double>> get_gradient_trajectory() {
+    return gradients;
   }
 };
 }  // namespace pele
