@@ -83,6 +83,12 @@ cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
         if self.save_trajectory:
             result["time_trajectory"] = np.array(cppfire.get_time_trajectory())
             result["gradient_norm_trajectory"] = np.array(cppfire.get_gradient_norm_trajectory())
+            result["distance_trajectory"] = np.array(cppfire.get_distance_trajectory())
+            result["energy_trajectory"] = np.array(cppfire.get_energy_trajectory())
+            # costly trajectories
+            result["costly_time_trajectory"] = np.array(cppfire.get_costly_time_trajectory())
+            result["coordinate_trajectory"] = np.array(cppfire.get_coordinate_trajectory())
+            result["gradient_trajectory"] = np.array(cppfire.get_gradient_trajectory())
         return result
             
     def __reduce__(self):
