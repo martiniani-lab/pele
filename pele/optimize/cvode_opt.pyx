@@ -33,6 +33,12 @@ cdef extern from "pele/cvode.hpp" namespace "pele":
         double get_nhev() except +
         vector[double] get_time_trajectory() except +
         vector[double] get_gradient_norm_trajectory() except +
+        vector[double] get_distance_trajectory() except +
+        vector[double] get_energy_trajectory() except +
+        vector[double] get_costly_time_trajectory() except +
+        vector[vector[double]] get_coordinate_trajectory() except +
+        vector[vector[double]] get_gradient_trajectory() except +
+        
 
 cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
     """This class is the python interface for the c++ CVODEBDFOptimizer implementation
@@ -62,6 +68,15 @@ cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
         if self.save_trajectory:
             res["time_trajectory"] = np.array(cvode_ptr.get_time_trajectory())
             res["gradient_norm_trajectory"] = np.array(cvode_ptr.get_gradient_norm_trajectory())
+            res["distance_trajectory"] = np.array(cvode_ptr.get_distance_trajectory())
+            res["energy_trajectory"] = np.array(cvode_ptr.get_energy_trajectory())
+            # costly trajectories
+            res["costly_time_trajectory"] = np.array(cvode_ptr.get_costly_time_trajectory())
+            res["coordinate_trajectory"] = np.array(cvode_ptr.get_coordinate_trajectory())
+            res["gradient_trajectory"] = np.array(cvode_ptr.get_gradient_trajectory())
+            
+
+            
         return res
     
     def __reduce__(self):
