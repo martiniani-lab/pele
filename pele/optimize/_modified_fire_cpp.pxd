@@ -13,3 +13,8 @@ cdef extern from "pele/modified_fire.hpp" namespace "pele":
                          double, double, double, cbool, cbool, int) except +
         vector[double] get_time_trajectory() except +
         vector[double] get_gradient_norm_trajectory() except +
+        vector[double] get_distance_trajectory() except +
+        vector[double] get_energy_trajectory() except +
+        vector[double] get_costly_time_trajectory() except +
+        vector[vector[double]] get_coordinate_trajectory() except +
+        vector[vector[double]] get_gradient_trajectory() except +
