@@ -345,6 +345,7 @@ class ODEBasedOptimizer : public GradientOptimizer {
   std::vector<std::vector<double>> gradients;
 
  protected:
+  double step_norm_;
   double time_;
 
   void update_costly_trajectory_info() {
@@ -359,7 +360,8 @@ class ODEBasedOptimizer : public GradientOptimizer {
   void update_cheap_trajectory_info() {
     cheap_times.push_back(time_);
     gradient_norms.push_back(gradient_norm_);
-    distances.push_back(compute_pot_norm(x_));
+    // needs to be updated by the derived class
+    distances.push_back(step_norm_);
     energies.push_back(f_);
   }
 
@@ -370,6 +372,7 @@ class ODEBasedOptimizer : public GradientOptimizer {
                     int iterations_before_save = 1)
       : GradientOptimizer(potential, x0, tol, save_trajectory,
                           iterations_before_save),
+        step_norm_(0),
         time_(0) {}
 
   virtual ~ODEBasedOptimizer() {}

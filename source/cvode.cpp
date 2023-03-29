@@ -200,9 +200,10 @@ void CVODEBDFOptimizer::one_iteration() {
   f_ = udata.stored_energy;
   nfev_ = udata.nfev;
   Array<double> step = xold - x_;
+  step_norm_ = norm(step);
 
   // really hacky way to output $lambdamin/lambdamax on a low tolerance run
-  // simply print the energy and lambdamin/lambdamax as csv values and write
+  // simply print the energy and $lambdamin/lambdamax as csv values and write
   // stdout to file then plot them using python
 
 #if PRINT_TO_FILE == 1
