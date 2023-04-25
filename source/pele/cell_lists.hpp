@@ -4,11 +4,13 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <exception>
 #include <iostream>
 #include <limits>
 #include <memory>
 #include <omp.h>
+#include <ostream>
 #include <sstream>
 #include <vector>
 
@@ -526,14 +528,49 @@ class LatticeNeighbors {
     }
   }
 
+  void find_global_neighbor_inds_nearest(const size_t idim,
+                                         cell_vec_t const &possible_neighbor,
+                                         std::vector<size_t> &neighbors,
+                                         cell_vec_t const &cell) const {
+    if (idim >= ndim) {
+      double rmin = minimum_distance(possible_neighbor, cell);
+      if (rmin <= m_rcut) {
+        size_t global_ind = cell_vec_to_global_ind(possible_neighbor);
+        auto found = std::find(neighbors.begin(), neighbors.end(), global_ind);
+        if (found == neighbors.end()) {
+          neighbors.push_back(global_ind);
+        }
+      }
+    } else {
+      auto v = possible_neighbor;
+      int search_range = std::ceil(m_rcut / m_rcell_vec[idim]);
+      // A little extra distance to make sure we cover corner to corner cases
+      for (int delta = -2 * search_range; delta <= 2 * search_range; ++delta) {
+        // v is size_t, so we need to be careful about negative values
+        int m_n_cells = m_ncells_vec[idim];
+        int expected = cell[idim] + delta;
+        expected = (expected % m_n_cells + m_n_cells) % m_n_cells;
+        v[idim] = expected;
+        find_global_neighbor_inds_nearest(idim + 1, v, neighbors, cell);
+      }
+    }
+  }
+
   /**
    * return a vector of all the neighbors of icell (including icell itself)
    * using global cell indices
    */
   std::vector<size_t> find_all_global_neighbor_inds(const size_t icell) const {
-    auto vcell = global_ind_to_cell_vec(icell);
-
+    cell_vec_t vcell = global_ind_to_cell_vec(icell);
     std::vector<size_t> neighbors;
+    if (typeid(*m_dist) == typeid(periodic_distance<2>) or
+        typeid(*m_dist) == typeid(periodic_distance<3>)) {
+      // For a regular lattice does not iterate over all the cells
+      // instead only the nearest ones
+      find_global_neighbor_inds_nearest(0, vcell, neighbors, vcell);
+      return neighbors;
+    }
+
     find_global_neighbor_inds(0, vcell, neighbors, vcell);
     return neighbors;
   }
@@ -651,9 +688,9 @@ class LatticeNeighbors {
  * The visitor is called for every pair of atoms in the system.  It
  * is meant to be used for, e.g. accumulating the energy or the gradient.
  *
- * We use a template rather than an interface because the visitor will be called
- * many times over a short period and the additional overhead of an interface
- * might be a problem.
+ * We use a template rather than an interface because the visitor will be
+ * called many times over a short period and the additional overhead of an
+ * interface might be a problem.
  */
 template <class visitor_t, typename distance_policy = periodic_distance<3>>
 class CellListsLoop {
@@ -754,10 +791,10 @@ class CellListsLoop {
 
   /**
    * @brief loop through unique pairs that contain elements of iatoms
-   * @details for each iatom, this function loops through unique {iatom, jatom}
-   * pairs where jatom is an belongs to the cell or neighboring cells of iatom.
-   * This is useful to calculate energy changes when atoms corresponding to
-   * iatoms are moved.
+   * @details for each iatom, this function loops through unique {iatom,
+   * jatom} pairs where jatom is an belongs to the cell or neighboring cells
+   * of iatom. This is useful to calculate energy changes when atoms
+   * corresponding to iatoms are moved.
    *
    * @param coords the coordinates of the atoms
    * @param iatoms list of indices (iatoms)
@@ -780,8 +817,8 @@ class CellListsLoop {
  * in that case m_ncellx should be an array rather than a scalar and the
  * definition of ncells and rcell would change to array. This implies that in
  * all the function these would need to be replace with the correct array
- * element. This adds room for errors so in this first implementation we do not
- * account for that scenario
+ * element. This adds room for errors so in this first implementation we do
+ * not account for that scenario
  */
 template <typename distance_policy = periodic_distance<3>>
 class CellLists {
@@ -789,8 +826,8 @@ class CellLists {
   static const size_t m_ndim = distance_policy::_ndim;
 
  protected:
-  bool m_initialized;  // flag for whether the cell lists have been initialized
-                       // with coordinates
+  bool m_initialized;  // flag for whether the cell lists have been
+                       // initialized with coordinates
   pele::LatticeNeighbors<distance_policy> m_lattice_tool;
   std::vector<SafePushQueue<std::array<size_t, 2>>> add_atom_queue;
 
@@ -887,7 +924,8 @@ CellLists<distance_policy>::CellLists(
 
   if (m_ndim < 2) {
     throw std::runtime_error(
-        "CellLists::CellLists: Cell lists only work with more than 1 dimension "
+        "CellLists::CellLists: Cell lists only work with more than 1 "
+        "dimension "
         "(due to the split of subdomains in y-dimension)");
   }
   if (boxv.size() != m_ndim) {
@@ -919,9 +957,9 @@ CellLists<distance_policy>::CellLists(
   size_t ncell_min = *std::min_element(m_lattice_tool.m_ncells_vec.begin(),
                                        m_lattice_tool.m_ncells_vec.end());
   if ((m_ndim == 2 && ncell_min <= 4) || (m_ndim == 3 && ncell_min <= 3)) {
-    // If there are only a few cells in any direction then it doesn't make sense
-    // to use cell lists because so many cells will be neighbors with each
-    // other. It would be better to use simple loops over atom pairs.
+    // If there are only a few cells in any direction then it doesn't make
+    // sense to use cell lists because so many cells will be neighbors with
+    // each other. It would be better to use simple loops over atom pairs.
     std::cout << "CellLists: efficiency warning: there are not many cells ("
               << ncell_min << ") in at least one direction.\n";
   }
