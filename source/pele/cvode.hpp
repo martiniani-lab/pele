@@ -80,7 +80,11 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
   SUNMatrix A;
   SUNLinearSolver LS;
   double tN;
+  // return code for everything else, throws exception
   int ret;
+  // Single step return code for sundials 0 if sucessful
+  // used for stopping if there is a failure
+  int single_step_ret_code;
   SUNContext sunctx;  // SUNDIALS context
 
   // save construction parameters

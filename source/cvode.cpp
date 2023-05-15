@@ -185,7 +185,7 @@ void CVODEBDFOptimizer::one_iteration() {
   /* advance solver just one internal step */
   Array<double> xold = x_.copy();
 
-  ret = CVode(cvode_mem, tN, x0_N, &time_, CV_ONE_STEP);
+  single_step_ret_code = CVode(cvode_mem, tN, x0_N, &time_, CV_ONE_STEP);
 
   // if (check_sundials_retval(&ret, "CVode", 1)) {
   //   throw std::runtime_error("CVODE single step failed");
@@ -242,6 +242,15 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
     std::cout << "x is too large, exiting" << std::endl;
     return true;
   }
+
+  if (single_step_ret_code < 0) {
+    // CVODE failed so, no point continuing
+    std::cout << "CVODE failed, exiting" << std::endl;
+    succeeded_ = false;
+    return true;
+  }
+
+
 
   if (gradient_norm_ < tol_) {
     if (use_newton_stop_criterion_) {
@@ -375,7 +384,6 @@ static int check_sundials_retval(void *return_value, const char *funcname,
             funcname);
     return (1);
   }
-
   /* Check if retval < 0 */
 
   else if (opt == 1) {
