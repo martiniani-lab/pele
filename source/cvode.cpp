@@ -26,7 +26,7 @@ using namespace std;
 
 #define NUMERICAL_ZERO 1e-15
 #define THRESHOLD 1e-9
-#define NEWTON_TOL 1e-5
+#define NEWTON_TOL 1e-4
 #define ZERO 0.0
 namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(
@@ -288,6 +288,10 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
             -eigenvectors *
             ((eigenvectors.transpose() * g_eigen).cwiseProduct(inv_eigenvalues))
                 .matrix();
+        std::cout << "checking newton stop criterion\n";
+        std::cout << "iter number = " << iter_number_ << "\n";
+        std::cout << "gradient norm = " << gradient_norm_ << "\n";
+        std::cout << "newton step norm = " << newton_step.norm() << "\n";
         if (newton_step.norm() < NEWTON_TOL) {
           std::cout << "converged in " << iter_number_ << " iterations\n";
           std::cout << "rms = " << gradient_norm_ << "\n";
