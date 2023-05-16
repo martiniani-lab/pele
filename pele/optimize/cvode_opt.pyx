@@ -29,7 +29,7 @@ cdef extern from "pele/cvode.hpp" namespace "pele":
 cdef extern from "pele/cvode.hpp" namespace "pele":
     cdef cppclass cppCVODEBDFOptimizer "pele::CVODEBDFOptimizer":
         cppCVODEBDFOptimizer(shared_ptr[_pele.cBasePotential], _pele.Array[double],
-                             double, double, double, HessianType, bool, bool, int) except +
+                             double, double, double, HessianType, bool, bool, int, double, double) except +
         double get_nhev() except +
         vector[double] get_time_trajectory() except +
         vector[double] get_gradient_norm_trajectory() except +
@@ -49,7 +49,7 @@ cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
     cdef _pele.BasePotential pot
     cdef HessianType hess_type
     cdef bool save_trajectory
-    def __cinit__(self, potential, x0,  double tol=1e-4, double rtol = 1e-4, double atol = 1e-4, int nsteps=10000, HessianType hessian_type=HessianType.DENSE, bool use_newton_stop_criterion=False, bool save_trajectory=False, int iterations_before_save=1):
+    def __cinit__(self, potential, x0,  double tol=1e-4, double rtol = 1e-4, double atol = 1e-4, int nsteps=10000, HessianType hessian_type=HessianType.DENSE, bool use_newton_stop_criterion=False, bool save_trajectory=False, int iterations_before_save=1, double newton_tol = 1e-5, double offset_factor = 1e-1):
         potential = as_cpp_potential(potential, verbose=True)
 
         self.pot = potential
@@ -59,7 +59,7 @@ cdef class _Cdef_CVODEBDFOptimizer_CPP(_pele_opt.GradientOptimizer):
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppCVODEBDFOptimizer(self.pot.thisptr,
                              _pele.Array[double](<double*> x0c.data, x0c.size),
-                                tol, rtol, atol, hess_type, use_newton_stop_criterion, save_trajectory, iterations_before_save))
+                                tol, rtol, atol, hess_type, use_newton_stop_criterion, save_trajectory, iterations_before_save, newton_tol, offset_factor))
     
     def get_result(self):
         cdef cppCVODEBDFOptimizer* cvode_ptr = <cppCVODEBDFOptimizer*> self.thisptr.get()

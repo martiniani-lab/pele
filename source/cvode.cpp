@@ -33,7 +33,8 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0, double tol, double rtol, double atol,
     HessianType hessian_type, bool use_newton_stop_criterion,
-    bool save_trajectory, int iterations_before_save)
+    bool save_trajectory, int iterations_before_save, double newton_tol,
+    double offset_factor)
     : ODEBasedOptimizer(potential, x0, tol, save_trajectory,
                         iterations_before_save),
       N_size(x0.size()),
@@ -43,7 +44,9 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
       atol_(atol),
       hessian_type_(hessian_type),
       use_newton_stop_criterion_(use_newton_stop_criterion),
-      hessian(x0.size(), x0.size()) {
+      hessian(x0.size(), x0.size()),
+      newton_tol_(newton_tol),
+      offset_factor_(offset_factor) {
   setup_cvode();
 };
 
@@ -283,8 +286,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
         // postprocess inverse Eigenvalues
 
         double average_eigenvalue = eigenvalues.mean();
-        double offset_factor = 1e-1;
-        double offset = std::max(offset_factor * std::abs(average_eigenvalue),
+        double offset = std::max(offset_factor_ * std::abs(average_eigenvalue),
                                  2 * abs_min_eigval);
 
         hessian.diagonal().array() += offset;
@@ -299,7 +301,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
         std::cout << "iter number = " << iter_number_ << "\n";
         std::cout << "gradient norm = " << gradient_norm_ << "\n";
         std::cout << "newton step norm = " << newton_step.norm() << "\n";
-        if (newton_step.norm() < NEWTON_TOL) {
+        if (newton_step.norm() < newton_tol_) {
           std::cout << "converged in " << iter_number_ << " iterations\n";
           std::cout << "rms = " << gradient_norm_ << "\n";
           std::cout << "tol = " << tol_ << "\n";
