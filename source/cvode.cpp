@@ -26,7 +26,7 @@ using namespace std;
 
 #define NUMERICAL_ZERO 1e-15
 #define THRESHOLD 1e-9
-#define NEWTON_TOL 1e-4
+#define NEWTON_TOL 1e-5
 #define ZERO 0.0
 namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(
@@ -39,11 +39,11 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
       N_size(x0.size()),
       tN(1.0),
       ret(0),
-      hessian(x0.size(), x0.size()),
       rtol_(rtol),
       atol_(atol),
       hessian_type_(hessian_type),
-      use_newton_stop_criterion_(use_newton_stop_criterion) {
+      use_newton_stop_criterion_(use_newton_stop_criterion),
+      hessian(x0.size(), x0.size()) {
   setup_cvode();
 };
 
@@ -243,6 +243,8 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
     return true;
   }
 
+  // The newton stop criterion helps us take care of
+  // the case where eigenvalues are very small
   if (gradient_norm_ < tol_) {
     if (use_newton_stop_criterion_) {
       if (iter_number_ % 100 == 0) {
@@ -259,6 +261,14 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
         Eigen::VectorXd eigenvalues = es.eigenvalues();
         Eigen::MatrixXd eigenvectors = es.eigenvectors();
 
+        double abs_min_eigval = eigenvalues.minCoeff();
+
+        if (abs_min_eigval < 0) {
+          abs_min_eigval = -abs_min_eigval;
+        } else {
+          abs_min_eigval = 0;
+        }
+
         // replace eigenvalues with their absolute values
         for (size_t i = 0; i < eigenvalues.size(); ++i) {
           eigenvalues(i) = std::abs(eigenvalues(i));
@@ -266,28 +276,20 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
 
         // cout << "eigenvalues" << eigenvalues << endl;
         // postprocess inverse Eigenvalues
-        Eigen::VectorXd inv_eigenvalues(eigenvalues.size());
-        for (size_t i = 0; i < eigenvalues.size(); ++i) {
-          double mod_eig = abs(eigenvalues(i));
-          if (mod_eig < NUMERICAL_ZERO) {
-            // case for translational symmetries
-            inv_eigenvalues(i) = 0.0;
-          } else if (mod_eig < THRESHOLD) {
-            // case for really small eigenvalues
-            inv_eigenvalues(i) = 1.0 / THRESHOLD;
-          } else {
-            // case for normal eigenvalues
-            inv_eigenvalues(i) = 1.0 / mod_eig;
-          }
-        }
+
+        double average_eigenvalue = eigenvalues.mean();
+        double offset_factor = 1e-1;
+        double offset = std::max(offset_factor * std::abs(average_eigenvalue),
+                                 2 * abs_min_eigval);
+
+        hessian.diagonal().array() += offset;
+
         Eigen::VectorXd newton_step(g_.size());
         newton_step.setZero();
-
-        // find the largest eigenvalue
-        newton_step =
-            -eigenvectors *
-            ((eigenvectors.transpose() * g_eigen).cwiseProduct(inv_eigenvalues))
-                .matrix();
+        newton_step = -hessian.ldlt().solve(g_eigen);
+        std::cout << "offset = " << offset << "\n";
+        std::cout << "average eigenvalue = " << average_eigenvalue << "\n";
+        std::cout << "abs min eigenvalue = " << abs_min_eigval << "\n";
         std::cout << "checking newton stop criterion\n";
         std::cout << "iter number = " << iter_number_ << "\n";
         std::cout << "gradient norm = " << gradient_norm_ << "\n";
