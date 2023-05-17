@@ -24,10 +24,6 @@
 
 using namespace std;
 
-#define NUMERICAL_ZERO 1e-15
-#define THRESHOLD 1e-9
-#define NEWTON_TOL 1e-5
-#define ZERO 0.0
 namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
