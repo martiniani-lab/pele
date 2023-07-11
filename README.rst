@@ -169,6 +169,7 @@ is:
 make sure to add the install directory to your
 PYTHONPATH environment variable. to test whether your installation has worked correctly, run::
 
+  $ export OMP_NUM_THREADS=1
   $ pytest pele/
 
 from the base directory. to install without attractor identification support i.e without CVODE, run::
