@@ -78,18 +78,17 @@ class GradientDescent : public ODEBasedOptimizer {
     // reduce the stepsize if necessary
     line_search_method.set_xold_gold_(xold, gold);
     line_search_method.set_g_f_ptr(g_);
-    double stepnorm = line_search_method.line_search(x_, step);
+    step_norm_ = line_search_method.line_search(x_, step);
     Array<double> gdiff = gold - g_;
     Array<double> xdiff = xold - x_;
-
     // Forward Euler time
     // dx = -dt * g => dt = |dx| / |g|
-    time_ += stepnorm / norm(gold);
+    time_ += step_norm_ / norm(gold);
     // print some status information
     if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {
       std::cout << "steepest descent: " << iter_number_ << " E " << f_
                 << " rms " << gradient_norm_ << " nfev " << nfev_
-                << " step norm " << stepnorm << std::endl;
+                << " step norm " << step_norm_ << std::endl;
     }
     iter_number_ += 1;
   }

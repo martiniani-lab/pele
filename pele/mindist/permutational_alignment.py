@@ -127,10 +127,7 @@ def find_permutations_OPTIM(X1, X2, box_lengths=None, make_cost_matrix=None):
     use OPTIM's minperm() routine to calculate the optimum permutation
     """
 
-    if (
-        make_cost_matrix is not _make_cost_matrix
-        and make_cost_matrix is not None
-    ):
+    if make_cost_matrix is not _make_cost_matrix and make_cost_matrix is not None:
         raise RuntimeError(
             "cannot use a custom cost matrix with findBestPermutationListOPTIM"
         )
@@ -238,15 +235,10 @@ def find_best_permutation(
             continue
         if user_algorithm is not None:
             dist, perm = user_algorithm(
-                X1[atomlist],
-                X2[atomlist],
-                make_cost_matrix=user_cost_matrix,
-                **kwargs
+                X1[atomlist], X2[atomlist], make_cost_matrix=user_cost_matrix, **kwargs
             )
         else:
-            dist, perm = _find_permutations(
-                X1[atomlist], X2[atomlist], **kwargs
-            )
+            dist, perm = _find_permutations(X1[atomlist], X2[atomlist], **kwargs)
 
         disttot += dist**2
         for atom, i in zip(atomlist, range(len(atomlist))):

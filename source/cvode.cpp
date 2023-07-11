@@ -24,26 +24,25 @@
 
 using namespace std;
 
-#define NUMERICAL_ZERO 1e-15
-#define THRESHOLD 1e-9
-#define NEWTON_TOL 1e-5
-#define ZERO 0.0
 namespace pele {
 CVODEBDFOptimizer::CVODEBDFOptimizer(
     std::shared_ptr<pele::BasePotential> potential,
     const pele::Array<double> x0, double tol, double rtol, double atol,
     HessianType hessian_type, bool use_newton_stop_criterion,
-    bool save_trajectory, int iterations_before_save)
+    bool save_trajectory, int iterations_before_save, double newton_tol,
+    double offset_factor)
     : ODEBasedOptimizer(potential, x0, tol, save_trajectory,
                         iterations_before_save),
       N_size(x0.size()),
       tN(1.0),
       ret(0),
-      hessian(x0.size(), x0.size()),
       rtol_(rtol),
       atol_(atol),
       hessian_type_(hessian_type),
-      use_newton_stop_criterion_(use_newton_stop_criterion) {
+      use_newton_stop_criterion_(use_newton_stop_criterion),
+      hessian(x0.size(), x0.size()),
+      newton_tol_(newton_tol),
+      offset_factor_(offset_factor) {
   setup_cvode();
 };
 
@@ -185,7 +184,7 @@ void CVODEBDFOptimizer::one_iteration() {
   /* advance solver just one internal step */
   Array<double> xold = x_.copy();
 
-  ret = CVode(cvode_mem, tN, x0_N, &time_, CV_ONE_STEP);
+  single_step_ret_code = CVode(cvode_mem, tN, x0_N, &time_, CV_ONE_STEP);
 
   // if (check_sundials_retval(&ret, "CVode", 1)) {
   //   throw std::runtime_error("CVODE single step failed");
@@ -200,9 +199,10 @@ void CVODEBDFOptimizer::one_iteration() {
   f_ = udata.stored_energy;
   nfev_ = udata.nfev;
   Array<double> step = xold - x_;
+  step_norm_ = norm(step);
 
   // really hacky way to output $lambdamin/lambdamax on a low tolerance run
-  // simply print the energy and lambdamin/lambdamax as csv values and write
+  // simply print the energy and $lambdamin/lambdamax as csv values and write
   // stdout to file then plot them using python
 
 #if PRINT_TO_FILE == 1
@@ -242,6 +242,13 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
     return true;
   }
 
+  if (single_step_ret_code < 0) {
+    // CVODE failed so, no point continuing
+    std::cout << "CVODE failed, exiting" << std::endl;
+    succeeded_ = false;
+    return true;
+  }
+
   if (gradient_norm_ < tol_) {
     if (use_newton_stop_criterion_) {
       if (iter_number_ % 100 == 0) {
@@ -258,6 +265,14 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
         Eigen::VectorXd eigenvalues = es.eigenvalues();
         Eigen::MatrixXd eigenvectors = es.eigenvectors();
 
+        double abs_min_eigval = eigenvalues.minCoeff();
+
+        if (abs_min_eigval < 0) {
+          abs_min_eigval = -abs_min_eigval;
+        } else {
+          abs_min_eigval = 0;
+        }
+
         // replace eigenvalues with their absolute values
         for (size_t i = 0; i < eigenvalues.size(); ++i) {
           eigenvalues(i) = std::abs(eigenvalues(i));
@@ -265,29 +280,24 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
 
         // cout << "eigenvalues" << eigenvalues << endl;
         // postprocess inverse Eigenvalues
-        Eigen::VectorXd inv_eigenvalues(eigenvalues.size());
-        for (size_t i = 0; i < eigenvalues.size(); ++i) {
-          double mod_eig = abs(eigenvalues(i));
-          if (mod_eig < NUMERICAL_ZERO) {
-            // case for translational symmetries
-            inv_eigenvalues(i) = 0.0;
-          } else if (mod_eig < THRESHOLD) {
-            // case for really small eigenvalues
-            inv_eigenvalues(i) = 1.0 / THRESHOLD;
-          } else {
-            // case for normal eigenvalues
-            inv_eigenvalues(i) = 1.0 / mod_eig;
-          }
-        }
+
+        double average_eigenvalue = eigenvalues.mean();
+        double offset = std::max(offset_factor_ * std::abs(average_eigenvalue),
+                                 2 * abs_min_eigval);
+
+        hessian.diagonal().array() += offset;
+
         Eigen::VectorXd newton_step(g_.size());
         newton_step.setZero();
-
-        // find the largest eigenvalue
-        newton_step =
-            -eigenvectors *
-            ((eigenvectors.transpose() * g_eigen).cwiseProduct(inv_eigenvalues))
-                .matrix();
-        if (newton_step.norm() < NEWTON_TOL) {
+        newton_step = -hessian.ldlt().solve(g_eigen);
+        std::cout << "offset = " << offset << "\n";
+        std::cout << "average eigenvalue = " << average_eigenvalue << "\n";
+        std::cout << "abs min eigenvalue = " << abs_min_eigval << "\n";
+        std::cout << "checking newton stop criterion\n";
+        std::cout << "iter number = " << iter_number_ << "\n";
+        std::cout << "gradient norm = " << gradient_norm_ << "\n";
+        std::cout << "newton step norm = " << newton_step.norm() << "\n";
+        if (newton_step.norm() < newton_tol_) {
           std::cout << "converged in " << iter_number_ << " iterations\n";
           std::cout << "rms = " << gradient_norm_ << "\n";
           std::cout << "tol = " << tol_ << "\n";
@@ -370,7 +380,6 @@ static int check_sundials_retval(void *return_value, const char *funcname,
             funcname);
     return (1);
   }
-
   /* Check if retval < 0 */
 
   else if (opt == 1) {

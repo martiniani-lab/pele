@@ -80,7 +80,11 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
   SUNMatrix A;
   SUNLinearSolver LS;
   double tN;
+  // return code for everything else, throws exception
   int ret;
+  // Single step return code for sundials 0 if sucessful
+  // used for stopping if there is a failure
+  int single_step_ret_code;
   SUNContext sunctx;  // SUNDIALS context
 
   // save construction parameters
@@ -106,6 +110,12 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
   void setup_cvode();
   void free_cvode_objects();
 
+  // Tolerance of the newton step
+  double newton_tol_;
+  // offset factor that controls how much of the
+  // average eigenvalue is used to offset the hessian
+  double offset_factor_;
+
  public:
   void one_iteration();
   // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -118,7 +128,8 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
                     HessianType hessian_type = DENSE,
                     bool use_newton_stop_criterion = false,
                     bool save_trajectory = false,
-                    int iterations_before_save = 1);
+                    int iterations_before_save = 1, double newton_tol = 1e-5,
+                    double offset_factor = 0.1);
 
   ~CVODEBDFOptimizer();
 

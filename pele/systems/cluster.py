@@ -45,6 +45,10 @@ class AtomicCluster(BaseSystem):
         permlist = self.get_permlist()
         return ExactMatchAtomicCluster(permlist=permlist, **kwargs)
 
+    def get_compare_exact_without_perms(self, **kwargs):
+        permlist = self.get_permlist()
+        return ExactMatchAtomicCluster(permlist=permlist, **kwargs)
+
     def get_mindist(self, **kwargs):
         """return a function which puts two structures in best alignment.
 

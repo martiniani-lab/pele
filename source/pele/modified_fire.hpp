@@ -235,6 +235,7 @@ inline void MODIFIED_FIRE::one_iteration() {
       std::cout << "warning: step direction was uphill.  inverting\n";
     }
   }
+  step_norm_ = norm(x_ - _xold);
 
   // print some status information
   if ((iprint_ > 0) && (iter_number_ % iprint_ == 0)) {

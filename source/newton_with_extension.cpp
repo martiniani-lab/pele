@@ -21,15 +21,15 @@ NewtonWithExtendedPotential::NewtonWithExtendedPotential(
     double tol, std::shared_ptr<BasePotential> potential_extension,
     double translation_offset, double max_step)
     : GradientOptimizer(potential, x0, tol),
-      _translation_offset(translation_offset),
-      _max_step(max_step),
-      _potential_extension(potential_extension),
       _hessian(x0.size(), x0.size()),
       _gradient(x0.size()),
       _x(x0.size()),
-      _line_search(this, 1.0),
       _x_old(x0.size()),
-      _gradient_old(x0.size()) {
+      _gradient_old(x0.size()),
+      _line_search(this, 1.0),
+      _translation_offset(translation_offset),
+      _max_step(max_step),
+      _potential_extension(potential_extension) {
   // Setup the extended potential
   _potential_extension = potential_extension;
   _extended_potential_wrapper =
