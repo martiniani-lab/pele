@@ -115,6 +115,7 @@ set(cvode_pele_source
   ${pele_include}/mxopt.cpp
   ${pele_include}/newton.cpp
   ${pele_include}/newton_with_extension.cpp
+  ${pele_include}/generic_mixed_descent.cpp
 )
 
 if(INCLUDE_SUNDIALS)
