@@ -451,8 +451,6 @@ cmake_txt = cmake_txt.replace("__PYTHON_INCLUDE__", " ".join(python_includes))
 
 if with_cvode:
     cmake_txt = cmake_txt.replace("__INCLUDE_SUNDIALS__", "ON")
-    print(with_cvode)
-    quit()
 else:
     cmake_txt = cmake_txt.replace("__INCLUDE_SUNDIALS__", "OFF")
 
