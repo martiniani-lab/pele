@@ -175,7 +175,7 @@ from the base directory. to install without attractor identification support i.e
 
   $ python setup_with_cmake.py build_ext -i --with-cvode 0
 
-note that this will make some of the tests fail. to check whether the code you're interested in works correctly you can run :code:`pytest .`
+note that this will make some of the tests fail. to check whether the code you're interested in works correctly you can run :code:`pytest`
 in the module you're interested in, for example, to check whether :code:`pele/utils` is working correctly, run :code:`pytest pele/utils`.
 
 Tests
