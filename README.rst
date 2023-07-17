@@ -178,6 +178,7 @@ from the base directory. to install without attractor identification support i.e
 
 note that this will make some of the tests fail. to check whether the code you're interested in works correctly you can run :code:`pytest`
 in the module you're interested in, for example, to check whether :code:`pele/utils` is working correctly, run :code:`pytest pele/utils`.
+If building fails, run :code:`rm -rf build cythonize.dat CMakeCache.txt cmake_install.cmake` to remove cached files before building again
 
 Tests
 =====
