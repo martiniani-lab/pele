@@ -522,7 +522,7 @@ def set_compiler_env(compiler_id):
             .rstrip("\n")
         )
     else:
-        raise Exception("compiler_id not known")
+        raise Exception("compiler id not known")
     # this line only works is the build directory has been deleted
     cmake_compiler_args = shlex.split(
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
