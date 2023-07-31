@@ -39,11 +39,6 @@ class BasePotential {
   virtual double get_energy_change(Array<double> const &old_coords,
                                    Array<double> const &new_coords,
                                    std::vector<size_t> const &) {
-    std::cout
-        << "WARNING: get_energy_change not implemented. defaulting to \n "
-           "calculating energy differences by calling get_energy on old \n "
-           "coords and new coords and subtracting the difference. \n "
-        << std::endl;
     return get_energy(new_coords) - get_energy(old_coords);
   }
 
