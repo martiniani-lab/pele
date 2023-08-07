@@ -156,6 +156,18 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
 
   inline int get_nhev() const { return udata.nhev; }
 
+  void reset(Array<double> &x0) {
+    this->x_ = x0.copy();
+    this->xold = x0.copy();
+    this->udata.nhev = 0;
+    this->udata.nfev = 0;
+    this->udata.stored_energy = 0;
+    this->udata.stored_grad = Array<double>(x0.size());
+    this->udata.stored_J = NULL;
+    this->free_cvode_objects();
+    this->setup_cvode();
+  }
+
  protected:
   double H02;
 };
@@ -190,7 +202,6 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
 static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-
 static int check_sundials_retval(void *return_value, const char *funcname,
                                  int opt);
 
