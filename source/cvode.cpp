@@ -36,6 +36,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
       N_size(x0.size()),
       tN(1.0),
       ret(0),
+      single_step_ret_code(0),
       rtol_(rtol),
       atol_(atol),
       hessian_type_(hessian_type),
