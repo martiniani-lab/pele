@@ -256,6 +256,7 @@ TEST(CVODE, Reset) {
   int nhev = cvode.get_nhev();
   cvode.reset(original_x);
   ASSERT_FALSE(cvode.success());
+  ASSERT_FALSE(cvode.stop_criterion_satisfied());
 
   cvode.run(1000);
   Array<double> x_after_reset = cvode.get_x();

@@ -103,7 +103,6 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
 #endif
   N_Vector x0_N;
   Array<double> xold;
-  bool stop_criterion_satisfied();
   bool use_newton_stop_criterion_;
   Eigen::MatrixXd hessian;
   void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset);
@@ -168,6 +167,7 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
     this->free_cvode_objects();
     this->setup_cvode();
   }
+  bool stop_criterion_satisfied();
 
  protected:
   double H02;
