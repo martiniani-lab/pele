@@ -162,6 +162,7 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
     this->udata.nhev = 0;
     this->udata.nfev = 0;
     this->udata.stored_energy = 0;
+    succeeded_ = false;
     this->udata.stored_grad = Array<double>(x0.size());
     this->udata.stored_J = NULL;
     this->free_cvode_objects();

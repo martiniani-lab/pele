@@ -247,12 +247,15 @@ TEST(CVODE, Reset) {
   pele::CVODEBDFOptimizer cvode(pot, x_start, 1e-9, 1e-10, 1e-10, pele::DENSE,
                                 false);
 
+  Array<double> original_x = x_start.copy();
+
   // Check that reset works
   cvode.run(1000);
   Array<double> x_before_reset = cvode.get_x();
   int nfev = cvode.get_nfev();
   int nhev = cvode.get_nhev();
-  cvode.reset(x_start);
+  cvode.reset(original_x);
+  ASSERT_FALSE(cvode.success());
 
   cvode.run(1000);
   Array<double> x_after_reset = cvode.get_x();
