@@ -156,14 +156,16 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
   inline int get_nhev() const { return udata.nhev; }
 
   void reset(Array<double> &x0) {
-    this->x_ = x0.copy();
-    this->xold = x0.copy();
-    this->udata.nhev = 0;
-    this->udata.nfev = 0;
-    this->udata.stored_energy = 0;
+    x_.assign(x0);
+    udata.nhev = 0;
+    udata.nfev = 0;
+    nfev_ = 0;
+    nhev_ = 0;
     succeeded_ = false;
+    iter_number_ = 0;
+    udata.stored_energy = 0;
+    func_initialized_ = false;
     this->udata.stored_grad = Array<double>(x0.size());
-    this->udata.stored_J = NULL;
     this->free_cvode_objects();
     this->setup_cvode();
   }

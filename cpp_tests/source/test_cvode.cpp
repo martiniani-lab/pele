@@ -254,8 +254,11 @@ TEST(CVODE, Reset) {
   Array<double> x_before_reset = cvode.get_x();
   int nfev = cvode.get_nfev();
   int nhev = cvode.get_nhev();
+
   cvode.reset(original_x);
   ASSERT_FALSE(cvode.success());
+  ASSERT_EQ(cvode.get_nfev(), 0);
+  ASSERT_EQ(cvode.get_nhev(), 0);
   ASSERT_FALSE(cvode.stop_criterion_satisfied());
 
   cvode.run(1000);

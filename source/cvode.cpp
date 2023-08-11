@@ -39,6 +39,7 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
       rtol_(rtol),
       atol_(atol),
       hessian_type_(hessian_type),
+      xold(x_.size()),
       use_newton_stop_criterion_(use_newton_stop_criterion),
       hessian(x0.size(), x0.size()),
       newton_tol_(newton_tol),
@@ -182,7 +183,7 @@ void CVODEBDFOptimizer::free_cvode_objects() {
 
 void CVODEBDFOptimizer::one_iteration() {
   /* advance solver just one internal step */
-  Array<double> xold = x_.copy();
+  xold.assign(x_);
 
   single_step_ret_code = CVode(cvode_mem, tN, x0_N, &time_, CV_ONE_STEP);
 
