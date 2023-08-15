@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <sundials/sundials_context.h>
 #include <vector>
+#include <Eigen/Dense>
 
 #include "array.hpp"
 #include "base_potential.hpp"
@@ -20,7 +21,7 @@
 
 // #define EIGEN_USE_MKL_ALL
 // Eigen linear algebra library
-#include <Eigen/Dense>
+
 
 #include "eigen_interface.hpp"
 

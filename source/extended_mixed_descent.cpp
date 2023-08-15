@@ -1,5 +1,4 @@
 #include "pele/extended_mixed_descent.hpp"
-#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <complex>
 #include <cstddef>
