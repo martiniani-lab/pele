@@ -1,8 +1,10 @@
 #ifndef _PELE_TEST_FUNCS_H
 #define _PELE_TEST_FUNCS_H
 
+#include <cstddef>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 #include "array.hpp"
@@ -118,6 +120,73 @@ class FlatHarmonic : public BasePotential {
     hess[3] = hess[0];
     return m_a * x[0] * x[0];
   };
+};
+/**
+ * Negative cosine product function for testing basin volume calculations.
+ * Yields a hypercubic basin with volume period^dim.
+ */
+class NegativeCosProduct : public BasePotential {
+ private:
+  double period_factor;
+
+  // precompute cos and sin values
+  Array<double> cos_values;
+  Array<double> sin_values;
+
+ public:
+  NegativeCosProduct(size_t dim, double period = 1)
+      : period_factor(2 * std::numbers::pi / period),
+        cos_values(dim),
+        sin_values(dim){};
+  virtual ~NegativeCosProduct(){};
+  inline double get_energy(Array<double> const &x) {
+    double energy = 1;
+    for (auto x_i : x) {
+      energy *= -std::cos(period_factor * x_i);
+    }
+    return energy;
+  }
+
+  double get_energy_gradient(Array<double> const &x, Array<double> &grad) {
+    double cos_product = 1;
+    for (size_t i = 0; i < x.size(); ++i) {
+      cos_values[i] = std::cos(period_factor * x[i]);
+      sin_values[i] = std::sin(period_factor * x[i]);
+      cos_product *= cos_values[i];
+    }
+
+    for (size_t i = 0; i < x.size(); ++i) {
+      grad[i] = cos_product;
+      grad[i] *= sin_values[i] / cos_values[i];
+    }
+    return -cos_product;
+  }
+
+  double get_energy_gradient_hessian(Array<double> const &x,
+                                     Array<double> &grad, Array<double> &hess) {
+    double cos_product = 1;
+    for (size_t i = 0; i < x.size(); ++i) {
+      cos_values[i] = std::cos(period_factor * x[i]);
+      sin_values[i] = std::sin(period_factor * x[i]);
+      cos_product *= cos_values[i];
+    }
+
+    for (size_t i = 0; i < x.size(); ++i) {
+      grad[i] = cos_product;
+      grad[i] *= sin_values[i] / cos_values[i];
+    }
+
+    for (size_t i = 0; i < x.size(); ++i) {
+      for (size_t j = 0; j < x.size(); ++j) {
+        if (i == j) {
+          hess[i * x.size() + j] = -cos_product;
+        } else {
+          hess[i * x.size() + j] = grad[i] * sin_values[j] / cos_values[j];
+        }
+      }
+    }
+    return -cos_product;
+  }
 };
 
 }  // namespace pele

@@ -23,6 +23,8 @@ from pele.optimize import (
     Result,
     LBFGS_CPP,
     ModifiedFireCPP,
+    CVODEBDFOptimizer,
+    HessianType,
 )
 
 from scipy.integrate import Radau
@@ -87,7 +89,7 @@ def lbfgs_scipy(coords, pot, iprint=-1, tol=1e-3, nsteps=15000):
         print(res.message)
     # note: if the linesearch fails the lbfgs may fail without setting warnflag.  Check
     # tolerance exactly
-    if False:
+    if True:
         if res.success:
             maxV = np.max(np.abs(res.grad))
             if maxV > tol:
@@ -246,6 +248,25 @@ def mylbfgs(coords, pot, **kwargs):
 def modifiedfire_cpp(coords, pot, **kwargs):
     modifiedfire = ModifiedFireCPP(coords, pot, **kwargs)
     return modifiedfire.run()
+
+
+def quench_cvode_opt(potential, initial_coordinates, nsteps=1000000, **kwargs):
+    """ "Subroutine" for quenching steepest descent, add subtract yada yada
+    to control how information gets returned, basically simply passing
+    potential, initial_coordinates with these default parameters should give identical results
+    between different pieces.
+    """
+    if "iterative" in kwargs:
+        if kwargs["iterative"]:
+            kwargs["hessian_type"] = HessianType.ITERATIVE
+            kwargs.pop("iterative")
+        else:
+            kwargs["hessian_type"] = HessianType.DENSE
+            kwargs.pop("iterative")
+    cvode = CVODEBDFOptimizer(potential, initial_coordinates, **kwargs)
+    cvode.run(nsteps)
+    res = cvode.get_result()
+    return res
 
 
 def ode_scipy_naive(

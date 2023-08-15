@@ -88,3 +88,4 @@ from .xyspin import *
 from .morse import Morse
 from .ml import MLCost
 from .inverse_power_py import PyInversePower
+from .cpp_test_functions import NegativeCosProduct

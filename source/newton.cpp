@@ -1,6 +1,4 @@
 #include "pele/newton.hpp"
-
-#include "Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h"
 #include "pele/array.hpp"
 #include "pele/eigen_interface.hpp"
 #include "pele/optimizer.hpp"

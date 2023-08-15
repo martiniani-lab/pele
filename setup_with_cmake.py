@@ -393,6 +393,7 @@ cxx_files = [
     "pele/potentials/_inversepower_stillinger_cut_quad.cxx",
     "pele/potentials/_sumgaussianpot_cpp.cxx",
     "pele/potentials/combine_potentials.cxx",
+    "pele/potentials/cpp_test_functions.cxx",
     "pele/potentials/_pele.cxx",
     "pele/potentials/_pspin_spherical_cpp.cxx",
     "pele/optimize/_pele_opt.cxx",
@@ -522,7 +523,7 @@ def set_compiler_env(compiler_id):
             .rstrip("\n")
         )
     else:
-        raise Exception("compiler_id not known")
+        raise Exception("compiler id not known")
     # this line only works is the build directory has been deleted
     cmake_compiler_args = shlex.split(
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
