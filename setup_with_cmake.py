@@ -393,6 +393,7 @@ cxx_files = [
     "pele/potentials/_inversepower_stillinger_cut_quad.cxx",
     "pele/potentials/_sumgaussianpot_cpp.cxx",
     "pele/potentials/combine_potentials.cxx",
+    "pele/potentials/cpp_test_functions.cxx",
     "pele/potentials/_pele.cxx",
     "pele/potentials/_pspin_spherical_cpp.cxx",
     "pele/optimize/_pele_opt.cxx",

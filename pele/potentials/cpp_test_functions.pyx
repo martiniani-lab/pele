@@ -1,3 +1,6 @@
+"""
+# distutils: language = C++
+"""
 import numpy as np
 
 from ctypes import c_size_t as size_t
@@ -25,7 +28,7 @@ cdef class _Cdef_NegativeCosProduct(_pele.BasePotential):
     def __cinit__(self, int dim, double period):
         self.cdim = dim
         self.cperiod = period
-        self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new cNegativeCosProduct(cdim, period))
+        self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*>new cNegativeCosProduct(self.cdim, self.cperiod))
     
     def __reduce__(self):
         return (NegativeCosProduct, (self.cdim, self.cperiod))
