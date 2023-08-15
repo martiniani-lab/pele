@@ -39,6 +39,15 @@ parser.add_argument(
     default="Release",
     help="Build type. Default: Release,  types Release, Debug, RelWithDebInfo, MemCheck, Coverage",
 )
+
+parser.add_argument(
+    "--with-cvode",
+    type=int,
+    default=1,
+    help="Build with CVODE. Needed for Attractor identification. Default: True",
+)
+
+
 jargs, remaining_args = parser.parse_known_args(sys.argv)
 
 # record c compiler choice. use unix (gcc) by default
@@ -52,6 +61,9 @@ if not jargs.compiler or jargs.compiler in ("unix", "gnu", "gcc"):
 elif jargs.compiler in ("intelem", "intel", "icc", "icpc"):
     idcompiler = "intel"
     remaining_args += ["-c", idcompiler]
+
+with_cvode = jargs.with_cvode
+
 
 # set the remaining args back as sys.argv
 sys.argv = remaining_args
@@ -387,11 +399,6 @@ cxx_files = [
     "pele/optimize/_gradient_descent_cpp.cxx",
     "pele/optimize/_lbfgs_cpp.cxx",
     "pele/optimize/_modified_fire_cpp.cxx",
-    "pele/optimize/_mxopt.cxx",
-    "pele/optimize/generic_mixed_descent.cxx",
-    "pele/optimize/_mxd_end_only.cxx",
-    "pele/optimize/extended_mixed_descent.cxx",
-    "pele/optimize/cvode_opt.cxx",
     "pele/potentials/_pythonpotential.cxx",
     "pele/angleaxis/_cpp_aa.cxx",
     "pele/utils/_cpp_utils.cxx",
@@ -400,6 +407,16 @@ cxx_files = [
     "pele/distance/_get_distance_cpp.cxx",
     "pele/distance/_put_in_box_cpp.cxx",
 ]
+
+
+if with_cvode:
+    cxx_files += [
+        "pele/optimize/_mxopt.cxx",
+        "pele/optimize/generic_mixed_descent.cxx",
+        "pele/optimize/_mxd_end_only.cxx",
+        "pele/optimize/extended_mixed_descent.cxx",
+        "pele/optimize/cvode_opt.cxx",
+    ]
 
 
 def get_ldflags(opt="--ldflags"):
@@ -431,6 +448,12 @@ python_includes = [
     sysconfig.get_python_inc(plat_specific=True),
 ]
 cmake_txt = cmake_txt.replace("__PYTHON_INCLUDE__", " ".join(python_includes))
+
+if with_cvode:
+    cmake_txt = cmake_txt.replace("__INCLUDE_SUNDIALS__", "ON")
+else:
+    cmake_txt = cmake_txt.replace("__INCLUDE_SUNDIALS__", "OFF")
+
 if isinstance(numpy_include, basestring):
     numpy_include = [numpy_include]
 cmake_txt = cmake_txt.replace("__NUMPY_INCLUDE__", " ".join(numpy_include))
@@ -499,7 +522,7 @@ def set_compiler_env(compiler_id):
             .rstrip("\n")
         )
     else:
-        raise Exception("compiler_id not known")
+        raise Exception("compiler id not known")
     # this line only works is the build directory has been deleted
     cmake_compiler_args = shlex.split(
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "

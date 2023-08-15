@@ -164,10 +164,21 @@ but we mostly use gfortran and GCC, so it's the least likely to have problems.  
 package uses the standard python setup utility (distutils).  The current installation procedure
 is:
 
-  $ python setup_with_cmake.py build_ext -i --fcompiler=gfortran
+  $ python setup_with_cmake.py build_ext -i
 
 make sure to add the install directory to your
-PYTHONPATH environment variable.
+PYTHONPATH environment variable. to test whether your installation has worked correctly, run::
+
+  $ export OMP_NUM_THREADS=1
+  $ pytest pele/
+
+from the base directory. to install without attractor identification support i.e without CVODE, run::
+
+  $ python setup_with_cmake.py build_ext -i --with-cvode 0
+
+note that this will make some of the tests fail. to check whether the code you're interested in works correctly you can run :code:`pytest`
+in the module you're interested in, for example, to check whether :code:`pele/utils` is working correctly, run :code:`pytest pele/utils`.
+If building fails, run :code:`rm -rf build cythonize.dat CMakeCache.txt cmake_install.cmake` to remove cached files before building again
 
 Tests
 =====

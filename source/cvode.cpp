@@ -36,9 +36,11 @@ CVODEBDFOptimizer::CVODEBDFOptimizer(
       N_size(x0.size()),
       tN(1.0),
       ret(0),
+      single_step_ret_code(0),
       rtol_(rtol),
       atol_(atol),
       hessian_type_(hessian_type),
+      xold(x_.size()),
       use_newton_stop_criterion_(use_newton_stop_criterion),
       hessian(x0.size(), x0.size()),
       newton_tol_(newton_tol),
@@ -182,7 +184,7 @@ void CVODEBDFOptimizer::free_cvode_objects() {
 
 void CVODEBDFOptimizer::one_iteration() {
   /* advance solver just one internal step */
-  Array<double> xold = x_.copy();
+  xold.assign(x_);
 
   single_step_ret_code = CVode(cvode_mem, tN, x0_N, &time_, CV_ONE_STEP);
 
@@ -264,9 +266,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
             Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(hessian);
         Eigen::VectorXd eigenvalues = es.eigenvalues();
         Eigen::MatrixXd eigenvectors = es.eigenvectors();
-
         double abs_min_eigval = eigenvalues.minCoeff();
-
         if (abs_min_eigval < 0) {
           abs_min_eigval = -abs_min_eigval;
         } else {
@@ -290,6 +290,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
         Eigen::VectorXd newton_step(g_.size());
         newton_step.setZero();
         newton_step = -hessian.ldlt().solve(g_eigen);
+#if OPTIMIZER_DEBUG_LEVEL > 0
         std::cout << "offset = " << offset << "\n";
         std::cout << "average eigenvalue = " << average_eigenvalue << "\n";
         std::cout << "abs min eigenvalue = " << abs_min_eigval << "\n";
@@ -297,10 +298,13 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
         std::cout << "iter number = " << iter_number_ << "\n";
         std::cout << "gradient norm = " << gradient_norm_ << "\n";
         std::cout << "newton step norm = " << newton_step.norm() << "\n";
+#endif
         if (newton_step.norm() < newton_tol_) {
+#if OPTIMIZER_DEBUG_LEVEL > 0
           std::cout << "converged in " << iter_number_ << " iterations\n";
           std::cout << "rms = " << gradient_norm_ << "\n";
           std::cout << "tol = " << tol_ << "\n";
+#endif
           succeeded_ = true;
           return true;
         } else {
@@ -310,9 +314,11 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
         return false;
       }
     } else {
+#if OPTIMIZER_DEBUG_LEVEL > 0
       std::cout << "converged in " << iter_number_ << " iterations\n";
       std::cout << "rms = " << gradient_norm_ << "\n";
       std::cout << "tol = " << tol_ << "\n";
+#endif
       succeeded_ = true;
       return true;
     }
@@ -346,7 +352,7 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
 
   pele::Array<double> yw = pele_eq_N_Vector(y);
   Array<double> g = Array<double>(yw.size());
-  // TODO: don't keep allocating memory for every jaocobian calculation
+  // TODO: don't keep allocating memory for every jacobian calculation
   Array<double> h = Array<double>(yw.size() * yw.size());
   udata->pot_->get_energy_gradient_hessian(pele_eq_N_Vector(y), g, h);
   udata->nhev += 1;

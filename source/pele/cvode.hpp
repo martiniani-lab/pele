@@ -104,7 +104,6 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
 #endif
   N_Vector x0_N;
   Array<double> xold;
-  bool stop_criterion_satisfied();
   bool use_newton_stop_criterion_;
   Eigen::MatrixXd hessian;
   void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset);
@@ -157,6 +156,22 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
 
   inline int get_nhev() const { return udata.nhev; }
 
+  void reset(Array<double> &x0) {
+    x_.assign(x0);
+    udata.nhev = 0;
+    udata.nfev = 0;
+    nfev_ = 0;
+    nhev_ = 0;
+    succeeded_ = false;
+    iter_number_ = 0;
+    udata.stored_energy = 0;
+    func_initialized_ = false;
+    this->udata.stored_grad = Array<double>(x0.size());
+    this->free_cvode_objects();
+    this->setup_cvode();
+  }
+  bool stop_criterion_satisfied();
+
  protected:
   double H02;
 };
@@ -191,7 +206,6 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
 static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-
 static int check_sundials_retval(void *return_value, const char *funcname,
                                  int opt);
 

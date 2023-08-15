@@ -7,9 +7,10 @@ message("${CMAKE_CXX_COMPILER}")
 set(numpy_include __NUMPY_INCLUDE__)
 set(PYTHON_INCLUDE_DIRS __PYTHON_INCLUDE__)
 set(PYTHON_LDFLAGS "__PYTHON_LDFLAGS__")
+set(INCLUDE_SUNDIALS __INCLUDE_SUNDIALS__)
+
 message(PYTHON_LDFLAGS)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 
 # osx makes the suffix for shared object libraries .dylib
 IF(APPLE)
@@ -19,36 +20,37 @@ ENDIF(APPLE)
 set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/extern/install")
 
 # #################################### sundials #######################################
-set(SUNDIALS_INCLUDE_DIR
+set(EXT_INCLUDE_DIR
   ${EXT_INSTALL_PATH}/include
-  CACHE PATH "Location of SUNDIALS header files")
+  CACHE PATH "Location of header files")
 
-if(EXISTS "${EXT_INSTALL_PATH}/lib")
-  set(SUNDIALS_LIBRARY_DIR
-    ${EXT_INSTALL_PATH}/lib
-    CACHE PATH "Location of SUNDIALS libraries")
-else()
-  set(SUNDIALS_LIBRARY_DIR
-    ${EXT_INSTALL_PATH}/lib64
-    CACHE PATH "Location of SUNDIALS libraries")
+if(INCLUDE_SUNDIALS)
+  if(EXISTS "${EXT_INSTALL_PATH}/lib")
+    set(SUNDIALS_LIBRARY_DIR
+      ${EXT_INSTALL_PATH}/lib
+      CACHE PATH "Location of SUNDIALS libraries")
+  else()
+    set(SUNDIALS_LIBRARY_DIR
+      ${EXT_INSTALL_PATH}/lib64
+      CACHE PATH "Location of SUNDIALS libraries")
+  endif()
+
+  # Find the SUNDIALS libraries
+  find_library(SUNDIALS_SOLVER_LIB
+    sundials_cvode PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
+    DOC "CVODE library")
+
+  find_library(SUNDIALS_NVEC_LIB
+    sundials_nvecserial PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
+    DOC "NVECTOR_SERIAL library")
+
+  set(SUNDIALS_LIBRARIES
+    -L${SUNDIALS_LIBRARY_DIR}
+    ${SUNDIALS_SOLVER_LIB}
+    ${SUNDIALS_NVEC_LIB}
+    ${SUNDIALS_MANYVEC_LIB}
+    ${SUNDIALS_EXTRA_LIBS})
 endif()
-
-# Find the SUNDIALS libraries
-find_library(SUNDIALS_SOLVER_LIB
-  sundials_cvode PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
-  DOC "CVODE library")
-
-find_library(SUNDIALS_NVEC_LIB
-  sundials_nvecserial PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
-  DOC "NVECTOR_SERIAL library")
-
-
-set(SUNDIALS_LIBRARIES
-  -L${SUNDIALS_LIBRARY_DIR}
-  ${SUNDIALS_SOLVER_LIB}
-  ${SUNDIALS_NVEC_LIB}
-  ${SUNDIALS_MANYVEC_LIB}
-  ${SUNDIALS_EXTRA_LIBS})
 
 # ####################################################################################
 message("python include dirs: ${PYTHON_INCLUDE_DIRS}")
@@ -70,16 +72,14 @@ find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
 # message(${BLAS_LIBRARIES})
-message("LAPACK include dir " ${LAPACKE_INCLUDE_DIR})
 
 # lapacke.h comes with Eigen
 set(LAPACKE_INCLUDE_DIR
-${CMAKE_SOURCE_DIR}/extern/install/include/Eigen/src/misc
+  ${CMAKE_SOURCE_DIR}/extern/install/include/Eigen/src/misc
   CACHE PATH "Location of lapacke include")
 
 enable_language(CXX)
 SET(CMAKE_CXX_FLAGS __COMPILER_EXTRA_ARGS__)
-
 
 # cmake_policy(SET CMP0015 NEW)
 
@@ -92,20 +92,56 @@ message("pele include directory: ${pele_include}")
 # This is a likely source of undefined symbol errors
 FILE(GLOB pele_sources ${pele_include}/*.c*)
 
-include_directories(BEFORE SYSTEM ${SUNDIALS_INCLUDE_DIR})
+set(pele_sources
+  ${pele_include}/aatopology.cpp
+  ${pele_include}/atlj.cpp
+  ${pele_include}/backtracking.cpp
+  ${pele_include}/bracketing.cpp
+  ${pele_include}/lbfgs.cpp
+  ${pele_include}/linesearch.cpp
+  ${pele_include}/modified_fire.cpp
+  ${pele_include}/more_thuente.cpp
+  ${pele_include}/nwpele.cpp
+  ${pele_include}/pressure_tensor.cpp
+  ${pele_include}/rotations.cpp
+  ${pele_include}/xsum.c
+  ${pele_include}/pbinary.c
+)
+
+set(cvode_pele_source
+  ${pele_include}/cvode.cpp
+  ${pele_include}/extended_mixed_descent.cpp
+  ${pele_include}/mxd_end_only.cpp
+  ${pele_include}/mxopt.cpp
+  ${pele_include}/newton.cpp
+  ${pele_include}/newton_with_extension.cpp
+  ${pele_include}/generic_mixed_descent.cpp
+)
+
+if(INCLUDE_SUNDIALS)
+  set(pele_sources ${pele_sources} ${cvode_pele_source})
+endif()
+
 include_directories(BEFORE SYSTEM ${pele_include})
-include_directories(BEFORE SYSTEM ${LAPACKE_INCLUDE_DIR})
+include_directories(BEFORE SYSTEM ${EXT_INCLUDE_DIR})
+
+if(INCLUDE_SUNDIALS)
+  include_directories(BEFORE SYSTEM ${LAPACKE_INCLUDE_DIR})
+  message("SUNDIALS LIBRARIES " ${SUNDIALS_LIBRARIES})
+endif()
 
 add_library(pele_lib SHARED ${pele_sources})
-
-message("SUNDIALS LIBRARIES " ${SUNDIALS_LIBRARIES})
 
 function(make_cython_lib cython_cxx_source)
   get_filename_component(library_name ${cython_cxx_source} NAME)
   string(REGEX REPLACE ".cxx$" "" library_name ${library_name})
   add_library(${library_name} SHARED ${cython_cxx_source})
   target_link_libraries(${library_name} PUBLIC pele_lib)
-  target_link_libraries(${library_name} PUBLIC ${SUNDIALS_LIBRARIES})
+
+  if(INCLUDE_SUNDIALS)
+    target_link_libraries(${library_name} PUBLIC ${SUNDIALS_LIBRARIES})
+  endif()
+
   target_link_libraries(${library_name} PUBLIC ${LAPACK_LIBRARIES})
   set_target_properties(${library_name} PROPERTIES PREFIX "")
   message("making library ${library_name} from source ${cython_cxx_source}")
