@@ -37,7 +37,7 @@ cdef class _Cdef_ExtendedMixedOptimizer_CPP(_pele_opt.GradientOptimizer):
     cdef _pele.BasePotential pot_ext
     cdef shared_ptr[_pele.cBasePotential] pot_ext_ptr
     def __cinit__(self, potential, x0, potential_extension=None, global_symmetry_offset=[], double tol=1e-5,
-                  int T=1, double step=1, double conv_tol = 1e-1,
+                  int T=10, double step=1, double conv_tol = 1e-1,
                   double rtol=1e-3, double atol=1e-3, int nsteps=10000, bool iterative=False):
         potential = as_cpp_potential(potential, verbose=True)
         global_symmetry_offset = np.array(global_symmetry_offset, dtype=float)
