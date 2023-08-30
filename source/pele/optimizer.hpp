@@ -1,6 +1,7 @@
 #ifndef _PELE_OPTIMIZER_H__
 #define _PELE_OPTIMIZER_H__
 
+#include <Eigen/Dense>
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -16,6 +17,21 @@
 #include "xsum.h"
 
 namespace pele {
+
+enum StopCriterionType {
+  GRADIENT = 0,
+  STEPNORM = 1,
+  NEWTON = 2,
+}
+
+class AbstractStopCriterion {
+ public:
+  virtual bool stop_criterion_satisfied() = 0;
+};
+
+class NewtonStopCriterion;
+class GradientStopCriterion;
+class StepnormStopCriterion;
 
 // class blah
 // {
@@ -95,14 +111,16 @@ class GradientOptimizer : public Optimizer {
   double f_;             /**< The current function value */
   Array<double> g_;      /**< The current gradient */
   double gradient_norm_; /**< The root mean square of the gradient */
+  double step_norm_;     /**< The norm of the step taken */
+  std::shared_ptr<AbstractStopCriterion> stop_criterion;
 
   /**
    * This flag keeps track of whether the function and gradient have been
-   * initialized.This allows the initial function and gradient to be computed
-   * outside of the constructor and also allows the function and gradient to
-   * be passed rather than computed.  The downside is that it complicates the
-   * logic because this flag must be checked at all places where the gradient,
-   * function value, or rms can be first accessed.
+   * initialized.This allows the initial function and gradient to be
+   * computed outside of the constructor and also allows the function and
+   * gradient to be passed rather than computed.  The downside is that it
+   * complicates the logic because this flag must be checked at all places
+   * where the gradient, function value, or rms can be first accessed.
    */
   bool func_initialized_;
 
@@ -119,7 +137,8 @@ class GradientOptimizer : public Optimizer {
   GradientOptimizer(std::shared_ptr<pele::BasePotential> potential,
                     const pele::Array<double> x0, double tol = 1e-4,
                     bool save_trajectory = false,
-                    int iterations_before_save = 1)
+                    int iterations_before_save = 1,
+                    StopCriterionType stop = GRADIENT)
       : potential_(potential),
         tol_(tol),
         maxstep_(0.1),
@@ -133,11 +152,22 @@ class GradientOptimizer : public Optimizer {
         f_(0.),
         g_(x0.size()),
         gradient_norm_(1e10),
+        step_norm_(0),
         func_initialized_(false),
         last_step_failed_(false),
         succeeded_(false),
         save_trajectory_(save_trajectory),
-        iterations_before_save_(iterations_before_save) {}
+        iterations_before_save_(iterations_before_save) {
+    if (stop == GRADIENT) {
+      stop_criterion = std::make_shared<GradientStopCriterion>(tol_, this);
+    } else if (stop == STEPNORM) {
+      stop_criterion = std::make_shared<StepnormStopCriterion>(tol_, this);
+    } else if (stop == NEWTON) {
+      stop_criterion = std::make_shared<NewtonStopCriterion>(tol_, this);
+    } else {
+      throw std::invalid_argument("invalid stop criterion");
+    }
+  }
 
   virtual ~GradientOptimizer() {}
 
@@ -246,6 +276,8 @@ class GradientOptimizer : public Optimizer {
   inline int get_niter() const { return iter_number_; }
   inline int get_maxiter() const { return maxiter_; }
   inline double get_maxstep() { return maxstep_; }
+  inline double get_gradient_norm_() { return gradient_norm_; }
+  inline double get_step_norm_() { return step_norm_; }
   inline double get_tol() const { return tol_; }
   inline bool success() { return succeeded_; }
   inline int get_verbosity_() { return verbosity_; }
@@ -345,7 +377,6 @@ class ODEBasedOptimizer : public GradientOptimizer {
   std::vector<std::vector<double>> gradients;
 
  protected:
-  double step_norm_;
   double time_;
 
   void update_costly_trajectory_info() {
@@ -372,7 +403,6 @@ class ODEBasedOptimizer : public GradientOptimizer {
                     int iterations_before_save = 1)
       : GradientOptimizer(potential, x0, tol, save_trajectory,
                           iterations_before_save),
-        step_norm_(0),
         time_(0) {}
 
   virtual ~ODEBasedOptimizer() {}
@@ -401,6 +431,106 @@ class ODEBasedOptimizer : public GradientOptimizer {
     return gradients;
   }
 };
+
+class GradientStopCriterion {
+ private:
+  double tol_;
+  GradientOptimizer *opt_;
+
+ public:
+  GradientStopCriterion(double tol, GradientOptimizer *opt)
+      : tol_(tol), opt_(opt) {}
+
+  bool stop_criterion_satisfied() {
+    if (opt_->get_gradient_norm_() < tol_) {
+      return true;
+    }
+    return false;
+  }
+};
+
+/**
+ * @brief Stop criterion based on the step norm.
+ *
+ *
+ */
+class StepnormStopCriterion {
+ private:
+  double gradient_tol_;
+  double step_norm_tol_;
+  GradientOptimizer *opt_;
+
+ public:
+  StepnormStopCriterion(double tol, GradientOptimizer *opt)
+      : gradient_tol_(tol * 1e-3), step_norm_tol_(tol), opt_(opt) {}
+
+  bool stop_criterion_satisfied() {
+    if (opt_->get_gradient_norm_() < gradient_tol_) {
+      if (opt_->get_step_norm_() < step_norm_tol_) {
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
+};
+
+class NewtonStopCriterion {
+ private:
+  double gradient_tol_;
+  double newton_tol_;
+  double offset_factor_;
+  GradientOptimizer *opt_;
+  Eigen::MatrixXd hessian_;
+  Eigen::VectorXd gradient;
+  Eigen::VectorXd eigenvalues_;
+  Eigen::VectorXd newton_step_;
+  Eigen::MatrixXd eigenvectors_;
+  std::shared_ptr<BasePotential> potential_;
+
+ public:
+  NewtonStopCriterion(double tol, GradientOptimizer *opt)
+      : gradient_tol_(tol * 1e-3),
+        newton_tol_(tol),
+        offset_factor_(1e-1),
+        opt_(opt),
+        hessian_(opt_->get_x().size(), opt_->get_x().size()),
+        eigenvalues_(opt_->get_x().size()),
+        newton_step_(opt_->get_x().size()),
+        eigenvectors_(opt_->get_x().size(), opt_->get_x().size()),
+        potential_(opt_->get_potential()) {}
+
+  bool stop_criterion_satisfied() {
+    if (opt_->get_gradient_norm_() > gradient_tol_) {
+      return false;
+    }
+    Array<double> hessian_pele(hessian_.data(), hessian_.size());
+    Array<double> gradient_pele(gradient.data(), gradient.size());
+    potential_->get_energy_gradient_hessian(opt_->get_x(), gradient_pele,
+                                            hessian_pele);
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es =
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(hessian_);
+    eigenvalues_ = es.eigenvalues();
+    eigenvectors_ = es.eigenvectors();
+    double abs_min_eigenvalue = eigenvalues_.minCoeff();
+    if (abs_min_eigenvalue < 0) {
+      abs_min_eigenvalue = -abs_min_eigenvalue;
+    } else {
+      abs_min_eigenvalue = 0;
+    }
+    double average_eigenvalue = eigenvalues_.mean();
+    double offset = std::max(offset_factor_ * std::abs(average_eigenvalue),
+                             2 * abs_min_eigenvalue);
+    hessian_.diagonal().array() += offset;
+    newton_step_ = -hessian_.ldlt().solve(gradient);
+    double newton_step_norm = newton_step_.norm();
+    if (newton_step_norm > newton_tol_) {
+      return false;
+    }
+    return true;
+  }
+};
+
 }  // namespace pele
 
 #endif
