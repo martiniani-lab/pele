@@ -191,7 +191,6 @@ void CVODEBDFOptimizer::one_iteration() {
   // if (check_sundials_retval(&ret, "CVode", 1)) {
   //   throw std::runtime_error("CVODE single step failed");
   // }
-  iter_number_ += 1;
 
   // Assert length of x0_N is the same as x_
   assert(N_VGetLength_Serial(x0_N) == x_.size());
@@ -202,7 +201,7 @@ void CVODEBDFOptimizer::one_iteration() {
   nfev_ = udata.nfev;
   Array<double> step = xold - x_;
   step_norm_ = norm(step);
-
+  iter_number_ += 1;
   // really hacky way to output $lambdamin/lambdamax on a low tolerance run
   // simply print the energy and $lambdamin/lambdamax as csv values and write
   // stdout to file then plot them using python

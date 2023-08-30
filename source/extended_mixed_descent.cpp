@@ -251,7 +251,7 @@ void ExtendedMixedOptimizer::one_iteration() {
    * satisfied The new version is done. at this point the corresponding values
    * are added
    */
-
+  step_norm_ = norm(step);
   iter_number_ += 1;
 }
 

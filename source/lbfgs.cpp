@@ -178,11 +178,11 @@ double LBFGS::backtracking_linesearch(Array<double> step) {
   }
 
   double factor = 1.;
-  double stepnorm = compute_pot_norm(step);
+  step_norm_ = compute_pot_norm(step);
 
   // make sure the step is no larger than maxstep_
-  if (factor * stepnorm > maxstep_) {
-    factor = maxstep_ / stepnorm;
+  if (factor * step_norm_ > maxstep_) {
+    factor = maxstep_ / step_norm_;
   }
 
   int nred;
@@ -208,7 +208,7 @@ double LBFGS::backtracking_linesearch(Array<double> step) {
       factor *= 0.5;
       if (verbosity_ > 2) {
         std::cout << "energy increased by " << df << " to " << fnew << " from "
-                  << f_ << " reducing step norm to " << factor * stepnorm
+                  << f_ << " reducing step norm to " << factor * step_norm_
                   << " H0 " << H0_ << std::endl;
       }
     }
@@ -224,7 +224,7 @@ double LBFGS::backtracking_linesearch(Array<double> step) {
 
   f_ = fnew;
   gradient_norm_ = norm(g_) * inv_sqrt_size;
-  return stepnorm * factor;
+  return step_norm_ * factor;
 }
 
 void LBFGS::reset(pele::Array<double> &x0) {
