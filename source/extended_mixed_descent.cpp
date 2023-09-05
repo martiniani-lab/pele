@@ -29,8 +29,10 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
     const pele::Array<double> x0,
     std::shared_ptr<pele::BasePotential> potential_extension, double tol, int T,
     double step, double conv_tol, double rtol, double atol, bool iterative,
-    const Array<double> global_symmetry_offset)
-    : GradientOptimizer(potential, x0, tol),
+    const Array<double> global_symmetry_offset, bool save_trajectory,
+    int iterations_before_save, StopCriterionType stop_criterion)
+    : GradientOptimizer(potential, x0, tol, save_trajectory,
+                        iterations_before_save, stop_criterion),
       N_size(x_.size()),
       t0(0),
       tN(100.0),
