@@ -338,11 +338,8 @@ class GradientOptimizer : public Optimizer {
     if (!func_initialized_) {
       initialize_func_gradient();
     }
-    if (gradient_norm_ <= tol_) {
-      succeeded_ = true;
-      return true;
-    };
-    return false;
+    succeeded_ = stop_criterion->stop_criterion_satisfied();
+    return succeeded_;
   }
 
  protected:
