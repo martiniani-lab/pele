@@ -15,11 +15,20 @@ cimport pele.optimize._pele_opt as _pele_opt
 from pele.optimize._pele_opt cimport shared_ptr
 cimport cython
 from cpython cimport bool as cbool
+from libcpp cimport bool
+
+
+cdef extern from "pele/optimizer.hpp" namespace "pele":
+    cpdef enum StopCriterionType:
+        GRADIENT,
+        STEPNORM,
+        NEWTON
+
 
 # import the externally defined ljbfgs implementation
 cdef extern from "pele/lbfgs.hpp" namespace "pele":
     cdef cppclass cppLBFGS "pele::LBFGS":
-        cppLBFGS(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, int) except +
+        cppLBFGS(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, int, bool, int, StopCriterionType) except +
 
         void set_H0(double) except +
         void set_tol(double) except +
@@ -38,22 +47,26 @@ cdef class _Cdef_LBFGS_CPP(_pele_opt.GradientOptimizer):
     """This class is the python interface for the c++ LBFGS implementation
     """
     cdef _pele.BasePotential pot
+    cdef StopCriterionType stop_criterion
+    cdef bool save_trajectory
     
     def __cinit__(self, x0, potential, double tol=1e-5, int M=4, double maxstep=0.1, 
                   double maxErise=1e-4, double H0=0.1, int iprint=-1,
                   energy=None, gradient=None,
                   int nsteps=10000, int verbosity=0, events=None, logger=None,
-                  rel_energy=False):
+                  rel_energy=False, bool save_trajectory=False, int iterations_before_save=1, StopCriterionType stop_criterion=StopCriterionType.GRADIENT):
         potential = as_cpp_potential(potential, verbose=verbosity>0)
 
         self.pot = potential
+        self.save_trajectory = save_trajectory
+        self.stop_criterion = stop_criterion
         if logger is not None:
             print "warning c++ LBFGS is ignoring logger"
         cdef np.ndarray[double, ndim=1] x0c = np.array(x0, dtype=float)
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppLBFGS(self.pot.thisptr, 
                              _pele.Array[double](<double*> x0c.data, x0c.size),
-                             tol, M) )
+                             tol, M, self.save_trajectory, iterations_before_save, self.stop_criterion) )
         cdef cppLBFGS* lbfgs_ptr = <cppLBFGS*> self.thisptr.get()
         lbfgs_ptr.set_H0(H0)
         lbfgs_ptr.set_maxstep(maxstep)
