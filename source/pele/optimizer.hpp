@@ -439,12 +439,13 @@ class ODEBasedOptimizer : public GradientOptimizer {
   }
 
  public:
-  ODEBasedOptimizer(std::shared_ptr<pele::BasePotential> potential,
-                    const pele::Array<double> x0, double tol = 1e-4,
-                    bool save_trajectory = false,
-                    int iterations_before_save = 1)
+  ODEBasedOptimizer(
+      std::shared_ptr<pele::BasePotential> potential,
+      const pele::Array<double> x0, double tol = 1e-4,
+      bool save_trajectory = false, int iterations_before_save = 1,
+      StopCriterionType stop_criterion = StopCriterionType::GRADIENT)
       : GradientOptimizer(potential, x0, tol, save_trajectory,
-                          iterations_before_save),
+                          iterations_before_save, stop_criterion),
         time_(0) {}
 
   virtual ~ODEBasedOptimizer() {}

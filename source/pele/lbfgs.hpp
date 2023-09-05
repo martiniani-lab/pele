@@ -61,8 +61,9 @@ class LBFGS : public GradientOptimizer {
    * Constructor
    */
   LBFGS(std::shared_ptr<pele::BasePotential> potential,
-        const pele::Array<double> x0, double tol = 1e-4, int M = 4);
-
+        const pele::Array<double> x0, double tol = 1e-4, int M = 4,
+        bool save_trajectory = false, int iterations_before_save = 1,
+        StopCriterionType stop_criterion = StopCriterionType::GRADIENT);
   /**
    * Destructor
    */

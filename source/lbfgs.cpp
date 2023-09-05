@@ -9,8 +9,11 @@
 namespace pele {
 
 LBFGS::LBFGS(std::shared_ptr<pele::BasePotential> potential,
-             const pele::Array<double> x0, double tol, int M)
-    : GradientOptimizer(potential, x0, tol),
+             const pele::Array<double> x0, double tol, int M,
+             bool save_trajectory, int iterations_before_save,
+             StopCriterionType stop_criterion)
+    : GradientOptimizer(potential, x0, tol, save_trajectory,
+                        iterations_before_save, stop_criterion),
       M_(M),
       max_f_rise_(1e-4),
       use_relative_f_(false),
