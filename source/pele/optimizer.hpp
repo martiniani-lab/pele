@@ -529,6 +529,7 @@ inline NewtonStopCriterion::NewtonStopCriterion(double tol,
       opt_(opt),
       hessian_(opt_->get_x().size(), opt_->get_x().size()),
       eigenvalues_(opt_->get_x().size()),
+      gradient(opt_->get_x().size()),
       newton_step_(opt_->get_x().size()),
       eigenvectors_(opt_->get_x().size(), opt_->get_x().size()),
       potential_(opt_->get_potential()) {}
