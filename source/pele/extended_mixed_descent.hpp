@@ -155,7 +155,9 @@ class ExtendedMixedOptimizer : public GradientOptimizer {
       std::shared_ptr<pele::BasePotential> potential_extension = nullptr,
       double tol = 1e-4, int T = 10, double step = 1, double conv_tol = 1e-8,
       double rtol = 1e-5, double atol = 1e-5, bool iterative = false,
-      Array<double> global_symmetry_offset = Array<double>(0));
+      Array<double> global_symmetry_offset = Array<double>(0),
+      bool save_trajectory = false, int iterations_before_save = 1,
+      StopCriterionType stop_criterion = StopCriterionType::GRADIENT);
   /**
    * Destructor
    */

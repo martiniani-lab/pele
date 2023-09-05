@@ -46,9 +46,10 @@ MODIFIED_FIRE::MODIFIED_FIRE(std::shared_ptr<pele::BasePotential> potential,
                              double dtmax, double maxstep, size_t Nmin,
                              double finc, double fdec, double fa, double astart,
                              double tol, bool stepback, bool save_trajectory,
-                             int iterations_before_save)
+                             int iterations_before_save,
+                             StopCriterionType stop_criterion)
     : ODEBasedOptimizer(potential, x0, tol, save_trajectory,
-                        iterations_before_save),
+                        iterations_before_save, stop_criterion),
       _dtstart(dtstart),
       _dt(dtstart),
       _dtmax(dtmax),

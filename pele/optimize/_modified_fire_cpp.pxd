@@ -5,12 +5,18 @@ from pele.potentials cimport _pele
 from pele.potentials._pele cimport shared_ptr
 from libcpp.vector cimport vector
 
+cdef extern from "pele/optimizer.hpp" namespace "pele":
+    cpdef enum StopCriterionType:
+        GRADIENT,
+        STEPNORM,
+        NEWTON
+
 # import the externally defined modified_fire implementation
 cdef extern from "pele/modified_fire.hpp" namespace "pele":
     cdef cppclass cppMODIFIED_FIRE "pele::MODIFIED_FIRE":
         cppMODIFIED_FIRE(shared_ptr[_pele.cBasePotential] , _pele.Array[double], 
                          double, double, double, size_t , double, double, 
-                         double, double, double, cbool, cbool, int) except +
+                         double, double, double, cbool, cbool, int, StopCriterionType stop_criterion_type) except +
         vector[double] get_time_trajectory() except +
         vector[double] get_gradient_norm_trajectory() except +
         vector[double] get_distance_trajectory() except +
