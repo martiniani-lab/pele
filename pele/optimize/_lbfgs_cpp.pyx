@@ -25,7 +25,7 @@ cdef extern from "pele/optimizer.hpp" namespace "pele":
         NEWTON
 
 
-# import the externally defined ljbfgs implementation
+# import the externally defined lbfgs implementation
 cdef extern from "pele/lbfgs.hpp" namespace "pele":
     cdef cppclass cppLBFGS "pele::LBFGS":
         cppLBFGS(shared_ptr[_pele.cBasePotential], _pele.Array[double], double, int, bool, int, StopCriterionType) except +
