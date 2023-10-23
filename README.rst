@@ -77,7 +77,7 @@ C/C++ packages:
 #. SUNDIALS (https://computing.llnl.gov/projects/sundials)
 
 SUNDIALS and Eigen are automatically downloaded with :code:`git submodule update --init --recursive` (which will also download GoogleTest for C++ tests)
-an install script is provided for sundials, Eigen can be installed by running the command :code:`cp -r eigen/Eigen install/include/`
+an install script `sun_inst.sh` is provided for sundials in the install folder. Eigen can be installed by running the command :code:`cp -r eigen/Eigen install/include/` in the `extern` folder.
 
 python packages:
 ^^^^^^^^^^^^^^^^
