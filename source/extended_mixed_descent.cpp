@@ -136,6 +136,7 @@ void ExtendedMixedOptimizer::setup_cvode() {
   Array<double> x0copy = x_.copy();
   x0_N = N_Vector_eq_pele(x0copy, sunctx);
 
+  ret = CVodeInit(cvode_mem, f, t0, x0_N);
   if (check_sundials_retval(&ret, "CVodeInit", 1)) {
     throw std::runtime_error("CVODE initialization failed");
   }
