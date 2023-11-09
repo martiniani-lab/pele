@@ -365,46 +365,4 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
   return 0;
 };
 
-/**
- * @brief Checks sundials error code and prints out error message. Copied from
- * the sundials examples. Honestly this is 3 functions in one. it needs to be
- * split
- *
- * @param flag
- * @param funcname
- * @param opt
- */
-static int check_sundials_retval(void *return_value, const char *funcname,
-                                 int opt) {
-  int *retval;
-
-  /* Check if SUNDIALS function returned NULL pointer - no memory allocated */
-
-  if (opt == 0 && return_value == NULL) {
-    fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
-            funcname);
-    return (1);
-  }
-  /* Check if retval < 0 */
-
-  else if (opt == 1) {
-    retval = (int *)return_value;
-    if (*retval < 0) {
-      fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with retval = %d\n\n",
-              funcname, *retval);
-      return (1);
-    }
-  }
-
-  /* Check if function returned NULL pointer - no memory allocated */
-
-  else if (opt == 2 && return_value == NULL) {
-    fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
-            funcname);
-    return (1);
-  }
-
-  return (0);
-}
-
 }  // namespace pele
