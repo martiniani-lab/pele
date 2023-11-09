@@ -65,6 +65,9 @@ class ExtendedMixedOptimizer : public GradientOptimizer {
   N_Vector x0_N;
   double rtol;
   double atol;
+
+  // return val from CVODE
+  int retval;
   // instatiate if you want to print to file
 #if PRINT_TO_FILE == 1
   std::ofstream trajectory_file;
@@ -135,6 +138,7 @@ class ExtendedMixedOptimizer : public GradientOptimizer {
   BacktrackingLineSearch line_search_method;
 
   bool iterative_;  // if true, use iterative solver for hessian solve
+  HessianType hessian_type_;
 
   const Array<double>
       m_global_symmetry_offset;  // global symmetry offset for hessian
@@ -175,7 +179,20 @@ class ExtendedMixedOptimizer : public GradientOptimizer {
   /**
    * reset the optimizer to start a new minimization from x0
    */
-  virtual void reset(pele::Array<double> &x0);
+  void reset(pele::Array<double> &x0);
+
+  /**
+   * @brief reset cvode data
+   *
+   */
+  void reset_cvode();
+
+  /**
+   * @brief reset the newton method
+   *
+   */
+  void reset_newton();
+
   inline int get_nhev() const { return udata.nhev; }
   inline int get_nhev_extended() const {
     return extended_potential->get_nhev_extension();
@@ -192,6 +209,7 @@ class ExtendedMixedOptimizer : public GradientOptimizer {
   bool convexity_check();
   void get_hess(Eigen::MatrixXd &hess);
   void get_hess_extended(Eigen::MatrixXd &hess);
+  void setup_cvode();
 
   void update_H0_(Array<double> x_old, Array<double> &g_old,
                   Array<double> x_new, Array<double> &g_new);
