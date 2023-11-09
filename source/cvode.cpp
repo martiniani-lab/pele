@@ -188,12 +188,7 @@ void CVODEBDFOptimizer::one_iteration() {
 
   single_step_ret_code = CVode(cvode_mem, tN, x0_N, &time_, CV_ONE_STEP);
 
-  // if (check_sundials_retval(&ret, "CVode", 1)) {
-  //   throw std::runtime_error("CVODE single step failed");
-  // }
-
-  // Assert length of x0_N is the same as x_
-  assert(N_VGetLength_Serial(x0_N) == x_.size());
+  assert(static_cast<size_t>(N_VGetLength_Serial(x0_N)) == x_.size());
   x_.assign(pele_eq_N_Vector(x0_N));
   g_.assign(udata.stored_grad);
   gradient_norm_ = (norm(g_) / sqrt(x_.size()));
@@ -202,9 +197,6 @@ void CVODEBDFOptimizer::one_iteration() {
   Array<double> step = xold - x_;
   step_norm_ = norm(step);
   iter_number_ += 1;
-  // really hacky way to output $lambdamin/lambdamax on a low tolerance run
-  // simply print the energy and $lambdamin/lambdamax as csv values and write
-  // stdout to file then plot them using python
 
 #if PRINT_TO_FILE == 1
   trajectory_file << std::setprecision(17) << x_;
@@ -219,8 +211,8 @@ void CVODEBDFOptimizer::add_translation_offset_2d(Eigen::MatrixXd &hessian,
   double factor = 2.0 / hessian.rows();
   offset = offset * factor;
 
-  for (size_t i = 0; i < hessian.rows(); ++i) {
-    for (size_t j = i + 1; j < hessian.cols(); ++j) {
+  for (long i = 0; i < hessian.rows(); ++i) {
+    for (long j = i + 1; j < hessian.cols(); ++j) {
       if ((i % 2 == 0 && j % 2 == 0) || (i % 2 == 1 && j % 2 == 1)) {
         hessian(i, j) += offset;
         hessian(j, i) += offset;
@@ -273,7 +265,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
         }
 
         // replace eigenvalues with their absolute values
-        for (size_t i = 0; i < eigenvalues.size(); ++i) {
+        for (long i = 0; i < eigenvalues.size(); ++i) {
           eigenvalues(i) = std::abs(eigenvalues(i));
         }
 
@@ -328,7 +320,7 @@ bool CVODEBDFOptimizer::stop_criterion_satisfied() {
   }
 }
 
-int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
+int f(double, N_Vector y, N_Vector ydot, void *user_data) {
   UserData udata = (UserData)user_data;
   pele::Array<double> yw = pele_eq_N_Vector(y);
   // double energy = udata->pot_->get_energy_gradient(yw, g);
@@ -337,7 +329,6 @@ int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
   // calculate negative grad g
   double energy = udata->pot_->get_energy_gradient(yw, udata->stored_grad);
   udata->nfev += 1;
-#pragma simd
   for (size_t i = 0; i < yw.size(); ++i) {
     fdata[i] = -udata->stored_grad[i];
   }
@@ -345,8 +336,8 @@ int f(double t, N_Vector y, N_Vector ydot, void *user_data) {
   return 0;
 }
 
-int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
-        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+int Jac(realtype, N_Vector y, N_Vector, SUNMatrix J, void *user_data, N_Vector,
+        N_Vector, N_Vector) {
   UserData udata = (UserData)user_data;
 
   pele::Array<double> yw = pele_eq_N_Vector(y);
