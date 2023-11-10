@@ -20,8 +20,9 @@
 
 namespace pele {
 
-void generate_2d_symmetries(size_t n_particles, Eigen::MatrixXd &projector_x,
-                            Eigen::MatrixXd &projector_y) {
+inline void generate_2d_symmetries(size_t n_particles,
+                                   Eigen::MatrixXd &projector_x,
+                                   Eigen::MatrixXd &projector_y) {
   projector_x.setZero();
   projector_y.setZero();
 
@@ -46,9 +47,10 @@ void generate_2d_symmetries(size_t n_particles, Eigen::MatrixXd &projector_x,
   }
 }
 
-void generate_3d_symmetries(size_t n_particles, Eigen::MatrixXd &projector_x,
-                            Eigen::MatrixXd &projector_y,
-                            Eigen::MatrixXd &projector_z) {
+inline void generate_3d_symmetries(size_t n_particles,
+                                   Eigen::MatrixXd &projector_x,
+                                   Eigen::MatrixXd &projector_y,
+                                   Eigen::MatrixXd &projector_z) {
   projector_x.setZero();
   projector_y.setZero();
   projector_z.setZero();
@@ -81,7 +83,8 @@ void generate_3d_symmetries(size_t n_particles, Eigen::MatrixXd &projector_x,
   }
 }
 
-std::vector<Eigen::MatrixXd> get_symmetries(size_t n_particles, size_t n_d) {
+inline std::vector<Eigen::MatrixXd> get_symmetries(size_t n_particles,
+                                                   size_t n_d) {
   std::vector<Eigen::MatrixXd> symmetries;
   if (n_d == 2) {
     Eigen::MatrixXd projector_x, projector_y;
@@ -110,7 +113,7 @@ std::vector<Eigen::MatrixXd> get_symmetries(size_t n_particles, size_t n_d) {
  * @param  hessian the hessian to be modified
  * @param  offset the offset to be added
  */
-void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset) {
+inline void add_translation_offset_2d(Eigen::MatrixXd &hessian, double offset) {
   // factor so that the added translation operators are unitary
   double factor = 2.0 / hessian.rows();
   offset = offset * factor;
