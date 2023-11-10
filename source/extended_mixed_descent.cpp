@@ -9,6 +9,7 @@
 #include <ostream>
 #include <pele/cvode.hpp>
 #include <stdexcept>
+#include <sundials/sundials_matrix.h>
 #include <sunlinsol/sunlinsol_dense.h>  // access to dense SUNLinearSolver
 #include <sunlinsol/sunlinsol_spgmr.h>  /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h> /* access to Newton SUNNonLinearSolver */
@@ -339,26 +340,36 @@ void ExtendedMixedOptimizer::free_cvode_objects() {
 }
 
 void ExtendedMixedOptimizer::reset(Array<double> &x0) {
+  // reset vectors
   x_.assign(x0);
+  xold.assign(x0);
+  gold.assign(0);
+  step.assign(0);
+  xold_old.assign(0);
+  x_last_cvode.assign(0);
   reset_cvode();
   reset_newton();
+  use_phase_1 = true;
+  n_phase_1_steps = 0;
+  n_phase_2_steps = 0;
+  hessian_calculated = false;
 }
 
 void ExtendedMixedOptimizer::reset_cvode() {
-  udata.nhev = 0;
-  udata.nfev = 0;
   nfev_ = 0;
   nhev_ = 0;
   succeeded_ = false;
   iter_number_ = 0;
-  udata.stored_energy = 0;
   func_initialized_ = false;
-  this->udata.stored_grad = Array<double>(x_.size());
+  reset_user_data(&udata);
   this->free_cvode_objects();
   this->setup_cvode();
 }
 
-void ExtendedMixedOptimizer::reset_newton() {}
+void ExtendedMixedOptimizer::reset_newton() {
+  hessian.setZero();
+  hessian_copy_for_cholesky.setZero();
+}
 
 /**
  * checks convexity in the region and updates the convexity flag accordingly
