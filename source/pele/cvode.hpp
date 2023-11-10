@@ -68,6 +68,13 @@ typedef struct UserData_ {
   std::shared_ptr<pele::BasePotential> pot_;
 } * UserData;
 
+inline void reset_user_data(UserData udata) {
+  udata->nfev = 0;
+  udata->nhev = 0;
+  udata->stored_energy = 0;
+  udata->stored_grad.assign(0);
+}
+
 /**
  * Not exactly an optimizer but solves for the differential equation $ dx/dt = -
  * \grad{V(x)} $ to arrive at the trajectory to the corresponding minimum
