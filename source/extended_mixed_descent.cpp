@@ -50,6 +50,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       hessian(x_.size(), x_.size()),
       hessian_copy_for_cholesky(x_.size(), x_.size()),
       use_phase_1(true),
+      prev_phase_is_phase1(true),
       n_phase_1_steps(0),
       n_phase_2_steps(0),
       n_failed_phase_2_steps(0),
@@ -86,9 +87,6 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
         "T must be greater than 1. switching back to CVODE from Newton will "
         "get stuck in an infinite loop");
   }
-
-  // assume previous phase is phase 1
-  prev_phase_is_phase1 = true;
   // Check whether potentials are Null
   if (!potential_) {
     throw std::runtime_error("ExtendedMixedOptimizer: potential is null");
