@@ -251,7 +251,7 @@ TEST(CVODE, Reset) {
 
   // Check that reset works
   cvode.run(1000);
-  Array<double> x_before_reset = cvode.get_x();
+  Array<double> x_before_reset = cvode.get_x().copy();
   int nfev = cvode.get_nfev();
   int nhev = cvode.get_nhev();
 
