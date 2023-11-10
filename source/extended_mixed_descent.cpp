@@ -245,7 +245,7 @@ void ExtendedMixedOptimizer::one_iteration() {
     std::cout << " computing phase 1 step"
               << "\n";
 #endif
-    compute_phase_1_step(step);
+    compute_phase_1_step();
   } else {
     extended_potential->switch_on_extended_potential();
 #if OPTIMIZER_DEBUG_LEVEL >= 3
@@ -253,7 +253,7 @@ void ExtendedMixedOptimizer::one_iteration() {
               << "\n";
 #endif
     step.assign(g_);
-    compute_phase_2_step(step);
+    compute_phase_2_step();
 
     n_phase_2_steps += 1;
     prev_phase_is_phase1 = false;
@@ -433,7 +433,7 @@ void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
 /**
  * Phase 1 The problem does not look convex, Try solving using with sundials
  */
-void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
+void ExtendedMixedOptimizer::compute_phase_1_step() {
   /* advance solver just one internal step */
   xold = x_;
 
@@ -457,7 +457,7 @@ void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
 /**
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
-void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
+void ExtendedMixedOptimizer::compute_phase_2_step() {
   if (!prev_phase_is_phase1) {
     convexity_check();
   }
