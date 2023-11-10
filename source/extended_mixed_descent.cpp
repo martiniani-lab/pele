@@ -7,6 +7,7 @@
 #include <limits>
 #include <memory>
 #include <ostream>
+#include <pele/cvode.hpp>
 #include <stdexcept>
 #include <sunlinsol/sunlinsol_dense.h>  // access to dense SUNLinearSolver
 #include <sunlinsol/sunlinsol_spgmr.h>  /* access to SPGMR SUNLinearSolver */
@@ -49,6 +50,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       hessian(x_.size(), x_.size()),
       hessian_copy_for_cholesky(x_.size(), x_.size()),
       use_phase_1(true),
+      prev_phase_is_phase1(true),
       n_phase_1_steps(0),
       n_phase_2_steps(0),
       n_failed_phase_2_steps(0),
@@ -56,14 +58,6 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       line_search_method(this, step),
       iterative_(iterative),
       m_global_symmetry_offset(global_symmetry_offset.copy()) {
-  SUNContext_Create(NULL, &sunctx);
-  cvode_mem = CVodeCreate(CV_BDF, sunctx);
-  if (T <= 1) {
-    throw std::runtime_error(
-        "T must be greater than 1. switching back to CVODE from Newton will "
-        "get stuck in an infinite loop");
-  }
-
 #if OPTIMIZER_DEBUG_LEVEL > 0
   std::cout << "ExtendedMixedOptimizer Parameters" << std::endl;
   std::cout << "x0: " << x0 << std::endl;
@@ -80,8 +74,19 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   }
 #endif
 
-  // assume previous phase is phase 1
-  prev_phase_is_phase1 = true;
+  if (iterative) {
+    hessian_type_ = ITERATIVE;
+  } else {
+    hessian_type_ = DENSE;
+  }
+
+  setup_cvode();
+  uplo = 'U';
+  if (T <= 1) {
+    throw std::runtime_error(
+        "T must be greater than 1. switching back to CVODE from Newton will "
+        "get stuck in an infinite loop");
+  }
   // Check whether potentials are Null
   if (!potential_) {
     throw std::runtime_error("ExtendedMixedOptimizer: potential is null");
@@ -91,46 +96,9 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   }
   set_potential(
       extended_potential);  // because we can only create the extended potential
-  // after we instantiate the extended potential
-  double t0 = 0;
 #if PRINT_TO_FILE == 1
   trajectory_file.open("trajectory.txt");
 #endif
-  uplo = 'U';
-  // set the initial step size
-  Array<double> x0copy = x0.copy();
-  x0_N = N_Vector_eq_pele(x0copy, sunctx);
-  // initialization of everything CVODE needs
-  int ret = CVodeInit(cvode_mem, f, t0, x0_N);
-  // initialize userdata
-  udata.rtol = rtol;
-  udata.atol = atol;
-  udata.nfev = 0;
-  udata.nhev = 0;
-  udata.pot_ = potential_;
-  udata.stored_grad = Array<double>(x0.size(), 0);
-  // set tolerances
-  CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
-  ret = CVodeSetUserData(cvode_mem, &udata);
-  // initialize hessian
-  if (iterative) {
-    LS = SUNLinSol_SPGMR(x0_N, SUN_PREC_NONE, 0, sunctx);
-    CVodeSetLinearSolver(cvode_mem, LS, NULL);
-  } else {
-    A = SUNDenseMatrix(N_size, N_size, sunctx);
-    LS = SUNLinSol_Dense(x0_N, A, sunctx);
-    CVodeSetLinearSolver(cvode_mem, LS, A);
-    CVodeSetJacFn(cvode_mem, Jac);
-  }
-
-  // pass hessian information
-  g_ = udata.stored_grad;
-  // initialize CVODE steps and stop time
-  CVodeSetMaxNumSteps(cvode_mem, 1000000);
-  CVodeSetStopTime(cvode_mem, tN);
-  inv_sqrt_size = 1 / sqrt(x_.size());
-  // optmizer debug level
-  std::cout << OPTIMIZER_DEBUG_LEVEL << "optimizer debug level \n";
 
 #if OPTIMIZER_DEBUG_LEVEL >= 1
   std::cout << "Mixed optimizer constructed"
@@ -140,6 +108,102 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
 /**
  * Does one iteration of the optimization algorithm
  */
+/**
+ * setup the CVODE solver. extracted for use in assigment operators/constructors
+ */
+void ExtendedMixedOptimizer::setup_cvode() {
+  cvode_mem = NULL;
+  x0_N = NULL;
+  A = NULL;
+  sunctx = NULL;
+  LS = NULL;
+  int ret = 0;
+
+  sunctx = NULL;
+  ret = SUNContext_Create(NULL, &sunctx);
+  if (check_sundials_retval(&ret, "SUNContext_Create", 1)) {
+    throw std::runtime_error("SUNContext_Create failed");
+  }
+
+  cvode_mem = CVodeCreate(CV_BDF, sunctx);
+  if (cvode_mem == NULL) {
+    std::cerr << "CVodeCreate failed to create CVODE solver" << std::endl;
+    exit(1);
+  }
+  t0 = 0;
+  Array<double> x0copy = x_.copy();
+  x0_N = N_Vector_eq_pele(x0copy, sunctx);
+
+  ret = CVodeInit(cvode_mem, f, t0, x0_N);
+  if (check_sundials_retval(&ret, "CVodeInit", 1)) {
+    throw std::runtime_error("CVODE initialization failed");
+  }
+
+  // initialize userdata
+  udata.rtol = rtol;
+  udata.atol = atol;
+  udata.nfev = 0;
+  udata.nhev = 0;
+  udata.pot_ = potential_;
+  udata.stored_grad = Array<double>(x_.size(), 0);
+
+  ret = CVodeSStolerances(cvode_mem, udata.rtol, udata.atol);
+  if (check_sundials_retval(&ret, "CVodeSStolerances", 1)) {
+    throw std::runtime_error("CVODE tolerances failed");
+  }
+
+  ret = CVodeSetUserData(cvode_mem, &udata);
+  if (check_sundials_retval(&ret, "CVodeSetUserData", 1)) {
+    throw std::runtime_error("CVODE user data failed");
+  }
+  if (hessian_type_ == ITERATIVE) {
+    LS = SUNLinSol_SPGMR(x0_N, SUN_PREC_NONE, 0, sunctx);
+    if (check_sundials_retval((void *)LS, "SUNLinSol_SPGMR", 0)) {
+      throw std::runtime_error("SUNLinSol_SPGMR failed");
+    }
+
+    ret = CVodeSetLinearSolver(cvode_mem, LS, NULL);
+    if (check_sundials_retval(&ret, "CVodeSetLinearSolver", 1)) {
+      throw std::runtime_error("CVODE linear solver failed");
+    }
+
+  } else if (hessian_type_ == DENSE) {
+    A = SUNDenseMatrix(N_size, N_size, sunctx);
+    if (check_sundials_retval((void *)A, "SUNDenseMatrix", 0)) {
+      throw std::runtime_error("SUNDenseMatrix failed");
+    }
+    LS = SUNLinSol_Dense(x0_N, A, sunctx);
+    if (check_sundials_retval((void *)LS, "SUNLinSol_Dense", 0)) {
+      throw std::runtime_error("SUNLinSol_Dense failed");
+    }
+
+    ret = CVodeSetLinearSolver(cvode_mem, LS, A);
+    if (check_sundials_retval(&ret, "CVodeSetLinearSolver", 1)) {
+      throw std::runtime_error("CVODE linear solver failed");
+    }
+    ret = CVodeSetJacFn(cvode_mem, Jac);
+    if (check_sundials_retval(&ret, "CVodeSetJacFn", 1)) {
+      throw std::runtime_error("CVODE set jacobian failed");
+    }
+  } else {
+    throw std::runtime_error("Unknown Hessian type");
+  }
+  g_.assign(udata.stored_grad);
+  ret = CVodeSetMaxNumSteps(cvode_mem, 1000000);
+  if (check_sundials_retval(&ret, "CVodeSetMaxNumSteps", 1)) {
+    throw std::runtime_error("CVODE set max num steps failed");
+  }
+  ret = CVodeSetStopTime(cvode_mem, tN);
+  if (check_sundials_retval(&ret, "CVodeSetStopTime", 1)) {
+    throw std::runtime_error("CVODE set stop time failed");
+  }
+#if PRINT_TO_FILE == 1
+  trajectory_file.open("trajectory_cvode.txt");
+  gradient_file.open("gradient_cvode.txt");
+  time_file.open("time_cvode.txt");
+#endif
+}
+
 void ExtendedMixedOptimizer::one_iteration() {
   if (!func_initialized_) {
     initialize_func_gradient();
@@ -181,7 +245,7 @@ void ExtendedMixedOptimizer::one_iteration() {
     std::cout << " computing phase 1 step"
               << "\n";
 #endif
-    compute_phase_1_step(step);
+    compute_phase_1_step();
   } else {
     extended_potential->switch_on_extended_potential();
 #if OPTIMIZER_DEBUG_LEVEL >= 3
@@ -189,7 +253,7 @@ void ExtendedMixedOptimizer::one_iteration() {
               << "\n";
 #endif
     step.assign(g_);
-    compute_phase_2_step(step);
+    compute_phase_2_step();
 
     n_phase_2_steps += 1;
     prev_phase_is_phase1 = false;
@@ -218,7 +282,7 @@ void ExtendedMixedOptimizer::one_iteration() {
     } else {
       line_search_method.set_xold_gold_(xold, gold);
       line_search_method.set_g_f_ptr(g_);
-      double stepnorm = line_search_method.line_search(x_, step);
+      line_search_method.line_search(x_, step);
       // if step is going uphill, phase two has failed.
       phase_2_failed_ = line_search_method.get_step_moving_away_from_min();
 
@@ -274,20 +338,27 @@ void ExtendedMixedOptimizer::free_cvode_objects() {
   SUNContext_Free(&sunctx);
 }
 
-/**
- * resets the minimizer for usage again
- */
-void ExtendedMixedOptimizer::reset(pele::Array<double> &x0) {
-  if (x0.size() != x_.size()) {
-    throw std::invalid_argument(
-        "The number of degrees of freedom (x0.size()) "
-        "cannot change when calling reset()");
-  }
-  iter_number_ = 0;
-  nfev_ = 0;
+void ExtendedMixedOptimizer::reset(Array<double> &x0) {
   x_.assign(x0);
-  initialize_func_gradient();
+  reset_cvode();
+  reset_newton();
 }
+
+void ExtendedMixedOptimizer::reset_cvode() {
+  udata.nhev = 0;
+  udata.nfev = 0;
+  nfev_ = 0;
+  nhev_ = 0;
+  succeeded_ = false;
+  iter_number_ = 0;
+  udata.stored_energy = 0;
+  func_initialized_ = false;
+  this->udata.stored_grad = Array<double>(x_.size());
+  this->free_cvode_objects();
+  this->setup_cvode();
+}
+
+void ExtendedMixedOptimizer::reset_newton() {}
 
 /**
  * checks convexity in the region and updates the convexity flag accordingly
@@ -362,14 +433,14 @@ void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
 /**
  * Phase 1 The problem does not look convex, Try solving using with sundials
  */
-void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
+void ExtendedMixedOptimizer::compute_phase_1_step() {
   /* advance solver just one internal step */
   xold = x_;
 
   // use this variable to compute differences and add to nhev later
   double udatadiff = udata.nfev;
 
-  int flag = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
+  retval = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
   udatadiff = udata.nfev - udatadiff;
   nfev_ += udatadiff;
   x_ = pele_eq_N_Vector(x0_N);
@@ -386,7 +457,7 @@ void ExtendedMixedOptimizer::compute_phase_1_step(Array<double> step) {
 /**
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
-void ExtendedMixedOptimizer::compute_phase_2_step(Array<double> step) {
+void ExtendedMixedOptimizer::compute_phase_2_step() {
   if (!prev_phase_is_phase1) {
     convexity_check();
   }
