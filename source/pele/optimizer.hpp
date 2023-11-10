@@ -29,6 +29,7 @@ class GradientOptimizer;
 class AbstractStopCriterion {
  public:
   virtual bool stop_criterion_satisfied() = 0;
+  virtual ~AbstractStopCriterion() = default;
 };
 
 class GradientStopCriterion : public AbstractStopCriterion {
@@ -310,7 +311,6 @@ class GradientOptimizer : public Optimizer {
   // make sure that the allocated x is not changed externally
   // this can cause memory issues
   inline void set_x(pele::Array<double> x) { x_.assign(x); }
-
   // functions for accessing the status of the optimizer
   virtual inline Array<double> get_x() const { return x_; }
   inline Array<double> get_g() const { return g_; }
