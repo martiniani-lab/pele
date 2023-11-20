@@ -22,9 +22,9 @@ ATLJ::ATLJ(double sig, double eps, double Z)
     : m_eps(eps),
       m_sig(sig),
       m_Z(Z),
-      ljpot(4 * eps * pow(sig, 6), 4 * eps * pow(sig, 12)),
+      m_ndim(3),
       m_natoms(3),
-      m_ndim(3)
+      ljpot(4 * eps * pow(sig, 6), 4 * eps * pow(sig, 12))
 
 {}
 
