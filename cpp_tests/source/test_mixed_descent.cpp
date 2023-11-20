@@ -152,14 +152,14 @@ TEST(EMXD, Reset) {
       std::make_shared<pele::InverseHalfIntPowerPeriodic<_ndim, pow2>>(
           eps, radii, boxvec, exact_sum);
 
-  // Newton stop criterion
-  pele::ExtendedMixedOptimizer mxd(pot, x_start);
+  pele::ExtendedMixedOptimizer mxd(pot, x_start, nullptr, 1e-10, 10, 1, 1e-4,
+                                   1e-4, 1e-4, false, Array<double>(0), false,
+                                   1, pele::StopCriterionType::GRADIENT);
 
   Array<double> original_x = x_start.copy();
 
-  // Check that reset works
-  mxd.run(1000);
-  Array<double> x_before_reset = mxd.get_x();
+  mxd.run(4000);
+  Array<double> x_before_reset = mxd.get_x().copy();
   int nfev = mxd.get_nfev();
   int nhev = mxd.get_nhev();
 
@@ -168,8 +168,7 @@ TEST(EMXD, Reset) {
   ASSERT_EQ(mxd.get_nfev(), 0);
   ASSERT_EQ(mxd.get_nhev(), 0);
   ASSERT_FALSE(mxd.stop_criterion_satisfied());
-
-  mxd.run(1000);
+  mxd.run(4000);
   Array<double> x_after_reset = mxd.get_x();
   int nfev_after_reset = mxd.get_nfev();
   int nhev_after_reset = mxd.get_nhev();

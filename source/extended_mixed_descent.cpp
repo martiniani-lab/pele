@@ -9,6 +9,7 @@
 #include <ostream>
 #include <pele/cvode.hpp>
 #include <stdexcept>
+#include <sundials/sundials_matrix.h>
 #include <sunlinsol/sunlinsol_dense.h>  // access to dense SUNLinearSolver
 #include <sunlinsol/sunlinsol_spgmr.h>  /* access to SPGMR SUNLinearSolver */
 #include <sunnonlinsol/sunnonlinsol_newton.h> /* access to Newton SUNNonLinearSolver */
@@ -79,7 +80,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   } else {
     hessian_type_ = DENSE;
   }
-
+  std::cout << "initial x0" << x0 << std::endl;
   setup_cvode();
   uplo = 'U';
   if (T <= 1) {
@@ -339,26 +340,36 @@ void ExtendedMixedOptimizer::free_cvode_objects() {
 }
 
 void ExtendedMixedOptimizer::reset(Array<double> &x0) {
+  // reset vectors
   x_.assign(x0);
+  xold.assign(x0);
+  gold.assign(0);
+  step.assign(0);
+  xold_old.assign(0);
+  x_last_cvode.assign(0);
   reset_cvode();
   reset_newton();
+  use_phase_1 = true;
+  n_phase_1_steps = 0;
+  n_phase_2_steps = 0;
+  hessian_calculated = false;
 }
 
 void ExtendedMixedOptimizer::reset_cvode() {
-  udata.nhev = 0;
-  udata.nfev = 0;
   nfev_ = 0;
   nhev_ = 0;
   succeeded_ = false;
   iter_number_ = 0;
-  udata.stored_energy = 0;
   func_initialized_ = false;
-  this->udata.stored_grad = Array<double>(x_.size());
+  reset_user_data(&udata);
   this->free_cvode_objects();
   this->setup_cvode();
 }
 
-void ExtendedMixedOptimizer::reset_newton() {}
+void ExtendedMixedOptimizer::reset_newton() {
+  hessian.setZero();
+  hessian_copy_for_cholesky.setZero();
+}
 
 /**
  * checks convexity in the region and updates the convexity flag accordingly
@@ -435,7 +446,7 @@ void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
  */
 void ExtendedMixedOptimizer::compute_phase_1_step() {
   /* advance solver just one internal step */
-  xold = x_;
+  xold.assign(x_);
 
   // use this variable to compute differences and add to nhev later
   double udatadiff = udata.nfev;
@@ -443,7 +454,7 @@ void ExtendedMixedOptimizer::compute_phase_1_step() {
   retval = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
   udatadiff = udata.nfev - udatadiff;
   nfev_ += udatadiff;
-  x_ = pele_eq_N_Vector(x0_N);
+  x_.assign(pele_eq_N_Vector(x0_N));
   // here we have to translate from ODE solver language to optimizer language.
   // this is because CVODE calculates the negative of the gradient.
   g_ = -udata.stored_grad;

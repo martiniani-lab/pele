@@ -31,7 +31,7 @@ jobs:
           auto-activate-base: false
       - name: Install python dependencies
         run: |
-          conda install -c conda-forge gcc gxx gfortran
+          conda install -c conda-forge gcc gxx gfortran openmp
           conda install -y numpy scipy matplotlib networkx cython=0.29.32
           conda install -y -c conda-forge sqlalchemy=1.4.42 munkres pyro4 scikit-sparse
           pip install pytest future pyyaml omp-thread-count
