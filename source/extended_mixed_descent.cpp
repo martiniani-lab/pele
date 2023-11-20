@@ -80,7 +80,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   } else {
     hessian_type_ = DENSE;
   }
-
+  std::cout << "initial x0" << x0 << std::endl;
   setup_cvode();
   uplo = 'U';
   if (T <= 1) {
@@ -446,7 +446,7 @@ void ExtendedMixedOptimizer::get_hess_extended(Eigen::MatrixXd &hessian) {
  */
 void ExtendedMixedOptimizer::compute_phase_1_step() {
   /* advance solver just one internal step */
-  xold = x_;
+  xold.assign(x_);
 
   // use this variable to compute differences and add to nhev later
   double udatadiff = udata.nfev;
@@ -454,7 +454,7 @@ void ExtendedMixedOptimizer::compute_phase_1_step() {
   retval = CVode(cvode_mem, tN, x0_N, &t0, CV_ONE_STEP);
   udatadiff = udata.nfev - udatadiff;
   nfev_ += udatadiff;
-  x_ = pele_eq_N_Vector(x0_N);
+  x_.assign(pele_eq_N_Vector(x0_N));
   // here we have to translate from ODE solver language to optimizer language.
   // this is because CVODE calculates the negative of the gradient.
   g_ = -udata.stored_grad;
