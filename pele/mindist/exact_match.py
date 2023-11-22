@@ -123,7 +123,11 @@ class StandardClusterAlignment(object):
             self.idx2_1 = next(self.iter1)
 
         # toggle inversion if inversion is possible
-        if self.can_invert and self.invert == False and self.idx2_2 is not None:
+        if (
+            self.can_invert
+            and self.invert == False
+            and self.idx2_2 is not None
+        ):
             self.invert = True
         else:
             # determine next pair of indices
@@ -249,7 +253,7 @@ class ExactMatchCluster(object):
         )
         return alignment is not None
 
-    def find_transformation(self, coords1, coords2, check_inversion=False):
+    def find_transformation(self, coords1, coords2, check_inversion=True):
         """Return None if the two structures are different, else return the transformations that brings them into alignment
 
         Returns
@@ -308,8 +312,8 @@ class ExactMatchCluster(object):
         self.transform.rotate(x2_trial, rot)
 
         # get the best permutation
-        # dist, perm = self.measure.find_permutation(x1, x2_trial)
-        # x2_trial = self.transform.permute(x2_trial, perm)
+        dist, perm = self.measure.find_permutation(x1, x2_trial)
+        x2_trial = self.transform.permute(x2_trial, perm)
 
         # now find best rotational alignment, this is more reliable than just
         # aligning the 2 reference atoms
@@ -322,7 +326,7 @@ class ExactMatchCluster(object):
         if self.measure.get_dist(x1, x2_trial) < self.tol:
             # return the rotation and permutation as a named tupple
             ret = namedtuple("alignment", ["permutation", "rotation"])
-            ret.permutation = None
+            ret.permutation = perm
             ret.rotation = np.dot(rot2, rot)
             return ret
         return None
