@@ -10,7 +10,6 @@
 #include "pele/harmonic.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/lj.hpp"
-#include "pele/mxopt.hpp"
 #include "pele/rosenbrock.hpp"
 
 using pele::Array;

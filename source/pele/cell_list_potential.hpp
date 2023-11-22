@@ -50,7 +50,6 @@ inline void accumulate_energies_omp(vector<double> &energies, double energy,
 #endif
 }
 
-
 // class containing r2, dij, dr, , xi_off, xj_off
 template <size_t ndim>
 class DistanceData {
@@ -193,19 +192,19 @@ class BaseAccumulator {
   }
 
   /**
-   * @brief 
-   * 
-   * @param coords 
-   * @param atom_i 
-   * @param atom_j 
+   * @brief
+   *
+   * @param coords
+   * @param atom_i
+   * @param atom_j
    * @param isubdom thread number)
    */
   inline void calculate_dist_data_in_thread(const pele::Array<double> &coords,
                                             const size_t atom_i,
-                                            const size_t atom_j, const size_t isubdom) {
+                                            const size_t atom_j,
+                                            const size_t isubdom) {
 #ifdef _OPENMP
-    calculate_distance_data(m_distance_datas[isubdom], coords,
-                            atom_i, atom_j);
+    calculate_distance_data(m_distance_datas[isubdom], coords, atom_i, atom_j);
 #else
     calculate_distance_data(m_distance_datas[0], coords, atom_i, atom_j);
 #endif
@@ -241,7 +240,8 @@ class EnergyAccumulator
 
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
                         const size_t isubdom) {
-    this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j, isubdom);
+    this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j,
+                                        isubdom);
     double energy =
         this->m_interaction->energy(this->m_distance_datas[isubdom].r2,
                                     this->m_distance_datas[isubdom].dij);
@@ -285,7 +285,8 @@ class EnergyGradientAccumulator
 
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
                         const size_t isubdom) {
-    this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j, isubdom);
+    this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j,
+                                        isubdom);
     double gij;
     double energy = this->m_interaction->energy_gradient(
         this->m_distance_datas[isubdom].r2, &gij,
@@ -334,7 +335,8 @@ class EnergyGradientHessianAccumulator
   }
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
                         const size_t isubdom) {
-    this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j, isubdom);
+    this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j,
+                                        isubdom);
     double gij, hij;
     double energy = this->m_interaction->energy_gradient_hessian(
         this->m_distance_datas[isubdom].r2, &gij, &hij,
@@ -385,7 +387,8 @@ class EnergyHessianAccumulator
 
   void insert_atom_pair(const size_t atom_i, const size_t atom_j,
                         const size_t isubdom) {
-    this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j, isubdom);
+    this->calculate_dist_data_in_thread(*this->m_coords, atom_i, atom_j,
+                                        isubdom);
     double gij, hij;
     double energy = this->m_interaction->energy_gradient_hessian(
         this->m_distance_datas[isubdom].r2, &gij, &hij,
@@ -830,10 +833,12 @@ class CellListPotential : public PairwisePotentialInterface {
       delete m_eAccExact;
       delete m_egAccExact;
       delete m_eghAccExact;
+      delete m_ehAcc;
     } else {
       delete m_eAcc;
       delete m_egAcc;
       delete m_eghAcc;
+      delete m_ehAcc;
     }
   }
 
