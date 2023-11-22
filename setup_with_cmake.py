@@ -153,6 +153,7 @@ intel_args = []
 
 cmake_compiler_extra_args += intel_args
 
+
 #
 # Make the git revision visible.  Most of this is copied from scipy
 #
@@ -412,7 +413,6 @@ cxx_files = [
 
 if with_cvode:
     cxx_files += [
-        "pele/optimize/_mxopt.cxx",
         "pele/optimize/generic_mixed_descent.cxx",
         "pele/optimize/_mxd_end_only.cxx",
         "pele/optimize/extended_mixed_descent.cxx",

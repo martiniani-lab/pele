@@ -20,7 +20,6 @@
 #include <pele/cvode.hpp>
 #include <pele/lbfgs.hpp>
 #include <pele/modified_fire.hpp>
-#include <pele/mxopt.hpp>
 #include <stdexcept>
 #include <vector>
 

@@ -7,7 +7,6 @@
 #include "pele/inversepower.hpp"
 #include "pele/lbfgs.hpp"
 #include "pele/mxd_end_only.hpp"
-#include "pele/mxopt.hpp"
 #include "pele/rosenbrock.hpp"
 #include "pele/utils.hpp"
 
@@ -23,7 +22,6 @@
 #include "pele/array.hpp"
 
 using pele::Array;
-using std::cout;
 
 TEST(CVODE, IterativeDenseCheck) {
   static const size_t _ndim = 2;

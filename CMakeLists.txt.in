@@ -112,7 +112,6 @@ set(cvode_pele_source
   ${pele_include}/cvode.cpp
   ${pele_include}/extended_mixed_descent.cpp
   ${pele_include}/mxd_end_only.cpp
-  ${pele_include}/mxopt.cpp
   ${pele_include}/newton.cpp
   ${pele_include}/newton_with_extension.cpp
   ${pele_include}/generic_mixed_descent.cpp
