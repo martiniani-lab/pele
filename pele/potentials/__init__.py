@@ -70,6 +70,7 @@ from ._inversepower_stillinger_cut_quad import InversePowerStillingerCutQuad
 from .combine_potentials import CombinedPotential
 from ._wca_cpp import *
 from ._harmonic_cpp import Harmonic
+from ._radial_gaussian_cpp import RadialGaussian
 from ._sumgaussianpot_cpp import SumGaussianPot
 from ._pspin_spherical_cpp import MeanFieldPSpinSpherical
 from .ATLJ import *
