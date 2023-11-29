@@ -10,7 +10,7 @@ TODO: The results are hardcoded for the current test_cvode.py.
 from pele.optimize import CVODEBDFOptimizer, HessianType
 import numpy as np
 
-# from .potential_fixture import potential_initial_and_final_conditions
+from .potential_fixture import potential_initial_and_final_conditions
 
 
 def test_cvode_compare_with_cpp(potential_initial_and_final_conditions):
