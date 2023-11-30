@@ -56,9 +56,10 @@ double inline BaseRadialGaussian::get_energy(pele::Array<double> const &x) {
   this->_get_distance(x);
   const double _distance_modulus = sqrt(dot(_distance, _distance));
   const double _spring_deformation = _distance_modulus - _l0;
+  const size_t _ndof = _ndim * _nparticles;
   
   // The energy here assumes beta = 1, otherwise a 1/beta factor is needed in front of the log
-  return 0.5 * _k * _spring_deformation * _spring_deformation + _log_prefactor * ((double)_ndim - 1.0) * log(_distance_modulus);
+  return 0.5 * _k * _spring_deformation * _spring_deformation + _log_prefactor * ((double)_ndof - 1.0) * log(_distance_modulus);
 }
 
 /* calculate energy and gradient from distance squared, gradient is in g/|rij|,
@@ -70,14 +71,15 @@ double inline BaseRadialGaussian::get_energy_gradient(pele::Array<double> const 
   this->_get_distance(x);
   const double _distance_modulus = sqrt(dot(_distance, _distance));
   const double _spring_deformation = _distance_modulus - _l0;
+  const size_t _ndof = _ndim * _nparticles;
   
   // The energy and gradient here both assume beta = 1, otherwise a 1/beta factor is needed in front of the log
   
 #pragma simd
   for (size_t i = 0; i < x.size(); ++i) {
-    grad[i] = _k * _distance[i] * (1.0 - _l0/_distance_modulus) + _log_prefactor * ((double)_ndim - 1.0) * _distance[i]/(_distance_modulus*_distance_modulus) ;
+    grad[i] = _k * _distance[i] * (1.0 - _l0/_distance_modulus) + _log_prefactor * ((double)_ndof - 1.0) * _distance[i]/(_distance_modulus*_distance_modulus) ;
   }
-  return 0.5 * _k * _spring_deformation * _spring_deformation + _log_prefactor * ((double)_ndim - 1.0) * log(_distance_modulus);
+  return 0.5 * _k * _spring_deformation * _spring_deformation + _log_prefactor * ((double)_ndof - 1.0) * log(_distance_modulus);
 }
 
 /**
