@@ -64,7 +64,12 @@ double inline BaseRadialGaussian::get_energy(pele::Array<double> const &x) {
   const size_t _ndof = _ndim * _nparticles;
   
   // The energy here assumes beta = 1, otherwise a 1/beta factor is needed in front of the log
-  return 0.5 * _k * _spring_deformation * _spring_deformation + _log_prefactor * ((double)_ndof - 1.0) * log(_distance_modulus / _r_cutoff);
+  double _energy = 0.5 * _k * _spring_deformation * _spring_deformation;
+  if (_log_prefactor != 0.0 && _distance_modulus > _r_cutoff) {
+    _energy += _log_prefactor * ((double)_ndof - 1.0) * log(_distance_modulus / _r_cutoff);
+  }
+  
+  return _energy;
 }
 
 /* calculate energy and gradient from distance squared, gradient is in g/|rij|,
@@ -82,9 +87,19 @@ double inline BaseRadialGaussian::get_energy_gradient(pele::Array<double> const 
   
 #pragma simd
   for (size_t i = 0; i < x.size(); ++i) {
-    grad[i] = _k * _distance[i] * (1.0 - _l0/_distance_modulus) + _log_prefactor * ((double)_ndof - 1.0) * _distance[i]/(_distance_modulus*_distance_modulus) ;
+    // The gradient is singular at the cutoff, which does not matter since this potential is only used within Metropolis acceptances
+    grad[i] =  _k * _distance[i] * (1.0 - _l0/_distance_modulus);
+    if (_log_prefactor != 0.0 && _distance_modulus > _r_cutoff) {
+      grad[i] += _log_prefactor * ((double)_ndof - 1.0) * _distance[i]/(_distance_modulus*_distance_modulus) ;
+    }
   }
-  return 0.5 * _k * _spring_deformation * _spring_deformation + _log_prefactor * ((double)_ndof - 1.0) * log(_distance_modulus / _r_cutoff);
+
+  double _energy = 0.5 * _k * _spring_deformation * _spring_deformation;
+  if (_log_prefactor != 0.0 && _distance_modulus > _r_cutoff) {
+    _energy += _log_prefactor * ((double)_ndof - 1.0) * log(_distance_modulus / _r_cutoff);
+  }
+  
+  return _energy;
 }
 
 /**
