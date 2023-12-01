@@ -20,6 +20,7 @@ class BaseRadialGaussian : public BasePotential {
   double _k;
   double _l0;
   double _log_prefactor;
+  double _r_cutoff;
   const size_t _ndim;
   const size_t _nparticles;
   BaseRadialGaussian(
@@ -27,12 +28,14 @@ class BaseRadialGaussian : public BasePotential {
                const double k,
                const double l0,
                const double log_prefactor,
+               const double r_cutoff,
                const size_t ndim)
       : _origin(origin.copy()),
         _distance(origin.size()),
         _k(k),
         _l0(l0),
         _log_prefactor(log_prefactor),
+        _r_cutoff(r_cutoff),
         _ndim(ndim),
         _nparticles(origin.size() / _ndim) {}
 
@@ -44,9 +47,11 @@ class BaseRadialGaussian : public BasePotential {
   void set_k(double newk) { _k = newk; }
   void set_l0(double newl0) {_l0 = newl0; }
   void set_log_prefactor(double newlog_prefactor) {_log_prefactor = newlog_prefactor; }
+  void set_r_cutoff(double newr_cutoff) {_r_cutoff = newr_cutoff; }
   double get_k() { return _k; }
   double get_l0() {return _l0; }
   double get_log_prefactor() {return _log_prefactor; }
+  double get_r_cutoff() {return _r_cutoff; }
 };
 
 /* calculate energy from distance.
@@ -59,7 +64,7 @@ double inline BaseRadialGaussian::get_energy(pele::Array<double> const &x) {
   const size_t _ndof = _ndim * _nparticles;
   
   // The energy here assumes beta = 1, otherwise a 1/beta factor is needed in front of the log
-  return 0.5 * _k * _spring_deformation * _spring_deformation + _log_prefactor * ((double)_ndof - 1.0) * log(_distance_modulus);
+  return 0.5 * _k * _spring_deformation * _spring_deformation + _log_prefactor * ((double)_ndof - 1.0) * log(_distance_modulus / _r_cutoff);
 }
 
 /* calculate energy and gradient from distance squared, gradient is in g/|rij|,
@@ -79,7 +84,7 @@ double inline BaseRadialGaussian::get_energy_gradient(pele::Array<double> const 
   for (size_t i = 0; i < x.size(); ++i) {
     grad[i] = _k * _distance[i] * (1.0 - _l0/_distance_modulus) + _log_prefactor * ((double)_ndof - 1.0) * _distance[i]/(_distance_modulus*_distance_modulus) ;
   }
-  return 0.5 * _k * _spring_deformation * _spring_deformation + _log_prefactor * ((double)_ndof - 1.0) * log(_distance_modulus);
+  return 0.5 * _k * _spring_deformation * _spring_deformation + _log_prefactor * ((double)_ndof - 1.0) * log(_distance_modulus / _r_cutoff);
 }
 
 /**
@@ -87,8 +92,8 @@ double inline BaseRadialGaussian::get_energy_gradient(pele::Array<double> const 
  */
 class RadialGaussian : public BaseRadialGaussian {
  public:
-  RadialGaussian(pele::Array<double> origin, double k, double l0, double log_prefactor, size_t ndim)
-      : BaseRadialGaussian(origin, k, l0, log_prefactor, ndim) {}
+  RadialGaussian(pele::Array<double> origin, double k, double l0, double log_prefactor, double r_cutoff, size_t ndim)
+      : BaseRadialGaussian(origin, k, l0, log_prefactor, r_cutoff, ndim) {}
   virtual void inline _get_distance(const pele::Array<double> &x) {
     assert(x.size() == _origin.size());
 #pragma simd
@@ -103,8 +108,8 @@ class RadialGaussian : public BaseRadialGaussian {
  */
 class RadialGaussianCOM : public BaseRadialGaussian {
  public:
-  RadialGaussianCOM(pele::Array<double> origin, double k, double l0, double log_prefactor, size_t ndim)
-      : BaseRadialGaussian(origin, k, l0, log_prefactor, ndim) {}
+  RadialGaussianCOM(pele::Array<double> origin, double k, double l0, double log_prefactor, double r_cutoff, size_t ndim)
+      : BaseRadialGaussian(origin, k, l0, log_prefactor, r_cutoff, ndim) {}
   virtual void inline _get_distance(const pele::Array<double> &x) {
     assert(x.size() == _origin.size());
     pele::Array<double> delta_com(_ndim, 0);
