@@ -1,4 +1,3 @@
-from polars import pearson_corr
 from pele.potentials import PoweredCosineSum
 from pele.optimize import CVODEBDFOptimizer
 import numpy as np
@@ -48,10 +47,11 @@ def test_negative_cos_product():
 
 
 def test_minimum_convergence():
-    start_coords = np.ones(5) / 4
-    period = 1.0
-    potential = PoweredCosineSum(dim=5, period=period)
-    opt = CVODEBDFOptimizer(potential, start_coords)
-    res = opt.run(1000)
-    print(res.coords)
-    assert np.allclose(res.coords, 0.0, atol=1e-3)
+    dims = range(2, 7)
+    for dim in dims:
+        start_coords = 3 * np.ones(6) / 8
+        period = 1.0
+        potential = PoweredCosineSum(dim=6, period=period)
+        opt = CVODEBDFOptimizer(potential, start_coords)
+        res = opt.run(1000)
+        assert np.allclose(res.coords, 0.0, atol=1e-3)
