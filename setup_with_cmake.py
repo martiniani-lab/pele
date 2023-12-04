@@ -386,6 +386,7 @@ cxx_files = [
     "pele/potentials/_hs_wca_cpp.cxx",
     "pele/potentials/_wca_cpp.cxx",
     "pele/potentials/_harmonic_cpp.cxx",
+    "pele/potentials/_radial_gaussian_cpp.cxx",
     "pele/potentials/atlj.cxx",
     "pele/potentials/_frenkel.cxx",
     "pele/potentials/_inversepower_cpp.cxx",
