@@ -1,10 +1,12 @@
 #ifndef _PELE_TEST_FUNCS_H
 #define _PELE_TEST_FUNCS_H
 
+#include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <memory>
 #include <numbers>
+#include <numeric>
 #include <vector>
 
 #include "array.hpp"
@@ -122,70 +124,85 @@ class FlatHarmonic : public BasePotential {
   };
 };
 /**
- * Negative cosine product function for testing basin volume calculations.
+ * Negative cosine sum function for testing basin volume calculations.
  * Yields a hypercubic basin with volume period^dim.
+ * We also add a power to the energy to ensure that the hessian isn't diagonal.
+ * The full potential is given by
+ * $$
+ * V(x) = \left(offset + sum_i 1-cos(2\pi x_i/period)\right)^power
+ * $$
+ * The offset ensures that the hessian is smooth if power goes below 0.
  */
-class NegativeCosProduct : public BasePotential {
+class PoweredCosineSum : public BasePotential {
  private:
-  double period_factor;
-
+  double _period_factor;
   // precompute cos and sin values
-  Array<double> cos_values;
-  Array<double> sin_values;
-
- public:
-  NegativeCosProduct(size_t dim, double period = 1)
-      : period_factor(2 * std::numbers::pi / period),
-        cos_values(dim),
-        sin_values(dim){};
-  virtual ~NegativeCosProduct(){};
-  inline double get_energy(Array<double> const &x) {
-    double energy = 1;
-    for (auto x_i : x) {
-      energy *= -std::cos(period_factor * x_i);
+  Array<double> _cos_values;
+  Array<double> _sin_values;
+  double _power;
+  double _offset;
+  void _precompute_cos_sin(Array<double> const &x) {
+    for (size_t i = 0; i < x.size(); ++i) {
+      _cos_values[i] = std::cos(_period_factor * x[i]);
+      _sin_values[i] = std::sin(_period_factor * x[i]);
     }
-    return energy;
   }
 
-  double get_energy_gradient(Array<double> const &x, Array<double> &grad) {
-    double cos_product = 1;
-    for (size_t i = 0; i < x.size(); ++i) {
-      cos_values[i] = std::cos(period_factor * x[i]);
-      sin_values[i] = std::sin(period_factor * x[i]);
-      cos_product *= cos_values[i];
-    }
+ public:
+  PoweredCosineSum(size_t dim, double period = 1, double pow = 0.5,
+                   double offset = 0)
+      : _period_factor(2 * std::numbers::pi / period),
+        _cos_values(dim, 0.0),
+        _sin_values(dim, 0.0),
+        _power(pow),
+        _offset(offset){};
+  virtual ~PoweredCosineSum(){};
+  inline double get_energy(Array<double> const &x) {
+    _precompute_cos_sin(x);
+    double f_x = x.size() + _offset;
+    f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
+    return std::pow(f_x, _power);
+  }
+
+  double get_energy_gradient(const Array<double> &x, Array<double> &grad) {
+    _precompute_cos_sin(x);
+    double f_x = x.size() + _offset;
+    f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
+    // m for minus
+    double power_m_1_term = std::pow(f_x, _power - 1);
 
     for (size_t i = 0; i < x.size(); ++i) {
-      grad[i] = cos_product;
-      grad[i] *= sin_values[i] / cos_values[i];
+      grad[i] = _power * power_m_1_term * _period_factor * _sin_values[i];
     }
-    return -cos_product;
+    return power_m_1_term * f_x;
   }
 
   double get_energy_gradient_hessian(Array<double> const &x,
                                      Array<double> &grad, Array<double> &hess) {
-    double cos_product = 1;
+    _precompute_cos_sin(x);
+    double f_x = x.size() + _offset;
+    f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
+    // m for minus
+    double power_m_2 = std::pow(f_x, _power - 2);
     for (size_t i = 0; i < x.size(); ++i) {
-      cos_values[i] = std::cos(period_factor * x[i]);
-      sin_values[i] = std::sin(period_factor * x[i]);
-      cos_product *= cos_values[i];
-    }
-
-    for (size_t i = 0; i < x.size(); ++i) {
-      grad[i] = cos_product;
-      grad[i] *= sin_values[i] / cos_values[i];
+      grad[i] = _power * power_m_2 * f_x * _period_factor * _sin_values[i];
     }
 
     for (size_t i = 0; i < x.size(); ++i) {
       for (size_t j = 0; j < x.size(); ++j) {
+        double common_term = _power * (_power - 1) * power_m_2 *
+                             _period_factor * _period_factor * _sin_values[i] *
+                             _sin_values[j];
         if (i == j) {
-          hess[i * x.size() + j] = -cos_product;
+          hess[i * x.size() + j] =
+              common_term + _power * power_m_2 * f_x * _period_factor *
+                                _period_factor * _cos_values[i];
         } else {
-          hess[i * x.size() + j] = grad[i] * sin_values[j] / cos_values[j];
+          hess[i * x.size() + j] = common_term;
         }
       }
     }
-    return -cos_product;
+    return power_m_2 * f_x * f_x;
   }
 };
 
