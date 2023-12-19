@@ -70,7 +70,6 @@ class Saddle : public BasePotential {
 /**
  * 1d x cubed function for testing optimizers. WARNING stop minimization before
  * the energy goes too low.
- *
  */
 class XCube : public BasePotential {
  public:
@@ -164,7 +163,7 @@ class PoweredCosineSum : public BasePotential {
     return std::pow(f_x, _power);
   }
 
-  double get_energy_gradient(const Array<double> &x, Array<double> &grad) {
+  double add_energy_gradient(const Array<double> &x, Array<double> &grad) {
     _precompute_cos_sin(x);
     double f_x = x.size() + _offset;
     f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
@@ -172,9 +171,14 @@ class PoweredCosineSum : public BasePotential {
     double power_m_1_term = std::pow(f_x, _power - 1);
 
     for (size_t i = 0; i < x.size(); ++i) {
-      grad[i] = _power * power_m_1_term * _period_factor * _sin_values[i];
+      grad[i] += _power * power_m_1_term * _period_factor * _sin_values[i];
     }
     return power_m_1_term * f_x;
+  }
+
+  double get_energy_gradient(const Array<double> &x, Array<double> &grad) {
+    grad.assign(0);
+    return add_energy_gradient(x, grad);
   }
 
   double get_energy_gradient_hessian(Array<double> const &x,
