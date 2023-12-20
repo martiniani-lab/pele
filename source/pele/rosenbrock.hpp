@@ -181,6 +181,28 @@ class PoweredCosineSum : public BasePotential {
     return add_energy_gradient(x, grad);
   }
 
+  void add_hessian(const Array<double> &x, Array<double> &hess) {
+    _precompute_cos_sin(x);
+    double f_x = x.size() + _offset;
+    f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
+    // m for minus
+    double power_m_2 = std::pow(f_x, _power - 2);
+    for (size_t i = 0; i < x.size(); ++i) {
+      for (size_t j = 0; j < x.size(); ++j) {
+        double common_term = _power * (_power - 1) * power_m_2 *
+                             _period_factor * _period_factor * _sin_values[i] *
+                             _sin_values[j];
+        if (i == j) {
+          hess[i * x.size() + j] =
+              common_term + _power * power_m_2 * f_x * _period_factor *
+                                _period_factor * _cos_values[i];
+        } else {
+          hess[i * x.size() + j] = common_term;
+        }
+      }
+    }
+  }
+
   double get_energy_gradient_hessian(Array<double> const &x,
                                      Array<double> &grad, Array<double> &hess) {
     _precompute_cos_sin(x);
