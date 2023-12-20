@@ -1,5 +1,5 @@
 from pele.potentials import PoweredCosineSum
-from pele.optimize import CVODEBDFOptimizer
+from pele.optimize import CVODEBDFOptimizer, ExtendedMixedOptimizer
 import numpy as np
 
 np.random.seed(1234)
@@ -53,5 +53,16 @@ def test_minimum_convergence():
         period = 1.0
         potential = PoweredCosineSum(dim=6, period=period)
         opt = CVODEBDFOptimizer(potential, start_coords)
+        res = opt.run(1000)
+        assert np.allclose(res.coords, 0.0, atol=1e-3)
+
+
+def test_mxd_works_with_neg_cos():
+    dims = range(2, 7)
+    for dim in dims:
+        start_coords = 3 * np.ones(6) / 8
+        period = 1.0
+        potential = PoweredCosineSum(dim=6, period=period)
+        opt = ExtendedMixedOptimizer(potential, start_coords)
         res = opt.run(1000)
         assert np.allclose(res.coords, 0.0, atol=1e-3)
