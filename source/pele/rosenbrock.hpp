@@ -193,25 +193,26 @@ class PoweredCosineSum : public BasePotential {
                              _period_factor * _period_factor * _sin_values[i] *
                              _sin_values[j];
         if (i == j) {
-          hess[i * x.size() + j] =
+          hess[i * x.size() + j] +=
               common_term + _power * power_m_2 * f_x * _period_factor *
                                 _period_factor * _cos_values[i];
         } else {
-          hess[i * x.size() + j] = common_term;
+          hess[i * x.size() + j] += common_term;
         }
       }
     }
   }
 
-  double get_energy_gradient_hessian(Array<double> const &x,
-                                     Array<double> &grad, Array<double> &hess) {
+  inline double add_energy_gradient_hessian(Array<double> const &x,
+                                            Array<double> &grad,
+                                            Array<double> &hess) {
     _precompute_cos_sin(x);
     double f_x = x.size() + _offset;
     f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
     // m for minus
     double power_m_2 = std::pow(f_x, _power - 2);
     for (size_t i = 0; i < x.size(); ++i) {
-      grad[i] = _power * power_m_2 * f_x * _period_factor * _sin_values[i];
+      grad[i] += _power * power_m_2 * f_x * _period_factor * _sin_values[i];
     }
 
     for (size_t i = 0; i < x.size(); ++i) {
@@ -220,15 +221,22 @@ class PoweredCosineSum : public BasePotential {
                              _period_factor * _period_factor * _sin_values[i] *
                              _sin_values[j];
         if (i == j) {
-          hess[i * x.size() + j] =
+          hess[i * x.size() + j] +=
               common_term + _power * power_m_2 * f_x * _period_factor *
                                 _period_factor * _cos_values[i];
         } else {
-          hess[i * x.size() + j] = common_term;
+          hess[i * x.size() + j] += common_term;
         }
       }
     }
     return power_m_2 * f_x * f_x;
+  }
+
+  double get_energy_gradient_hessian(Array<double> const &x,
+                                     Array<double> &grad, Array<double> &hess) {
+    grad.assign(0);
+    hess.assign(0);
+    return add_energy_gradient_hessian(x, grad, hess);
   }
 };
 
