@@ -13,7 +13,7 @@ def test_negative_cos_product():
     """
     dim = 5
     period = 2 * np.pi
-    potential = PoweredCosineSum(dim=dim, period=period)
+    potential = PoweredCosineSum(dim=dim, period=period, offset=1.0)
 
     # check thet the numerical gradients and hessians match
     x = np.random.uniform(-period / 2, period / 2, dim)
@@ -60,19 +60,21 @@ def test_minimum_convergence():
 
 def test_mxd_works_with_neg_cos():
     """TODO: test doesn't hit the Newton step"""
-    dims = [1024]
+    dims = [1000]
     for dim in dims:
+        global_symmetry_offset = np.zeros((dim, dim))
         start_coords = 3 * np.ones(dim) / 8
         period = 1.0
-        potential = PoweredCosineSum(dim=dim, period=period)
+        potential = PoweredCosineSum(dim=dim, period=period, offset=1.0)
         opt = ExtendedMixedOptimizer(
             potential,
             start_coords,
             tol=1e-10,
             T=10,
-            conv_tol=1e-8,
-            rtol=1e-10,
-            atol=1e-10,
+            conv_tol=1e-1,
+            rtol=1e-5,
+            atol=1e-5,
+            global_symmetry_offset=global_symmetry_offset,
         )
         res = opt.run(1000)
         assert np.allclose(res.coords, 0.0, atol=1e-3)

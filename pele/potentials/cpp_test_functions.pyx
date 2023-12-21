@@ -28,7 +28,7 @@ cdef class _Cdef_PoweredCosineSum(_pele.BasePotential):
     
     
     
-    def __cinit__(self, int dim, double period, double power=0.5, double offset = 0.0):
+    def __cinit__(self, int dim, double period, double power=0.5, double offset = 1.0):
         self.cdim = dim
         self.cperiod = period
         self.cpower = power

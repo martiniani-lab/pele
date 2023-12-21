@@ -150,7 +150,7 @@ class PoweredCosineSum : public BasePotential {
 
  public:
   PoweredCosineSum(size_t dim, double period = 1, double pow = 0.5,
-                   double offset = 0)
+                   double offset = 1.0)
       : _period_factor(2 * std::numbers::pi / period),
         _cos_values(dim, 0.0),
         _sin_values(dim, 0.0),
