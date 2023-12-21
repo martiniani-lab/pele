@@ -1,6 +1,7 @@
 #ifndef _PELE_TEST_FUNCS_H
 #define _PELE_TEST_FUNCS_H
 
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
@@ -157,6 +158,10 @@ class PoweredCosineSum : public BasePotential {
         _offset(offset){};
   virtual ~PoweredCosineSum(){};
   inline double get_energy(Array<double> const &x) {
+    if (_cos_values.size() != x.size()) {
+      throw std::runtime_error(
+          "dim passed to cosine sume not the same size as input");
+    }
     _precompute_cos_sin(x);
     double f_x = x.size() + _offset;
     f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
@@ -164,6 +169,10 @@ class PoweredCosineSum : public BasePotential {
   }
 
   double add_energy_gradient(const Array<double> &x, Array<double> &grad) {
+    if (_cos_values.size() != x.size()) {
+      throw std::runtime_error(
+          "dim passed to cosine sume not the same size as input");
+    }
     _precompute_cos_sin(x);
     double f_x = x.size() + _offset;
     f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
@@ -182,6 +191,10 @@ class PoweredCosineSum : public BasePotential {
   }
 
   void add_hessian(const Array<double> &x, Array<double> &hess) {
+    if (_cos_values.size() != x.size()) {
+      throw std::runtime_error(
+          "dim passed to cosine sume not the same size as input");
+    }
     _precompute_cos_sin(x);
     double f_x = x.size() + _offset;
     f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
@@ -206,6 +219,10 @@ class PoweredCosineSum : public BasePotential {
   inline double add_energy_gradient_hessian(Array<double> const &x,
                                             Array<double> &grad,
                                             Array<double> &hess) {
+    if (_cos_values.size() != x.size()) {
+      throw std::runtime_error(
+          "dim passed to cosine sume not the same size as input");
+    }
     _precompute_cos_sin(x);
     double f_x = x.size() + _offset;
     f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);

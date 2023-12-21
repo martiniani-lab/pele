@@ -50,7 +50,6 @@ def test_negative_cos_product():
 def test_minimum_convergence():
     dims = range(6, 7)
     for dim in dims:
-        print(dim)
         start_coords = 3 * np.ones(dim) / 8
         period = 1.0
         potential = PoweredCosineSum(dim=dim, period=period)
