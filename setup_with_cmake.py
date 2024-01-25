@@ -382,13 +382,23 @@ def get_compiler_env(compiler_id):
         )
     else:
         raise Exception("compiler id not known")
-    # this line only works is the build directory has been deleted
+    # this line only works if the build directory has been deleted
     cmake_compiler_args = shlex.split(
-        "-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
+        "-D CMAKE_EXPORT_COMPILE_COMMANDS=1 "
+        "-D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
         "-D CMAKE_LINKER={} -D CMAKE_AR={}".format(
             env["CC"], env["CXX"], env["LD"], env["AR"]
         )
     )
+    # Add search path for brew installed openblas on MacOs.
+    if sys.platform.startswith("darwin"):
+        openblas = (
+            (subprocess.check_output(["brew", "--prefix", "openblas"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        cmake_compiler_args.extend(
+            shlex.split(f"-D CMAKE_PREFIX_PATH={openblas}"))
     return env, cmake_compiler_args
 
 
