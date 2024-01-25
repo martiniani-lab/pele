@@ -300,6 +300,101 @@ cxx_modules = [
 fortran_modules = fmodules.module_list
 ext_modules = fortran_modules + cxx_modules
 
+
+def get_compiler_env(compiler_id):
+    """
+    set environment variables for the C and C++ compiler:
+    set CC and CXX paths to `which` output because cmake
+    does not alway choose the right compiler
+    """
+    env = os.environ.copy()
+
+    if compiler_id.lower() in ("unix"):
+        print(env, "eeenv")
+        if sys.platform.startswith("darwin"):
+            cc = None
+            version = 10
+            while version < 21:
+                try:
+                    cc = (
+                        (subprocess.check_output(["which", f"gcc-{version}"]))
+                        .decode(encoding)
+                        .rstrip("\n")
+                    )
+                    break
+                except subprocess.CalledProcessError:
+                    version += 1
+            if version == 21:
+                raise RuntimeError("Could not detect a GNU C compiler "
+                                   "with an executable in the format 'gcc-version' "
+                                   "on your darwin platform (tried versions 10 to "
+                                   "20). Make sure that you installed a GNU C "
+                                   "compiler and that its executable is in one of your "
+                                   "PATH directories.")
+            assert cc is not None
+            env["CC"] = cc
+            env["CXX"] = (
+                (subprocess.check_output(["which", f"g++-{version}"]))
+                .decode(encoding)
+                .rstrip("\n")
+            )
+        else:
+            env["CC"] = (
+                (subprocess.check_output(["which", "gcc"]))
+                .decode(encoding)
+                .rstrip("\n")
+            )
+            env["CXX"] = (
+                (subprocess.check_output(["which", "g++"]))
+                .decode(encoding)
+                .rstrip("\n")
+            )
+        env["LD"] = (
+            (subprocess.check_output(["which", "ld"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        env["AR"] = (
+            (subprocess.check_output(["which", "ar"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+    elif compiler_id.lower() in ("intel"):
+        env["CC"] = (
+            (subprocess.check_output(["which", "icc"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        env["CXX"] = (
+            (subprocess.check_output(["which", "icpc"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        env["LD"] = (
+            (subprocess.check_output(["which", "xild"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        env["AR"] = (
+            (subprocess.check_output(["which", "xiar"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+    else:
+        raise Exception("compiler id not known")
+    # this line only works is the build directory has been deleted
+    cmake_compiler_args = shlex.split(
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
+        "-D CMAKE_LINKER={} -D CMAKE_AR={}".format(
+            env["CC"], env["CXX"], env["LD"], env["AR"]
+        )
+    )
+    return env, cmake_compiler_args
+
+
+env, _ = get_compiler_env(idcompiler)
+os.environ = env
+
 setup(
     name="pele",
     version="0.1",
@@ -471,75 +566,12 @@ with open("CMakeLists.txt", "w") as fout:
         fout.write("make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/%s)\n" % fname)
 
 
-def set_compiler_env(compiler_id):
-    """
-    set environment variables for the C and C++ compiler:
-    set CC and CXX paths to `which` output because cmake
-    does not alway choose the right compiler
-    """
-    env = os.environ.copy()
-
-    if compiler_id.lower() in ("unix"):
-        print(env, "eeenv")
-        env["CC"] = (
-            (subprocess.check_output(["which", "gcc"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["CXX"] = (
-            (subprocess.check_output(["which", "g++"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["LD"] = (
-            (subprocess.check_output(["which", "ld"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["AR"] = (
-            (subprocess.check_output(["which", "ar"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-    elif compiler_id.lower() in ("intel"):
-        env["CC"] = (
-            (subprocess.check_output(["which", "icc"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["CXX"] = (
-            (subprocess.check_output(["which", "icpc"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["LD"] = (
-            (subprocess.check_output(["which", "xild"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["AR"] = (
-            (subprocess.check_output(["which", "xiar"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-    else:
-        raise Exception("compiler id not known")
-    # this line only works is the build directory has been deleted
-    cmake_compiler_args = shlex.split(
-        "-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
-        "-D CMAKE_LINKER={} -D CMAKE_AR={}".format(
-            env["CC"], env["CXX"], env["LD"], env["AR"]
-        )
-    )
-    return env, cmake_compiler_args
-
-
 def run_cmake(compiler_id="unix"):
     if not os.path.isdir(cmake_build_dir):
         os.makedirs(cmake_build_dir)
     print("\nrunning cmake in directory", cmake_build_dir)
     cwd = os.path.abspath(os.path.dirname(__file__))
-    env, cmake_compiler_args = set_compiler_env(compiler_id)
+    env, cmake_compiler_args = get_compiler_env(compiler_id)
     print(env, "-------")
     p = subprocess.call(["sh", "./opt/intel/oneapi/setvars.sh"], env=env)
     p = subprocess.call(
