@@ -16,9 +16,27 @@ endif()
 
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 
+# include LAPACK AND BLAS
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+
+# set OpenMP
+find_package(OpenMP)
+message("${OpenMP_C_FLAGS}")
+message("${OpenMP_CXX_FLAGS}")
+
+if(OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb3 -O0 -fsanitize=address -static-libasan")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb3 -O0 -fsanitize=address -static-libasan")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb3 -O0")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb3 -O0")
+  if(NOT APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -static-libasan")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -static-libasan")
+  endif(NOT APPLE)
 elseif(CMAKE_BUILD_TYPE STREQUAL Release)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG")
@@ -32,20 +50,6 @@ message(CMAKE_CONFIGURATION_TYPES ${CMAKE_CONFIGURATION_TYPES})
 # find conda path for python header
 set(PYTHON_INCLUDE_DIR $ENV{CONDA_PREFIX}/include/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR})
 message("PYTHON INCLUDE DIR" ${PYTHON_INCLUDE_DIR})
-
-# set OpenMP
-find_package(OpenMP)
-message("${OpenMP_C_FLAGS}")
-message("${OpenMP_CXX_FLAGS}")
-
-if(OPENMP_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
-
-# include LAPACK AND BLAS
-find_package(BLAS REQUIRED)
-find_package(LAPACK REQUIRED)
 
 set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/../../extern/install")
 
@@ -114,6 +118,9 @@ target_link_libraries(test_main pele_lib gtest gtest_main pthread)
 target_link_libraries(test_main ${SUNDIALS_LIBRARIES})
 target_link_libraries(test_main ${BLAS_LIBRARIES})
 target_link_libraries(test_main ${LAPACK_LIBRARIES})
+if(APPLE)
+  target_link_options(test_main PUBLIC "LINKER:-ld_classic")
+endif(APPLE)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
