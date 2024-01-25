@@ -389,6 +389,7 @@ cxx_files = [
     "pele/potentials/_frenkel.cxx",
     "pele/potentials/_frozen_dof.cxx",
     "pele/potentials/_harmonic_cpp.cxx",
+    "pele/potentials/_hs_wca_cpp.cxx",
     "pele/potentials/_inversepower_cpp.cxx",
     "pele/potentials/_inversepower_stillinger_cpp.cxx",
     "pele/potentials/_inversepower_stillinger_cut_cpp.cxx",
@@ -404,7 +405,6 @@ cxx_files = [
     "pele/potentials/atlj.cxx",
     "pele/potentials/combine_potentials.cxx",
     "pele/potentials/cpp_test_functions.cxx",
-    "pele/potentials/_hs_wca_cpp.cxx",
     "pele/rates/_ngt_cpp.cxx",
     "pele/utils/_cpp_utils.cxx",
     "pele/utils/_pressure_tensor.cxx",
@@ -413,10 +413,10 @@ cxx_files = [
 
 if with_cvode:
     cxx_files += [
-        "pele/optimize/generic_mixed_descent.cxx",
         "pele/optimize/_mxd_end_only.cxx",
-        "pele/optimize/extended_mixed_descent.cxx",
         "pele/optimize/cvode_opt.cxx",
+        "pele/optimize/extended_mixed_descent.cxx",
+        "pele/optimize/generic_mixed_descent.cxx",
     ]
 
 
