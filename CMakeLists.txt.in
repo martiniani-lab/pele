@@ -13,25 +13,9 @@ message(PYTHON_LDFLAGS)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # osx makes the suffix for shared object libraries .dylib
-#IF(APPLE)
- # SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
-
-  #set(HOMEBREW_PREFIX "/usr/local"
-   # CACHE PATH "Path to Homebrew installation")
-
-  #set(CMAKE_PREFIX_PATH
-   #   "${HOMEBREW_PREFIX}"
-    #  # These libraries are keg-only and not loaded into
-     # # the root prefix by default (to avoid clashes).
-    #  "${HOMEBREW_PREFIX}/opt/lapack"
-    #  "${HOMEBREW_PREFIX}/opt/openblas"
-    #  "${HOMEBREW_PREFIX}/opt/gcc/lib/gcc/13"
- # )
-
-  #set(CMAKE_C_COMPILER "${HOMEBREW_PREFIX}/bin/gcc-13")
-  #set(CMAKE_CXX_COMPILER "${HOMEBREW_PREFIX}/bin/g++-13")
-
-#ENDIF(APPLE)
+IF(APPLE)
+  SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
+ENDIF(APPLE)
 
 set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/extern/install")
 
@@ -157,7 +141,7 @@ add_library(pele_lib SHARED ${pele_sources})
 if(APPLE)
   target_link_libraries(pele_lib PUBLIC ${SUNDIALS_LIBRARIES})
   target_link_libraries(pele_lib PUBLIC ${LAPACK_LIBRARIES})
-  target_link_directories(pele_lib PUBLIC "/usr/local/opt/gettext/lib")
+  target_link_directories(pele_lib PUBLIC ${Intl_LIBRARY_DIR})
 endif(APPLE)
 
 function(make_cython_lib cython_cxx_source)
