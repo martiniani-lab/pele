@@ -403,8 +403,13 @@ def get_compiler_env(compiler_id):
             .decode(encoding)
             .rstrip("\n")
         )
+        gettext = (
+            (subprocess.check_output(["brew", "--prefix", "gettext"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
         cmake_compiler_args.extend(
-            shlex.split(f"-D CMAKE_PREFIX_PATH={openblas}"))
+            shlex.split(f"-D CMAKE_PREFIX_PATH={openblas};{gettext}"))
     return env, cmake_compiler_args
 
 
