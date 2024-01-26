@@ -138,10 +138,11 @@ class GetThermodynamicInfoParallel(object):
 
         # initialize workers
         self.workers = []
-        # Explicitly use fork to start a new process
-        # This is the default on Linux but not on MacOs which uses spawn
+        # Explicitly use fork to start a new process.
+        # This is the default on Linux but not on MacOs that uses spawn.
         # With spawning, data is sent by pickling, however, some Cython
-        # classes can currently not be pickled
+        # classes can currently not be pickled.
+        # See https://github.com/pytest-dev/pytest-flask/issues/104
         ctx = mp.get_context('fork')
         self.send_queue = ctx.Queue()
         self.done_queue = ctx.Queue()
