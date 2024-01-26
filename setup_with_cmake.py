@@ -541,9 +541,13 @@ def get_ldflags(opt="--ldflags"):
     getvar = sysconfig.get_config_var
     pyver = sysconfig.get_config_var("VERSION")
     libs = getvar("LIBS").split() + getvar("SYSLIBS").split()
-    libs.append(
-        "-lpython" + pyver
-    )  # need to add m depending on the installation
+    if not sys.platform.startswith("darwin"):
+        # On MacOs, explicitly including the python library leads to a
+        # segmentation fault when libraries created by cython are
+        # imported
+        libs.append(
+            "-lpython" + pyver
+        )  # need to add m depending on the installation
     # add the prefix/lib/pythonX.Y/config dir, but only if there is no
     # shared library in prefix/lib/.
     if opt == "--ldflags":
