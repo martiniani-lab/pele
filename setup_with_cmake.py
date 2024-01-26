@@ -57,10 +57,16 @@ jargs, remaining_args = parser.parse_known_args(sys.argv)
 idcompiler = None
 if not jargs.compiler or jargs.compiler in ("unix", "gnu", "gcc"):
     idcompiler = "unix"
-    remaining_args += ["-c", idcompiler]
+    # Only add command line option back if it was really set
+    # This allows to use setup.py install (which does not allow -c option)
+    if jargs.compiler:
+        remaining_args += ["-c", idcompiler]
 elif jargs.compiler in ("intelem", "intel", "icc", "icpc"):
     idcompiler = "intel"
-    remaining_args += ["-c", idcompiler]
+    # Only add command line option back if it was really set
+    # This allows to use setup.py install (which does not allow -c option)
+    if jargs.compiler:
+        remaining_args += ["-c", idcompiler]
 
 with_cvode = jargs.with_cvode
 
