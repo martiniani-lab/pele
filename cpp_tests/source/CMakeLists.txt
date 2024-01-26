@@ -34,6 +34,8 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb3 -O0")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb3 -O0")
   if(NOT APPLE)
+    # Apple does not support libsanitizer
+    # See https://github.com/orgs/Homebrew/discussions/3384#discussioncomment-6263471
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -static-libasan")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -static-libasan")
   endif(NOT APPLE)
