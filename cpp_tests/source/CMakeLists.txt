@@ -121,6 +121,7 @@ target_link_libraries(test_main ${SUNDIALS_LIBRARIES})
 target_link_libraries(test_main ${BLAS_LIBRARIES})
 target_link_libraries(test_main ${LAPACK_LIBRARIES})
 if(APPLE)
+  # See https://github.com/rust-lang/rust/issues/113783#issuecomment-1758036690
   target_link_options(test_main PUBLIC "LINKER:-ld_classic")
 endif(APPLE)
 
