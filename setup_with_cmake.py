@@ -540,7 +540,8 @@ def get_ldflags(opt="--ldflags"):
             # libdir does this for centOS and more importantly conda environments
             libs.insert(0, "-L" + getvar("LIBDIR"))
         if not getvar("PYTHONFRAMEWORK"):
-            libs.extend(getvar("LINKFORSHARED").split())
+            # See https://github.com/kovidgoyal/kitty/issues/289#issuecomment-416040645
+            libs.extend(getvar("LINKFORSHARED").replace('-Wl,-stack_size,1000000', '').split())
     return " ".join(libs)
 
 
