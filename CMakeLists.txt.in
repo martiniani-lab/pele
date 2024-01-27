@@ -1,6 +1,9 @@
 # this file is meant to be parsed by python before being a proper CMakeLists.txt file
 # in particular, the following strings will be set to their proper values by python when
 # making CMakeLists.txt
+
+cmake_minimum_required(VERSION 3.18)
+
 project(pele)
 message("${CMAKE_C_COMPILER}")
 message("${CMAKE_CXX_COMPILER}")
@@ -63,9 +66,7 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 # target_link_librarires().  CMake kept interpreting the flag CoreFoundation
 # as a library and appending -l to it and the compiler would complain
 unset(CMAKE_SHARED_LINKER_FLAGS CACHE)
-set(CMAKE_SHARED_LINKER_FLAGS ${PYTHON_LDFLAGS} CACHE type string)
-
-cmake_minimum_required(VERSION 2.8)
+set(CMAKE_SHARED_LINKER_FLAGS ${PYTHON_LDFLAGS} CACHE STRING flags)
 
 # LAPACK (this also searches for BLAS automatically)
 find_package(LAPACK REQUIRED)
