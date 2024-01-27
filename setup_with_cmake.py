@@ -344,6 +344,17 @@ def get_compiler_env(compiler_id):
                 .decode(encoding)
                 .rstrip("\n")
             )
+            # Numpy distutils looks for the F90 environment variable to
+            # determine the Fortran compiler.
+            # See https://stackoverflow.com/questions/55373559/numpy-distutils-specify-intel-fortran-compiler-in-setup-py
+            env["F90"] = (
+                (subprocess.check_output(["which", f"gfortran-{version}"]))
+                .decode(encoding)
+                .rstrip("\n")
+            )
+            # Cmake looks for the FC environment variable to determine
+            # the Fortran compiler.
+            # See https://cmake.org/cmake/help/latest/envvar/FC.html
             env["FC"] = (
                 (subprocess.check_output(["which", f"gfortran-{version}"]))
                 .decode(encoding)
