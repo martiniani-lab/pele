@@ -319,8 +319,8 @@ def get_compiler_env(compiler_id):
         print(env, "eeenv")
         if sys.platform.startswith("darwin"):
             cc = None
-            version = 10
-            while version < 21:
+            version = 20
+            while version > 9:
                 try:
                     cc = (
                         (subprocess.check_output(["which", f"gcc-{version}"]))
@@ -329,8 +329,8 @@ def get_compiler_env(compiler_id):
                     )
                     break
                 except subprocess.CalledProcessError:
-                    version += 1
-            if version == 21:
+                    version -= 1
+            if version == 9:
                 raise RuntimeError("Could not detect a GNU C compiler "
                                    "with an executable in the format 'gcc-version' "
                                    "on your darwin platform (tried versions 10 to "
