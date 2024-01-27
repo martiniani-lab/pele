@@ -175,10 +175,10 @@ The Ubuntu packages (apt-get) for these are: python-qt4, python-opengl, and pyth
 In fedora Fedora (yum) you will want the packages: PyQt4, and PyOpenGl
 
 
-Commands using Conda (Ubuntu and MacOs)
+Commands using Conda
 """"""""""""""""""""""""""
-We recommend to install `Anaconda <https://docs.anaconda.com>`_ and
-that you set up a new conda environment using::
+We recommend to install `Anaconda <https://docs.anaconda.com>`_ .
+On Ubuntu, set up a new conda environment using::
 
   $ conda create -n myenv python=3.9
   $ conda activate myenv
@@ -189,6 +189,12 @@ that you set up a new conda environment using::
   $ pip install omp-thread-count # for multi-threading
   $ pip install future # used for upgrading to python 3
   $ pip install pytest # in case you want to ensure library runs correctly (optional)
+
+On MacOs, follow the same commands but make sure that the
+installation of omp-thread-count uses the correct compiler by setting
+the CC environment variable::
+
+  $ CC=gcc-13 pip install omp-thread-count # for multi-threading
 
 Compilation
 -----------
