@@ -344,6 +344,11 @@ def get_compiler_env(compiler_id):
                 .decode(encoding)
                 .rstrip("\n")
             )
+            env["FC"] = (
+                (subprocess.check_output(["which", f"gfortran-{version}"]))
+                .decode(encoding)
+                .rstrip("\n")
+            )
         else:
             env["CC"] = (
                 (subprocess.check_output(["which", "gcc"]))
