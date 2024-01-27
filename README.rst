@@ -177,7 +177,7 @@ In fedora Fedora (yum) you will want the packages: PyQt4, and PyOpenGl
 
 Commands using Conda
 """"""""""""""""""""""""""
-We recommend to install `Anaconda <https://docs.anaconda.com>`_ .
+We recommend to install `Anaconda <https://docs.anaconda.com>`_.
 On Ubuntu, set up a new conda environment using::
 
   $ conda create -n myenv python=3.9
