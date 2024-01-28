@@ -71,11 +71,11 @@ On older versions of Ubuntu you may need to provide a version number, and set th
      $ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
      $ sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-10 100
 
-Commands for MacOs (Intel-based)
+Commands for MacOs
 """"""""""""""""""""""""""""""""""""""""""
-On Intel-based Macs, we recommend using `homebrew <https://brew.sh>`_
-to install the necessary software and libraries for compilation. Once
-homebrew is installed, use::
+On Macs (for both Intel and Apple silicon), we recommend using
+`homebrew <https://brew.sh>`_ to install the necessary software
+and libraries for compilation. Once homebrew is installed, use::
 
    $ brew install gcc@13 cmake openblas gettext
 
@@ -106,7 +106,7 @@ Run::
   $ cp -r eigen/Eigen install/include/
   $ cd ..
 
-Commands for MacOs (Intel-based)
+Commands for MacOs
 """"""""""""""""""""""""""""""""""""""""""
 Use the commands for Ubuntu, however, set the correct compilers when
 running the install script `sun_inst.sh` by setting the CC and CXX
@@ -129,7 +129,7 @@ pele requires python 3.9 and the following packages
 #. networkx:
      For graph functionality. https://networkx.lanl.gov
 
-#. cython (version 0.29.37):
+#. cython (version 0.29.36):
      For calling C++ code from python for speed
 
 #. pyyaml:
@@ -182,7 +182,7 @@ On Ubuntu, set up a new conda environment using::
 
   $ conda create -n myenv python=3.9
   $ conda activate myenv
-  $ conda install numpy scipy networkx matplotlib cython=0.29.37
+  $ conda install numpy scipy networkx matplotlib cython=0.29.36
   $ conda install -c conda-forge sqlalchemy=1.4.51 munkres pyro4 scikit-sparse
   $ conda install -c conda-forge -c schrodinger pymol-bundle
   $ pip install pyyaml
@@ -195,6 +195,9 @@ installation of omp-thread-count uses the correct compiler by setting
 the CC environment variable::
 
   $ CC=gcc-13 pip install omp-thread-count # for multi-threading
+
+Also, note that the pymol-bundle package is not available on Apple
+silicon.
 
 Compilation
 -----------

@@ -31,7 +31,7 @@ jobs:
           auto-activate-base: false
       - name: Install python dependencies
         run: |
-          conda install -y numpy scipy matplotlib networkx cython=0.29.37
+          conda install -y numpy scipy matplotlib networkx cython=0.29.36
           conda install -y -c conda-forge sqlalchemy=1.4.51 munkres pyro4 scikit-sparse
           pip install pytest future pyyaml omp-thread-count
 
@@ -105,7 +105,7 @@ jobs:
           auto-activate-base: false
       - name: Install python dependencies
         run: |
-          conda install -y numpy scipy matplotlib networkx cython=0.29.37
+          conda install -y numpy scipy matplotlib networkx cython=0.29.36
           conda install -y -c conda-forge sqlalchemy=1.4.51 munkres pyro4 scikit-sparse
           CC=gcc-13 pip install omp-thread-count
           pip install pytest future pyyaml
