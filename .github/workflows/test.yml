@@ -92,8 +92,6 @@ jobs:
         uses: actions/checkout@v3
       - name: Install homebrew
         uses: Homebrew/actions/setup-homebrew@master
-      - name: Update homebrew
-        run: brew update && brew upgrade
       - name: Install software and libraries
         run: brew install gcc@13 cmake openblas gettext
       - uses: conda-incubator/setup-miniconda@v2
