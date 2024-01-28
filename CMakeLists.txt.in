@@ -1,6 +1,9 @@
 # this file is meant to be parsed by python before being a proper CMakeLists.txt file
 # in particular, the following strings will be set to their proper values by python when
 # making CMakeLists.txt
+
+cmake_minimum_required(VERSION 3.18)
+
 project(pele)
 message("${CMAKE_C_COMPILER}")
 message("${CMAKE_CXX_COMPILER}")
@@ -63,13 +66,19 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 # target_link_librarires().  CMake kept interpreting the flag CoreFoundation
 # as a library and appending -l to it and the compiler would complain
 unset(CMAKE_SHARED_LINKER_FLAGS CACHE)
-set(CMAKE_SHARED_LINKER_FLAGS ${PYTHON_LDFLAGS} CACHE type string)
+set(CMAKE_SHARED_LINKER_FLAGS ${PYTHON_LDFLAGS} CACHE STRING flags)
 
-cmake_minimum_required(VERSION 2.8)
-
-# BLAS and LAPACK
-find_package(BLAS REQUIRED)
+# LAPACK (this also searches for BLAS automatically)
 find_package(LAPACK REQUIRED)
+
+# PYTHON_LDFLAGS attempts to link against the gettext libintl library
+# The gettext functions are not part of the C standard library on Apple
+# See https://cmake.org/cmake/help/latest/module/FindIntl.html
+if(APPLE)
+  find_package(Intl REQUIRED)
+  include_directories(${Intl_INCLUDE_DIRS})
+  get_filename_component(Intl_LIBRARY_DIR ${Intl_LIBRARIES} DIRECTORY)
+endif(APPLE)
 
 # message(${BLAS_LIBRARIES})
 
@@ -130,11 +139,38 @@ if(INCLUDE_SUNDIALS)
 endif()
 
 add_library(pele_lib SHARED ${pele_sources})
+if(APPLE)
+  target_link_libraries(pele_lib PUBLIC ${SUNDIALS_LIBRARIES})
+  target_link_libraries(pele_lib PUBLIC ${LAPACK_LIBRARIES})
+  target_link_directories(pele_lib PUBLIC ${Intl_LIBRARY_DIR})
+endif(APPLE)
+
+# Apple changed the ld linker in Xcode 15 which breaks pele.
+# The classic linker can be chosen with -ld_classic flag.
+# However, on older Xcode versions, this flag throws an error.
+# Thus, we simply check here whether this flag exists.
+# See https://www.scivision.dev/xcode-ld_classic/
+# For the undefined flag, see
+# https://github.com/nasa/cFE/issues/476#issuecomment-579436106
+if(APPLE)
+  include(CheckLinkerFlag)
+  check_linker_flag(C "-ld_classic" CLASSIC_FLAG)
+  if(CLASSIC_FLAG)
+    set(APPLE_LINK_OPTIONS "LINKER:-undefined,dynamic_lookup,-ld_classic")
+  else(CLASSIC_FLAG)
+    set(APPLE_LINK_OPTIONS "LINKER:-undefined,dynamic_lookup")
+  endif(CLASSIC_FLAG)
+endif(APPLE)
 
 function(make_cython_lib cython_cxx_source)
   get_filename_component(library_name ${cython_cxx_source} NAME)
   string(REGEX REPLACE ".cxx$" "" library_name ${library_name})
   add_library(${library_name} SHARED ${cython_cxx_source})
+
+  if(APPLE)
+    target_link_options(${library_name} PUBLIC ${APPLE_LINK_OPTIONS})
+  endif(APPLE)
+
   target_link_libraries(${library_name} PUBLIC pele_lib)
 
   if(INCLUDE_SUNDIALS)

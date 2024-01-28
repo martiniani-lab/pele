@@ -15,7 +15,7 @@ from pele.thermodynamics._normalmodes import NormalModeError
 
 
 class _ThermoWorker(
-    mp.Process
+    mp.context.ForkProcess
 ):  # pragma: no cover (coverage can't see it because it's in a separate process)
     """worker to calculate the thermodynamic data in a separate process
 
@@ -138,8 +138,14 @@ class GetThermodynamicInfoParallel(object):
 
         # initialize workers
         self.workers = []
-        self.send_queue = mp.Queue()
-        self.done_queue = mp.Queue()
+        # Explicitly use fork to start a new process.
+        # This is the default on Linux but not on MacOs that uses spawn.
+        # With spawning, data is sent by pickling, however, some Cython
+        # classes can currently not be pickled.
+        # See https://github.com/pytest-dev/pytest-flask/issues/104
+        ctx = mp.get_context('fork')
+        self.send_queue = ctx.Queue()
+        self.done_queue = ctx.Queue()
         for _ in range(npar):
             worker = _ThermoWorker(
                 self.send_queue, self.done_queue, system, verbose=self.verbose
@@ -223,8 +229,7 @@ class GetThermodynamicInfoParallel(object):
             print("closing workers normally")
         for worker in self.workers:
             worker.join()
-            worker.terminate()
-            worker.join()
+            worker.close()
 
     def _kill_workers(self):
         """kill the workers without waiting for them to finish"""

@@ -4,6 +4,7 @@ from past.builtins import basestring
 from builtins import object
 import glob
 import os
+import platform
 import sys
 import subprocess
 import shutil
@@ -57,10 +58,16 @@ jargs, remaining_args = parser.parse_known_args(sys.argv)
 idcompiler = None
 if not jargs.compiler or jargs.compiler in ("unix", "gnu", "gcc"):
     idcompiler = "unix"
-    remaining_args += ["-c", idcompiler]
+    # Only add command line option back if it was really set
+    # This allows to use setup.py install (which does not allow -c option)
+    if jargs.compiler:
+        remaining_args += ["-c", idcompiler]
 elif jargs.compiler in ("intelem", "intel", "icc", "icpc"):
     idcompiler = "intel"
-    remaining_args += ["-c", idcompiler]
+    # Only add command line option back if it was really set
+    # This allows to use setup.py install (which does not allow -c option)
+    if jargs.compiler:
+        remaining_args += ["-c", idcompiler]
 
 with_cvode = jargs.with_cvode
 
@@ -239,7 +246,7 @@ class ModuleList(object):
         self.module_list.append(Extension(modname, [filename], **self.kwargs))
 
 
-extra_compile_args = ["-mavx"]
+extra_compile_args = ["-mavx"] if not platform.processor() == "arm" else []
 if False:
     # for bug testing
     extra_compile_args += ["-DF2PY_REPORT_ON_ARRAY_COPY=1"]
@@ -299,6 +306,132 @@ cxx_modules = [
 
 fortran_modules = fmodules.module_list
 ext_modules = fortran_modules + cxx_modules
+
+
+def get_compiler_env(compiler_id):
+    """
+    set environment variables for the C and C++ compiler:
+    set CC and CXX paths to `which` output because cmake
+    does not alway choose the right compiler
+    """
+    env = os.environ.copy()
+
+    if compiler_id.lower() in ("unix"):
+        print(env, "eeenv")
+        if sys.platform.startswith("darwin"):
+            cc = None
+            version = 20
+            while version > 9:
+                try:
+                    cc = (
+                        (subprocess.check_output(["which", f"gcc-{version}"]))
+                        .decode(encoding)
+                        .rstrip("\n")
+                    )
+                    break
+                except subprocess.CalledProcessError:
+                    version -= 1
+            if version == 9:
+                raise RuntimeError("Could not detect a GNU C compiler "
+                                   "with an executable in the format 'gcc-version' "
+                                   "on your darwin platform (tried versions 10 to "
+                                   "20). Make sure that you installed a GNU C "
+                                   "compiler and that its executable is in one of your "
+                                   "PATH directories.")
+            assert cc is not None
+            env["CC"] = cc
+            env["CXX"] = (
+                (subprocess.check_output(["which", f"g++-{version}"]))
+                .decode(encoding)
+                .rstrip("\n")
+            )
+            # Numpy distutils looks for the F90 environment variable to
+            # determine the Fortran compiler.
+            # See https://stackoverflow.com/questions/55373559/numpy-distutils-specify-intel-fortran-compiler-in-setup-py
+            env["F90"] = (
+                (subprocess.check_output(["which", f"gfortran-{version}"]))
+                .decode(encoding)
+                .rstrip("\n")
+            )
+            # Cmake looks for the FC environment variable to determine
+            # the Fortran compiler.
+            # See https://cmake.org/cmake/help/latest/envvar/FC.html
+            env["FC"] = (
+                (subprocess.check_output(["which", f"gfortran-{version}"]))
+                .decode(encoding)
+                .rstrip("\n")
+            )
+        else:
+            env["CC"] = (
+                (subprocess.check_output(["which", "gcc"]))
+                .decode(encoding)
+                .rstrip("\n")
+            )
+            env["CXX"] = (
+                (subprocess.check_output(["which", "g++"]))
+                .decode(encoding)
+                .rstrip("\n")
+            )
+        env["LD"] = (
+            (subprocess.check_output(["which", "ld"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        env["AR"] = (
+            (subprocess.check_output(["which", "ar"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+    elif compiler_id.lower() in ("intel"):
+        env["CC"] = (
+            (subprocess.check_output(["which", "icc"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        env["CXX"] = (
+            (subprocess.check_output(["which", "icpc"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        env["LD"] = (
+            (subprocess.check_output(["which", "xild"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        env["AR"] = (
+            (subprocess.check_output(["which", "xiar"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+    else:
+        raise Exception("compiler id not known")
+    # this line only works if the build directory has been deleted
+    cmake_compiler_args = shlex.split(
+        "-D CMAKE_EXPORT_COMPILE_COMMANDS=1 "
+        "-D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
+        "-D CMAKE_LINKER={} -D CMAKE_AR={}".format(
+            env["CC"], env["CXX"], env["LD"], env["AR"]
+        )
+    )
+    # Add search path for brew installed openblas on MacOs.
+    if sys.platform.startswith("darwin"):
+        openblas = (
+            (subprocess.check_output(["brew", "--prefix", "openblas"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        gettext = (
+            (subprocess.check_output(["brew", "--prefix", "gettext"]))
+            .decode(encoding)
+            .rstrip("\n")
+        )
+        cmake_compiler_args.extend(
+            shlex.split(f"-D CMAKE_PREFIX_PATH={openblas};{gettext}"))
+    return env, cmake_compiler_args
+
+
+env, _ = get_compiler_env(idcompiler)
+os.environ = env
 
 setup(
     name="pele",
@@ -378,46 +511,45 @@ setup(
 
 cmake_build_dir = "build/cmake"
 
-# TODO Sort in alphabetical order to easily identify missing files
 cxx_files = [
-    "pele/potentials/_lj_cpp.cxx",
-    "pele/potentials/_morse_cpp.cxx",
-    "pele/potentials/_frozen_dof.cxx",
-    "pele/potentials/_hs_wca_cpp.cxx",
-    "pele/potentials/_wca_cpp.cxx",
-    "pele/potentials/_harmonic_cpp.cxx",
-    "pele/potentials/_radial_gaussian_cpp.cxx",
-    "pele/potentials/atlj.cxx",
+    "pele/angleaxis/_cpp_aa.cxx",
+    "pele/distance/_get_distance_cpp.cxx",
+    "pele/distance/_put_in_box_cpp.cxx",
+    "pele/optimize/_gradient_descent_cpp.cxx",
+    "pele/optimize/_lbfgs_cpp.cxx",
+    "pele/optimize/_modified_fire_cpp.cxx",
+    "pele/optimize/_pele_opt.cxx",
     "pele/potentials/_frenkel.cxx",
+    "pele/potentials/_frozen_dof.cxx",
+    "pele/potentials/_harmonic_cpp.cxx",
+    "pele/potentials/_hs_wca_cpp.cxx",
     "pele/potentials/_inversepower_cpp.cxx",
     "pele/potentials/_inversepower_stillinger_cpp.cxx",
     "pele/potentials/_inversepower_stillinger_cut_cpp.cxx",
     "pele/potentials/_inversepower_stillinger_cut_quad.cxx",
-    "pele/potentials/_sumgaussianpot_cpp.cxx",
-    "pele/potentials/combine_potentials.cxx",
-    "pele/potentials/cpp_test_functions.cxx",
+    "pele/potentials/_lj_cpp.cxx",
+    "pele/potentials/_morse_cpp.cxx",
     "pele/potentials/_pele.cxx",
     "pele/potentials/_pspin_spherical_cpp.cxx",
-    "pele/optimize/_pele_opt.cxx",
-    "pele/optimize/_gradient_descent_cpp.cxx",
-    "pele/optimize/_lbfgs_cpp.cxx",
-    "pele/optimize/_modified_fire_cpp.cxx",
     "pele/potentials/_pythonpotential.cxx",
-    "pele/angleaxis/_cpp_aa.cxx",
+    "pele/potentials/_radial_gaussian_cpp.cxx",
+    "pele/potentials/_sumgaussianpot_cpp.cxx",
+    "pele/potentials/_wca_cpp.cxx",
+    "pele/potentials/atlj.cxx",
+    "pele/potentials/combine_potentials.cxx",
+    "pele/potentials/cpp_test_functions.cxx",
+    "pele/rates/_ngt_cpp.cxx",
     "pele/utils/_cpp_utils.cxx",
     "pele/utils/_pressure_tensor.cxx",
-    "pele/rates/_ngt_cpp.cxx",
-    "pele/distance/_get_distance_cpp.cxx",
-    "pele/distance/_put_in_box_cpp.cxx",
 ]
 
 
 if with_cvode:
     cxx_files += [
-        "pele/optimize/generic_mixed_descent.cxx",
         "pele/optimize/_mxd_end_only.cxx",
-        "pele/optimize/extended_mixed_descent.cxx",
         "pele/optimize/cvode_opt.cxx",
+        "pele/optimize/extended_mixed_descent.cxx",
+        "pele/optimize/generic_mixed_descent.cxx",
     ]
 
 
@@ -426,9 +558,13 @@ def get_ldflags(opt="--ldflags"):
     getvar = sysconfig.get_config_var
     pyver = sysconfig.get_config_var("VERSION")
     libs = getvar("LIBS").split() + getvar("SYSLIBS").split()
-    libs.append(
-        "-lpython" + pyver
-    )  # need to add m depending on the installation
+    if not sys.platform.startswith("darwin"):
+        # On MacOs, explicitly including the python library leads to a
+        # segmentation fault when libraries created by cython are
+        # imported
+        libs.append(
+            "-lpython" + pyver
+        )  # need to add m depending on the installation
     # add the prefix/lib/pythonX.Y/config dir, but only if there is no
     # shared library in prefix/lib/.
     if opt == "--ldflags":
@@ -436,7 +572,8 @@ def get_ldflags(opt="--ldflags"):
             # libdir does this for centOS and more importantly conda environments
             libs.insert(0, "-L" + getvar("LIBDIR"))
         if not getvar("PYTHONFRAMEWORK"):
-            libs.extend(getvar("LINKFORSHARED").split())
+            # See https://github.com/kovidgoyal/kitty/issues/289#issuecomment-416040645
+            libs.extend(getvar("LINKFORSHARED").replace('-Wl,-stack_size,1000000', '').split())
     return " ".join(libs)
 
 
@@ -472,75 +609,12 @@ with open("CMakeLists.txt", "w") as fout:
         fout.write("make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/%s)\n" % fname)
 
 
-def set_compiler_env(compiler_id):
-    """
-    set environment variables for the C and C++ compiler:
-    set CC and CXX paths to `which` output because cmake
-    does not alway choose the right compiler
-    """
-    env = os.environ.copy()
-
-    if compiler_id.lower() in ("unix"):
-        print(env, "eeenv")
-        env["CC"] = (
-            (subprocess.check_output(["which", "gcc"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["CXX"] = (
-            (subprocess.check_output(["which", "g++"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["LD"] = (
-            (subprocess.check_output(["which", "ld"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["AR"] = (
-            (subprocess.check_output(["which", "ar"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-    elif compiler_id.lower() in ("intel"):
-        env["CC"] = (
-            (subprocess.check_output(["which", "icc"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["CXX"] = (
-            (subprocess.check_output(["which", "icpc"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["LD"] = (
-            (subprocess.check_output(["which", "xild"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-        env["AR"] = (
-            (subprocess.check_output(["which", "xiar"]))
-            .decode(encoding)
-            .rstrip("\n")
-        )
-    else:
-        raise Exception("compiler id not known")
-    # this line only works is the build directory has been deleted
-    cmake_compiler_args = shlex.split(
-        "-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
-        "-D CMAKE_LINKER={} -D CMAKE_AR={}".format(
-            env["CC"], env["CXX"], env["LD"], env["AR"]
-        )
-    )
-    return env, cmake_compiler_args
-
-
 def run_cmake(compiler_id="unix"):
     if not os.path.isdir(cmake_build_dir):
         os.makedirs(cmake_build_dir)
     print("\nrunning cmake in directory", cmake_build_dir)
     cwd = os.path.abspath(os.path.dirname(__file__))
-    env, cmake_compiler_args = set_compiler_env(compiler_id)
+    env, cmake_compiler_args = get_compiler_env(compiler_id)
     print(env, "-------")
     p = subprocess.call(["sh", "./opt/intel/oneapi/setvars.sh"], env=env)
     p = subprocess.call(
