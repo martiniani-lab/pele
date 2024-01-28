@@ -4,6 +4,7 @@ from past.builtins import basestring
 from builtins import object
 import glob
 import os
+import platform
 import sys
 import subprocess
 import shutil
@@ -245,7 +246,7 @@ class ModuleList(object):
         self.module_list.append(Extension(modname, [filename], **self.kwargs))
 
 
-extra_compile_args = ["-mavx"]
+extra_compile_args = ["-mavx"] if not platform.processor() == "arm" else []
 if False:
     # for bug testing
     extra_compile_args += ["-DF2PY_REPORT_ON_ARRAY_COPY=1"]
