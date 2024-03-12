@@ -240,6 +240,7 @@ void LBFGS::reset(pele::Array<double> &x0) {
   iter_number_ = 0;
   nfev_ = 0;
   x_.assign(x0);
+  H0_ = 0.1;
   func_initialized_ = false;
 }
 }  // namespace pele
