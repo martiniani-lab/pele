@@ -10,6 +10,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <random>
 #include <stdexcept>
 #include <vector>
 
@@ -52,6 +53,21 @@ TEST(EMXD, Reset) {
              6.27529, 1.81749,  6.02049, 6.70693, 5.36309, 4.6089,   4.9476,
              5.54674, 0.677836, 6.04457, 4.9083,  1.24044, 5.09315,  0.108931,
              2.18619, 6.52932,  2.85539, 2.30303};
+
+  Array<double> x_reset_copy = x_start.copy();
+
+  // generate random coordinates in a box of size box_length
+  // use std::uniform_real_distribution to generate random numbers
+  // set rng
+  std::mt19937 rng(0);
+  for (auto i = 0; i < x_start.size(); i++) {
+    x_reset_copy[i] = std::uniform_real_distribution<>(0, box_length)(rng);
+  }
+
+  std::mt19937 rng2(5);
+  for (auto i = 0; i < x_start.size(); i++) {
+    x_start[i] = std::uniform_real_distribution<>(0, box_length)(rng2);
+  }
   Array<double> x_dense = x_start.copy();
   boxvec = {box_length, box_length};
 
@@ -69,14 +85,25 @@ TEST(EMXD, Reset) {
                                    1e-4, 1e-4, false, Array<double>(0), false,
                                    1, pele::StopCriterionType::GRADIENT);
 
-  Array<double> original_x = x_start.copy();
+  pele::ExtendedMixedOptimizer mxd_reference(
+      pot, x_reset_copy, nullptr, 1e-10, 10, 1, 1e-4, 1e-4, 1e-4, false,
+      Array<double>(0), false, 1, pele::StopCriterionType::GRADIENT);
 
+  Array<double> reference_start_x = x_reset_copy.copy();
+  // reference run
+  mxd_reference.run(4000);
+  Array<double> test_mxd_reference_x = mxd_reference.get_x().copy();
+  int nfev_reference = mxd_reference.get_nfev();
+  int nhev_reference = mxd_reference.get_nhev();
+
+  // run with original
+  Array<double> original_x = x_start.copy();
   mxd.run(4000);
   Array<double> x_before_reset = mxd.get_x().copy();
   int nfev = mxd.get_nfev();
   int nhev = mxd.get_nhev();
 
-  mxd.reset(original_x);
+  mxd.reset(reference_start_x);
   ASSERT_FALSE(mxd.success());
   ASSERT_EQ(mxd.get_nfev(), 0);
   ASSERT_EQ(mxd.get_nhev(), 0);
@@ -86,10 +113,10 @@ TEST(EMXD, Reset) {
   int nfev_after_reset = mxd.get_nfev();
   int nhev_after_reset = mxd.get_nhev();
 
-  ASSERT_EQ(nfev, nfev_after_reset);
-  ASSERT_EQ(nhev, nhev_after_reset);
+  ASSERT_EQ(nfev_reference, nfev_after_reset);
+  ASSERT_EQ(nhev_reference, nhev_after_reset);
 
   for (auto i = 0; i < x_start.size(); ++i) {
-    ASSERT_EQ(x_before_reset[i], x_after_reset[i]);
+    ASSERT_EQ(test_mxd_reference_x[i], x_after_reset[i]);
   }
 }
