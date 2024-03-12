@@ -93,7 +93,11 @@ jobs:
       - name: Install homebrew
         uses: Homebrew/actions/setup-homebrew@master
       - name: Install software and libraries
-        run: brew install gcc@13 cmake openblas gettext
+        run: |
+          brew list gcc@13 || brew install gcc@13
+          brew list cmake || brew install cmake
+          brew list openblas || brew install openblas
+          brew list gettext || brew install gettext
       - uses: conda-incubator/setup-miniconda@v2
         with:
           installer-url: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.11.0-2-MacOSX-x86_64.sh
