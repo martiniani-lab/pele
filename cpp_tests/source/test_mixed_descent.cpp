@@ -37,35 +37,32 @@ TEST(EMXD, Reset) {
   power = 2.5;
   const int pow2 = 5;
 
-  n_particles = 16;
+  n_particles = 32;
   n_dof = n_particles * _ndim;
   phi = 0.9;
 
   int n_1 = n_particles / 2;
   int n_2 = n_particles - n_1;
 
-  radii = {0.982267, 0.959526, 1.00257,  0.967356, 1.04893, 0.97781,
-           0.954191, 0.988939, 0.980737, 0.964811, 1.04198, 0.926199,
-           0.969865, 1.08593,  1.01491,  0.968892};
-  box_length = 7.40204;
-  x_start = {1.8777,  3.61102,  1.70726, 6.93457, 2.14539, 2.55779,  4.1191,
-             7.02707, 0.357781, 4.92849, 1.28547, 2.83375, 0.775204, 6.78136,
-             6.27529, 1.81749,  6.02049, 6.70693, 5.36309, 4.6089,   4.9476,
-             5.54674, 0.677836, 6.04457, 4.9083,  1.24044, 5.09315,  0.108931,
-             2.18619, 6.52932,  2.85539, 2.30303};
+  radii =
+      pele::generate_bidisperse_radii(n_1, n_2, 1.0, 1.4, 0.05, 0.07).copy();
+  box_length = pele::get_box_length(radii, _ndim, 0.9);
 
-  Array<double> x_reset_copy = x_start.copy();
+  x_start =
+      pele::generate_random_coordinates(box_length, n_particles, _ndim, 0);
+  Array<double> x_reset_copy =
+      pele::generate_random_coordinates(box_length, n_particles, _ndim, 42);
 
   // generate random coordinates in a box of size box_length
   // use std::uniform_real_distribution to generate random numbers
   // set rng
   std::mt19937 rng(0);
-  for (auto i = 0; i < x_start.size(); i++) {
+  for (auto i = 0; i < n_particles; i++) {
     x_reset_copy[i] = std::uniform_real_distribution<>(0, box_length)(rng);
   }
 
   std::mt19937 rng2(5);
-  for (auto i = 0; i < x_start.size(); i++) {
+  for (auto i = 0; i < n_particles; i++) {
     x_start[i] = std::uniform_real_distribution<>(0, box_length)(rng2);
   }
   Array<double> x_dense = x_start.copy();
