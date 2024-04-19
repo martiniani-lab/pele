@@ -259,13 +259,10 @@ void ExtendedMixedOptimizer::one_iteration() {
     n_phase_2_steps += 1;
     prev_phase_is_phase1 = false;
 
-    // find abs max of the step
-    double max_step = 0;
-    for (size_t i = 0; i < step.size(); i++) {
-      if (abs(step[i]) > max_step) {
-        max_step = abs(step[i]);
-      }
-    }
+    auto compare = [](double a, double b) { return abs(a) < abs(b); };
+    auto max_step_it = std::max_element(step.begin(), step.end(), compare);
+    double max_step = abs(*max_step_it);
+
     // if max step is too big, switch back to CVODE
     if (max_step > conv_tol_) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
