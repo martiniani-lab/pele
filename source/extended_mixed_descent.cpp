@@ -59,7 +59,6 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       line_search_method(this, step),
       iterative_(iterative),
       m_global_symmetry_offset(global_symmetry_offset.copy()) {
-#if OPTIMIZER_DEBUG_LEVEL > 0
   std::cout << "ExtendedMixedOptimizer Parameters" << std::endl;
   std::cout << "x0: " << x0 << std::endl;
   std::cout << "tol: " << tol << std::endl;
@@ -73,7 +72,6 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   } else {
     std::cout << "iterative: false " << std::endl;
   }
-#endif
 
   if (iterative) {
     hessian_type_ = ITERATIVE;
@@ -353,6 +351,11 @@ void ExtendedMixedOptimizer::reset(Array<double> &x0) {
 }
 
 void ExtendedMixedOptimizer::reset_cvode() {
+  // std::cout << "resetting cvode objects" << std::endl;
+  // std::cout << "previous nfev: " << nfev_ << std::endl;
+  // std::cout << "previous nhev: " << udata.nhev << std::endl;
+  // std::cout << "previous n_phase_1_steps: " << n_phase_1_steps << std::endl;
+  // std::cout << "previous n_phase_2_steps: " << n_phase_2_steps << std::endl;
   nfev_ = 0;
   nhev_ = 0;
   succeeded_ = false;
