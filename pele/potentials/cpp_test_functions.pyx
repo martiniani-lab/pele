@@ -3,7 +3,7 @@
 """
 import numpy as np
 
-from ctypes import c_size_t as size_t, c_double as double
+from ctypes import c_size_t as size_t
 from libcpp cimport bool as cbool
 cimport numpy as np
 
@@ -31,7 +31,7 @@ cdef class _Cdef_PoweredCosineSum(_pele.BasePotential):
     
     def __cinit__(self, int dim, period, double power=0.5, double offset = 1.0):
         self.cdim = dim
-        if isinstance(period, double):
+        if isinstance(period, float):
             period_array = np.full(dim, period)
         else:
             period_array = period
