@@ -3,18 +3,19 @@
 """
 import numpy as np
 
-from ctypes import c_size_t as size_t
+from ctypes import c_size_t as size_t, c_double as double
 from libcpp cimport bool as cbool
 cimport numpy as np
 
 cimport pele.potentials._pele as _pele
+from pandas.core.arrays import period_array
 from pele.potentials._pele cimport shared_ptr
-from pele.potentials._pele cimport array_wrap_np, array_wrap_np_size_t
+from pele.potentials._pele cimport array_wrap_np, array_wrap_np_size_t, pele_array_to_np
 
 
 cdef extern from "pele/rosenbrock.hpp" namespace "pele":
     cdef cppclass cPoweredCosineSum "pele::PoweredCosineSum":
-        cPoweredCosineSum(size_t dim, double period, double cpower, double coffset) except +
+        cPoweredCosineSum(size_t dim, _pele.Array[double] periods, double cpower, double coffset) except +
         
         
         
@@ -22,21 +23,26 @@ cdef class _Cdef_PoweredCosineSum(_pele.BasePotential):
     """Define the python interface to the c++ PoweredCosineSum potential implementation
     """
     cdef int cdim
-    cdef double cperiod
+    cdef _pele.Array[double] cperiods
     cdef double cpower
     cdef double coffset
     
     
     
-    def __cinit__(self, int dim, double period, double power=0.5, double offset = 1.0):
+    def __cinit__(self, int dim, period, double power=0.5, double offset = 1.0):
         self.cdim = dim
-        self.cperiod = period
+        if isinstance(period, double):
+            period_array = np.full(dim, period)
+        else:
+            period_array = period
+        self.cperiods = array_wrap_np(period_array)
         self.cpower = power
         self.coffset = offset
-        self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*>new cPoweredCosineSum(self.cdim, self.cperiod, self.cpower, self.coffset))
+        self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*>new cPoweredCosineSum(
+            self.cdim, self.cperiods, self.cpower, self.coffset))
     
     def __reduce__(self):
-        return (PoweredCosineSum, (self.cdim, self.cperiod, self.cpower, self.coffset))
+        return (PoweredCosineSum, (self.cdim, pele_array_to_np(self.cperiods), self.cpower, self.coffset))
     
     
 class PoweredCosineSum(_Cdef_PoweredCosineSum):
