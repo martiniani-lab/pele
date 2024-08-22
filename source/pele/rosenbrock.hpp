@@ -156,7 +156,7 @@ class PoweredCosineSum : public BasePotential {
         _sin_values(dim, 0.0),
         _power(pow),
         _offset(offset){};
-  PoweredCosineSum(size_t dim, const Array<double> &periods, double pow = 0.5,
+  PoweredCosineSum(size_t dim, Array<double> periods, double pow = 0.5,
                    double offset = 1.0)
         : _cos_values(dim, 0.0),
           _sin_values(dim, 0.0),
@@ -165,6 +165,7 @@ class PoweredCosineSum : public BasePotential {
     if (periods.size() != dim) {
       throw std::runtime_error("periods size not equal to dim");
     }
+    _period_factors = Array<double>(dim);
     for (size_t i = 0; i < dim; ++i) {
       _period_factors[i] = 2.0 * std::numbers::pi / periods[i];
     }
