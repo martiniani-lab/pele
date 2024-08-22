@@ -26,9 +26,7 @@ cdef class _Cdef_PoweredCosineSum(_pele.BasePotential):
     cdef _pele.Array[double] cperiods
     cdef double cpower
     cdef double coffset
-    
-    
-    
+
     def __cinit__(self, int dim, period, double power=0.5, double offset = 1.0):
         self.cdim = dim
         if isinstance(period, float):
