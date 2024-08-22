@@ -135,7 +135,7 @@ class FlatHarmonic : public BasePotential {
  */
 class PoweredCosineSum : public BasePotential {
  private:
-  double _period_factor;
+  Array<double> _period_factors;
   // precompute cos and sin values
   Array<double> _cos_values;
   Array<double> _sin_values;
@@ -143,19 +143,32 @@ class PoweredCosineSum : public BasePotential {
   double _offset;
   void _precompute_cos_sin(Array<double> const &x) {
     for (size_t i = 0; i < x.size(); ++i) {
-      _cos_values[i] = std::cos(_period_factor * x[i]);
-      _sin_values[i] = std::sin(_period_factor * x[i]);
+      _cos_values[i] = std::cos(_period_factors[i] * x[i]);
+      _sin_values[i] = std::sin(_period_factors[i] * x[i]);
     }
   }
 
  public:
   PoweredCosineSum(size_t dim, double period = 1, double pow = 0.5,
                    double offset = 1.0)
-      : _period_factor(2 * std::numbers::pi / period),
+      : _period_factors(dim, 2.0 * std::numbers::pi / period),
         _cos_values(dim, 0.0),
         _sin_values(dim, 0.0),
         _power(pow),
         _offset(offset){};
+  PoweredCosineSum(size_t dim, const Array<double> &periods, double pow = 0.5,
+                   double offset = 1.0)
+        : _cos_values(dim, 0.0),
+          _sin_values(dim, 0.0),
+          _power(pow),
+          _offset(offset) {
+    if (periods.size() != dim) {
+      throw std::runtime_error("periods size not equal to dim");
+    }
+    for (size_t i = 0; i < dim; ++i) {
+      _period_factors[i] = 2.0 * std::numbers::pi / periods[i];
+    }
+  }
   virtual ~PoweredCosineSum(){};
   inline double get_energy(Array<double> const &x) {
     if (_cos_values.size() != x.size()) {
@@ -180,7 +193,7 @@ class PoweredCosineSum : public BasePotential {
     double power_m_1_term = std::pow(f_x, _power - 1);
 
     for (size_t i = 0; i < x.size(); ++i) {
-      grad[i] += _power * power_m_1_term * _period_factor * _sin_values[i];
+      grad[i] += _power * power_m_1_term * _period_factors[i] * _sin_values[i];
     }
     return power_m_1_term * f_x;
   }
@@ -203,12 +216,12 @@ class PoweredCosineSum : public BasePotential {
     for (size_t i = 0; i < x.size(); ++i) {
       for (size_t j = 0; j < x.size(); ++j) {
         double common_term = _power * (_power - 1) * power_m_2 *
-                             _period_factor * _period_factor * _sin_values[i] *
+                             _period_factors[i] * _period_factors[j] * _sin_values[i] *
                              _sin_values[j];
         if (i == j) {
           hess[i * x.size() + j] +=
-              common_term + _power * power_m_2 * f_x * _period_factor *
-                                _period_factor * _cos_values[i];
+              common_term + _power * power_m_2 * f_x * _period_factors[i] *
+                                _period_factors[i] * _cos_values[i];
         } else {
           hess[i * x.size() + j] += common_term;
         }
@@ -229,18 +242,18 @@ class PoweredCosineSum : public BasePotential {
     // m for minus
     double power_m_2 = std::pow(f_x, _power - 2);
     for (size_t i = 0; i < x.size(); ++i) {
-      grad[i] += _power * power_m_2 * f_x * _period_factor * _sin_values[i];
+      grad[i] += _power * power_m_2 * f_x * _period_factors[i] * _sin_values[i];
     }
 
     for (size_t i = 0; i < x.size(); ++i) {
       for (size_t j = 0; j < x.size(); ++j) {
         double common_term = _power * (_power - 1) * power_m_2 *
-                             _period_factor * _period_factor * _sin_values[i] *
+                             _period_factors[i] * _period_factors[j] * _sin_values[i] *
                              _sin_values[j];
         if (i == j) {
           hess[i * x.size() + j] +=
-              common_term + _power * power_m_2 * f_x * _period_factor *
-                                _period_factor * _cos_values[i];
+              common_term + _power * power_m_2 * f_x * _period_factors[i] *
+                                _period_factors[i] * _cos_values[i];
         } else {
           hess[i * x.size() + j] += common_term;
         }
