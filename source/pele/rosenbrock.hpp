@@ -136,6 +136,7 @@ class FlatHarmonic : public BasePotential {
 class PoweredCosineSum : public BasePotential {
  private:
   Array<double> _period_factors;
+  Array<double> _prefactors;
   // precompute cos and sin values
   Array<double> _cos_values;
   Array<double> _sin_values;
@@ -143,8 +144,8 @@ class PoweredCosineSum : public BasePotential {
   double _offset;
   void _precompute_cos_sin(Array<double> const &x) {
     for (size_t i = 0; i < x.size(); ++i) {
-      _cos_values[i] = std::cos(_period_factors[i] * x[i]);
-      _sin_values[i] = std::sin(_period_factors[i] * x[i]);
+      _cos_values[i] = _prefactors[i] * std::cos(_period_factors[i] * x[i]);
+      _sin_values[i] = _prefactors[i] * std::sin(_period_factors[i] * x[i]);
     }
   }
 
@@ -152,13 +153,15 @@ class PoweredCosineSum : public BasePotential {
   PoweredCosineSum(size_t dim, double period = 1, double pow = 0.5,
                    double offset = 1.0)
       : _period_factors(dim, 2.0 * std::numbers::pi / period),
+        _prefactors(dim, period),
         _cos_values(dim, 0.0),
         _sin_values(dim, 0.0),
         _power(pow),
         _offset(offset){};
   PoweredCosineSum(size_t dim, Array<double> periods, double pow = 0.5,
                    double offset = 1.0)
-        : _cos_values(dim, 0.0),
+        : _prefactors(periods.copy()),
+          _cos_values(dim, 0.0),
           _sin_values(dim, 0.0),
           _power(pow),
           _offset(offset) {
