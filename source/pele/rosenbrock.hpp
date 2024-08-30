@@ -157,14 +157,14 @@ class PoweredCosineSum : public BasePotential {
         _cos_values(dim, 0.0),
         _sin_values(dim, 0.0),
         _power(pow),
-        _offset(offset){};
+        _offset(offset + dim * period){};
   PoweredCosineSum(size_t dim, Array<double> periods, double pow = 0.5,
                    double offset = 1.0)
         : _prefactors(periods.copy()),
           _cos_values(dim, 0.0),
           _sin_values(dim, 0.0),
           _power(pow),
-          _offset(offset) {
+          _offset(offset + std::accumulate(periods.begin(), periods.end(), 0.0)) {
     if (periods.size() != dim) {
       throw std::runtime_error("periods size not equal to dim");
     }
@@ -180,7 +180,7 @@ class PoweredCosineSum : public BasePotential {
           "dim passed to cosine sume not the same size as input");
     }
     _precompute_cos_sin(x);
-    double f_x = x.size() + _offset;
+    double f_x = _offset;
     f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
     return std::pow(f_x, _power);
   }
@@ -191,7 +191,7 @@ class PoweredCosineSum : public BasePotential {
           "dim passed to cosine sume not the same size as input");
     }
     _precompute_cos_sin(x);
-    double f_x = x.size() + _offset;
+    double f_x = _offset;
     f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
     // m for minus
     double power_m_1_term = std::pow(f_x, _power - 1);
@@ -213,7 +213,7 @@ class PoweredCosineSum : public BasePotential {
           "dim passed to cosine sume not the same size as input");
     }
     _precompute_cos_sin(x);
-    double f_x = x.size() + _offset;
+    double f_x = _offset;
     f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
     // m for minus
     double power_m_2 = std::pow(f_x, _power - 2);
@@ -241,7 +241,7 @@ class PoweredCosineSum : public BasePotential {
           "dim passed to cosine sume not the same size as input");
     }
     _precompute_cos_sin(x);
-    double f_x = x.size() + _offset;
+    double f_x = _offset;
     f_x -= std::accumulate(_cos_values.begin(), _cos_values.end(), 0.0);
     // m for minus
     double power_m_2 = std::pow(f_x, _power - 2);
