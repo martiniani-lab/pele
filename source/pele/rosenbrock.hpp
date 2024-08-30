@@ -150,23 +150,25 @@ class PoweredCosineSum : public BasePotential {
   }
 
  public:
-  PoweredCosineSum(size_t dim, double period = 1, double pow = 0.5,
-                   double offset = 1.0)
+  PoweredCosineSum(size_t dim, double period = 1.0, double pow = 0.5, double offset = 1.0)
       : _period_factors(dim, 2.0 * std::numbers::pi / period),
-        _prefactors(dim, period),
+        _prefactors(dim, 1.0),
         _cos_values(dim, 0.0),
         _sin_values(dim, 0.0),
         _power(pow),
-        _offset(offset + dim * period){};
-  PoweredCosineSum(size_t dim, Array<double> periods, double pow = 0.5,
-                   double offset = 1.0)
-        : _prefactors(periods.copy()),
+        _offset(offset + dim){};
+  PoweredCosineSum(size_t dim, Array<double> periods, Array<double> prefactors,
+				   double pow = 0.5, double offset = 1.0)
+        : _prefactors(prefactors.copy()),
           _cos_values(dim, 0.0),
           _sin_values(dim, 0.0),
           _power(pow),
-          _offset(offset + std::accumulate(periods.begin(), periods.end(), 0.0)) {
+          _offset(offset + std::accumulate(prefactors.begin(), prefactors.end(), 0.0)) {
     if (periods.size() != dim) {
       throw std::runtime_error("periods size not equal to dim");
+    }
+	if (prefactors.size() != dim) {
+      throw std::runtime_error("prefactors size not equal to dim");
     }
     _period_factors = Array<double>(dim);
     for (size_t i = 0; i < dim; ++i) {
