@@ -8,7 +8,6 @@ from libcpp cimport bool as cbool
 cimport numpy as np
 
 cimport pele.potentials._pele as _pele
-from pandas.core.arrays import period_array
 from pele.potentials._pele cimport shared_ptr
 from pele.potentials._pele cimport array_wrap_np, array_wrap_np_size_t, pele_array_to_np
 
