@@ -38,11 +38,14 @@ namespace pele {
  */
 inline Array<double> generate_bidisperse_radii(int n_1, int n_2, double r_1,
                                                double r_2, double r_std_1,
-                                               double r_std_2) {
+                                               double r_std_2, int seed = -1) {
   Array<double> radii(n_1 + n_2);
 
   std::random_device rd;
-  std::mt19937 gen(rd());
+  if (seed == -1) {
+    seed = rd();
+  }
+  std::mt19937 gen(seed);
 
   for (int i = 0; i < n_1; i++) {
     radii[i] = r_1 + r_std_1 * std::normal_distribution<double>(0, 1)(gen);

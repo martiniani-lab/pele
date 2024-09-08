@@ -71,6 +71,7 @@ class ExtendedMixedOptimizer : public GradientOptimizer {
   // instatiate if you want to print to file
 #if PRINT_TO_FILE == 1
   std::ofstream trajectory_file;
+  std::ofstream hessian_eigvals_file;
 #endif
   /**
    * extension of the original potential that ensures the hessian is positive

@@ -1,4 +1,6 @@
 #include "pele/newton.hpp"
+#include <fstream>
+
 #include "pele/array.hpp"
 #include "pele/eigen_interface.hpp"
 #include "pele/optimizer.hpp"
@@ -18,18 +20,18 @@ Newton::Newton(std::shared_ptr<BasePotential> potential,
                const pele::Array<double> &x0, double tol, double threshold,
                bool use_rattler_mask)
     : GradientOptimizer(potential, x0, tol),
-      _threshold(threshold),
-      _tolerance(tol),
       _hessian(x0.size(), x0.size()),
       _gradient(x0.size()),
       _x(x0.size()),
-      _rattlers_found(false),
+      _x_old(x0.size()),
+      _gradient_old(x0.size()),
+      _line_search(this, 1.0),
+      _tolerance(tol),
+      _threshold(threshold),
+      _nhev(0),
       _use_rattler_mask(use_rattler_mask),
       _not_rattlers(x0.size(), true),
-      _line_search(this, 1.0),
-      _nhev(0),
-      _x_old(x0.size()),
-      _gradient_old(x0.size())  // use step size of 1.0 for newton
+      _rattlers_found(false)  // use step size of 1.0 for newton
 {
   // write pele array data into the Eigen array
   for (size_t i = 0; i < x0.size(); ++i) {
@@ -152,7 +154,7 @@ void Newton::one_iteration() {
   }
   cout << "starting step size" << starting_norm << endl;
   cout << "step size rescaled" << stepnorm << endl;
-  // Hacky since we're not wrapping the original pele arrays. but we can change
+  // Hacky since we're not wrapping the original pele array. but we can change
   // this if this if it becomes a speed constraint/causes maintainability issues
   x_ = x_pele;
   g_ = gradient_pele;

@@ -137,7 +137,7 @@ TEST(EMXD, MultiRun) {
   power = 2.5;
   const int pow2 = 5;
 
-  n_particles = 16;
+  n_particles = 128;
   n_dof = n_particles * _ndim;
   phi = 0.9;
 
@@ -163,13 +163,13 @@ TEST(EMXD, MultiRun) {
   double atol = rtol;
   x_start =
       pele::generate_random_coordinates(box_length, n_particles, _ndim, 0);
-  pele::ExtendedMixedOptimizer mxd(pot, x_start, nullptr, 1e-10, 50, 0.1, 1,
+  pele::ExtendedMixedOptimizer mxd(pot, x_start, nullptr, 1e-10, 50, 1.0, 0.1,
                                    rtol, atol, false, Array<double>(0), false,
                                    1, pele::StopCriterionType::GRADIENT);
   Array<double> x_start_copy = x_start.copy();
   pele::CVODEBDFOptimizer cvode(pot, x_start_copy, 1e-10, rtol, atol);
 
-  int n_runs = 10;
+  int n_runs = 1;
 
   float average_cvode_nfev = 0;
   float average_mxd_nfev = 0;
@@ -181,6 +181,10 @@ TEST(EMXD, MultiRun) {
   // declare rng etc
   //
   std::mt19937 rng(0);
+  // set precision
+  std::cout.precision(17);
+  std::cout << "radii" << radii << std::endl;
+  std::cout << "box length" << box_length << std::endl;
   for (int i = 0; i < n_runs; i++) {
     x_start =
         pele::generate_random_coordinates(box_length, n_particles, _ndim, i);
@@ -215,8 +219,10 @@ TEST(EMXD, MultiRun) {
             << std::endl;
   std::cout << "average hessian evals mxd" << average_mxd_nhev << std::endl;
   std::cout << "average hessian evals cvode" << average_cvode_nhev << std::endl;
-  std::cout << "average failed phase 2" << average_failed_phase_2 << std::endl;
-  std::cout << "hello wordl" << std::endl;
+  std::cout << "average failed phase 2: " << average_failed_phase_2
+            << std::endl;
+  std::cout << "radii" << radii << std::endl;
+  std::cout << "box length" << box_length << std::endl;
 }
 
 TEST(CVODE, MultiRun) {

@@ -5,9 +5,11 @@
 #define _PELE_NEWTON_H_
 
 #include <Eigen/Dense>
+#include <Eigen/src/Core/Matrix.h>
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <pele/vecn.hpp>
 
 #include "array.hpp"
 #include "base_potential.hpp"
@@ -62,6 +64,19 @@ class Newton : public GradientOptimizer {
    *
    */
   void one_iteration();
+  double compute_step();
+
+  // Trust region stuff
+  double compute_trust_region_step();
+  Array<double> solve_subproblem();
+  double ev(Eigen::MatrixXd, Array<double>);
+  double get_rho_k(Array<double> p_k);
+  double delta_k;
+  double eta = 0.1;
+  Array<double> p_k;
+  Array<double> x_k;
+  double delta_max = 0.1;
+  double prev_e;
 
   /**
    * @brief Reset the optimizer to start a new minimization from x0
