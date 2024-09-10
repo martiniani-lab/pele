@@ -188,6 +188,49 @@ class ExtendedPotential : public CombinedPotential {
   size_t get_nhev_extension() { return nhev_extension; }
 };  // ExtendedPotential
 
+/**
+ * Potential wrapper which negates a potential.
+ */
+class NegatedPotential final : public BasePotential {
+ protected:
+  std::shared_ptr<BasePotential> _potential;
+
+ public:
+  explicit NegatedPotential(std::shared_ptr<BasePotential> potential)
+      : _potential(std::move(potential)) {}
+
+  /**
+   * destructor: destroy all the potentials in the list
+   */
+  ~NegatedPotential() override {}
+
+  double get_energy(Array<double> const &x) override {
+    return -_potential->get_energy(x);
+  }
+
+  double get_energy_gradient(Array<double> const &x,
+                             Array<double> &grad) override {
+    const double energy = _potential->get_energy_gradient(x, grad);
+    grad *= -1.0;
+    return -energy;
+  }
+
+  double get_energy_gradient_hessian(Array<double> const &x,
+                                     Array<double> &grad,
+                                     Array<double> &hess) override {
+    const double energy =
+        _potential->get_energy_gradient_hessian(x, grad, hess);
+    grad *= -1.0;
+    hess *= -1.0;
+    return -energy;
+  }
+
+  void get_hessian(Array<double> const &x, Array<double> &hessian) override {
+    _potential->get_hessian(x, hessian);
+    hessian *= -1.0;
+  }
+};
+
 }  // namespace pele
 
 #endif
