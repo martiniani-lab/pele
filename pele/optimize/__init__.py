@@ -89,6 +89,7 @@ These are not used very often and may be buggy.
 
 
 """
+
 from __future__ import absolute_import
 
 from .result import *
@@ -98,6 +99,10 @@ from ._fire import *
 from ._gradient_descent_cpp import GradientDescent_CPP
 from ._modified_fire_cpp import ModifiedFireCPP
 from ._lbfgs_cpp import LBFGS_CPP, StopCriterionType
+from ._cosine_gradient_descent_cpp import (
+    CosineGradientDescent_CPP as CosineGradientDescent,
+)
+
 
 try:
     from .cvode_opt import (
