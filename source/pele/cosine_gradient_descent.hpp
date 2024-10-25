@@ -9,9 +9,6 @@
 #include "base_potential.hpp"
 #include "optimizer.hpp"
 
-// line search methods
-#include "optimizer.hpp"
-
 namespace pele {
 
 /**
@@ -33,6 +30,7 @@ class CosineGradientDescent : public ODEBasedOptimizer {
   Array<double> step;   //!< Step direction
   double cos_sim_tol_;  //!< Cosine similarity tolerance
   double dt_;           //!< Time step
+  double dt_initial_;   //!< Initial time step
   int back_track_n_;  //! if 1 - cosine similarity is greater than cos_sim_tol_
                       //! keep dividing step by n until we end up with a step
                       //! less than the tolerance
@@ -59,6 +57,7 @@ class CosineGradientDescent : public ODEBasedOptimizer {
         step(x_.size(), 0),
         cos_sim_tol_(cos_sim_tol),
         dt_(dt_initial),
+        dt_initial_(dt_initial),
         back_track_n_(back_track_n) {
     std::cout << "cosine gradient descent initialized" << std::endl;
     std::cout << "with parameters: " << std::endl;
@@ -148,8 +147,14 @@ class CosineGradientDescent : public ODEBasedOptimizer {
     }
     iter_number_ = 0;
     nfev_ = 0;
+    n_success_without_backtrack = 0;
     x_.assign(x0);
+    dt_ = dt_initial_;
     initialize_func_gradient();
+    time_ = 0;
+#if OPTIMIZER_DEBUG_LEVEL > 2
+    std::cout << "resetting optimizer" << std::endl;
+#endif
   }
 };
 }  // namespace pele
