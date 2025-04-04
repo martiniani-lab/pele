@@ -93,6 +93,22 @@ if build_type == "Release":
         "-DNDEBUG",
         "-march=native",
     ]
+elif build_type == "Greene":
+    cmake_compiler_extra_args = [
+        "-std=c++2a",
+        "-Wall",
+        "-Wextra",
+        "-pedantic",
+        "-O3",
+        "-fPIC",
+        "-DNDEBUG",
+        "-unroll",
+        "-ip",
+        "-axCORE-AVX512",
+        "-qopenmp",
+        "-qopt-report-stdout",
+        "-qopt-report-phase=openmp",
+    ]
 elif build_type == "Debug":
     cmake_compiler_extra_args = [
         "-std=c++2a",
