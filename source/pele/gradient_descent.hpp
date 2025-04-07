@@ -43,7 +43,11 @@ class GradientDescent : public ODEBasedOptimizer {
   GradientDescent(std::shared_ptr<pele::BasePotential> potential,
                   const pele::Array<double> x0, double tol = 1e-4,
                   double step_size = 1e-4, bool save_trajectory = true,
-                  int iterations_before_save = 1)
+                  int iterations_before_save = 1,
+                  bool use_hessian_step_size = false,
+                  bool use_cosine_backtrack = false,
+                  double cosine_backtrack_eps = 1e-2,
+                  double cosine_backtrack_n = 5)
       : ODEBasedOptimizer(potential, x0, tol, save_trajectory,
                           iterations_before_save),
         xold(x_.size()),

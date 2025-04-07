@@ -93,6 +93,22 @@ if build_type == "Release":
         "-DNDEBUG",
         "-march=native",
     ]
+elif build_type == "Greene":
+    cmake_compiler_extra_args = [
+        "-std=c++2a",
+        "-Wall",
+        "-Wextra",
+        "-pedantic",
+        "-O3",
+        "-fPIC",
+        "-DNDEBUG",
+        "-unroll",
+        "-ip",
+        "-axCORE-AVX512",
+        "-qopenmp",
+        "-qopt-report-stdout",
+        "-qopt-report-phase=openmp",
+    ]
 elif build_type == "Debug":
     cmake_compiler_extra_args = [
         "-std=c++2a",
@@ -177,9 +193,7 @@ def git_version():
         env["LANGUAGE"] = "C"
         env["LANG"] = "C"
         env["LC_ALL"] = "C"
-        out = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, env=env
-        ).communicate()[0]
+        out = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env).communicate()[0]
         return out
 
     try:
@@ -219,8 +233,7 @@ def generate_cython():
     cwd = os.path.abspath(os.path.dirname(__file__))
     print("Cythonizing sources")
     p = subprocess.call(
-        [sys.executable, os.path.join(cwd, "cythonize.py"), "pele"]
-        + cython_flags,
+        [sys.executable, os.path.join(cwd, "cythonize.py"), "pele"] + cython_flags,
         cwd=cwd,
     )
     if p != 0:
@@ -332,12 +345,14 @@ def get_compiler_env(compiler_id):
                 except subprocess.CalledProcessError:
                     version -= 1
             if version == 9:
-                raise RuntimeError("Could not detect a GNU C compiler "
-                                   "with an executable in the format 'gcc-version' "
-                                   "on your darwin platform (tried versions 10 to "
-                                   "20). Make sure that you installed a GNU C "
-                                   "compiler and that its executable is in one of your "
-                                   "PATH directories.")
+                raise RuntimeError(
+                    "Could not detect a GNU C compiler "
+                    "with an executable in the format 'gcc-version' "
+                    "on your darwin platform (tried versions 10 to "
+                    "20). Make sure that you installed a GNU C "
+                    "compiler and that its executable is in one of your "
+                    "PATH directories."
+                )
             assert cc is not None
             env["CC"] = cc
             env["CXX"] = (
@@ -373,35 +388,23 @@ def get_compiler_env(compiler_id):
                 .rstrip("\n")
             )
         env["LD"] = (
-            (subprocess.check_output(["which", "ld"]))
-            .decode(encoding)
-            .rstrip("\n")
+            (subprocess.check_output(["which", "ld"])).decode(encoding).rstrip("\n")
         )
         env["AR"] = (
-            (subprocess.check_output(["which", "ar"]))
-            .decode(encoding)
-            .rstrip("\n")
+            (subprocess.check_output(["which", "ar"])).decode(encoding).rstrip("\n")
         )
     elif compiler_id.lower() in ("intel"):
         env["CC"] = (
-            (subprocess.check_output(["which", "icc"]))
-            .decode(encoding)
-            .rstrip("\n")
+            (subprocess.check_output(["which", "icc"])).decode(encoding).rstrip("\n")
         )
         env["CXX"] = (
-            (subprocess.check_output(["which", "icpc"]))
-            .decode(encoding)
-            .rstrip("\n")
+            (subprocess.check_output(["which", "icpc"])).decode(encoding).rstrip("\n")
         )
         env["LD"] = (
-            (subprocess.check_output(["which", "xild"]))
-            .decode(encoding)
-            .rstrip("\n")
+            (subprocess.check_output(["which", "xild"])).decode(encoding).rstrip("\n")
         )
         env["AR"] = (
-            (subprocess.check_output(["which", "xiar"]))
-            .decode(encoding)
-            .rstrip("\n")
+            (subprocess.check_output(["which", "xiar"])).decode(encoding).rstrip("\n")
         )
     else:
         raise Exception("compiler id not known")
@@ -426,7 +429,8 @@ def get_compiler_env(compiler_id):
             .rstrip("\n")
         )
         cmake_compiler_args.extend(
-            shlex.split(f"-D CMAKE_PREFIX_PATH={openblas};{gettext}"))
+            shlex.split(f"-D CMAKE_PREFIX_PATH={openblas};{gettext}")
+        )
     return env, cmake_compiler_args
 
 
@@ -516,6 +520,7 @@ cxx_files = [
     "pele/distance/_get_distance_cpp.cxx",
     "pele/distance/_put_in_box_cpp.cxx",
     "pele/optimize/_gradient_descent_cpp.cxx",
+    "pele/optimize/_cosine_gradient_descent_cpp.cxx",
     "pele/optimize/_lbfgs_cpp.cxx",
     "pele/optimize/_modified_fire_cpp.cxx",
     "pele/optimize/_pele_opt.cxx",
@@ -562,9 +567,7 @@ def get_ldflags(opt="--ldflags"):
         # On MacOs, explicitly including the python library leads to a
         # segmentation fault when libraries created by cython are
         # imported
-        libs.append(
-            "-lpython" + pyver
-        )  # need to add m depending on the installation
+        libs.append("-lpython" + pyver)  # need to add m depending on the installation
     # add the prefix/lib/pythonX.Y/config dir, but only if there is no
     # shared library in prefix/lib/.
     if opt == "--ldflags":
@@ -573,7 +576,9 @@ def get_ldflags(opt="--ldflags"):
             libs.insert(0, "-L" + getvar("LIBDIR"))
         if not getvar("PYTHONFRAMEWORK"):
             # See https://github.com/kovidgoyal/kitty/issues/289#issuecomment-416040645
-            libs.extend(getvar("LINKFORSHARED").replace('-Wl,-stack_size,1000000', '').split())
+            libs.extend(
+                getvar("LINKFORSHARED").replace("-Wl,-stack_size,1000000", "").split()
+            )
     return " ".join(libs)
 
 
@@ -650,9 +655,7 @@ class build_ext_precompiled(old_build_ext):
         ext_path = self.get_ext_fullpath(ext.name)
         pre_compiled_library = ext.sources[0]
         if pre_compiled_library[-3:] != ".so":
-            raise RuntimeError(
-                "library is not a .so file: " + pre_compiled_library
-            )
+            raise RuntimeError("library is not a .so file: " + pre_compiled_library)
         if not os.path.isfile(pre_compiled_library):
             raise RuntimeError(
                 "file does not exist: "

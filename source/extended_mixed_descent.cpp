@@ -1,4 +1,5 @@
 #include "pele/extended_mixed_descent.hpp"
+#include <Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h>
 #include <algorithm>
 #include <complex>
 #include <cstddef>
@@ -59,7 +60,6 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       line_search_method(this, step),
       iterative_(iterative),
       m_global_symmetry_offset(global_symmetry_offset.copy()) {
-#if OPTIMIZER_DEBUG_LEVEL > 0
   std::cout << "ExtendedMixedOptimizer Parameters" << std::endl;
   std::cout << "x0: " << x0 << std::endl;
   std::cout << "tol: " << tol << std::endl;
@@ -73,7 +73,6 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
   } else {
     std::cout << "iterative: false " << std::endl;
   }
-#endif
 
   if (iterative) {
     hessian_type_ = ITERATIVE;
@@ -99,6 +98,7 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       extended_potential);  // because we can only create the extended potential
 #if PRINT_TO_FILE == 1
   trajectory_file.open("trajectory.txt");
+  hessian_eigvals_file.open("hessian_eigenvalues.txt");
 #endif
 
 #if OPTIMIZER_DEBUG_LEVEL >= 1
@@ -198,11 +198,6 @@ void ExtendedMixedOptimizer::setup_cvode() {
   if (check_sundials_retval(&ret, "CVodeSetStopTime", 1)) {
     throw std::runtime_error("CVODE set stop time failed");
   }
-#if PRINT_TO_FILE == 1
-  trajectory_file.open("trajectory_cvode.txt");
-  gradient_file.open("gradient_cvode.txt");
-  time_file.open("time_cvode.txt");
-#endif
 }
 
 void ExtendedMixedOptimizer::one_iteration() {
@@ -218,9 +213,17 @@ void ExtendedMixedOptimizer::one_iteration() {
   }
   xold.assign(x_);
   gold.assign(g_);
+
 #if PRINT_TO_FILE == 1
+  get_hess(hessian);
   // save to file
   trajectory_file << x_;
+  Array<double> hessian_eigenvalues(hessian.rows());
+
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(hessian);
+  Eigen::VectorXd eigenvalues = solver.eigenvalues();
+  pele_eq_eig(hessian_eigenvalues, eigenvalues);
+  hessian_eigvals_file << hessian_eigenvalues;
 #endif
   // copy the gradient into step
 
@@ -234,8 +237,17 @@ void ExtendedMixedOptimizer::one_iteration() {
 #endif
     // check if landscape is convex
     bool landscape_is_convex = convexity_check();
+#if OPTIMIZER_DEBUG_LEVEL >= 3
+    std::cout << "landscape is convex " << landscape_is_convex << "\n";
+#endif
     // If lanscape is convex and we're in phase 1, switch to phase 2
     if (use_phase_1 && landscape_is_convex) {
+#if OPTIMIZER_DEBUG_LEVEL >= 3
+      std::cout << "landscape is convex and we're in phase 1, switching to "
+                   "phase 2"
+                << "\n";
+#endif
+
       use_phase_1 = false;
       x_last_cvode.assign(x_);
     }
@@ -259,13 +271,11 @@ void ExtendedMixedOptimizer::one_iteration() {
     n_phase_2_steps += 1;
     prev_phase_is_phase1 = false;
 
-    // find abs max of the step
-    double max_step = 0;
-    for (size_t i = 0; i < step.size(); i++) {
-      if (abs(step[i]) > max_step) {
-        max_step = abs(step[i]);
-      }
-    }
+    auto compare = [](double a, double b) { return abs(a) < abs(b); };
+    auto max_step_it = std::max_element(step.begin(), step.end(), compare);
+    double max_step = abs(*max_step_it);
+    std::cout << "max step calculated" << max_step << std::endl;
+
     // if max step is too big, switch back to CVODE
     if (max_step > conv_tol_) {
 #if OPTIMIZER_DEBUG_LEVEL >= 3
@@ -293,6 +303,7 @@ void ExtendedMixedOptimizer::one_iteration() {
                   << "\n";
         std::cout << "switching back to CVODE"
                   << "\n";
+        std::cout << "failed iteration number" << iter_number_ << "\n";
 #endif
         use_phase_1 = true;
         x_.assign(x_last_cvode);
@@ -312,6 +323,9 @@ void ExtendedMixedOptimizer::one_iteration() {
             << std::endl;
   std::cout << "optimizer position \n" << x_ << "\n";
   std::cout << "optimizer step \n" << step << "\n";
+  std::cout << "phase 1 steps" << n_phase_1_steps << "\n";
+  std::cout << "phase 2 steps" << n_phase_2_steps << "\n";
+  std::cout << "failed phase 2 steps" << n_failed_phase_2_steps << "\n";
 #endif
   /**
    * Checks whether the stop criterion is satisfied: if stop criterion is
@@ -325,6 +339,7 @@ void ExtendedMixedOptimizer::one_iteration() {
 ExtendedMixedOptimizer::~ExtendedMixedOptimizer() {
 #if PRINT_TO_FILE == 1
   trajectory_file.close();
+  hessian_eigvals_file.close();
 #endif
   free_cvode_objects();
 }
@@ -464,7 +479,6 @@ void ExtendedMixedOptimizer::compute_phase_1_step() {
   n_phase_1_steps += 1;
   prev_phase_is_phase1 = true;
 }
-
 /**
  * Phase 2 The problem looks convex enough to switch to a newton method
  */
@@ -475,11 +489,20 @@ void ExtendedMixedOptimizer::compute_phase_2_step() {
 
   Eigen::VectorXd r(step.size());
   Eigen::VectorXd q(step.size());
-
+  // add an offset to ensure the hessian is positive definite
+  // hessian.diagonal().array() += 1e-11;
   q.setZero();
   eig_eq_pele(r, step);
+  std::cout << "gradient" << r << std::endl;
+  std::cout << "hessian" << hessian << std::endl;
+  // print eigenvalues
+  Eigen::EigenSolver<Eigen::MatrixXd> es(hessian);
+
+  std::cout << "The eigenvalues of A are:" << std::endl
+            << es.eigenvalues() << std::endl;  // should be positive definite
 
   q = -hessian.householderQr().solve(r);
+  std::cout << "step calculated" << q << std::endl;
   pele_eq_eig(step, q);
 }
 

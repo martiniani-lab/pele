@@ -38,11 +38,14 @@ namespace pele {
  */
 inline Array<double> generate_bidisperse_radii(int n_1, int n_2, double r_1,
                                                double r_2, double r_std_1,
-                                               double r_std_2) {
+                                               double r_std_2, int seed = -1) {
   Array<double> radii(n_1 + n_2);
 
   std::random_device rd;
-  std::mt19937 gen(rd());
+  if (seed == -1) {
+    seed = rd();
+  }
+  std::mt19937 gen(seed);
 
   for (int i = 0; i < n_1; i++) {
     radii[i] = r_1 + r_std_1 * std::normal_distribution<double>(0, 1)(gen);
@@ -183,14 +186,22 @@ inline double get_box_length(Array<double> hs_radii, int dim, double phi) {
  * @param      box_length: length of box
  *             n_particles: number of particles
  *             dim:        dimension
+ *             seed:       seed for random number generator. Default is -1
+ *                         if -1, then the seed is generated from random_device
+ *
  *
  * @return     Array of random coordinates
  */
 inline Array<double> generate_random_coordinates(double box_length,
-                                                 int n_particles, int dim) {
+                                                 int n_particles, int dim,
+                                                 int seed = -1) {
   Array<double> coords(n_particles * dim);
+
   std::random_device rd;
-  std::mt19937 gen(rd());
+  if (seed == -1) {
+    seed = rd();
+  }
+  std::mt19937 gen(seed);
   std::uniform_real_distribution<> dist(0, box_length);
 
   for (int i = 0; i < n_particles; i++) {
