@@ -15,7 +15,7 @@ jobs:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash -l {0}
@@ -37,8 +37,8 @@ jobs:
 
       - name: Update apt
         run: sudo apt-get update
-      # installing gcc-12 since it's available on ubuntu 22.04
-      - name: Use gcc-12/g++-12
+      # installing gcc-12 preferably, with fallbacks for older Ubuntu versions
+      - name: Install GCC compiler
         run: |
           sudo apt-get install -y gcc-12 g++-12 gfortran-12
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
