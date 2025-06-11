@@ -13,10 +13,6 @@
             "intelliSenseMode": "clang-x64",
             "compileCommands": "${workspaceFolder}/build/cmake/compile_commands.json",
             "compilerArgs": [],
-            "intelliSenseModeIsExplicit": true,
-            "cStandardIsExplicit": true,
-            "cppStandardIsExplicit": true,
-            "compilerPathIsExplicit": true,
             "configurationProvider": "ms-vscode.cmake-tools",
             "browse": {
                 "path": [

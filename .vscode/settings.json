@@ -16,5 +16,10 @@
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
-  "python.formatting.provider": "none"
+  "python.formatting.provider": "none",
+  "files.associations": {
+    "*.in": "lmps",
+    "*.pyx": "python",
+    "core": "cpp"
+  }
 }

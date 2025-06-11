@@ -529,6 +529,7 @@ cxx_files = [
     "pele/potentials/_harmonic_cpp.cxx",
     "pele/potentials/_hs_wca_cpp.cxx",
     "pele/potentials/_inversepower_cpp.cxx",
+    "pele/potentials/_inversepower_hs_cpp.cxx",
     "pele/potentials/_inversepower_stillinger_cpp.cxx",
     "pele/potentials/_inversepower_stillinger_cut_cpp.cxx",
     "pele/potentials/_inversepower_stillinger_cut_quad.cxx",
