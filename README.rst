@@ -1,4 +1,3 @@
-
 pele : Python Energy Landscape Explorer
 +++++++++++++++++++++++++++++++++++++++
 
@@ -205,7 +204,10 @@ Compilation
 Compilation is required as many of the computationally intensive parts (especially potentials)
 are written in fortran and c++.  Theoretically you should be able to use any compilers,
 but we mostly use gfortran and GCC, so it's the least likely to have problems.  This
-package uses the standard python setup utility (distutils).  The current installation procedure
+package uses the standard python setup utility (`setuptools`). The current installation procedure
+requires a working C, C++, and Fortran compiler (e.g. gcc, g++, gfortran).
+
+This package uses the standard python setup utility (`setuptools`). The current installation procedure
 on Ubuntu is::
 
   $ python setup_with_cmake.py develop

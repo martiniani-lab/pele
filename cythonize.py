@@ -55,7 +55,18 @@ _extra_flags = []
 def process_pyx(fromfile, tofile):
     try:
         from Cython.Compiler.Version import version as cython_version
-        from distutils.version import LooseVersion
+        try:
+            from packaging.version import Version as LooseVersion
+        except ImportError:
+            # Fallback - create a simple version comparison
+            def LooseVersion(version_str):
+                class SimpleVersion:
+                    def __init__(self, v):
+                        self.version = v
+                    def __lt__(self, other):
+                        # Simple string comparison for version
+                        return self.version < other.version
+                return SimpleVersion(version_str)
 
         if LooseVersion(cython_version) < LooseVersion("0.16"):
             raise Exception("Building pele requires Cython >= 0.16")

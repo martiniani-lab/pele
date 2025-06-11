@@ -10,12 +10,47 @@ import subprocess
 import shutil
 import argparse
 import shlex
+import sysconfig
 
 import numpy as np
-from distutils import sysconfig
-from numpy.distutils.core import setup
-from numpy.distutils.core import Extension
-from numpy.distutils.command.build_ext import build_ext as old_build_ext
+from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext as old_build_ext
+
+# Create compatibility layer for distutils.sysconfig using standard sysconfig
+class SysconfigCompat:
+    @staticmethod
+    def get_python_inc(plat_specific=False):
+        if plat_specific:
+            return sysconfig.get_path('platinclude')
+        return sysconfig.get_path('include')
+    
+    @staticmethod
+    def get_config_var(name):
+        return sysconfig.get_config_var(name)
+
+# Use the compatibility layer
+sysconfig_compat = SysconfigCompat()
+
+# Try to import numpy's Fortran support - this may not be available in newer versions
+try:
+    # Modern numpy with setuptools integration
+    from numpy.f2py import setup as f2py_setup
+    from numpy.f2py.setuptools_extension import NumpyExtension as FortranExtension
+    fortran_support = True
+    print("INFO: Using numpy.f2py for Fortran support")
+except ImportError:
+    try:
+        # Legacy numpy.distutils for older numpy/python versions
+        from numpy.distutils.core import setup as f2py_setup
+        from numpy.distutils.core import Extension as FortranExtension
+        fortran_support = True
+        print("INFO: Using numpy.distutils for Fortran support (legacy)")
+    except ImportError:
+        # No fortran support
+        print("WARNING: No Fortran support available. Fortran extensions may not be built.")
+        fortran_support = False
+        f2py_setup = setup
+        FortranExtension = Extension
 
 # Numpy header files
 numpy_lib = os.path.split(np.__file__)[0]
@@ -52,7 +87,7 @@ parser.add_argument(
 jargs, remaining_args = parser.parse_known_args(sys.argv)
 
 # record c compiler choice. use unix (gcc) by default
-# Add it back into remaining_args so distutils can see it also
+# Add it back into remaining_args so setuptools can see it also
 
 
 idcompiler = None
@@ -256,7 +291,11 @@ class ModuleList(object):
     def add_module(self, filename):
         modname = filename.replace("/", ".")
         modname, ext = os.path.splitext(modname)
-        self.module_list.append(Extension(modname, [filename], **self.kwargs))
+        # Use FortranExtension for Fortran files if available
+        if fortran_support and filename.endswith('.f90'):
+            self.module_list.append(FortranExtension(modname, [filename], **self.kwargs))
+        else:
+            self.module_list.append(Extension(modname, [filename], **self.kwargs))
 
 
 extra_compile_args = ["-mavx"] if not platform.processor() == "arm" else []
@@ -360,9 +399,9 @@ def get_compiler_env(compiler_id):
                 .decode(encoding)
                 .rstrip("\n")
             )
-            # Numpy distutils looks for the F90 environment variable to
+            # Setuptools looks for the F90 environment variable to
             # determine the Fortran compiler.
-            # See https://stackoverflow.com/questions/55373559/numpy-distutils-specify-intel-fortran-compiler-in-setup-py
+            # See https://setuptools.readthedocs.io/en/latest/userguide/ext_modules.html
             env["F90"] = (
                 (subprocess.check_output(["which", f"gfortran-{version}"]))
                 .decode(encoding)
@@ -437,7 +476,9 @@ def get_compiler_env(compiler_id):
 env, _ = get_compiler_env(idcompiler)
 os.environ = env
 
-setup(
+# Use f2py_setup for Fortran extensions if available, otherwise use regular setup
+setup_func = f2py_setup if fortran_support else setup
+setup_func(
     name="pele",
     version="0.1",
     description="Python implementation of GMIN, OPTIM, and PATHSAMPLE",
@@ -560,38 +601,55 @@ if with_cvode:
 
 
 def get_ldflags(opt="--ldflags"):
-    """return the ldflags.  This was taken directly from python-config"""
-    getvar = sysconfig.get_config_var
-    pyver = sysconfig.get_config_var("VERSION")
-    libs = getvar("LIBS").split() + getvar("SYSLIBS").split()
-    if not sys.platform.startswith("darwin"):
-        # On MacOs, explicitly including the python library leads to a
-        # segmentation fault when libraries created by cython are
-        # imported
-        libs.append("-lpython" + pyver)  # need to add m depending on the installation
-    # add the prefix/lib/pythonX.Y/config dir, but only if there is no
-    # shared library in prefix/lib/.
-    if opt == "--ldflags":
-        if not getvar("Py_ENABLE_SHARED"):
-            # libdir does this for centOS and more importantly conda environments
-            libs.insert(0, "-L" + getvar("LIBDIR"))
-        if not getvar("PYTHONFRAMEWORK"):
-            # See https://github.com/kovidgoyal/kitty/issues/289#issuecomment-416040645
-            libs.extend(
-                getvar("LINKFORSHARED").replace("-Wl,-stack_size,1000000", "").split()
-            )
-    return " ".join(libs)
+    """return the ldflags using modern sysconfig"""
+    try:
+        getvar = sysconfig_compat.get_config_var
+        pyver = sysconfig_compat.get_config_var("VERSION")
+        libs = getvar("LIBS").split() + getvar("SYSLIBS").split()
+        if not sys.platform.startswith("darwin"):
+            # On MacOs, explicitly including the python library leads to a
+            # segmentation fault when libraries created by cython are
+            # imported
+            libs.append("-lpython" + pyver)  # need to add m depending on the installation
+        # add the prefix/lib/pythonX.Y/config dir, but only if there is no
+        # shared library in prefix/lib/.
+        if opt == "--ldflags":
+            if not getvar("Py_ENABLE_SHARED"):
+                # libdir does this for centOS and more importantly conda environments
+                libs.insert(0, "-L" + getvar("LIBDIR"))
+            if not getvar("PYTHONFRAMEWORK"):
+                # See https://github.com/kovidgoyal/kitty/issues/289#issuecomment-416040645
+                libs.extend(
+                    getvar("LINKFORSHARED").replace("-Wl,-stack_size,1000000", "").split()
+                )
+        return " ".join(libs)
+    except (AttributeError, TypeError):
+        # Fallback for modern Python versions
+        pyver = sysconfig.get_python_version()
+        libs = []
+        if not sys.platform.startswith("darwin"):
+            libs.append(f"-lpython{pyver}")
+        
+        # Add library directory
+        libdir = sysconfig.get_config_var("LIBDIR")
+        if libdir:
+            libs.insert(0, f"-L{libdir}")
+            
+        return " ".join(libs)
 
 
 # create file CMakeLists.txt from CMakeLists.txt.in
 with open("CMakeLists.txt.in", "r") as fin:
     cmake_txt = fin.read()
 # We first tell cmake where the include directories are
-# note: the code to find python_includes was taken from the python-config executable
-python_includes = [
-    sysconfig.get_python_inc(),
-    sysconfig.get_python_inc(plat_specific=True),
-]
+try:
+    python_includes = [
+        sysconfig_compat.get_python_inc(),
+        sysconfig_compat.get_python_inc(plat_specific=True),
+    ]
+except (AttributeError, TypeError):
+    # Fallback for modern Python versions
+    python_includes = [sysconfig.get_path('include')]
 cmake_txt = cmake_txt.replace("__PYTHON_INCLUDE__", " ".join(python_includes))
 
 if with_cvode:
@@ -642,7 +700,7 @@ run_cmake(compiler_id=idcompiler)
 
 # Now that the cython libraries are built, we have to make sure they are copied to
 # the correct location.  This means in the source tree if build in-place, or
-# somewhere in the build/ directory otherwise.  The standard distutils
+# somewhere in the build/ directory otherwise.  The standard setuptools
 # knows how to do this best.  We will overload the build_ext command class
 # to simply copy the pre-compiled libraries into the right place
 class build_ext_precompiled(old_build_ext):

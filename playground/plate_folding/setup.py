@@ -1,6 +1,5 @@
 from __future__ import print_function
-from numpy.distutils.core import setup
-from numpy.distutils.core import Extension
+from setuptools import setup, Extension
 import os
 import numpy as np
 import subprocess
@@ -42,10 +41,8 @@ setup(
     ext_modules=[
         Extension(
             "plate_potential",
-            ["plate_potential.cxx"],
+            sources=["plate_potential.c"],
             include_dirs=include_dirs,
-            language="c++",
-            extra_compile_args=["-std=c++0x"],
-        ),
+        )
     ]
 )
