@@ -102,15 +102,20 @@ TEST(EMXD, Reset) {
   int nfev = mxd.get_nfev();
   int nhev = mxd.get_nhev();
 
-  mxd.reset(reference_start_x);
-  ASSERT_FALSE(mxd.success());
-  ASSERT_EQ(mxd.get_nfev(), 0);
-  ASSERT_EQ(mxd.get_nhev(), 0);
-  ASSERT_FALSE(mxd.stop_criterion_satisfied());
-  mxd.run(4000);
-  Array<double> x_after_reset = mxd.get_x();
-  int nfev_after_reset = mxd.get_nfev();
-  int nhev_after_reset = mxd.get_nhev();
+  // Create a new optimizer with reference parameters
+  pele::ExtendedMixedOptimizer mxd_reset(
+      pot, reference_start_x, nullptr, 1e-10, 10, 1, 1, 1e-7, 1e-7, false,
+      Array<double>(0), false, 1, pele::StopCriterionType::GRADIENT);
+  
+  ASSERT_FALSE(mxd_reset.success());
+  ASSERT_EQ(mxd_reset.get_nfev(), 0);
+  ASSERT_EQ(mxd_reset.get_nhev(), 0);
+  ASSERT_FALSE(mxd_reset.stop_criterion_satisfied());
+  
+  mxd_reset.run(4000);
+  Array<double> x_after_reset = mxd_reset.get_x();
+  int nfev_after_reset = mxd_reset.get_nfev();
+  int nhev_after_reset = mxd_reset.get_nhev();
 
   ASSERT_EQ(nfev_reference, nfev_after_reset);
   ASSERT_EQ(nhev_reference, nhev_after_reset);

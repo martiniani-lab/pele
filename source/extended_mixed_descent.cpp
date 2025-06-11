@@ -362,8 +362,9 @@ void ExtendedMixedOptimizer::reset_cvode() {
   iter_number_ = 0;
   func_initialized_ = false;
   reset_user_data(&udata);
-  this->free_cvode_objects();
-  this->setup_cvode();
+  
+  free_cvode_objects();
+  setup_cvode();
 }
 
 void ExtendedMixedOptimizer::reset_newton() {
