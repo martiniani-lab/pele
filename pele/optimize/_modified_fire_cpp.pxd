@@ -8,7 +8,7 @@ from pele.potentials._pele cimport shared_ptr
 from libcpp.vector cimport vector
 
 cdef extern from "pele/optimizer.hpp" namespace "pele":
-    cdef public enum StopCriterionType:
+    cdef enum StopCriterionType:
         GRADIENT,
         STEPNORM,
         NEWTON

@@ -29,4 +29,4 @@ cdef extern from "pele/optimizermpfr.hpp" namespace "pele":
     
 cdef class GradientOptimizerMPFR:
     cdef shared_ptr[cGradientOptimizerMPFR] thisptr      # hold a C++ instance which we're wrapping
-    cdef public events
+    cdef public object events
