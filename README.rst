@@ -128,7 +128,7 @@ pele requires python 3.9 and the following packages
 #. networkx:
      For graph functionality. https://networkx.lanl.gov
 
-#. cython (version 0.29.36):
+#. cython:
      For calling C++ code from python for speed
 
 #. pyyaml:
@@ -181,7 +181,7 @@ On Ubuntu, set up a new conda environment using::
 
   $ conda create -n myenv python=3.9
   $ conda activate myenv
-  $ conda install numpy scipy networkx matplotlib cython=0.29.36
+  $ conda install numpy scipy networkx matplotlib cython
   $ conda install -c conda-forge sqlalchemy=1.4.51 munkres pyro4 scikit-sparse
   $ conda install -c conda-forge -c schrodinger pymol-bundle
   $ pip install pyyaml
@@ -237,18 +237,21 @@ identification support (i.e., without CVODE) use the
   $ python setup_with_cmake.py build_ext -i --with-cvode 0
 
 Note that this will make some of the tests fail.
-To check whether the code you're interested in works correctly you can run :code:`pytest`
-in the module you're interested in, for example, to check whether :code:`pele/utils` is working correctly, run :code:`pytest pele/utils`.
+To check whether the code you're interested in works correctly you can run `pytest`
+in the module you're interested in, for example, to check whether `pele/utils` is working correctly, run `pytest pele/utils`.
 
 If building fails, run the following command to remove cached files
 before building again::
 
   $ rm -rf build cythonize.dat CMakeCache.txt cmake_install.cmake
+  $ find . -name "*.so" -delete
+  $ find . -name "*.c" -delete
+  $ find . -name "*.cpp" -delete
 
 Tests
 =====
 
-The C++ tests use GoogleTest. To run the tests, after running :code:`git submodule update --init --recursive` to get the GoogleTest submodule if you haven't already, run::
+The C++ tests use GoogleTest. To run the tests, after running `git submodule update --init --recursive` to get the GoogleTest submodule if you haven't already, run::
 
   $ cd cpp_tests/source
   $ cmake -DCMAKE_BUILD_TYPE=Debug .

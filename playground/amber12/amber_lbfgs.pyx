@@ -1,6 +1,8 @@
 """This file will define the interface for Amber12 with Cuda and the corresponding cuda lbfgs
 """
 
+# cython: language_level=3str
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 
 from pele.potentials import BasePotential

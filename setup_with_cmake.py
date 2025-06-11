@@ -261,7 +261,8 @@ write_version_py()
 # run cython on the pyx files
 #
 # need to pass cython the include directory so it can find the .pyx files
-cython_flags = ["-I"] + [os.path.abspath("pele/potentials")] + ["-v"]
+# Add language_level=3str for Cython 3.0 compatibility
+cython_flags = ["-I"] + [os.path.abspath("pele/potentials")] + ["-v"] + ["--directive", "language_level=3str"]
 
 
 def generate_cython():
@@ -347,12 +348,14 @@ cxx_modules = [
         ["pele/optimize/_cython_lbfgs.c"],
         include_dirs=[numpy_include],
         extra_compile_args=extra_compile_args,
+        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
     ),
     Extension(
         "pele.potentials._cython_tools",
         ["pele/potentials/_cython_tools.c"],
         include_dirs=[numpy_include],
         extra_compile_args=extra_compile_args,
+        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
     ),
 ]
 

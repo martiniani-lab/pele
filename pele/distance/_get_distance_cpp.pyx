@@ -1,7 +1,9 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
 cimport pele.potentials._pele as _pele
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 from pele.potentials._pele cimport array_wrap_np
 cimport numpy as np
 import numpy as np
@@ -106,7 +108,7 @@ cpdef get_distance(np.ndarray[double] r1, np.ndarray[double] r2, int ndim, metho
 
     # Copy results into Python object
     r_ij = np.empty(ndim)
-    for i in xrange(ndim):
+    for i in range(ndim):
         r_ij[i] = c_r_ij[i]
 
     # Free memory

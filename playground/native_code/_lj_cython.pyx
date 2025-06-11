@@ -1,3 +1,4 @@
+# cython: language_level=3str
 # This file demonstrates a pure cython wrapper for a fortran function
 #
 # I didn't figure out yet how to declare inherited c++ classes in python,

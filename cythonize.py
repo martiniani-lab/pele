@@ -68,8 +68,8 @@ def process_pyx(fromfile, tofile):
                         return self.version < other.version
                 return SimpleVersion(version_str)
 
-        if LooseVersion(cython_version) < LooseVersion("0.16"):
-            raise Exception("Building pele requires Cython >= 0.16")
+        if LooseVersion(cython_version) < LooseVersion("3.0.0"):
+            raise Exception("Building pele requires Cython >= 3.0.0")
 
     except ImportError:
         pass

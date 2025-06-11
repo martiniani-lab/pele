@@ -7,6 +7,8 @@ We now use setup.py to create the shared object library
 
     python setup.py build_ext -i
 """
+# cython: language_level=3str
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 cimport numpy as np
 
@@ -25,10 +27,10 @@ cdef _getEnergyGradient(np.ndarray[np.float_t, ndim=2] coords, float sig, float 
     cdef np.ndarray[np.float_t, ndim=1] dr = np.zeros([3], np.float)
     cdef int i, j, k
     cdef float r2, ir2, g, ir12, ir24
-    for i in xrange(natoms):
-        for j in xrange(i):
+    for i in range(natoms):
+        for j in range(i):
             r2 = 0.
-            for k in xrange(3):
+            for k in range(3):
                 dr[k] = coords[i,k] - coords[j,k]
                 r2 += dr[k] * dr[k]
             ir2 = 1. / r2
@@ -37,7 +39,7 @@ cdef _getEnergyGradient(np.ndarray[np.float_t, ndim=2] coords, float sig, float 
             ir24 = ir12 * ir12
             energy += 4. * eps * ( sig24 * ir24 - sig12 * ir12 )
             g = 4. * eps * ir2 * ( -24. * sig24 * ir24 + 12. * sig12 * ir12)
-            for k in xrange(3):
+            for k in range(3):
                 grad[i,k] += g * dr[k]
                 grad[j,k] -= g * dr[k]
 

@@ -1,6 +1,8 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 
 cimport numpy as np
@@ -42,7 +44,7 @@ class CppPotentialWrapper(_cdef_CppPotentialWrapper):
 class _TestingCppPotentialWrapper(CppPotentialWrapper):
     """testing potential which provides direct access to c++ wrapper"""
     def getEnergy(self, x):
-        print "going through cpp"
+        print("going through cpp")
         return _pele.BasePotential.getEnergy(self, x)
 
     def cpp_get_energy(self, x):
@@ -61,5 +63,5 @@ def as_cpp_potential(potential, verbose=False):
         return potential
     else:
         if verbose:
-            print "potential is not subclass of c++ BasePotential; wrapping it.", potential
+            print("potential is not subclass of c++ BasePotential; wrapping it."), potential
         return CppPotentialWrapper(potential)

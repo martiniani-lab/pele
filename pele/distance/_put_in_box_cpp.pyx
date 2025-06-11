@@ -1,7 +1,9 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
 cimport pele.potentials._pele as _pele
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 from pele.potentials._pele cimport array_wrap_np
 cimport numpy as np
 import numpy as np
@@ -64,7 +66,7 @@ cpdef put_atom_in_box(np.ndarray[double] r, int ndim, method, np.ndarray[double]
 
     # Initialize data arrays in C
     cdef double *c_r = <double *>malloc(ndim * sizeof(double))
-    for i in xrange(ndim):
+    for i in range(ndim):
         c_r[i] = r[i]
 
     # Get box size from the input parameters
@@ -88,7 +90,7 @@ cpdef put_atom_in_box(np.ndarray[double] r, int ndim, method, np.ndarray[double]
 
     # Copy results into Python object
     r_boxed = np.empty(ndim)
-    for i in xrange(ndim):
+    for i in range(ndim):
         r_boxed[i] = c_r[i]
 
     # Free memory
@@ -150,7 +152,7 @@ cpdef put_in_box(np.ndarray[double] rs, int ndim, method, np.ndarray[double] box
 
     # Copy results into Python object
     rs_boxed = np.empty(c_rs.size())
-    for i in xrange(c_rs.size()):
+    for i in range(c_rs.size()):
         rs_boxed[i] = c_rs[i]
 
     return rs_boxed

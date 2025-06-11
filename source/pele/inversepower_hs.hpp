@@ -23,8 +23,8 @@ namespace pele {
  * V = 0 for r >= d_c
  *
  * d_hs is the hard sphere diameter (sum of radii)
- * d_c = d_hs * (1 + sigma) is the cutoff distance
- * sigma is the soft shell thickness parameter
+ * d_c = d_hs * (1 + sca) is the cutoff distance
+ * sca is the soft shell thickness parameter
  *
  * This is an adaption of the InversePower potential to include a hard-sphere
  * core, similar to the HS_WCA potential.
@@ -33,11 +33,11 @@ namespace pele {
 struct InversePowerHS_interaction : BaseInteraction {
   double const _eps;
   double const _pow;
-  double const _sigma;
+  double const _sca;
   double const _infty;
 
-  InversePowerHS_interaction(double pow, double eps, double sigma)
-      : _eps(eps), _pow(pow), _sigma(sigma), _infty(std::numeric_limits<double>::infinity()) {}
+  InversePowerHS_interaction(double pow, double eps, double sca)
+      : _eps(eps), _pow(pow), _sca(sca), _infty(std::numeric_limits<double>::infinity()) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij_hs) const {
@@ -45,7 +45,7 @@ struct InversePowerHS_interaction : BaseInteraction {
     if (r2 <= d_hs2) {
       return _infty;
     }
-    const double d_c = dij_hs * (1.0 + _sigma);
+    const double d_c = dij_hs * (1.0 + _sca);
     if (r2 >= d_c * d_c) {
       return 0.0;
     }
@@ -62,7 +62,7 @@ struct InversePowerHS_interaction : BaseInteraction {
       *gij = _infty;
       return _infty;
     }
-    const double d_c = dij_hs * (1.0 + _sigma);
+    const double d_c = dij_hs * (1.0 + _sca);
     if (r2 >= d_c * d_c) {
       *gij = 0.0;
       return 0.0;
@@ -81,7 +81,7 @@ struct InversePowerHS_interaction : BaseInteraction {
       *hij = _infty;
       return _infty;
     }
-    const double d_c = dij_hs * (1.0 + _sigma);
+    const double d_c = dij_hs * (1.0 + _sca);
     if (r2 >= d_c * d_c) {
       *gij = 0.0;
       *hij = 0.0;
@@ -100,11 +100,11 @@ template <int POW>
 struct InverseIntPowerHS_interaction : BaseInteraction {
   double const _eps;
   double const _pow;
-  double const _sigma;
+  double const _sca;
   double const _infty;
 
-  InverseIntPowerHS_interaction(double eps, double sigma)
-      : _eps(eps), _pow(POW), _sigma(sigma), _infty(std::numeric_limits<double>::infinity()) {}
+  InverseIntPowerHS_interaction(double eps, double sca)
+      : _eps(eps), _pow(POW), _sca(sca), _infty(std::numeric_limits<double>::infinity()) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij_hs) const {
@@ -112,7 +112,7 @@ struct InverseIntPowerHS_interaction : BaseInteraction {
     if (r2 <= d_hs2) {
       return _infty;
     }
-    const double d_c = dij_hs * (1.0 + _sigma);
+    const double d_c = dij_hs * (1.0 + _sca);
     if (r2 >= d_c * d_c) {
       return 0.0;
     }
@@ -129,7 +129,7 @@ struct InverseIntPowerHS_interaction : BaseInteraction {
       *gij = _infty;
       return _infty;
     }
-    const double d_c = dij_hs * (1.0 + _sigma);
+    const double d_c = dij_hs * (1.0 + _sca);
     if (r2 >= d_c * d_c) {
       *gij = 0.0;
       return 0.0;
@@ -148,7 +148,7 @@ struct InverseIntPowerHS_interaction : BaseInteraction {
       *hij = _infty;
       return _infty;
     }
-    const double d_c = dij_hs * (1.0 + _sigma);
+    const double d_c = dij_hs * (1.0 + _sca);
     if (r2 >= d_c * d_c) {
       *gij = 0.0;
       *hij = 0.0;
@@ -167,11 +167,11 @@ template <int POW2>
 struct InverseHalfIntPowerHS_interaction : BaseInteraction {
   double const _eps;
   double const _pow;
-  double const _sigma;
+  double const _sca;
   double const _infty;
 
-  InverseHalfIntPowerHS_interaction(double eps, double sigma)
-      : _eps(eps), _pow(0.5 * POW2), _sigma(sigma), _infty(std::numeric_limits<double>::infinity()) {}
+  InverseHalfIntPowerHS_interaction(double eps, double sca)
+      : _eps(eps), _pow(0.5 * POW2), _sca(sca), _infty(std::numeric_limits<double>::infinity()) {}
 
   /* calculate energy from distance squared */
   double energy(double r2, const double dij_hs) const {
@@ -179,7 +179,7 @@ struct InverseHalfIntPowerHS_interaction : BaseInteraction {
     if (r2 <= d_hs2) {
       return _infty;
     }
-    const double d_c = dij_hs * (1.0 + _sigma);
+    const double d_c = dij_hs * (1.0 + _sca);
     if (r2 >= d_c * d_c) {
       return 0.0;
     }
@@ -196,7 +196,7 @@ struct InverseHalfIntPowerHS_interaction : BaseInteraction {
       *gij = _infty;
       return _infty;
     }
-    const double d_c = dij_hs * (1.0 + _sigma);
+    const double d_c = dij_hs * (1.0 + _sca);
     if (r2 >= d_c * d_c) {
       *gij = 0.0;
       return 0.0;
@@ -215,7 +215,7 @@ struct InverseHalfIntPowerHS_interaction : BaseInteraction {
       *hij = _infty;
       return _infty;
     }
-    const double d_c = dij_hs * (1.0 + _sigma);
+    const double d_c = dij_hs * (1.0 + _sca);
     if (r2 >= d_c * d_c) {
       *gij = 0.0;
       *hij = 0.0;
@@ -235,13 +235,13 @@ class InversePowerHS
     : public SimplePairwisePotential<InversePowerHS_interaction,
                                      cartesian_distance<ndim>> {
  public:
-  InversePowerHS(double pow, double eps, double sigma,
+  InversePowerHS(double pow, double eps, double sca,
                  pele::Array<double> const radii, bool exact_sum = false,
                  double non_additivity = 0.0)
       : SimplePairwisePotential<InversePowerHS_interaction,
                                 cartesian_distance<ndim>>(
-            std::make_shared<InversePowerHS_interaction>(pow, eps, sigma),
-            radii, std::make_shared<cartesian_distance<ndim>>(), sigma,
+            std::make_shared<InversePowerHS_interaction>(pow, eps, sca),
+            radii, std::make_shared<cartesian_distance<ndim>>(), sca,
             exact_sum, non_additivity) {}
 };
 
@@ -250,14 +250,14 @@ class InversePowerHSPeriodic
     : public SimplePairwisePotential<InversePowerHS_interaction,
                                      periodic_distance<ndim>> {
  public:
-  InversePowerHSPeriodic(double pow, double eps, double sigma,
+  InversePowerHSPeriodic(double pow, double eps, double sca,
                          pele::Array<double> const radii,
                          pele::Array<double> const boxvec,
                          bool exact_sum = false, double non_additivity = 0.0)
       : SimplePairwisePotential<InversePowerHS_interaction,
                                 periodic_distance<ndim>>(
-            std::make_shared<InversePowerHS_interaction>(pow, eps, sigma),
-            radii, std::make_shared<periodic_distance<ndim>>(boxvec), sigma,
+            std::make_shared<InversePowerHS_interaction>(pow, eps, sca),
+            radii, std::make_shared<periodic_distance<ndim>>(boxvec), sca,
             exact_sum, non_additivity) {}
 };
 
@@ -266,12 +266,12 @@ class InverseIntPowerHS
     : public SimplePairwisePotential<InverseIntPowerHS_interaction<POW>,
                                      cartesian_distance<ndim>> {
  public:
-  InverseIntPowerHS(double eps, double sigma, pele::Array<double> const radii,
+  InverseIntPowerHS(double eps, double sca, pele::Array<double> const radii,
                     bool exact_sum = false, double non_additivity = 0.0)
       : SimplePairwisePotential<InverseIntPowerHS_interaction<POW>,
                                 cartesian_distance<ndim>>(
-            std::make_shared<InverseIntPowerHS_interaction<POW>>(eps, sigma),
-            radii, std::make_shared<cartesian_distance<ndim>>(), sigma,
+            std::make_shared<InverseIntPowerHS_interaction<POW>>(eps, sca),
+            radii, std::make_shared<cartesian_distance<ndim>>(), sca,
             exact_sum, non_additivity) {}
 };
 
@@ -280,15 +280,15 @@ class InverseIntPowerHSPeriodic
     : public SimplePairwisePotential<InverseIntPowerHS_interaction<POW>,
                                      periodic_distance<ndim>> {
  public:
-  InverseIntPowerHSPeriodic(double eps, double sigma,
+  InverseIntPowerHSPeriodic(double eps, double sca,
                             pele::Array<double> const radii,
                             pele::Array<double> const boxvec,
                             bool exact_sum = false,
                             double non_additivity = 0.0)
       : SimplePairwisePotential<InverseIntPowerHS_interaction<POW>,
                                 periodic_distance<ndim>>(
-            std::make_shared<InverseIntPowerHS_interaction<POW>>(eps, sigma),
-            radii, std::make_shared<periodic_distance<ndim>>(boxvec), sigma,
+            std::make_shared<InverseIntPowerHS_interaction<POW>>(eps, sca),
+            radii, std::make_shared<periodic_distance<ndim>>(boxvec), sca,
             exact_sum, non_additivity) {}
 };
 
@@ -297,14 +297,14 @@ class InverseHalfIntPowerHS
     : public SimplePairwisePotential<InverseHalfIntPowerHS_interaction<POW2>,
                                      cartesian_distance<ndim>> {
  public:
-  InverseHalfIntPowerHS(double eps, double sigma,
+  InverseHalfIntPowerHS(double eps, double sca,
                         pele::Array<double> const radii,
                         bool exact_sum = false, double non_additivity = 0.0)
       : SimplePairwisePotential<InverseHalfIntPowerHS_interaction<POW2>,
                                 cartesian_distance<ndim>>(
             std::make_shared<InverseHalfIntPowerHS_interaction<POW2>>(
-                eps, sigma),
-            radii, std::make_shared<cartesian_distance<ndim>>(), sigma,
+                eps, sca),
+            radii, std::make_shared<cartesian_distance<ndim>>(), sca,
             exact_sum, non_additivity) {}
 };
 
@@ -313,7 +313,7 @@ class InverseHalfIntPowerHSPeriodic
     : public SimplePairwisePotential<InverseHalfIntPowerHS_interaction<POW2>,
                                      periodic_distance<ndim>> {
  public:
-  InverseHalfIntPowerHSPeriodic(double eps, double sigma,
+  InverseHalfIntPowerHSPeriodic(double eps, double sca,
                                 pele::Array<double> const radii,
                                 pele::Array<double> const boxvec,
                                 bool exact_sum = false,
@@ -321,8 +321,8 @@ class InverseHalfIntPowerHSPeriodic
       : SimplePairwisePotential<InverseHalfIntPowerHS_interaction<POW2>,
                                 periodic_distance<ndim>>(
             std::make_shared<InverseHalfIntPowerHS_interaction<POW2>>(
-                eps, sigma),
-            radii, std::make_shared<periodic_distance<ndim>>(boxvec), sigma,
+                eps, sca),
+            radii, std::make_shared<periodic_distance<ndim>>(boxvec), sca,
             exact_sum, non_additivity) {}
 };
 
@@ -332,15 +332,15 @@ class InversePowerHSPeriodicCellLists
                                periodic_distance<ndim>> {
  public:
   InversePowerHSPeriodicCellLists(
-      double pow, double eps, double sigma, pele::Array<double> const radii,
+      double pow, double eps, double sca, pele::Array<double> const radii,
       pele::Array<double> const boxvec, const double ncellx_scale = 1.0,
       bool exact_sum = false, double non_additivity = 0.0)
       : CellListPotential<InversePowerHS_interaction, periodic_distance<ndim>>(
-            std::make_shared<InversePowerHS_interaction>(pow, eps, sigma),
+            std::make_shared<InversePowerHS_interaction>(pow, eps, sca),
             std::make_shared<periodic_distance<ndim>>(boxvec), boxvec,
-            (1.0 + sigma) * 2.0 *
+            (1.0 + sca) * 2.0 *
                 (*std::max_element(radii.begin(), radii.end())),  // rcut
-            ncellx_scale, radii, sigma, true, exact_sum, non_additivity) {}
+            ncellx_scale, radii, sca, true, exact_sum, non_additivity) {}
 };
 
 template <size_t ndim, int POW>
@@ -349,19 +349,19 @@ class InverseIntPowerHSPeriodicCellLists
                                periodic_distance<ndim>> {
  public:
   InverseIntPowerHSPeriodicCellLists(
-      double eps, double sigma, pele::Array<double> const radii,
+      double eps, double sca, pele::Array<double> const radii,
       pele::Array<double> const boxvec, const double ncellx_scale = 1.0,
       bool exact_sum = false, double non_additivity = 0.0)
       : CellListPotential<InverseIntPowerHS_interaction<POW>,
                           periodic_distance<ndim>>(
-            std::make_shared<InverseIntPowerHS_interaction<POW>>(eps, sigma),
+            std::make_shared<InverseIntPowerHS_interaction<POW>>(eps, sca),
             std::make_shared<periodic_distance<ndim>>(boxvec), boxvec,
-            (1.0 + sigma) * 2.0 *
+            (1.0 + sca) * 2.0 *
                 (*std::max_element(
                     radii.begin(),
                     radii.end())),  // rcut, Note if boxvec or radii are of
                                     // size 0 this can lead to a segfault
-            ncellx_scale, radii, sigma, true, exact_sum, non_additivity) {}
+            ncellx_scale, radii, sca, true, exact_sum, non_additivity) {}
 };
 
 template <size_t ndim, int POW2>
@@ -370,17 +370,17 @@ class InverseHalfIntPowerHSPeriodicCellLists
                                periodic_distance<ndim>> {
  public:
   InverseHalfIntPowerHSPeriodicCellLists(
-      double eps, double sigma, pele::Array<double> const radii,
+      double eps, double sca, pele::Array<double> const radii,
       pele::Array<double> const boxvec, const double ncellx_scale = 1.0,
       bool exact_sum = false, double non_additivity = 0.0)
       : CellListPotential<InverseHalfIntPowerHS_interaction<POW2>,
                           periodic_distance<ndim>>(
             std::make_shared<InverseHalfIntPowerHS_interaction<POW2>>(
-                eps, sigma),
+                eps, sca),
             std::make_shared<periodic_distance<ndim>>(boxvec), boxvec,
-            (1.0 + sigma) * 2.0 *
+            (1.0 + sca) * 2.0 *
                 (*std::max_element(radii.begin(), radii.end())),  // rcut,
-            ncellx_scale, radii, sigma, true, exact_sum, non_additivity) {}
+            ncellx_scale, radii, sca, true, exact_sum, non_additivity) {}
 };
 
 }  // namespace pele

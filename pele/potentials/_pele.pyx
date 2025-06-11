@@ -1,8 +1,10 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 
 basic potential interface stuff
 """
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 cimport numpy as np
 from ctypes import c_size_t as size_t
@@ -96,7 +98,7 @@ cdef class PairwisePotentialInterface(BasePotential):
         cdef Array[double] c_radii
         c_radii = (<cPairwisePotentialInterface*>self.thisptr.get()).get_radii()
         radii = []
-        for i in xrange(c_radii.size()):
+        for i in range(c_radii.size()):
             radii.append(c_radii[i])
         return np.array(radii, dtype='d')
 
@@ -125,20 +127,20 @@ cdef class PairwisePotentialInterface(BasePotential):
                 cutoff_factor)
         else:
             c_include_atoms = Array[short](len(include_atoms))
-            for i in xrange(len(include_atoms)):
+            for i in range(len(include_atoms)):
                 c_include_atoms[i] = include_atoms[i]
             (<cPairwisePotentialInterface*>self.thisptr.get()).get_neighbors_picky(
                 array_wrap_np(coords), c_neighbor_indss, c_neighbor_distss,
                 c_include_atoms, cutoff_factor)
 
         neighbor_indss = []
-        for i in xrange(c_neighbor_indss.size()):
+        for i in range(c_neighbor_indss.size()):
             neighbor_indss.append([])
             for c_neighbor_ind in c_neighbor_indss[i]:
                 neighbor_indss[-1].append(c_neighbor_ind)
 
         neighbor_distss = []
-        for i in xrange(c_neighbor_distss.size()):
+        for i in range(c_neighbor_distss.size()):
             neighbor_distss.append([])
             for c_nneighbor_dist in c_neighbor_distss[i]:
                 neighbor_distss[-1].append([])
@@ -154,7 +156,7 @@ cdef class PairwisePotentialInterface(BasePotential):
             array_wrap_np(coords))
 
         overlap_inds = []
-        for i in xrange(0, len(c_overlap_inds), 2):
+        for i in range(0, len(c_overlap_inds), 2):
             overlap_inds.append((c_overlap_inds[i], c_overlap_inds[i + 1]))
 
         return overlap_inds
@@ -164,7 +166,7 @@ cdef class PairwisePotentialInterface(BasePotential):
         c_order = (<cPairwisePotentialInterface*>self.thisptr.get()).get_atom_order(array_wrap_np(coords))
 
         order = np.empty(c_order.size(), dtype=np.uint32)
-        for i in xrange(c_order.size()):
+        for i in range(c_order.size()):
             order[i] = c_order[i]
 
         if len(order) == 0:

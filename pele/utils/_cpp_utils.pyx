@@ -1,8 +1,10 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 
 This module provides access to the c++ routines that deal with rotations
 """
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 
 cimport numpy as np
@@ -83,11 +85,11 @@ cdef Matrix33 to_mat(A) except *:
     cdef Matrix33 Anew
     A = np.asarray(A).ravel()
     if A.size != 9:
-        print A
+        print(A)
         raise ValueError("A should have length 9 but it is length " + str(len(A)) )
     cdef int i
     cdef double * data = Anew.data()
-    for i in xrange(9):
+    for i in range(9):
         data[i] = A[i]
     return Anew
 
@@ -95,7 +97,7 @@ cdef np.ndarray[double] mat_to_np(Matrix33 & A):
     cdef np.ndarray[double, ndim=1] Anew = np.zeros(9)
     cdef int i
     cdef double * data = A.data()
-    for i in xrange(9):
+    for i in range(9):
         Anew[i] = data[i]
     return Anew.reshape([3,3])
 

@@ -8,6 +8,8 @@ We now use setup.py to create the shared object library
     python setup.py build_ext -i
 """
 cimport cython
+# cython: language_level=3str
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 cimport numpy as np
 from pele.potentials import BasePotential

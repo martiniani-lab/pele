@@ -1,5 +1,6 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
 
 cimport pele.potentials._pele as _pele

@@ -1,4 +1,6 @@
 # distutils: language = c++
+# cython: language_level=3str
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import sys
 
 import numpy as np
@@ -19,7 +21,7 @@ cdef pele_array_to_np_array(_pele.Array[double] v):
     cdef np.ndarray[double, ndim=1] vnew = np.zeros(v.size(), dtype=float)
     cdef int i
     cdef int N = vnew.size
-    for i in xrange(N):
+    for i in range(N):
         vnew[i] = v[i]
     
     return vnew

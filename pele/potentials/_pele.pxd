@@ -1,4 +1,6 @@
+# cython: language_level=3str
 cimport numpy as np
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 from ctypes import c_size_t as size_t
 
@@ -129,7 +131,7 @@ cdef inline np.ndarray[double, ndim=1] pele_array_to_np(Array[double] v):
     cdef int i
     cdef int N = v.size()
     cdef np.ndarray[double, ndim=1] vnew = np.zeros(N)
-    for i in xrange(N):
+    for i in range(N):
         vnew[i] = v[i]
     return vnew
 
@@ -151,7 +153,7 @@ cdef inline Array[size_t] array_size_t_from_np(vin) except *:
     cdef np.ndarray[long, ndim=1] v = np.asarray(vin, dtype=long)
     cdef int N = v.size
     cdef Array[size_t] vnew = Array[size_t](N)
-    for i in xrange(N):
+    for i in range(N):
         vnew[i] = v[i]
     return vnew
 
@@ -161,7 +163,7 @@ cdef inline np.ndarray[size_t, ndim=1] pele_array_to_np_size_t(Array[size_t] v):
     cdef int i
     cdef int N = v.size()
     cdef np.ndarray[size_t, ndim=1] vnew = np.zeros(N, dtype=size_t)
-    for i in xrange(N):
+    for i in range(N):
         vnew[i] = v[i]
     return vnew
 
@@ -182,6 +184,6 @@ cdef inline np.ndarray[long, ndim=1] pele_array_to_np_long(Array[long] v):
     cdef int i
     cdef int N = v.size()
     cdef np.ndarray[long, ndim=1] vnew = np.zeros(N, dtype=long)
-    for i in xrange(N):
+    for i in range(N):
         vnew[i] = v[i]
     return vnew

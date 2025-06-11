@@ -1,3 +1,5 @@
+# cython: language_level=3str
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import sys
 import numpy as np
 cimport numpy as np
@@ -42,37 +44,37 @@ def _compute_LBFGS_step(
     
     
     # loop through the history, most recent first
-    for j1 in xrange(nindices):
+    for j1 in range(nindices):
         i = indices[nindices - j1 - 1]
 #        a[i] = rho[i] * np.dot( s[i,:], q )
 #        q -= a[i] * y[i,:]
         sq = 0.
-        for j2 in xrange(N):
+        for j2 in range(N):
             sq += s[i,j2] * stp[j2]
         a[i] = rho[i] * sq
-        for j2 in xrange(N):
+        for j2 in range(N):
             stp[j2] -= a[i] * y[i,j2]
     
     # include our estimate for diagonal component of the inverse hessian
-    for j2 in xrange(N):
+    for j2 in range(N):
         stp[j2] *= H0
     
     # loop through the history, most recent last
-    for j1 in xrange(nindices):
+    for j1 in range(nindices):
         i = indices[j1]
 #        beta = rho[i] * np.dot( y[i,:], z )
 #        z += s[i,:] * (a[i] - beta)
         yz = 0.
-        for j2 in xrange(N):
+        for j2 in range(N):
             yz += y[i,j2] * stp[j2]
         beta = rho[i] * yz
-        for j2 in xrange(N):
+        for j2 in range(N):
             stp[j2] += s[i,j2] * (a[i] - beta)
     
         
     # step should point downhill
 #    stp = - stp
-    for j2 in xrange(N):
+    for j2 in range(N):
         stp[j2] = -stp[j2]
 
 
