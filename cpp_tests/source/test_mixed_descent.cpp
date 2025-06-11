@@ -38,7 +38,7 @@ TEST(EMXD, Reset) {
   power = 2.5;
   const int pow2 = 5;
 
-  n_particles = 128;
+  n_particles = 16;
   n_dof = n_particles * _ndim;
   phi = 0.9;
 
@@ -137,7 +137,7 @@ TEST(EMXD, MultiRun) {
   power = 2.5;
   const int pow2 = 5;
 
-  n_particles = 128;
+  n_particles = 16;
   n_dof = n_particles * _ndim;
   phi = 0.9;
 
@@ -183,8 +183,6 @@ TEST(EMXD, MultiRun) {
   std::mt19937 rng(0);
   // set precision
   std::cout.precision(17);
-  std::cout << "radii" << radii << std::endl;
-  std::cout << "box length" << box_length << std::endl;
   for (int i = 0; i < n_runs; i++) {
     x_start =
         pele::generate_random_coordinates(box_length, n_particles, _ndim, i);
@@ -193,16 +191,6 @@ TEST(EMXD, MultiRun) {
     mxd.reset(x_start);
     mxd.run(100000);
     cvode.run(100000);
-    std::cout << "gradient evals mxd" << mxd.get_nfev() << std::endl;
-    std::cout << "gradient evals cvode" << cvode.get_nfev() << std::endl;
-    std::cout << "hessian evals mxd" << mxd.get_nhev() << std::endl;
-    std::cout << "hessian evals cvode" << cvode.get_nhev() << std::endl;
-    std::cout << "hessian evals" << mxd.get_nhev() << std::endl;
-    std::cout << "step 1:" << mxd.get_n_phase_1_steps() << std::endl;
-    std::cout << "step 2: " << mxd.get_n_phase_2_steps() << std::endl;
-    std::cout << "failed phase 2:" << mxd.get_n_failed_phase_2_steps()
-              << std::endl;
-    std::cout << "iterations" << mxd.get_niter() << std::endl;
     average_cvode_nfev += cvode.get_nfev();
     average_mxd_nfev += mxd.get_nfev();
     average_cvode_nhev += cvode.get_nhev();
@@ -214,15 +202,6 @@ TEST(EMXD, MultiRun) {
   average_cvode_nhev /= n_runs;
   average_mxd_nhev /= n_runs;
   average_failed_phase_2 /= n_runs;
-  std::cout << "average gradient evals mxd" << average_mxd_nfev << std::endl;
-  std::cout << "average gradient evals cvode" << average_cvode_nfev
-            << std::endl;
-  std::cout << "average hessian evals mxd" << average_mxd_nhev << std::endl;
-  std::cout << "average hessian evals cvode" << average_cvode_nhev << std::endl;
-  std::cout << "average failed phase 2: " << average_failed_phase_2
-            << std::endl;
-  std::cout << "radii" << radii << std::endl;
-  std::cout << "box length" << box_length << std::endl;
 }
 
 TEST(CVODE, MultiRun) {

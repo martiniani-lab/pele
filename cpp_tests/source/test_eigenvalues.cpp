@@ -78,7 +78,6 @@ void setup() {
 
   pele::Array<double> g = pele::Array<double>(x.size());
   potcell->get_energy_gradient(x, g);
-  std::cout << g << "\n";
   pele::LowestEigPotential lep = pele::LowestEigPotential(potcell, x, _ndim);
 
   std::shared_ptr<pele::LowestEigPotential> lep_ptr =
@@ -94,17 +93,9 @@ void setup() {
   pele::Array<double> hess = pele::Array<double>(x.size() * x.size());
   potcell->get_energy_gradient_hessian(x, g, hess);
 
-  std::cout << hess << "\n";
-
   Eigen::MatrixXd hess_eig = Eigen::MatrixXd(x.size(), x.size());
 
   eig_mat_eq_pele(hess_eig, hess);
-
-  std::cout << hess_eig << "\n";
-
-  std::cout << hess_eig.eigenvalues().real().minCoeff() << "eigenvalues h \n";
-
-  std::cout << lowesteigenvalue << "lowest eigenvalue from pele \n";
 }
 
 TEST(EIG, sym) { setup(); }

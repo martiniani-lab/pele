@@ -55,9 +55,6 @@ TEST(FireLJ, Reset_Works) {
   fire2.reset(x0);
   fire2.run();
 
-  std::cout << fire1.get_x() << "\n";
-  std::cout << fire2.get_x() << "\n";
-
   ASSERT_EQ(fire1.get_nfev(), fire2.get_nfev());
   ASSERT_EQ(fire1.get_niter(), fire2.get_niter());
 

@@ -60,26 +60,12 @@ ExtendedMixedOptimizer::ExtendedMixedOptimizer(
       line_search_method(this, step),
       iterative_(iterative),
       m_global_symmetry_offset(global_symmetry_offset.copy()) {
-  std::cout << "ExtendedMixedOptimizer Parameters" << std::endl;
-  std::cout << "x0: " << x0 << std::endl;
-  std::cout << "tol: " << tol << std::endl;
-  std::cout << "T: " << T << std::endl;
-  std::cout << "step: " << step << std::endl;
-  std::cout << "conv_tol: " << conv_tol << std::endl;
-  std::cout << "rtol: " << rtol << std::endl;
-  std::cout << "atol: " << atol << std::endl;
-  if (iterative) {
-    std::cout << "iterative: true" << std::endl;
-  } else {
-    std::cout << "iterative: false " << std::endl;
-  }
 
   if (iterative) {
     hessian_type_ = ITERATIVE;
   } else {
     hessian_type_ = DENSE;
   }
-  std::cout << "initial x0" << x0 << std::endl;
   setup_cvode();
   uplo = 'U';
   if (T <= 1) {
@@ -274,7 +260,6 @@ void ExtendedMixedOptimizer::one_iteration() {
     auto compare = [](double a, double b) { return abs(a) < abs(b); };
     auto max_step_it = std::max_element(step.begin(), step.end(), compare);
     double max_step = abs(*max_step_it);
-    std::cout << "max step calculated" << max_step << std::endl;
 
     // if max step is too big, switch back to CVODE
     if (max_step > conv_tol_) {
@@ -493,16 +478,10 @@ void ExtendedMixedOptimizer::compute_phase_2_step() {
   // hessian.diagonal().array() += 1e-11;
   q.setZero();
   eig_eq_pele(r, step);
-  std::cout << "gradient" << r << std::endl;
-  std::cout << "hessian" << hessian << std::endl;
   // print eigenvalues
   Eigen::EigenSolver<Eigen::MatrixXd> es(hessian);
 
-  std::cout << "The eigenvalues of A are:" << std::endl
-            << es.eigenvalues() << std::endl;  // should be positive definite
-
   q = -hessian.householderQr().solve(r);
-  std::cout << "step calculated" << q << std::endl;
   pele_eq_eig(step, q);
 }
 

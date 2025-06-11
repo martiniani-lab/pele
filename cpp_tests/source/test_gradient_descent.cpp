@@ -15,8 +15,6 @@
 using namespace pele;
 
 TEST(CosineGradientDescent, rosenbrock) {
-  std::cout << "Testing Cosine Gradient Descent for the Rosenbrock function"
-            << std::endl;
 
   auto rosenbrock = std::make_shared<pele::RosenBrock>();
   Array<double> x0(2, 0);  // Initial guess for the optimization
@@ -29,10 +27,6 @@ TEST(CosineGradientDescent, rosenbrock) {
   double niter = optimizer.get_niter();
   double f_final = optimizer.get_f();
 
-  std::cout << "x :" << x << "\n";
-  std::cout << "nfev :" << nfev << "\n";
-  std::cout << "niter :" << niter << "\n";
-  std::cout << "f_final :" << f_final << "\n";
 
   // Validate the solution - the Rosenbrock minimum is at (1, 1)
   ASSERT_NEAR(x[0], 1, 1e-3);
@@ -109,8 +103,6 @@ TEST(CosineGradientDescent, harmonic_reset) {
   double niter_reset = cos_gd.get_niter();
   double f_final_reset = cos_gd.get_f();
   Array<double> x_final_reset = cos_gd.get_x();
-  std::cout << "x_final_reset: " << x_final_reset << std::endl;
-  std::cout << "x_final_copy: " << x_final_copy << std::endl;
   // ASSERT_EQ(x_final_reset[0], x_final_copy[0]);
   // ASSERT_EQ(x_final_reset[1], x_final_copy[1]);
   // ASSERT_EQ(f_final_reset, f_final);

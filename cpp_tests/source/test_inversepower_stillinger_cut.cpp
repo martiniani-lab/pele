@@ -29,7 +29,6 @@ class BasicIPSCutTest : public ::testing::Test {
     exponent = 4;
     double dr = std::sqrt(std::pow(x[0] - x[2], 2) + std::pow(x[1] - x[3], 2));
     etrue = get_test_energy(dr, rcut);
-    std::cout << "test energy " << etrue << std::endl;
     e0 = get_test_energy(rcut - eps, rcut);
     pot = std::make_shared<pele::InversePowerStillingerCut<2>>(exponent, radii,
                                                                rcut);
@@ -84,7 +83,6 @@ class TestInversePowerStillingerCutAuto : public PotentialTest {
     exponent = 4;
     double dr = std::sqrt(std::pow(x[0] - x[2], 2) + std::pow(x[1] - x[3], 2));
     etrue = get_test_energy(dr, rcut);
-    std::cout << "test energy " << etrue << std::endl;
     pot = std::make_shared<pele::InversePowerStillingerCut<2>>(exponent, radii,
                                                                rcut);
   }

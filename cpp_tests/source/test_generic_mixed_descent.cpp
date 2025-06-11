@@ -143,6 +143,4 @@ TEST(GENERIC_MXD, TEST_256_RUN) {
   double niter = optimizer_mixed_descent_fire.get_niter();
 
   optimizer_mixed_descent_fire.print_stats();
-
-  std::cout << "x_new" << std::endl;
 }
