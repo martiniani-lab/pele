@@ -63,8 +63,8 @@ cpdef get_distance(np.ndarray[double] r1, np.ndarray[double] r2, int ndim, metho
     cdef cppPeriodicDistance[INT3] *dist_per_3d
     cdef cppLeesEdwardsDistance[INT2] *dist_leesedwards_2d
     cdef cppLeesEdwardsDistance[INT3] *dist_leesedwards_3d
-    cdef cppCartesianDistance[INT2] *dist_cart_2d
-    cdef cppCartesianDistance[INT3] *dist_cart_3d
+    cdef cppCartesianDistance[INT2] dist_cart_2d
+    cdef cppCartesianDistance[INT3] dist_cart_3d
 
     # Define box in C
     cdef _pele.Array[double] c_box
@@ -88,22 +88,24 @@ cpdef get_distance(np.ndarray[double] r1, np.ndarray[double] r2, int ndim, metho
             if ndim == 2:
                 dist_per_2d = new cppPeriodicDistance[INT2](c_box)
                 dist_per_2d.get_rij(c_r_ij, c_r1, c_r2)
+                del dist_per_2d
             else:
                 dist_per_3d = new cppPeriodicDistance[INT3](c_box)
                 dist_per_3d.get_rij(c_r_ij, c_r1, c_r2)
+                del dist_per_3d
         else:
             if ndim == 2:
                 dist_leesedwards_2d = new cppLeesEdwardsDistance[INT2](c_box, shear)
                 dist_leesedwards_2d.get_rij(c_r_ij, c_r1, c_r2)
+                del dist_leesedwards_2d
             else:
                 dist_leesedwards_3d = new cppLeesEdwardsDistance[INT3](c_box, shear)
                 dist_leesedwards_3d.get_rij(c_r_ij, c_r1, c_r2)
+                del dist_leesedwards_3d
     else:
         if ndim == 2:
-            dist_cart_2d = new cppCartesianDistance[INT2]()
             dist_cart_2d.get_rij(c_r_ij, c_r1, c_r2)
         else:
-            dist_cart_3d = new cppCartesianDistance[INT3]()
             dist_cart_3d.get_rij(c_r_ij, c_r1, c_r2)
 
     # Copy results into Python object
