@@ -93,7 +93,3 @@ cpp_tests/source/lib/libgtest.a
 # trajectory files
 **/trajectory*.txt
 **/time*.txt
-
-
-# build artifacts
-pele.egg-info/
