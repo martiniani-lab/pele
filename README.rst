@@ -163,29 +163,6 @@ pele requires python 3.9 and the following packages
 
 We recommend installing all the above packages in a conda environment.
 
-Automated Setup Script
-^^^^^^^^^^^^^^^^^^^^^
-
-We provide a convenience script that automates the creation of a conda environment with all the necessary dependencies. To use it:
-
-.. code-block:: bash
-
-    chmod +x setup_pele_environment.sh
-    ./setup_pele_environment.sh
-
-This script will:
-
-1. Create a new conda environment named ``pele-env`` with Python 3.10
-2. Install all required Python packages
-3. Guide you through installing system dependencies
-4. Provide instructions for installing pele itself
-
-After running the script, activate the environment with:
-
-.. code-block:: bash
-
-    conda activate pele-env
-
 If you want to use the gui you will additionally need:
 
 1. qt4 and qt4 python bindings
@@ -224,57 +201,32 @@ silicon.
 Compilation
 -----------
 
-We recommend installing `pele` using `pip` from the root directory of this repository. This handles the complex build process for you.
+Compilation is required as many of the computationally intensive parts (especially potentials)
+are written in fortran and c++.  Theoretically you should be able to use any compilers,
+but we mostly use gfortran and GCC, so it's the least likely to have problems.  This
+package uses the standard python setup utility (`setuptools`). The current installation procedure
+requires a working C, C++, and Fortran compiler (e.g. gcc, g++, gfortran).
 
-.. code-block:: bash
+This package uses the standard python setup utility (`setuptools`). The current installation procedure
+on Ubuntu is::
 
-  pip install .
+  $ python setup_with_cmake.py develop
 
-This command will compile all the Fortran, C, and C++ extensions and install the package into your Python environment.
+On MacOs, one has to set the deployment target according to the
+MacOs version again (the CC and CXX environment variables are set
+by the Python script)::
 
-Customizing the build
-^^^^^^^^^^^^^^^^^^^^^^^
+  $ MACOSX_DEPLOYMENT_TARGET=14.3 python3 setup_with_cmake.py develop
 
-To control the build process, you can use environment variables.
+This compiles the extension modules and ensures that the python
+interpreter can find pele. You can also just compile the extension
+modules by using the command (possibly including the deployment
+target, if on MacOs)::
 
-**Parallel compilation**: To specify the number of parallel jobs for the compilation, you can set the `MAKEFLAGS` or `PELE_BUILD_JOBS` environment variable. For example, to use 8 cores:
+  $ python setup_with_cmake.py build_ext -i
 
-.. code-block:: bash
-
-  MAKEFLAGS="-j8" pip install .
-
-**Disabling CVODE**: To install `pele` without attractor identification support (i.e., without CVODE), set the `PELE_WITH_CVODE` environment variable to `0`:
-
-.. code-block:: bash
-
-  PELE_WITH_CVODE=0 pip install .
-
-Note that this will make some of the tests fail.
-
-
-Uninstalling
-------------
-
-To uninstall the package, run:
-
-.. code-block:: bash
-
-    pip uninstall pele
-
-Cleaning the build
-------------------
-
-To remove all build artifacts and compiled files from your project directory, run the following command from the root folder:
-
-.. code-block:: bash
-
-    rm -rf build/ dist/ pele.egg-info/
-    find pele -type f \( -name "*.c" -o -name "*.cxx" -o -name "*.so" \) -delete
-
-
-After cleaning, you can perform a fresh installation.
-
-To test whether your installation has worked correctly, run::
+Afterwards, make sure to add the install directory to your
+PYTHONPATH environment variable. To test whether your installation has worked correctly, run::
 
   $ OMP_NUM_THREADS=1 pytest pele/
 
@@ -292,6 +244,9 @@ If building fails, run the following command to remove cached files
 before building again::
 
   $ rm -rf build cythonize.dat CMakeCache.txt cmake_install.cmake
+  $ find . -name "*.so" -delete
+  $ find . -name "*.c" -delete
+  $ find . -name "*.cpp" -delete
 
 Tests
 =====

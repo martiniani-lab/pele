@@ -109,15 +109,15 @@ jobs:
           cd cpp_tests/source
           ./test_main
 
-      - name: Install pele (Linux)
+      - name: Compile python library (Linux)
         if: matrix.os == 'ubuntu-22.04'
         run: |
-          pip install .
+          python setup_with_cmake.py build_ext -i
 
-      - name: Install pele (macOS)
+      - name: Compile python library (macOS)
         if: matrix.os == 'macos-latest'
         run: |
-          MACOSX_DEPLOYMENT_TARGET=12.0 pip install .
+          MACOSX_DEPLOYMENT_TARGET=12.0 python setup_with_cmake.py build_ext -i
 
       - name: Run python tests
         run: |
