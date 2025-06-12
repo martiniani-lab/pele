@@ -24,7 +24,7 @@ from libcpp.vector cimport vector
 
 
 cdef extern from "pele/cvode.hpp" namespace "pele":
-    cdef enum HessianType:
+    cpdef enum HessianType:
         DENSE,
         ITERATIVE
 

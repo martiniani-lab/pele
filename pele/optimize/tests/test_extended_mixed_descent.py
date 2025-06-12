@@ -41,7 +41,6 @@ def test_extended_mixed_descent_compare_with_cpp(
     # check whether right minima is reached
     assert np.allclose(final_coords, expected_final_coordinates)
     # Expect steps to match with C++ results from test_cvode.cpp
-    return True
 
 
 def test_extended_mixed_descent_compare_with_cpp_iterative(
@@ -75,4 +74,3 @@ def test_extended_mixed_descent_compare_with_cpp_iterative(
     # check whether right minima is reached
     assert np.allclose(final_coords, expected_final_coordinates)
     # Expect steps to match with C++ results from test_cvode.cpp
-    return True

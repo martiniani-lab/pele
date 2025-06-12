@@ -21,7 +21,7 @@ from libcpp cimport bool
 
 
 cdef extern from "pele/optimizer.hpp" namespace "pele":
-    cdef enum StopCriterionType:
+    cpdef enum StopCriterionType:
         GRADIENT,
         STEPNORM,
         NEWTON

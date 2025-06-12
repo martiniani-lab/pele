@@ -14,7 +14,7 @@ cdef extern from "math.h":
 @cython.wraparound(False)
 def xymodel_energy_gradient(np.ndarray[double, ndim=1] angles, 
                                np.ndarray[double, ndim=2] phases, 
-                               np.ndarray[long, ndim=2] neighbors):
+                               np.ndarray[np.int64_t, ndim=2] neighbors):
     cdef int u, v
     cdef np.ndarray[double, ndim=1] grad = np.zeros(angles.size)
     cdef double E = 0.

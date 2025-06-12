@@ -3,16 +3,36 @@
 # distutils: sources = modified_fire.cpp
 # distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
-from yaml import DocumentStartEvent
 
 from pele.potentials import _pele
+from pele.potentials cimport _pele
 from pele.potentials._pythonpotential import as_cpp_potential
 
-#cimport numpy as np
-#cimport cython
-#from libcpp cimport bool as cbool
+cimport numpy as np
+cimport pele.optimize._pele_opt as _pele_opt
+from pele.optimize._pele_opt cimport shared_ptr
+cimport cython
 
 from libcpp cimport bool
+from libcpp.vector cimport vector
+
+cdef extern from "pele/optimizer.hpp" namespace "pele":
+    cpdef enum StopCriterionType:
+        GRADIENT,
+        STEPNORM,
+        NEWTON
+
+cdef extern from "pele/modified_fire.hpp" namespace "pele":
+    cdef cppclass cppMODIFIED_FIRE "pele::MODIFIED_FIRE":
+        cppMODIFIED_FIRE(shared_ptr[_pele.cBasePotential], _pele.Array[double], 
+                         double, double, double, size_t, double, double, double, double, double, bool, bool, int, StopCriterionType) except +
+        vector[double] get_time_trajectory() except +
+        vector[double] get_gradient_norm_trajectory() except +
+        vector[double] get_distance_trajectory() except +
+        vector[double] get_energy_trajectory() except +
+        vector[double] get_costly_time_trajectory() except +
+        vector[vector[double]] get_coordinate_trajectory() except +
+        vector[vector[double]] get_gradient_trajectory() except +
 
 cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
     """This class is the python interface for the c++ MODIFIED_FIRE implementation
@@ -56,7 +76,7 @@ cdef class _Cdef_MODIFIED_FIRE_CPP(_pele_opt.GradientOptimizer):
         self.verbosity = verbosity
         self.save_trajectory = save_trajectory
         self.iterations_before_save = iterations_before_save
-        self.stop_criterion_type = stop_criterion_type
+        self.stop_criterion = stop_criterion_type
         
         potential = as_cpp_potential(potential, verbose=verbosity>0)
         

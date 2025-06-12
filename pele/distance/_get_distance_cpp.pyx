@@ -8,7 +8,7 @@ from pele.potentials._pele cimport array_wrap_np
 cimport numpy as np
 import numpy as np
 from libc.stdlib cimport malloc, free
-from distance_enum import Distance
+from .distance_enum import Distance
 
 # cython has no support for integer template argument.  This is a hack to get around it
 # https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs

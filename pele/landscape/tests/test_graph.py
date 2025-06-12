@@ -83,7 +83,7 @@ class TestGraph(unittest.TestCase):
             edge_exists = graph.graph.has_edge(min1, n) or graph.graph.has_edge(
                 n, min1
             )
-            self.assert_(edge_exists)
+            self.assertTrue(edge_exists)
 
         # make sure the new edges have transition state data attached
         for v in graph.graph.neighbors(min1):

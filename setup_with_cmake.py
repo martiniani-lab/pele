@@ -53,8 +53,7 @@ except ImportError:
         FortranExtension = Extension
 
 # Numpy header files
-numpy_lib = os.path.split(np.__file__)[0]
-numpy_include = os.path.join(numpy_lib, "core/include")
+numpy_include = np.get_include()
 
 encoding = "utf-8"
 # extract the -j flag and pass save it for running make on the CMake makefile
@@ -127,6 +126,7 @@ if build_type == "Release":
         "-fPIC",
         "-DNDEBUG",
         "-march=native",
+        "-D_GLIBCXX_USE_CXX11_ABI=1",
     ]
 elif build_type == "Greene":
     cmake_compiler_extra_args = [
@@ -143,6 +143,7 @@ elif build_type == "Greene":
         "-qopenmp",
         "-qopt-report-stdout",
         "-qopt-report-phase=openmp",
+        "-D_GLIBCXX_USE_CXX11_ABI=1",
     ]
 elif build_type == "Debug":
     cmake_compiler_extra_args = [
@@ -153,6 +154,7 @@ elif build_type == "Debug":
         "-ggdb3",
         "-O0",
         "-fPIC",
+        "-D_GLIBCXX_USE_CXX11_ABI=1",
     ]
 elif build_type == "RelWithDebInfo":
     cmake_compiler_extra_args = [
@@ -163,6 +165,7 @@ elif build_type == "RelWithDebInfo":
         "-g",
         "-O3",
         "-fPIC",
+        "-D_GLIBCXX_USE_CXX11_ABI=1",
     ]
 elif build_type == "MemCheck":
     cmake_compiler_extra_args = [
@@ -175,6 +178,7 @@ elif build_type == "MemCheck":
         "-fPIC",
         "-fsanitize=address",
         "-fsanitize=leak",
+        "-D_GLIBCXX_USE_CXX11_ABI=1",
     ]
 else:
     raise ValueError("Unknown build type: " + build_type)
@@ -261,8 +265,7 @@ write_version_py()
 # run cython on the pyx files
 #
 # need to pass cython the include directory so it can find the .pyx files
-# Add language_level=3str for Cython 3.0 compatibility
-cython_flags = ["-I"] + [os.path.abspath("pele/potentials")] + ["-v"] + ["--directive", "language_level=3str"]
+cython_flags = ["-I"] + [os.path.abspath("pele/potentials")] + ["-v"]
 
 
 def generate_cython():
@@ -283,53 +286,24 @@ generate_cython()
 # compile fortran extension modules
 #
 
-
-class ModuleList(object):
-    def __init__(self, **kwargs):
-        self.module_list = []
-        self.kwargs = kwargs
-
-    def add_module(self, filename):
-        modname = filename.replace("/", ".")
-        modname, ext = os.path.splitext(modname)
-        # Use FortranExtension for Fortran files if available
-        if fortran_support and filename.endswith('.f90'):
-            self.module_list.append(FortranExtension(modname, [filename], **self.kwargs))
-        else:
-            self.module_list.append(Extension(modname, [filename], **self.kwargs))
-
-
-extra_compile_args = ["-mavx"] if not platform.processor() == "arm" else []
-if False:
-    # for bug testing
-    extra_compile_args += ["-DF2PY_REPORT_ON_ARRAY_COPY=1"]
-# if True:
-#    extra_compile_args += ["-ffixed-line-length-none"]
-
-fmodules = ModuleList(extra_compile_args=extra_compile_args)
-# fmodules.add_module("pele/mindist/overlap.f90")
-fmodules.add_module("pele/mindist/minperm.f90")
-# fmodules.add_module("pele/optimize/mylbfgs_fort.f90")
-fmodules.add_module("pele/optimize/mylbfgs_updatestep.f90")
-fmodules.add_module("pele/potentials/fortran/AT.f90")
-fmodules.add_module("pele/potentials/fortran/ljpshiftfort.f90")
-fmodules.add_module("pele/potentials/fortran/lj.f90")
-fmodules.add_module("pele/potentials/fortran/ljcut.f90")
-# fmodules.add_module("pele/potentials/fortran/soft_sphere_pot.f90")
-# fmodules.add_module("pele/potentials/fortran/maxneib_lj.f90")
-# fmodules.add_module("pele/potentials/fortran/maxneib_blj.f90")
-fmodules.add_module("pele/potentials/fortran/lj_hess.f90")
-fmodules.add_module("pele/potentials/fortran/morse.f90")
-fmodules.add_module("pele/potentials/fortran/scdiff_periodic.f90")
-fmodules.add_module("pele/potentials/fortran/FinSin.f90")
-fmodules.add_module("pele/potentials/fortran/gupta.f90")
-# fmodules.add_module("pele/potentials/fortran/magnetic_colloids.f90")
-# fmodules.add_module("pele/potentials/rigid_bodies/rbutils.f90")
-fmodules.add_module("pele/utils/_fortran_utils.f90")
-fmodules.add_module("pele/transition_states/_orthogoptf.f90")
-fmodules.add_module("pele/transition_states/_NEB_utils.f90")
-fmodules.add_module("pele/angleaxis/_aadist.f90")
-fmodules.add_module("pele/accept_tests/_spherical_container.f90")
+fortran_files = [
+    "pele/mindist/minperm.f90",
+    "pele/optimize/mylbfgs_updatestep.f90",
+    "pele/potentials/fortran/AT.f90",
+    "pele/potentials/fortran/ljpshiftfort.f90",
+    "pele/potentials/fortran/lj.f90",
+    "pele/potentials/fortran/ljcut.f90",
+    "pele/potentials/fortran/lj_hess.f90",
+    "pele/potentials/fortran/morse.f90",
+    "pele/potentials/fortran/scdiff_periodic.f90",
+    "pele/potentials/fortran/FinSin.f90",
+    "pele/potentials/fortran/gupta.f90",
+    "pele/utils/_fortran_utils.f90",
+    "pele/transition_states/_orthogoptf.f90",
+    "pele/transition_states/_NEB_utils.f90",
+    "pele/angleaxis/_aadist.f90",
+    "pele/accept_tests/_spherical_container.f90",
+]
 
 
 #
@@ -342,25 +316,13 @@ extra_compile_args = [
     "-O2",
 ]
 
-cxx_modules = [
-    Extension(
-        "pele.optimize._cython_lbfgs",
-        ["pele/optimize/_cython_lbfgs.c"],
-        include_dirs=[numpy_include],
-        extra_compile_args=extra_compile_args,
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        "pele.potentials._cython_tools",
-        ["pele/potentials/_cython_tools.c"],
-        include_dirs=[numpy_include],
-        extra_compile_args=extra_compile_args,
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
+c_files = [
+    "pele/optimize/_cython_lbfgs.c",
+    "pele/potentials/_cython_tools.c",
 ]
 
-fortran_modules = fmodules.module_list
-ext_modules = fortran_modules + cxx_modules
+
+ext_modules = []
 
 
 def get_compiler_env(compiler_id):
@@ -419,22 +381,14 @@ def get_compiler_env(compiler_id):
                 .rstrip("\n")
             )
         else:
-            env["CC"] = (
-                (subprocess.check_output(["which", "gcc"]))
-                .decode(encoding)
-                .rstrip("\n")
-            )
-            env["CXX"] = (
-                (subprocess.check_output(["which", "g++"]))
-                .decode(encoding)
-                .rstrip("\n")
-            )
-        env["LD"] = (
-            (subprocess.check_output(["which", "ld"])).decode(encoding).rstrip("\n")
-        )
-        env["AR"] = (
-            (subprocess.check_output(["which", "ar"])).decode(encoding).rstrip("\n")
-        )
+            # Using `which` to find the compiler executable can cause C++ ABI
+            # mismatches when working in a conda environment. The conda
+            # environment provides its own compilers which should be used.
+            # We now trust that the environment PATH is set up correctly
+            # so that CMake can find the appropriate compilers.
+            env["CC"] = "gcc"
+            env["CXX"] = "g++"
+            env["AR"] = "ar"
     elif compiler_id.lower() in ("intel"):
         env["CC"] = (
             (subprocess.check_output(["which", "icc"])).decode(encoding).rstrip("\n")
@@ -442,22 +396,24 @@ def get_compiler_env(compiler_id):
         env["CXX"] = (
             (subprocess.check_output(["which", "icpc"])).decode(encoding).rstrip("\n")
         )
-        env["LD"] = (
-            (subprocess.check_output(["which", "xild"])).decode(encoding).rstrip("\n")
-        )
         env["AR"] = (
             (subprocess.check_output(["which", "xiar"])).decode(encoding).rstrip("\n")
         )
     else:
         raise Exception("compiler id not known")
     # this line only works if the build directory has been deleted
-    cmake_compiler_args = shlex.split(
+
+    cmake_compiler_args_str = (
         "-D CMAKE_EXPORT_COMPILE_COMMANDS=1 "
-        "-D CMAKE_C_COMPILER={} -D CMAKE_CXX_COMPILER={} "
-        "-D CMAKE_LINKER={} -D CMAKE_AR={}".format(
-            env["CC"], env["CXX"], env["LD"], env["AR"]
-        )
+        "-D CMAKE_C_COMPILER={CC} -D CMAKE_CXX_COMPILER={CXX}"
     )
+    if "AR" in env:
+        cmake_compiler_args_str += " -D CMAKE_AR={AR}"
+    if "LD" in env:
+        cmake_compiler_args_str += " -D CMAKE_LINKER={LD}"
+    
+    cmake_compiler_args = shlex.split(cmake_compiler_args_str.format(**env))
+
     # Add search path for brew installed openblas on MacOs.
     if sys.platform.startswith("darwin"):
         openblas = (
@@ -672,8 +628,10 @@ cmake_txt = cmake_txt.replace(
 with open("CMakeLists.txt", "w") as fout:
     fout.write(cmake_txt)
     fout.write("\n")
-    for fname in cxx_files:
+    for fname in cxx_files + c_files:
         fout.write("make_cython_lib(${CMAKE_CURRENT_SOURCE_DIR}/%s)\n" % fname)
+    for fname in fortran_files:
+        fout.write("make_fortran_lib(${CMAKE_CURRENT_SOURCE_DIR}/%s)\n" % fname)
 
 
 def run_cmake(compiler_id="unix"):
@@ -716,14 +674,17 @@ class build_ext_precompiled(old_build_ext):
         """
         ext_path = self.get_ext_fullpath(ext.name)
         pre_compiled_library = ext.sources[0]
-        if pre_compiled_library[-3:] != ".so":
-            raise RuntimeError("library is not a .so file: " + pre_compiled_library)
+
         if not os.path.isfile(pre_compiled_library):
             raise RuntimeError(
                 "file does not exist: "
                 + pre_compiled_library
                 + " Did CMake not run correctly"
             )
+
+        # Ensure the destination directory exists before copying
+        os.makedirs(os.path.dirname(ext_path), exist_ok=True)
+
         print("copying", pre_compiled_library, "to", ext_path)
         shutil.copy2(pre_compiled_library, ext_path)
 
@@ -740,4 +701,28 @@ for fname in cxx_files:
     pre_compiled_lib = os.path.join(cmake_build_dir, lname)
     cxx_modules.append(Extension(name, [pre_compiled_lib]))
 
-setup(cmdclass=dict(build_ext=build_ext_precompiled), ext_modules=cxx_modules)
+c_modules = []
+for fname in c_files:
+    name = fname.replace(".c", "")
+    name = name.replace("/", ".")
+    lname = os.path.basename(fname)
+    lname = lname.replace(".c", ".so")
+    pre_compiled_lib = os.path.join(cmake_build_dir, lname)
+    c_modules.append(Extension(name, [pre_compiled_lib]))
+
+fortran_modules = []
+for fname in fortran_files:
+    name = fname.replace(".f90", "")
+    name = name.replace("/", ".")
+    lname = os.path.basename(fname)
+    # in python3 the extension has a hash
+    # e.g. minperm.cpython-35m-x86_64-linux-gnu.so
+    # we get it from sysconfig
+    lname = lname.replace(".f90", sysconfig.get_config_var("EXT_SUFFIX"))
+    pre_compiled_lib = os.path.join(cmake_build_dir, lname)
+    fortran_modules.append(Extension(name, [pre_compiled_lib]))
+
+setup(
+    cmdclass=dict(build_ext=build_ext_precompiled),
+    ext_modules=cxx_modules + fortran_modules + c_modules,
+)

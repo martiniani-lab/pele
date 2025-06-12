@@ -14,13 +14,13 @@ def _compute_LBFGS_step(
                            np.ndarray[double, ndim=2] s,
                            np.ndarray[double, ndim=2] y,
                            np.ndarray[double, ndim=1] rho,
-                           long int k, double H0
+                           int k, double H0
                            ):
-    cdef long int i, M, N, istart, j1, j2, nindices
+    cdef int i, M, N, istart, j1, j2, nindices
     cdef double sq, yz, beta
     cdef np.ndarray[double, ndim=1] stp
     cdef np.ndarray[double, ndim=1] a
-    cdef np.ndarray[long int, ndim=1] indices
+    cdef np.ndarray[np.int64_t, ndim=1] indices
 
     M = s.shape[0]
     N = G.size
@@ -39,7 +39,7 @@ def _compute_LBFGS_step(
         stp *= -H0 * min(gnorm, 1. / gnorm)
         return stp
     
-    indices = np.array([ i % M for i in range(max([0, k - M]), k, 1) ], np.integer)
+    indices = np.array([ i % M for i in range(max([0, k - M]), k, 1) ], dtype=np.int64)
     nindices = len(indices)
     
     
