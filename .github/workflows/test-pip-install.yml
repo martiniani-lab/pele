@@ -1,0 +1,128 @@
+name: Test pip installation
+
+on:
+  push:
+    branches: ["master", "dev"]
+  pull_request:
+    branches: ["master", "dev"]
+
+jobs:
+  test-pip-install:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-latest]
+        python-version: ["3.9", "3.10", "3.11"]
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc g++ gfortran cmake libblas-dev liblapack-dev liblapacke-dev libsuitesparse-dev
+
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew list gcc@13 || brew install gcc@13
+          brew list cmake || brew install cmake
+          brew list openblas || brew install openblas
+          brew list gettext || brew install gettext
+          brew list suite-sparse || brew install suite-sparse
+
+      - name: Get submodules
+        run: git submodule update --init --recursive
+
+      - name: Install sundials and Eigen (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          cd extern
+          chmod +x sun_inst.sh
+          ./sun_inst.sh release
+          cp -r eigen/Eigen install/include/
+          cd ..
+
+      - name: Install sundials and Eigen (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd extern
+          chmod +x sun_inst.sh
+          MACOSX_DEPLOYMENT_TARGET=12.0 CC=gcc-13 CXX=g++-13 ./sun_inst.sh release
+          cp -r eigen/Eigen install/include/
+          cd ..
+
+      - name: Test standard pip install (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          pip install .
+          # Test that pele can be imported
+          python -c "import pele; print('pele version:', pele.__version__ if hasattr(pele, '__version__') else 'unknown')"
+          # Run a simple test
+          export OMP_NUM_THREADS=1
+          pytest pele/potentials/tests/test__lj_cpp.py::TestLJ::test_lj_binary_file -v
+
+      - name: Test standard pip install (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          MACOSX_DEPLOYMENT_TARGET=12.0 pip install .
+          # Test that pele can be imported
+          python -c "import pele; print('pele version:', pele.__version__ if hasattr(pele, '__version__') else 'unknown')"
+          # Run a simple test
+          export OMP_NUM_THREADS=1
+          pytest pele/potentials/tests/test__lj_cpp.py::TestLJ::test_lj_binary_file -v
+
+      - name: Clean and test parallel build
+        run: |
+          pip uninstall -y pele
+          rm -rf build/ dist/ pele.egg-info/
+          find pele -type f \( -name "*.c" -o -name "*.cxx" -o -name "*.so" \) -delete
+
+      - name: Test parallel pip install (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          MAKEFLAGS="-j4" pip install .
+          python -c "import pele"
+
+      - name: Test parallel pip install (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          MACOSX_DEPLOYMENT_TARGET=12.0 MAKEFLAGS="-j4" pip install .
+          python -c "import pele"
+
+      - name: Clean and test editable install
+        run: |
+          pip uninstall -y pele
+          rm -rf build/ dist/ pele.egg-info/
+          find pele -type f \( -name "*.c" -o -name "*.cxx" -o -name "*.so" \) -delete
+
+      - name: Test editable install (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          pip install -e .
+          python -c "import pele"
+          # Run tests from a different directory to ensure editable install works
+          cd /tmp
+          python -c "import pele; print('Editable install successful')"
+
+      - name: Test editable install (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          MACOSX_DEPLOYMENT_TARGET=12.0 pip install -e .
+          python -c "import pele"
+          # Run tests from a different directory to ensure editable install works
+          cd /tmp
+          python -c "import pele; print('Editable install successful')"
+
+      - name: Test pip uninstall
+        run: |
+          pip uninstall -y pele
+          # Verify pele cannot be imported after uninstall
+          python -c "import pele" 2>&1 | grep -q "ModuleNotFoundError" && echo "Uninstall successful" || exit 1 
