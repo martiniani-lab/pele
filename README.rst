@@ -177,8 +177,8 @@ This script will:
 
 1. Create a new conda environment named ``pele-env`` with Python 3.10
 2. Install all required Python packages
-3. Guide you through installing system dependencies
-4. Provide instructions for installing pele itself
+3. Build the necessary C/C++ dependencies (SUNDIALS and Eigen)
+4. Install ``pele`` using ``pip``
 
 After running the script, activate the environment with:
 

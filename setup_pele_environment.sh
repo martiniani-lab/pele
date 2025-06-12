@@ -130,48 +130,35 @@ echo "To activate this environment in the future:"
 echo "  conda activate $ENV_NAME"
 echo ""
 echo "=========================================="
-echo "  Pele Installation Steps"
+echo "  Installing pele"
 echo "=========================================="
-echo ""
-echo "1. Clone and setup pele (if not already done):"
-echo "   git clone https://github.com/martiniani-lab/pele.git"
-echo "   cd pele"
-echo "   git submodule update --init --recursive"
-echo ""
-echo "2. Install C/C++ dependencies:"
-echo "   cd extern"
+
+echo "Fetching submodules..."
+git submodule update --init --recursive
+
+echo "Building SUNDIALS (this may take a while)..."
+pushd extern > /dev/null
 if [[ "$OS_TYPE" == "linux" ]]; then
-    echo "   ./sun_inst.sh release"
+    ./sun_inst.sh release
 elif [[ "$OS_TYPE" == "macos" ]]; then
-    echo "   MACOSX_DEPLOYMENT_TARGET=$MACOS_VERSION CC=gcc-13 CXX=g++-13 ./sun_inst.sh release"
+    MACOSX_DEPLOYMENT_TARGET=$MACOS_VERSION CC=gcc-13 CXX=g++-13 ./sun_inst.sh release
 fi
-echo "   cp -r eigen/Eigen install/include/"
-echo "   cd .."
-echo ""
-echo "3. Install pele using pip:"
+cp -r eigen/Eigen install/include/
+popd > /dev/null
+
+echo "Running pip install..."
 if [[ "$OS_TYPE" == "linux" ]]; then
-    echo "   pip install ."
-    echo ""
-    echo "   # For development (editable install):"
-    echo "   pip install -e ."
-    echo ""
-    echo "   # For parallel compilation (e.g., 8 cores):"
-    echo "   MAKEFLAGS=\"-j8\" pip install ."
-elif [[ "$OS_TYPE" == "macos" ]]; then
-    echo "   MACOSX_DEPLOYMENT_TARGET=$MACOS_VERSION pip install ."
-    echo ""
-    echo "   # For development (editable install):"
-    echo "   MACOSX_DEPLOYMENT_TARGET=$MACOS_VERSION pip install -e ."
-    echo ""
-    echo "   # For parallel compilation (e.g., 8 cores):"
-    echo "   MACOSX_DEPLOYMENT_TARGET=$MACOS_VERSION MAKEFLAGS=\"-j8\" pip install ."
+    pip install .
+else
+    MACOSX_DEPLOYMENT_TARGET=$MACOS_VERSION pip install .
 fi
+
 echo ""
-echo "4. Test the installation:"
-echo "   export OMP_NUM_THREADS=1"
-echo "   pytest pele/ -v"
-echo ""
-echo "5. To uninstall pele:"
-echo "   pip uninstall pele"
-echo ""
+echo "To run the test suite:" 
+echo "  export OMP_NUM_THREADS=1" 
+echo "  pytest pele/ -v" 
+
+echo "To uninstall pele:" 
+echo "  pip uninstall pele" 
+
 echo "Note: The editable install (-e .) is recommended for development work." 
