@@ -18,7 +18,6 @@ using std::cout;
 TEST(LbfgsLJ, TwoAtom_Works) {
   auto lj = std::make_shared<pele::LJ>(1., 1.);
   Array<double> x0(6, 0);
-  std::cout << x0 << "\n";
   x0[0] = 2.;
   pele::LBFGS lbfgs(lj, x0);
   lbfgs.run();
@@ -63,8 +62,6 @@ TEST(LbfgsLJ, Reset_Works) {
   lbfgs2.set_H0(H0);
   lbfgs2.run();
 
-  cout << lbfgs1.get_x() << "\n";
-  cout << lbfgs2.get_x() << "\n";
 
   ASSERT_EQ(lbfgs1.get_nfev(), lbfgs2.get_nfev());
   ASSERT_EQ(lbfgs1.get_niter(), lbfgs2.get_niter());
@@ -108,88 +105,4 @@ TEST(LbfgsRosenbrock, Rosebrock_works) {
   // pele ::GradientDescent lbfgs(rosenbrock, x0);
   lbfgs.run(2000);
   Array<double> x = lbfgs.get_x();
-  std::cout << x << "\n";
-  cout << lbfgs.get_nfev() << " get_nfev() \n";
-  cout << lbfgs.get_niter() << " get_niter() \n";
-  cout << lbfgs.get_rms() << " get_rms() \n";
-  cout << lbfgs.get_rms() << " get_rms() \n";
-  std::cout << x0 << "\n"
-            << " \n";
-  std::cout << x << "\n";
 }
-
-// TEST(LbfgsSaddle, Saddle_works){
-//     auto saddle = std::make_shared<pele::Saddle> ();
-//     Array<double> x0(2, 0);
-//     // Start from a point that ends on a saddle
-//     x0[0] = 1.;
-//     x0[1] = 0;
-//     std::cout << x0 << "\n";
-//     pele::LBFGS lbfgs(saddle, x0, 1e-4, 1, 1);
-//     lbfgs.run();
-//     Array<double> x = lbfgs.get_x();
-//     std::cout << x << "x value \n";
-//     cout << lbfgs.get_nfev() << " get_nfev() \n";
-//     cout << lbfgs.get_niter() << " get_niter() \n";
-//     cout << lbfgs.get_rms() << " get_rms() \n";
-//     cout << lbfgs.get_rms() << " get_rms() \n";
-//     std::cout << "this is okay" << "\n";
-// }
-
-// TEST(LbfgsATLJ, heavyconcaveworks){
-//     auto saddle = std::make_shared<pele::ATLJ> (1., 1., 1.);
-//     Array<double> x0 = {0.97303831232970894, 0, 0, 0, 0, 0,
-//     -1.8451195244938898, 0.66954397800263088, 0};
-//     // Start from a point that ends on a saddle
-//     std::cout << x0 << "\n";
-//     pele::LBFGS lbfgs(saddle, x0, 1e-4, 1, 1);
-//     lbfgs.run();
-//     Array<double> x = lbfgs.get_x();
-//     std::cout << x << "x value \n";
-//     cout << lbfgs.get_nfev() << " get_nfev() \n";
-//     cout << lbfgs.get_niter() << " get_niter() \n";
-//     cout << lbfgs.get_rms() << " get_rms() \n";
-//     cout << lbfgs.get_rms() << " get_rms() \n";
-//     std::cout << "this is okay" << "\n";
-// }
-
-// TEST(LbfgsATLJ, why){
-//     auto saddle = std::make_shared<pele::ATLJ> (1., 1., 2.);
-//     Array<double> x0 = { 1.1596938257996146
-//                          , 0.92275271036961359
-//                          , 0
-//                          , -1.03917561305288
-//                          , 0.60339721865003093
-//                          , 0
-//                          , 0.11585897591687914
-//                          , 0.5349653769730589
-//                          , 0};
-//     // Start from a point that ends on a saddle
-//     std::cout << x0 << "\n";
-//     pele::LBFGS lbfgs(saddle, x0, 1e-4, 1, 1);
-//     lbfgs.run();
-//     Array<double> x = lbfgs.get_x();
-//     std::cout << x << "x value \n";
-//     cout << lbfgs.get_nfev() << " get_nfev() \n";
-//     cout << lbfgs.get_niter() << " get_niter() \n";
-//     cout << lbfgs.get_rms() << " get_rms() \n";
-//     cout << lbfgs.get_rms() << " get_rms() \n";
-//     std::cout << "this is okay" << "\n";
-// }
-
-// TEST(LbfgsSaddlexcubed, Saddle_works){
-//     auto saddlex3 = std::make_shared<pele::XCube> ();
-//     Array<double> x0(1, 0);
-//     // Start from a point that ends on a saddle
-//     x0[0] = 1.;
-//     std::cout << x0 << "\n";
-//     pele::LBFGS lbfgs(saddlex3, x0, 1e-4, 1, 1);
-//     lbfgs.run(30);
-//     Array<double> x = lbfgs.get_x();
-//     std::cout << x << "x value \n";
-//     cout << lbfgs.get_nfev() << " get_nfev() \n";
-//     cout << lbfgs.get_niter() << " get_niter() \n";
-//     cout << lbfgs.get_rms() << " get_rms() \n";
-//     cout << lbfgs.get_rms() << " get_rms() \n";
-//     std::cout << "this is okay" << "\n";
-// }

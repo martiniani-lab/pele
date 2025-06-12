@@ -1,3 +1,4 @@
+# cython: language_level=3str
 from pele.potentials cimport _pele
 from pele.potentials._pele cimport shared_ptr
 from libcpp cimport bool as cbool
@@ -28,4 +29,4 @@ cdef extern from "pele/optimizermpfr.hpp" namespace "pele":
     
 cdef class GradientOptimizerMPFR:
     cdef shared_ptr[cGradientOptimizerMPFR] thisptr      # hold a C++ instance which we're wrapping
-    cpdef events
+    cdef public object events

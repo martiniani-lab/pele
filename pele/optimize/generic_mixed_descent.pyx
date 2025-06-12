@@ -1,9 +1,10 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
 
 
-from multiprocessing.dummy import Array
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import sys
 
 import numpy as np

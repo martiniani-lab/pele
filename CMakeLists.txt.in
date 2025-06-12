@@ -88,6 +88,9 @@ set(LAPACKE_INCLUDE_DIR
   CACHE PATH "Location of lapacke include")
 
 enable_language(CXX)
+enable_language(Fortran)
+find_package(PythonInterp REQUIRED)
+
 SET(CMAKE_CXX_FLAGS __COMPILER_EXTRA_ARGS__)
 
 # cmake_policy(SET CMP0015 NEW)
@@ -139,9 +142,20 @@ if(INCLUDE_SUNDIALS)
 endif()
 
 add_library(pele_lib SHARED ${pele_sources})
-if(APPLE)
+target_include_directories(pele_lib PUBLIC
+    ${PYTHON_INCLUDE_DIRS}
+    ${numpy_include}
+)
+
+# Ensure proper libstdc++ ABI consistency by explicitly linking with the compiler's libstdc++
+target_link_libraries(pele_lib PUBLIC stdc++)
+if(INCLUDE_SUNDIALS)
   target_link_libraries(pele_lib PUBLIC ${SUNDIALS_LIBRARIES})
-  target_link_libraries(pele_lib PUBLIC ${LAPACK_LIBRARIES})
+endif()
+target_link_libraries(pele_lib PUBLIC ${LAPACK_LIBRARIES})
+
+# Apple-specific linking
+if(APPLE)
   target_link_directories(pele_lib PUBLIC ${Intl_LIBRARY_DIR})
 endif(APPLE)
 
@@ -164,12 +178,18 @@ endif(APPLE)
 
 function(make_cython_lib cython_cxx_source)
   get_filename_component(library_name ${cython_cxx_source} NAME)
-  string(REGEX REPLACE ".cxx$" "" library_name ${library_name})
+  string(REGEX REPLACE "\\.c(xx)?$" "" library_name ${library_name})
   add_library(${library_name} SHARED ${cython_cxx_source})
 
   if(APPLE)
     target_link_options(${library_name} PUBLIC ${APPLE_LINK_OPTIONS})
-  endif(APPLE)
+  elseif(UNIX)
+    # For static Python builds, Cython extensions will have undefined
+    # symbols. We tell the linker to ignore these, as they will be
+    # resolved at runtime when the module is imported.
+    # This is the equivalent of -undefined dynamic_lookup on macOS.
+    target_link_options(${library_name} PUBLIC "LINKER:--unresolved-symbols=ignore-all")
+  endif()
 
   target_link_libraries(${library_name} PUBLIC pele_lib)
 
@@ -179,5 +199,44 @@ function(make_cython_lib cython_cxx_source)
 
   target_link_libraries(${library_name} PUBLIC ${LAPACK_LIBRARIES})
   set_target_properties(${library_name} PROPERTIES PREFIX "")
+  set_target_properties(${library_name} PROPERTIES SUFFIX ".so")
   message("making library ${library_name} from source ${cython_cxx_source}")
 endfunction(make_cython_lib)
+
+function(make_fortran_lib fortran_source)
+  get_filename_component(library_name ${fortran_source} NAME)
+  string(REGEX REPLACE "\\.f90$" "" library_name ${library_name})
+  
+  # a bit of a hack to get the module name
+  string(REPLACE "/" "." module_name ${fortran_source})
+  string(REPLACE ".f90" "" module_name ${module_name})
+  #remove the first part of the module name
+  string(REGEX REPLACE "^[^.]*." "" module_name ${module_name})
+
+
+  set(output_lib ${CMAKE_BINARY_DIR}/${library_name}.so)
+
+  add_custom_command(
+    OUTPUT ${output_lib}
+    COMMAND ${PYTHON_EXECUTABLE} -m numpy.f2py -c ${fortran_source} -m ${library_name} --quiet
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS ${fortran_source}
+    COMMENT "Building Fortran module ${library_name} with f2py"
+  )
+
+  add_custom_target(
+      ${library_name}_target ALL
+      DEPENDS ${output_lib}
+  )
+
+  # This is a dummy library to make setuptools happy
+  add_library(${library_name} SHARED IMPORTED)
+  set_property(TARGET ${library_name} PROPERTY IMPORTED_LOCATION ${output_lib})
+  set_property(TARGET ${library_name} APPEND PROPERTY IMPORTED_CONFIGURATIONS "NONE")
+  set_property(TARGET ${library_name} PROPERTY IMPORTED_LOCATION_NONE ${output_lib})
+
+
+  set_target_properties(${library_name} PROPERTIES PREFIX "")
+  set_target_properties(${library_name} PROPERTIES SUFFIX ".so")
+  message("making fortran library ${library_name} from source ${fortran_source}")
+endfunction(make_fortran_lib)

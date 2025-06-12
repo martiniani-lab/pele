@@ -1,4 +1,4 @@
-name: CMake
+name: Tests
 
 on:
   push:
@@ -7,136 +7,122 @@ on:
     branches: ["master"]
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
-  linux:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-latest]
+        python-version: ["3.10"]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
+    
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - uses: conda-incubator/setup-miniconda@v2
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
         with:
-          installer-url: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.11.0-2-Linux-x86_64.sh
-          activate-environment: test
-          python-version: 3.9
-          channels: conda-forge
-          auto-activate-base: false
-      - name: Install python dependencies
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-22.04'
         run: |
-          conda install -y numpy scipy matplotlib networkx cython=0.29.36
-          conda install -y -c conda-forge sqlalchemy=1.4.51 munkres pyro4 scikit-sparse
-          pip install pytest future pyyaml omp-thread-count
-
-      - name: Update apt
-        run: sudo apt-get update
-      # installing gcc-12 since it's available on ubuntu 22.04
-      - name: Use gcc-12/g++-12
-        run: |
-          sudo apt-get install -y gcc-12 g++-12 gfortran-12
+          sudo apt-get update
+          sudo apt-get install -y gcc-12 g++-12 gfortran-12 libblas-dev liblapack-dev liblapacke-dev cmake libsuitesparse-dev
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
           sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-12 100
 
-      # gets gtest
-      - name: Get submodules
-        run: git submodule update --init --recursive
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get install -y libblas-dev liblapack-dev liblapacke-dev
-          sudo apt-get install -y cmake
-      # todo change this with only installing CVODE
-      - name: Install sundials
-        run: |
-          cd extern
-          chmod +x sun_inst.sh
-          ./sun_inst.sh Debug
-          cd ..
-      - name: Install Eigen
-        run: |
-          cd extern
-          cp -r eigen/Eigen install/include
-      - name: Build C++ tests
-        # Build your program with the given configuration
-        run: |
-          cd cpp_tests/source 
-          cmake -DCMAKE_BUILD_TYPE=Debug .
-          make -j4
-      - name: Run C++ tests
-        run: |
-          cd cpp_tests/source
-          ./test_main
-      - name: Compile python library
-        run: |
-          python setup_with_cmake.py build_ext -i
-      - name: Run python tests
-        run: |
-          export OMP_NUM_THREADS=1
-          pytest pele/
-
-  mac:
-    runs-on: macos-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Install homebrew
-        uses: Homebrew/actions/setup-homebrew@master
-      - name: Install software and libraries
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
         run: |
           brew list gcc@13 || brew install gcc@13
           brew list cmake || brew install cmake
           brew list openblas || brew install openblas
           brew list gettext || brew install gettext
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          installer-url: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.11.0-2-MacOSX-x86_64.sh
-          activate-environment: test
-          python-version: 3.9
-          channels: conda-forge
-          auto-activate-base: false
-      - name: Install python dependencies
+          brew list suite-sparse || brew install suite-sparse
+
+      - name: Install Python dependencies
         run: |
-          conda install -y numpy scipy matplotlib networkx cython=0.29.36
-          conda install -y -c conda-forge sqlalchemy=1.4.51 munkres pyro4 scikit-sparse
-          CC=gcc-13 pip install omp-thread-count
-          pip install pytest future pyyaml
-      # gets gtest
+          python -m pip install --upgrade pip wheel
+          # Use modern setuptools and avoid any legacy dependencies
+          pip install "setuptools>=65" "build>=0.8"
+          # Install numpy with modern setuptools support
+          pip install "numpy>=1.24" "scipy>=1.9"
+          pip install matplotlib networkx "cython>=3.0"
+          pip install "sqlalchemy>=1.4,<2.0" munkres scikit-sparse
+          pip install pytest future pyyaml packaging
+          
+      - name: Install omp-thread-count (with compiler)
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            CC=gcc-13 pip install omp-thread-count
+          else
+            pip install omp-thread-count
+          fi
+
       - name: Get submodules
         run: git submodule update --init --recursive
-      - name: Install sundials
+
+      - name: Install sundials (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          cd extern
+          chmod +x sun_inst.sh
+          ./sun_inst.sh Debug
+          cd ..
+
+      - name: Install sundials (macOS)
+        if: matrix.os == 'macos-latest'
         run: |
           cd extern
           chmod +x sun_inst.sh
           MACOSX_DEPLOYMENT_TARGET=12.0 CC=gcc-13 CXX=g++-13 ./sun_inst.sh Debug
           cd ..
+
       - name: Install Eigen
         run: |
           cd extern
           cp -r eigen/Eigen install/include
-      - name: Build C++ tests
-        # Build your program with the given configuration
+
+      - name: Build C++ tests (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          cd cpp_tests/source 
+          cmake -DCMAKE_BUILD_TYPE=Debug .
+          make -j4
+
+      - name: Build C++ tests (macOS)
+        if: matrix.os == 'macos-latest'
         run: |
           cd cpp_tests/source
           cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_PREFIX_PATH=$(brew --prefix openblas) .
           make -j4
+
       - name: Run C++ tests
         run: |
           cd cpp_tests/source
           ./test_main
-      - name: Compile python library
+
+      - name: Compile python library (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          python setup_with_cmake.py build_ext -i
+
+      - name: Compile python library (macOS)
+        if: matrix.os == 'macos-latest'
         run: |
           MACOSX_DEPLOYMENT_TARGET=12.0 python setup_with_cmake.py build_ext -i
+
       - name: Run python tests
         run: |
-          OMP_NUM_THREADS=1 pytest pele/
+          export OMP_NUM_THREADS=1
+          pytest pele/ -v
+
+
+

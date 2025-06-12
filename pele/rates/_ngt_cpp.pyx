@@ -1,5 +1,6 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
 import time
 
@@ -9,7 +10,7 @@ from libcpp.pair cimport pair
 from libcpp.list cimport list as stdlist
 
 cdef extern from "pele/graph.hpp" namespace "pele":
-    ctypedef unsigned long node_id
+    ctypedef size_t node_id
 
 ctypedef pair[node_id, node_id] pair_t
 ctypedef map[pair_t, double] rate_map_t

@@ -29,7 +29,7 @@ class LJClusterFrozen(LJCluster):
         self.mobile_dof = self.coords_converter.get_mobile_dof()
         self.mobile_atoms = np.array(
             [i for i in range(self.natoms) if i not in self.frozen_atoms],
-            np.integer,
+            dtype=int,
         )
         self.nmobile = len(self.mobile_atoms)
         # print self.nmobile

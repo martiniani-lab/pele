@@ -1,6 +1,8 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 cimport pele.potentials._pele as _pele
 from pele.potentials._pele cimport shared_ptr
@@ -96,8 +98,8 @@ cdef class HS_WCA(_pele.PairwisePotentialInterface):
         Parameter controlling the cell list grid spacing: values larger than
         unity lead to finer cell meshing
     """
-    cpdef bool periodic
-    cpdef bool leesedwards
+    cdef public bool periodic
+    cdef public bool leesedwards
     def __cinit__(self, double eps=1.0, double sca=0.12,
                   np.ndarray[double, ndim=1] radii=None, int ndim=3, boxvec=None,
                   boxl=None, distance_method=Distance.CARTESIAN, pot_kwargs={},
@@ -112,7 +114,7 @@ cdef class HS_WCA(_pele.PairwisePotentialInterface):
         cdef size_t i
         if use_frozen:
             if frozen_atoms is None:
-                print "HS_WCA: warning: initialising frozen particle potential without frozen particles"
+                print("HS_WCA: warning: initialising frozen particle potential without frozen particles")
             if reference_coords is None:
                 raise Exception("missing input: can not initialise frozen particle potential without reference coordinates")
             else:

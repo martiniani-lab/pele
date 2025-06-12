@@ -1,4 +1,6 @@
 # distutils: language = c++
+# cython: language_level=3str
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 
 from ctypes import c_size_t as size_t

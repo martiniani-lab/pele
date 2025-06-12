@@ -1,6 +1,8 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 from ctypes import c_size_t as size_t
 
@@ -28,7 +30,7 @@ cdef extern from "pele/wca.hpp" namespace "pele":
 cdef class WCA(_pele.BasePotential):
     """define the python interface to the c++ WCA implementation
     """
-    cpdef bool periodic 
+    cdef public bool periodic 
     def __cinit__(self, sig=1.0, eps=1.0, ndim=3, boxvec=None, boxl=None):
         assert not (boxvec is not None and boxl is not None)
         if boxl is not None:

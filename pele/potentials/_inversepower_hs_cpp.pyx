@@ -24,43 +24,45 @@ cdef extern from *:
 
 
 # use external c++ class
-cdef extern from "pele/inversepower.hpp" namespace "pele":
-    cdef cppclass  cInversePower "pele::InversePower"[ndim]:
-        cInversePower(double pow, double eps, _pele.Array[double] radii, bool exact_sum, double non_additivity) except +
-    cdef cppclass  cInversePowerPeriodic "pele::InversePowerPeriodic"[ndim]:
-        cInversePowerPeriodic(double pow, double eps, _pele.Array[double] radii, _pele.Array[double] boxvec,bool exact_sum, double non_additivity) except +
-    cdef cppclass cInverseIntPower "pele::InverseIntPower"[ndim, pow]:
-        cInverseIntPower(double eps, _pele.Array[double] radii,bool exact_sum, double non_additivity) except +
-    cdef cppclass cInverseIntPowerPeriodic "pele::InverseIntPowerPeriodic"[ndim, pow]:
-        cInverseIntPowerPeriodic(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec,bool exact_sum, double non_additivity) except +
-    cdef cppclass cInverseHalfIntPower "pele::InverseHalfIntPower"[ndim, pow2]:
-        cInverseHalfIntPower(double eps, _pele.Array[double] radii,bool exact_sum, double non_additivity) except +
-    cdef cppclass cInverseHalfIntPowerPeriodic "pele::InverseHalfIntPowerPeriodic"[ndim, pow2]:
-        cInverseHalfIntPowerPeriodic(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec,bool exact_sum, double non_additivity) except +
-    cdef cppclass  cInversePowerPeriodicCellLists "pele::InversePowerPeriodicCellLists"[ndim]:
-        cInversePowerPeriodicCellLists(double pow, double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale,bool exact_sum, double non_additivity) except +
-    cdef cppclass  cInverseIntPowerPeriodicCellLists "pele::InverseIntPowerPeriodicCellLists"[ndim, pow]:
-        cInverseIntPowerPeriodicCellLists(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale,bool exact_sum, double non_additivity) except +
-    cdef cppclass  cInverseHalfIntPowerPeriodicCellLists "pele::InverseHalfIntPowerPeriodicCellLists"[ndim, pow2]:
-        cInverseHalfIntPowerPeriodicCellLists(double eps, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale, bool exact_sum, double non_additivity) except +
+cdef extern from "pele/inversepower_hs.hpp" namespace "pele":
+    cdef cppclass  cInversePowerHS "pele::InversePowerHS"[ndim]:
+        cInversePowerHS(double pow, double eps, double sca, _pele.Array[double] radii, bool exact_sum, double non_additivity) except +
+    cdef cppclass  cInversePowerHSPeriodic "pele::InversePowerHSPeriodic"[ndim]:
+        cInversePowerHSPeriodic(double pow, double eps, double sca, _pele.Array[double] radii, _pele.Array[double] boxvec,bool exact_sum, double non_additivity) except +
+    cdef cppclass cInverseIntPowerHS "pele::InverseIntPowerHS"[ndim, pow]:
+        cInverseIntPowerHS(double eps, double sca, _pele.Array[double] radii,bool exact_sum, double non_additivity) except +
+    cdef cppclass cInverseIntPowerHSPeriodic "pele::InverseIntPowerHSPeriodic"[ndim, pow]:
+        cInverseIntPowerHSPeriodic(double eps, double sca, _pele.Array[double] radii, _pele.Array[double] boxvec,bool exact_sum, double non_additivity) except +
+    cdef cppclass cInverseHalfIntPowerHS "pele::InverseHalfIntPowerHS"[ndim, pow2]:
+        cInverseHalfIntPowerHS(double eps, double sca, _pele.Array[double] radii,bool exact_sum, double non_additivity) except +
+    cdef cppclass cInverseHalfIntPowerHSPeriodic "pele::InverseHalfIntPowerHSPeriodic"[ndim, pow2]:
+        cInverseHalfIntPowerHSPeriodic(double eps, double sca, _pele.Array[double] radii, _pele.Array[double] boxvec,bool exact_sum, double non_additivity) except +
+    cdef cppclass  cInversePowerHSPeriodicCellLists "pele::InversePowerHSPeriodicCellLists"[ndim]:
+        cInversePowerHSPeriodicCellLists(double pow, double eps, double sca, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale,bool exact_sum, double non_additivity) except +
+    cdef cppclass  cInverseIntPowerHSPeriodicCellLists "pele::InverseIntPowerHSPeriodicCellLists"[ndim, pow]:
+        cInverseIntPowerHSPeriodicCellLists(double eps, double sca, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale,bool exact_sum, double non_additivity) except +
+    cdef cppclass  cInverseHalfIntPowerHSPeriodicCellLists "pele::InverseHalfIntPowerHSPeriodicCellLists"[ndim, pow2]:
+        cInverseHalfIntPowerHSPeriodicCellLists(double eps, double sca, _pele.Array[double] radii, _pele.Array[double] boxvec, double ncellx_scale, bool exact_sum, double non_additivity) except +
 
-cdef class InversePower(_pele.PairwisePotentialInterface):
-    """define the python interface to the c++ InversePower implementation
+cdef class InversePowerHS(_pele.PairwisePotentialInterface):
+    """define the python interface to the c++ InversePowerHS implementation
     """
     cdef bool periodic
     cdef float pow
     cdef float eps
+    cdef float sca
     cdef int ndim
     cdef double[:] radii
     cdef double[:] boxvec
     cdef bool use_cell_lists
     cdef float ncellx_scale
     cdef double non_additivity
-    def __cinit__(self, pow, eps, radii, ndim=3, boxvec=None, boxl=None,
+    def __cinit__(self, pow, eps, sca, radii, ndim=3, boxvec=None, boxl=None,
                   bool use_cell_lists=False, ncellx_scale=1.0, bool exact_sum=False, double non_additivity=0.0):
         # stored for pickling
         self.pow = pow
         self.eps = eps
+        self.sca = sca
         self.ndim = ndim
         max_radii = radii.max()
         self.use_cell_lists = use_cell_lists
@@ -71,19 +73,20 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
         assert not (boxvec is not None and boxl is not None)
         if boxl is not None:
             boxvec = [boxl] * ndim
-        boxvec = np.array(boxvec)
-        min_box_vec = boxvec.min()
+        
         cdef np.ndarray[double, ndim=1] bv
         cdef np.ndarray[double, ndim=1] radiic = np.array(radii, dtype=float)
 
         self.radii = radiic
-        self.boxvec = np.array(boxvec)
         
-        if (min_box_vec < 4 * max_radii):
-            raise Exception("boxvec is too small for radii")
-            
-        
-        
+        if boxvec is not None:
+            boxvec = np.array(boxvec)
+            min_box_vec = boxvec.min()
+            self.boxvec = np.array(boxvec)
+            if (min_box_vec < 2 * max_radii * (1. + sca)):
+                raise Exception("boxvec is too small for radii and sca")
+        else:
+            self.boxvec = np.array([])
 
 
         if use_cell_lists:
@@ -98,24 +101,24 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
                     if self.close_enough(pow, 2):
                         # periodic, 2D, Hook
                         self.thisptr = shared_ptr[_pele.cBasePotential](
-                            <_pele.cBasePotential*>new cInverseIntPowerPeriodicCellLists[INT2, INT2](
-                                eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                            <_pele.cBasePotential*>new cInverseIntPowerHSPeriodicCellLists[INT2, INT2](
+                                eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                 _pele.Array[double](<double*> bv.data, bv.size), ncellx_scale, exact_sum, non_additivity
                                 )
                             )
                     elif self.close_enough(pow, 2.5):
                         # periodic, 2D, Hertz
                         self.thisptr = shared_ptr[_pele.cBasePotential](
-                            <_pele.cBasePotential*>new cInverseHalfIntPowerPeriodicCellLists[INT2, INT5](
-                                eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                            <_pele.cBasePotential*>new cInverseHalfIntPowerHSPeriodicCellLists[INT2, INT5](
+                                eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                 _pele.Array[double](<double*> bv.data, bv.size), ncellx_scale, exact_sum, non_additivity
                                 )
                             )
                     else:
                         # periodic, 2D, any
                         self.thisptr = shared_ptr[_pele.cBasePotential](
-                            <_pele.cBasePotential*>new cInversePowerPeriodicCellLists[INT2](
-                                pow, eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                            <_pele.cBasePotential*>new cInversePowerHSPeriodicCellLists[INT2](
+                                pow, eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                 _pele.Array[double](<double*> bv.data, bv.size), ncellx_scale, exact_sum, non_additivity
                                 )
                             )
@@ -123,24 +126,24 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
                     if self.close_enough(pow, 2):
                         # periodic, 3D, Hook
                         self.thisptr = shared_ptr[_pele.cBasePotential](
-                            <_pele.cBasePotential*>new cInverseIntPowerPeriodicCellLists[INT3, INT2](
-                                eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                            <_pele.cBasePotential*>new cInverseIntPowerHSPeriodicCellLists[INT3, INT2](
+                                eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                 _pele.Array[double](<double*> bv.data, bv.size), ncellx_scale, exact_sum, non_additivity
                                 )
                             )
                     elif self.close_enough(pow, 2.5):
                         # periodic, 3D, Hertz
                         self.thisptr = shared_ptr[_pele.cBasePotential](
-                            <_pele.cBasePotential*>new cInverseHalfIntPowerPeriodicCellLists[INT3, INT5](
-                                eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                            <_pele.cBasePotential*>new cInverseHalfIntPowerHSPeriodicCellLists[INT3, INT5](
+                                eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                 _pele.Array[double](<double*> bv.data, bv.size), ncellx_scale, exact_sum, non_additivity
                                 )
                             )
                     else:
                         # periodic, 3D, any
                         self.thisptr = shared_ptr[_pele.cBasePotential](
-                            <_pele.cBasePotential*>new cInversePowerPeriodicCellLists[INT3](
-                                pow, eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                            <_pele.cBasePotential*>new cInversePowerHSPeriodicCellLists[INT3](
+                                pow, eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                 _pele.Array[double](<double*> bv.data, bv.size), ncellx_scale, exact_sum, non_additivity
                                 )
                             )
@@ -151,28 +154,28 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
                     if self.close_enough(pow, 2):
                         # non-periodic, 2D, Hook
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInverseIntPower[INT2, INT2](eps, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
+                                                                     cInverseIntPowerHS[INT2, INT2](eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
                     elif self.close_enough(pow, 2.5):
                         # non-periodic, 2D, Hertz
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInverseHalfIntPower[INT2, INT5](eps, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
+                                                                     cInverseHalfIntPowerHS[INT2, INT5](eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
                     else:
                         # non-periodic, 2D, any
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInversePower[INT2](pow, eps, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
+                                                                     cInversePowerHS[INT2](pow, eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
                 else:
                     if self.close_enough(pow, 2):
                         # non-periodic, 3D, Hook
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInverseIntPower[INT3, INT2](eps, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
+                                                                     cInverseIntPowerHS[INT3, INT2](eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
                     elif self.close_enough(pow, 2.5):
                         # non-periodic, 3D, Hertz
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInverseHalfIntPower[INT3, INT5](eps, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
+                                                                     cInverseHalfIntPowerHS[INT3, INT5](eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
                     else:
                         # non-periodic, 3D, any
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInversePower[INT3](pow, eps, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
+                                                                     cInversePowerHS[INT3](pow, eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size), exact_sum, non_additivity))
 
             else:
                 self.periodic = True
@@ -182,34 +185,33 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
                     if self.close_enough(pow, 2):
                         # periodic, 2D, Hook
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInverseIntPowerPeriodic[INT2, INT2](eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                                                                     cInverseIntPowerHSPeriodic[INT2, INT2](eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                                                                                  _pele.Array[double](<double*> bv.data, bv.size), exact_sum, non_additivity))
                     elif self.close_enough(pow, 2.5):
                         # periodic, 2D, Hertz
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInverseHalfIntPowerPeriodic[INT2, INT5](eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                                                                     cInverseHalfIntPowerHSPeriodic[INT2, INT5](eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                                                                                  _pele.Array[double](<double*> bv.data, bv.size), exact_sum, non_additivity) )
                     else:
                         # periodic, 2D, any
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInversePowerPeriodic[INT2](pow, eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                                                                     cInversePowerHSPeriodic[INT2](pow, eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                                                                                  _pele.Array[double](<double*> bv.data, bv.size), exact_sum, non_additivity) )
                 else:
                     if self.close_enough(pow, 2):
                         # periodic, 3D, Hook
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInverseIntPowerPeriodic[INT3, INT2](eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                                                                     cInverseIntPowerHSPeriodic[INT3, INT2](eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                                                                                  _pele.Array[double](<double*> bv.data, bv.size), exact_sum, non_additivity) )
                     elif self.close_enough(pow, 2.5):
                         # periodic, 3D, Hertz
-                        print(exact_sum, non_additivity)
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInverseHalfIntPowerPeriodic[INT3, INT5](eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                                                                     cInverseHalfIntPowerHSPeriodic[INT3, INT5](eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                                                                                  _pele.Array[double](<double*> bv.data, bv.size), exact_sum, non_additivity) )
                     else:
                         # periodic, 3D, any
                         self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new
-                                                                     cInversePowerPeriodic[INT3](pow, eps, _pele.Array[double](<double*> radiic.data, radiic.size),
+                                                                     cInversePowerHSPeriodic[INT3](pow, eps, sca, _pele.Array[double](<double*> radiic.data, radiic.size),
                                                                                                  _pele.Array[double](<double*> bv.data, bv.size), exact_sum, non_additivity) )
 
 
@@ -225,8 +227,8 @@ cdef class InversePower(_pele.PairwisePotentialInterface):
 
     def __reduce__(self):
         d = {}
-        return (self.__class__, (self, self.pow, self.eps, self.radii, self.ndim, self.boxvec, None,
+        return (self.__class__, (self, self.pow, self.eps, self.sca, self.radii, self.ndim, self.boxvec, None,
                   self.use_cell_lists, self.ncellx_scale), d)
 
     def __setstate__(self, d):
-        pass
+        pass 

@@ -7,5 +7,8 @@ target_link_libraries(bench_cell_lists_alt pele_lib)
 add_executable(bench_lj bench_lj.cpp)
 target_link_libraries(bench_lj pele_lib)
 
+add_executable(bench_inversepower bench_inversepower.cpp)
+target_link_libraries(bench_inversepower pele_lib)
+
 add_executable(bench_minimization bench_minimization.cpp)
 target_link_libraries(bench_minimization pele_lib)

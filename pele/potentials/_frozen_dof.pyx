@@ -1,9 +1,11 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 
 basic potential interface stuff    
 """
 
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 from ctypes import c_size_t as size_t
 
 cimport numpy as np
@@ -69,7 +71,7 @@ cdef class FrozenPotentialWrapper(_pele.BasePotential):
         pot = LJ()
         
         reference_coords = np.random.uniform(-1, 1, [3*natoms])
-        print reference_coords
+        print(reference_coords)
         
         # freeze the first two atoms (6 degrees of freedom)
         frozen_dof = range(6)
@@ -78,16 +80,16 @@ cdef class FrozenPotentialWrapper(_pele.BasePotential):
         
         reduced_coords = fpot.coords_converter.get_reduced_coords(reference_coords)
         
-        print "the energy in the full representation:" 
-        print pot.getEnergy(reference_coords)
-        print "is the same as the energy in the reduced representation:"
-        print fpot.getEnergy(reduced_coords)
+        print("the energy in the full representation:") 
+        print(pot.getEnergy(reference_coords))
+        print("is the same as the energy in the reduced representation:")
+        print(fpot.getEnergy(reduced_coords))
         
         ret = mylbfgs(reduced_coords, fpot)
-        print "after a minimization the energy is ", ret.energy, "and the rms gradient is", ret.rms
-        print "the coordinates of the frozen degrees of freedom are unchanged"
-        print "starting coords:", reference_coords
-        print "minimized coords:", fpot.coords_converter.get_full_coords(ret.coords)
+        print("after a minimization the energy is ", ret.energy, "and the rms gradient is", ret.rms)
+        print("the coordinates of the frozen degrees of freedom are unchanged")
+        print("starting coords:", reference_coords)
+        print("minimized coords:", fpot.coords_converter.get_full_coords(ret.coords))
 
     """
     cdef cppFrozenPotentialWrapper *direct_ptr # direct pointer for convenience only

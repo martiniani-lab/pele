@@ -1,7 +1,6 @@
 import os
 import numpy as np
-from numpy.distutils.core import setup, Extension
-from numpy.distutils.command.build_src import build_src as np_build_src
+from setuptools import setup, Extension
 
 ## Numpy header files
 numpy_lib = os.path.split(np.__file__)[0]
@@ -53,10 +52,9 @@ cxx_modules = [
     ),
 ]
 
-setup(
-    ext_modules=cxx_modules,
-)
-
+# NOTE: Building Fortran extensions with setuptools requires a tool like f2py.
+# This example is configured for C++ extensions. The main project's
+# setup_with_cmake.py handles Fortran compilation.
 cxx_f_modules = [
     Extension(
         "_lj_cython",
@@ -68,15 +66,6 @@ cxx_f_modules = [
 ]
 
 
-class build_src(np_build_src):
-    """redefine the command class that makes the c sources for interacting with fortran objects"""
-
-    def build_sources(self):
-        """tell numpy.distutils to not build any sources"""
-        pass
-
-
 setup(
-    ext_modules=cxx_f_modules,
-    cmdclass=dict(build_src=build_src),
+    ext_modules=cxx_modules + cxx_f_modules,
 )

@@ -1,6 +1,8 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import sys
 
 import numpy as np

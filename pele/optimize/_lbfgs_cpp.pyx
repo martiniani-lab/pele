@@ -1,6 +1,8 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import sys
 
 import numpy as np
@@ -61,7 +63,7 @@ cdef class _Cdef_LBFGS_CPP(_pele_opt.GradientOptimizer):
         self.save_trajectory = save_trajectory
         self.stop_criterion = stop_criterion
         if logger is not None:
-            print "warning c++ LBFGS is ignoring logger"
+            print("warning c++ LBFGS is ignoring logger")
         cdef np.ndarray[double, ndim=1] x0c = np.array(x0, dtype=float)
         self.thisptr = shared_ptr[_pele_opt.cGradientOptimizer]( <_pele_opt.cGradientOptimizer*>
                 new cppLBFGS(self.pot.thisptr, 

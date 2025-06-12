@@ -1,3 +1,5 @@
+# cython: language_level=3str
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import sys
 import numpy as np
 cimport numpy as np
@@ -12,13 +14,13 @@ def _compute_LBFGS_step(
                            np.ndarray[double, ndim=2] s,
                            np.ndarray[double, ndim=2] y,
                            np.ndarray[double, ndim=1] rho,
-                           long int k, double H0
+                           int k, double H0
                            ):
-    cdef long int i, M, N, istart, j1, j2, nindices
+    cdef int i, M, N, istart, j1, j2, nindices
     cdef double sq, yz, beta
     cdef np.ndarray[double, ndim=1] stp
     cdef np.ndarray[double, ndim=1] a
-    cdef np.ndarray[long int, ndim=1] indices
+    cdef np.ndarray[np.int64_t, ndim=1] indices
 
     M = s.shape[0]
     N = G.size
@@ -37,42 +39,42 @@ def _compute_LBFGS_step(
         stp *= -H0 * min(gnorm, 1. / gnorm)
         return stp
     
-    indices = np.array([ i % M for i in range(max([0, k - M]), k, 1) ], np.integer)
+    indices = np.array([ i % M for i in range(max([0, k - M]), k, 1) ], dtype=np.int64)
     nindices = len(indices)
     
     
     # loop through the history, most recent first
-    for j1 in xrange(nindices):
+    for j1 in range(nindices):
         i = indices[nindices - j1 - 1]
 #        a[i] = rho[i] * np.dot( s[i,:], q )
 #        q -= a[i] * y[i,:]
         sq = 0.
-        for j2 in xrange(N):
+        for j2 in range(N):
             sq += s[i,j2] * stp[j2]
         a[i] = rho[i] * sq
-        for j2 in xrange(N):
+        for j2 in range(N):
             stp[j2] -= a[i] * y[i,j2]
     
     # include our estimate for diagonal component of the inverse hessian
-    for j2 in xrange(N):
+    for j2 in range(N):
         stp[j2] *= H0
     
     # loop through the history, most recent last
-    for j1 in xrange(nindices):
+    for j1 in range(nindices):
         i = indices[j1]
 #        beta = rho[i] * np.dot( y[i,:], z )
 #        z += s[i,:] * (a[i] - beta)
         yz = 0.
-        for j2 in xrange(N):
+        for j2 in range(N):
             yz += y[i,j2] * stp[j2]
         beta = rho[i] * yz
-        for j2 in xrange(N):
+        for j2 in range(N):
             stp[j2] += s[i,j2] * (a[i] - beta)
     
         
     # step should point downhill
 #    stp = - stp
-    for j2 in xrange(N):
+    for j2 in range(N):
         stp[j2] = -stp[j2]
 
 

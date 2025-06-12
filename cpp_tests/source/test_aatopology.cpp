@@ -169,9 +169,7 @@ TEST_F(AATopologyTest, ToAtomisticOneMolecule_Works) {
 }
 
 TEST_F(AATopologyTest, ToAtomistic_Works) {
-  //    std::cout << "x0 " << x0 << "\n";
   auto x = rbtopology->to_atomistic(x0);
-  //    std::cout << x << "\n";
   ASSERT_EQ(x.size(), 27u);
   ASSERT_NEAR(x[0], 0.20925348, 1e-5);
   ASSERT_NEAR(x[2], 1.68095005, 1e-5);
@@ -191,7 +189,6 @@ TEST_F(AATopologyTest, SiteTransformGrad_Works) {
   Array<double> g = x0.view(0, 9).copy();
   VecN<3> g_com;
   VecN<3> g_rot;
-  //    std::cout << g << "\n";
   rf.transform_grad(p, g, g_com, g_rot);
 
   ASSERT_NEAR(g_com[0], 9., 1e-5);

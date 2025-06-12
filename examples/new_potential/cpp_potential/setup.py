@@ -1,5 +1,4 @@
-from numpy.distutils.core import setup
-from numpy.distutils.core import Extension
+from setuptools import setup, Extension
 import os
 import numpy as np
 

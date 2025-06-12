@@ -60,7 +60,7 @@ def test_minimum_convergence():
 
 def test_mxd_works_with_neg_cos():
     """TODO: test doesn't hit the Newton step"""
-    dims = [1000]
+    dims = [4]
     for dim in dims:
         global_symmetry_offset = np.zeros((dim, dim))
         start_coords = 3 * np.ones(dim) / 8

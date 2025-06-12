@@ -1,10 +1,12 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 
 This provides an interface to the c++ angle axis + rigid body classes.
 Not everything is implemented in c++, just the parts that were bottlenecks
 in python.
 """
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 from pele.potentials import _pele
 from pele.potentials._pythonpotential import as_cpp_potential
@@ -127,7 +129,7 @@ cdef class _cdef_RBTopology(_cppBaseTopology):
         cdef stdvector[_pele.Array[double] ] c_zevlist
         self.thisptr.get().get_zero_modes(array_wrap_np(xnp), c_zevlist)
         zevlist = []
-        for i in xrange(6):
+        for i in range(6):
             zevlist.append(pele_array_to_np(c_zevlist[i]))
         return zevlist
     

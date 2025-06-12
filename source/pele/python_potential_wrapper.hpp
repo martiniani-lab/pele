@@ -81,7 +81,7 @@ class PythonPotential : public BasePotential {
       std::cerr << "created numpy object is NULL\n";
       throw std::runtime_error("created numpy object is NULL\n");
     }
-    double *xdata = (double *)PyArray_DATA(numpyx);
+    double *xdata = (double *)PyArray_DATA((PyArrayObject *)numpyx);
     for (size_t i = 0; i < x.size(); ++i) {
       xdata[i] = x[i];
     }
@@ -136,7 +136,7 @@ class PythonPotential : public BasePotential {
       std::cerr << "created numpy object is NULL\n";
       throw std::runtime_error("created numpy object is NULL\n");
     }
-    double *numpyx_data = (double *)PyArray_DATA(numpyx);
+    double *numpyx_data = (double *)PyArray_DATA((PyArrayObject *)numpyx);
     for (size_t i = 0; i < x.size(); ++i) {
       numpyx_data[i] = x[i];
     }
@@ -171,7 +171,7 @@ class PythonPotential : public BasePotential {
     // NPY_ARRAY_CARRAY
     PyObject *npgrad_safe =
         PyArray_FromAny(npgrad_returned, PyArray_DescrFromType(NPY_DOUBLE), 1,
-                        1, NPY_CARRAY, NULL);
+                        1, NPY_ARRAY_CARRAY, NULL);
     if (!npgrad_safe) {
       Py_XDECREF(returnval);
       throw std::runtime_error(
@@ -189,7 +189,7 @@ class PythonPotential : public BasePotential {
     }
 
     // copy the gradient into grad
-    double *gdata = (double *)PyArray_DATA(npgrad_safe);
+    double *gdata = (double *)PyArray_DATA((PyArrayObject *)npgrad_safe);
     for (size_t i = 0; i < grad.size(); ++i) {
       grad[i] = gdata[i];
     }

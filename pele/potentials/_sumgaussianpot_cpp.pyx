@@ -1,6 +1,8 @@
 """
 # distutils: language = C++
+# cython: language_level=3str
 """
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 import numpy as np
 cimport numpy as np
 from ctypes import c_size_t as size_t
@@ -63,7 +65,7 @@ cdef class SumGaussianPot(_pele.BasePotential):
         cdef _pele.cCombinedPotential* combpot = new _pele.cCombinedPotential()
         ngauss = means.shape[0]
         self.bdim = means.shape[1]
-        for i in xrange(ngauss):
+        for i in range(ngauss):
             pot = GaussianPot(means[i,:], cov[i,:])
             combpot.add_potential(pot.thisptr)
         self.thisptr = shared_ptr[_pele.cBasePotential](<_pele.cBasePotential*> combpot)
