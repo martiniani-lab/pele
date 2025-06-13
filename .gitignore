@@ -49,6 +49,13 @@ htmlcov
 /.vscode/*.log
 /Makefile
 /compile_commands.json
+
+# Coverage files
+*.coverage
+coverage.xml
+coverage.info
+htmlcov/
+.coverage.*
 /cpp_tests/source/.cache/
 /cpp_tests/source/CMakeCache.txt
 /cpp_tests/source/CMakeFiles/
@@ -93,3 +100,6 @@ cpp_tests/source/lib/libgtest.a
 # trajectory files
 **/trajectory*.txt
 **/time*.txt
+*.egg-info/
+dist/
+bin/act
