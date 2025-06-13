@@ -1,6 +1,14 @@
 pele : Python Energy Landscape Explorer
 +++++++++++++++++++++++++++++++++++++++
 
+.. image:: https://github.com/spraharsh/pele/workflows/Tests/badge.svg
+   :target: https://github.com/spraharsh/pele/actions
+   :alt: Build Status
+
+.. image:: https://codecov.io/gh/spraharsh/pele/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/spraharsh/pele
+   :alt: Coverage Status
+
 Tools for global optimization, attractor finding and energy landscape exploration.
 
 Source code: https://github.com/pele-python/pele
@@ -251,6 +259,9 @@ before building again::
 Tests
 =====
 
+The project uses GitHub Actions for continuous integration (CI) testing on both Linux and macOS. 
+The badges at the top of this README show the current build status and code coverage.
+
 The C++ tests use GoogleTest. To run the tests, after running `git submodule update --init --recursive` to get the GoogleTest submodule if you haven't already, run::
 
   $ cd cpp_tests/source
@@ -269,3 +280,9 @@ To run the tests, run::
   $ pytest pele/
 
 from the base directory.
+
+To run the tests with coverage reporting (as done in CI), run::
+
+  $ pytest pele/ --cov=pele --cov-report=xml --cov-report=term-missing
+
+This will generate a `coverage.xml` file for Python coverage and display coverage statistics in the terminal.

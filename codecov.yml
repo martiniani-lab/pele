@@ -1,0 +1,52 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        # Don't fail CI based on coverage - just report it
+        if_ci_failed: success
+        
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+        # Don't fail CI based on coverage - just report it
+        if_ci_failed: success
+
+  # Parse both Python and C++ coverage reports
+  parsers:
+    gcov:
+      branch_detection:
+        conditional: true
+        loop: true
+        method: false
+        macro: false
+
+# Flag configuration for different types of coverage
+flags:
+  python:
+    paths:
+      - pele/
+    carryforward: false
+  cpp:
+    paths:
+      - source/
+      - cpp_tests/
+    carryforward: false
+
+# Ignore paths that shouldn't be included in coverage
+ignore:
+  - "extern/"
+  - "build/"
+  - "cpp_tests/gtest/"
+  - "**/tests/**"
+  - "**/test_*"
+  - "pele/gui/"
+  - "setup*.py"
+  - "cythonize.py"
+
+comment:
+  layout: "header, diff, flags, files, footer"
+  behavior: default
+  require_changes: false 
