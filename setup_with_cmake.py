@@ -441,7 +441,7 @@ setup_func(
     name="pele",
     version="0.1",
     description="Python implementation of GMIN, OPTIM, and PATHSAMPLE",
-    url="https://github.com/pele-python/pele",
+    url="https://github.com/martiniani-lab/pele",
     packages=[
         "pele",
         "pele.potentials",

@@ -1,19 +1,17 @@
 pele : Python Energy Landscape Explorer
 +++++++++++++++++++++++++++++++++++++++
 
-.. image:: https://github.com/spraharsh/pele/workflows/Tests/badge.svg
-   :target: https://github.com/spraharsh/pele/actions
+.. image:: https://github.com/martiniani-lab/pele/workflows/Tests/badge.svg
+   :target: https://github.com/martiniani-lab/pele/actions
    :alt: Build Status
 
-.. image:: https://codecov.io/gh/spraharsh/pele/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/spraharsh/pele
+.. image:: https://codecov.io/gh/martiniani-lab/pele/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/martiniani-lab/pele
    :alt: Coverage Status
 
 Tools for global optimization, attractor finding and energy landscape exploration.
 
-Source code: https://github.com/pele-python/pele
-
-Documentation: http://pele-python.github.io/pele/
+Source code: https://github.com/martiniani-lab/pele
 
 
 
