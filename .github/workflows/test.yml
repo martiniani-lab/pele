@@ -33,7 +33,7 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-12 g++-12 gfortran-12 libblas-dev liblapack-dev liblapacke-dev cmake libsuitesparse-dev
+          sudo apt-get install -y gcc-12 g++-12 gfortran-12 libblas-dev liblapack-dev liblapacke-dev cmake libsuitesparse-dev lcov
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
           sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-12 100
@@ -57,6 +57,8 @@ jobs:
           pip install matplotlib networkx "cython>=3.0"
           pip install "sqlalchemy>=1.4,<2.0" munkres scikit-sparse
           pip install pytest future pyyaml packaging
+          # Install coverage tools
+          pip install pytest-cov coverage
           
       - name: Install omp-thread-count (with compiler)
         run: |
@@ -90,11 +92,11 @@ jobs:
           cd extern
           cp -r eigen/Eigen install/include
 
-      - name: Build C++ tests (Linux)
+      - name: Build C++ tests with coverage (Linux)
         if: matrix.os == 'ubuntu-22.04'
         run: |
           cd cpp_tests/source 
-          cmake -DCMAKE_BUILD_TYPE=Debug .
+          cmake -DCMAKE_BUILD_TYPE=Coverage -DCMAKE_CXX_FLAGS_COVERAGE="-g -O0 --coverage -fprofile-arcs -ftest-coverage" -DCMAKE_C_FLAGS_COVERAGE="-g -O0 --coverage -fprofile-arcs -ftest-coverage" .
           make -j4
 
       - name: Build C++ tests (macOS)
@@ -109,6 +111,23 @@ jobs:
           cd cpp_tests/source
           ./test_main
 
+      - name: Generate C++ coverage (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          cd cpp_tests/source
+          # Use CMake coverage target
+          make pele_tests_coverage
+          # Generate manual coverage if the target doesn't exist
+          if [ ! -f coverage.info ]; then
+            lcov --capture --directory . --output-file coverage.info
+            # Remove external libraries from coverage
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            lcov --remove coverage.info '*/extern/*' --output-file coverage.info
+            lcov --remove coverage.info '*/gtest/*' --output-file coverage.info
+            lcov --remove coverage.info '*/googletest/*' --output-file coverage.info
+          fi
+          lcov --list coverage.info
+
       - name: Compile python library (Linux)
         if: matrix.os == 'ubuntu-22.04'
         run: |
@@ -119,10 +138,20 @@ jobs:
         run: |
           MACOSX_DEPLOYMENT_TARGET=12.0 python setup_with_cmake.py build_ext -i
 
-      - name: Run python tests
+      - name: Run python tests with coverage
         run: |
           export OMP_NUM_THREADS=1
-          pytest pele/ -v
+          pytest pele/ -v --cov=pele --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        if: matrix.os == 'ubuntu-22.04'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml,./cpp_tests/source/coverage.info
+          flags: python,cpp
+          name: codecov-umbrella
+          fail_ci_if_error: false
 
 
 

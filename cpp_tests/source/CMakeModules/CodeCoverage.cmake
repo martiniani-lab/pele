@@ -56,15 +56,6 @@ IF(NOT CMAKE_COMPILER_IS_GNUCXX)
 		MESSAGE(FATAL_ERROR "Compiler is not GNU gcc! Aborting...")
 	ENDIF()
 ENDIF() # NOT CMAKE_COMPILER_IS_GNUCXX
-
-SET(CMAKE_CXX_FLAGS_COVERAGE
-    "-g -O0 --coverage -fprofile-arcs -ftest-coverage"
-    CACHE STRING "Flags used by the C++ compiler during coverage builds."
-    FORCE )
-SET(CMAKE_C_FLAGS_COVERAGE
-    "-g -O0 --coverage -fprofile-arcs -ftest-coverage"
-    CACHE STRING "Flags used by the C compiler during coverage builds."
-    FORCE )
 SET(CMAKE_EXE_LINKER_FLAGS_COVERAGE
     ""
     CACHE STRING "Flags used for linking binaries during coverage builds."
