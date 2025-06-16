@@ -103,8 +103,9 @@ FUNCTION(SETUP_TARGET_FOR_COVERAGE _targetname _testrunner _outputname)
 		COMMAND ${_testrunner} ${ARGV3}
 		
 		# Capturing lcov counters and generating report
-		COMMAND ${LCOV_PATH} --directory . --capture --output-file ${_outputname}.info
-		COMMAND ${LCOV_PATH} --remove ${_outputname}.info 'tests/*' '/usr/*' --output-file ${_outputname}.info.cleaned
+		COMMAND ${LCOV_PATH} --directory . --capture --output-file ${_outputname}.info --ignore-errors usage,inconsistent,empty --rc geninfo_unexecuted_blocks=1
+		COMMAND ${LCOV_PATH} --remove ${_outputname}.info "${CMAKE_SOURCE_DIR}/cpp_tests/*" "${CMAKE_SOURCE_DIR}/extern/*" "/usr/*" "*/cpp_tests/*" "*/extern/*" "*/Eigen/*" "*gtest*" "*gmock*" --output-file ${_outputname}.info.cleaned --ignore-errors unused,empty
+		COMMAND ${LCOV_PATH} --extract ${_outputname}.info.cleaned "*/source/pele/*" --output-file ${_outputname}.info.cleaned --ignore-errors unused,empty
 		COMMAND ${GENHTML_PATH} -o ${_outputname} ${_outputname}.info.cleaned
 		COMMAND ${CMAKE_COMMAND} -E remove ${_outputname}.info ${_outputname}.info.cleaned
 		
