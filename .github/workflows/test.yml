@@ -116,7 +116,7 @@ jobs:
         run: |
           cd cpp_tests/source
           # Use CMake coverage target which handles all filtering
-          make pele_tests_coverage
+          GCOV=gcov-12 make pele_tests_coverage
           lcov --list coverage.info.cleaned
 
       - name: Compile python library (Linux)
