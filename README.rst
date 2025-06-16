@@ -250,10 +250,6 @@ If building fails, run the following command to remove cached files
 before building again::
 
   $ rm -rf build cythonize.dat CMakeCache.txt cmake_install.cmake
-  $ find . -name "*.so" -delete
-  $ find . -name "*.c" -delete
-  $ find . -name "*.cpp" -delete
-
 Tests
 =====
 
