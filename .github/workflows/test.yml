@@ -19,16 +19,16 @@ jobs:
     defaults:
       run:
         shell: bash
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      
+
       - name: Install system dependencies (Linux)
         if: matrix.os == 'ubuntu-24.04'
         run: |
@@ -59,7 +59,7 @@ jobs:
           pip install pytest future pyyaml packaging
           # Install coverage tools
           pip install pytest-cov coverage
-          
+
       - name: Install omp-thread-count (with compiler)
         run: |
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
@@ -72,7 +72,7 @@ jobs:
         run: git submodule update --init --recursive
 
       - name: Install sundials (Linux)
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           cd extern
           chmod +x sun_inst.sh
@@ -93,7 +93,7 @@ jobs:
           cp -r eigen/Eigen install/include
 
       - name: Build C++ tests with coverage (Linux)
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           cd cpp_tests/source 
           cmake -DCMAKE_BUILD_TYPE=Coverage -DCMAKE_CXX_FLAGS_COVERAGE="-g -O0 --coverage -fprofile-arcs -ftest-coverage" -DCMAKE_C_FLAGS_COVERAGE="-g -O0 --coverage -fprofile-arcs -ftest-coverage" .
@@ -112,7 +112,7 @@ jobs:
           ./test_main
 
       - name: Generate C++ coverage (Linux)
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           cd cpp_tests/source
           # Use CMake coverage target which handles all filtering
@@ -120,7 +120,7 @@ jobs:
           lcov --list coverage.info.cleaned
 
       - name: Compile python library (Linux)
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           python setup_with_cmake.py build_ext -i
 
@@ -136,13 +136,10 @@ jobs:
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-24.04'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml,./cpp_tests/source/coverage.info.cleaned
           flags: python,cpp
           name: codecov-umbrella
           fail_ci_if_error: false
-
-
-
