@@ -115,18 +115,9 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         run: |
           cd cpp_tests/source
-          # Use CMake coverage target
+          # Use CMake coverage target which handles all filtering
           make pele_tests_coverage
-          # Generate manual coverage if the target doesn't exist
-          if [ ! -f coverage.info ]; then
-            lcov --capture --directory . --output-file coverage.info
-            # Remove external libraries from coverage
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            lcov --remove coverage.info '*/extern/*' --output-file coverage.info
-            lcov --remove coverage.info '*/gtest/*' --output-file coverage.info
-            lcov --remove coverage.info '*/googletest/*' --output-file coverage.info
-          fi
-          lcov --list coverage.info
+          lcov --list coverage.info.cleaned
 
       - name: Compile python library (Linux)
         if: matrix.os == 'ubuntu-22.04'
@@ -148,7 +139,7 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml,./cpp_tests/source/coverage.info
+          files: ./coverage.xml,./cpp_tests/source/coverage.info.cleaned
           flags: python,cpp
           name: codecov-umbrella
           fail_ci_if_error: false
