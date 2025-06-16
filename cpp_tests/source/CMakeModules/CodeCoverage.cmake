@@ -103,8 +103,8 @@ FUNCTION(SETUP_TARGET_FOR_COVERAGE _targetname _testrunner _outputname)
 		COMMAND ${_testrunner} ${ARGV3}
 		
 		# Capturing lcov counters and generating report
-		COMMAND ${LCOV_PATH} --directory . --capture --output-file ${_outputname}.info --ignore-errors usage,inconsistent,empty,count --rc geninfo_unexecuted_blocks=1
-		COMMAND ${LCOV_PATH} --remove ${_outputname}.info "${CMAKE_SOURCE_DIR}/cpp_tests/*" "${CMAKE_SOURCE_DIR}/extern/*" "/usr/*" "*/cpp_tests/*" "*/extern/*" "*/Eigen/*" "*gtest*" "*gmock*" "*test_*" "*/source/test_*" --output-file ${_outputname}.info.cleaned --ignore-errors unused,empty,count
+		COMMAND ${LCOV_PATH} --directory . --capture --output-file ${_outputname}.info --ignore-errors usage,inconsistent,empty,count,mismatch --rc geninfo_unexecuted_blocks=1
+		COMMAND ${LCOV_PATH} --remove ${_outputname}.info "${CMAKE_SOURCE_DIR}/cpp_tests/*" "${CMAKE_SOURCE_DIR}/extern/*" "/usr/*" "*/cpp_tests/*" "*/extern/*" "*/Eigen/*" "*gtest*" "*gmock*" "*test_*" "*/source/test_*" --output-file ${_outputname}.info.cleaned --ignore-errors unused,empty,count,mismatch
 		COMMAND ${LCOV_PATH} --list ${_outputname}.info.cleaned || echo "Listing coverage files failed"
 		COMMAND ${GENHTML_PATH} -o ${_outputname} ${_outputname}.info.cleaned --ignore-errors empty
 		COMMAND ${CMAKE_COMMAND} -E remove ${_outputname}.info ${_outputname}.info.cleaned
