@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -43,8 +42,8 @@ elseif(CMAKE_BUILD_TYPE STREQUAL Release)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG")
 elseif(CMAKE_BUILD_TYPE STREQUAL Coverage)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -fprofile-arcs -ftest-coverage")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG -fprofile-arcs -ftest-coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g3 -DNDEBUG -fprofile-arcs -ftest-coverage")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -g3 -DNDEBUG -fprofile-arcs -ftest-coverage")
 endif()
 
 message(CMAKE_CONFIGURATION_TYPES ${CMAKE_CONFIGURATION_TYPES})

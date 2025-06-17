@@ -49,6 +49,18 @@ htmlcov
 /.vscode/*.log
 /Makefile
 /compile_commands.json
+
+# Coverage files
+*.coverage
+coverage.xml
+coverage.info
+htmlcov/
+.coverage.*
+cpp_tests/source/lib/libgmock_main.a
+cpp_tests/source/lib/libgmock.a
+cpp_tests/source/lib/libgtest_main.a
+cpp_tests/source/lib/libgtest.a
+cpp_tests/source/coverage*
 /cpp_tests/source/.cache/
 /cpp_tests/source/CMakeCache.txt
 /cpp_tests/source/CMakeFiles/
@@ -84,12 +96,13 @@ cpp_tests/source/test_main
 
 # Extern files
 extern/install
-cpp_tests/source/lib/libgmock_main.a
-cpp_tests/source/lib/libgmock.a
-cpp_tests/source/lib/libgtest_main.a
-cpp_tests/source/lib/libgtest.a
 
 
 # trajectory files
 **/trajectory*.txt
 **/time*.txt
+*.egg-info/
+dist/
+bin/act
+
+**/*.sqlite

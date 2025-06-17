@@ -301,15 +301,15 @@ def linkcode_resolve(domain, info):
     fn = relpath(fn, start=dirname(pele.__file__))
 
     # pele doesn't really have versions, so just return the master branch
-    return "http://github.com/pele-python/pele/blob/master/pele/%s%s" % (
+    return "http://github.com/martiniani-lab/pele/blob/master/pele/%s%s" % (
         fn,
         linespec,
     )
 
 
 #    if False:# or 'dev' in pele.version:
-#        return "http://github.com/pele-python/pele/blob/master/numpy/%s%s" % (
+#        return "http://github.com/martiniani-lab/pele/blob/master/numpy/%s%s" % (
 #           fn, linespec)
 #    else:
-#        return "http://github.com/pele-python/pele/blob/v%s/numpy/%s%s" % (
+#        return "http://github.com/martiniani-lab/pele/blob/v%s/numpy/%s%s" % (
 #           pele.version, fn, linespec)

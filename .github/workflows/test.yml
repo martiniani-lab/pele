@@ -13,30 +13,35 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-latest]
+        os: [ubuntu-24.04, macos-latest]
         python-version: ["3.10"]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: ${{ matrix.python-version }}
-      
+          auto-update-conda: true
+          auto-activate-base: false
+          
+      - name: Create conda environment
+        shell: bash -l {0}
+        run: |
+          conda create -n pele-env python=${{ matrix.python-version }} -y
+          conda activate pele-env
+          python --version
+
       - name: Install system dependencies (Linux)
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-12 g++-12 gfortran-12 libblas-dev liblapack-dev liblapacke-dev cmake libsuitesparse-dev
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
-          sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-12 100
+          sudo apt-get install -y gcc g++ gfortran libblas-dev liblapack-dev liblapacke-dev cmake libsuitesparse-dev lcov
 
       - name: Install system dependencies (macOS)
         if: matrix.os == 'macos-latest'
@@ -48,7 +53,9 @@ jobs:
           brew list suite-sparse || brew install suite-sparse
 
       - name: Install Python dependencies
+        shell: bash -l {0}
         run: |
+          conda activate pele-env
           python -m pip install --upgrade pip wheel
           # Use modern setuptools and avoid any legacy dependencies
           pip install "setuptools>=65" "build>=0.8"
@@ -57,9 +64,29 @@ jobs:
           pip install matplotlib networkx "cython>=3.0"
           pip install "sqlalchemy>=1.4,<2.0" munkres scikit-sparse
           pip install pytest future pyyaml packaging
-          
-      - name: Install omp-thread-count (with compiler)
+          # Install coverage tools
+          pip install pytest-cov coverage
+
+      - name: Debug Python Configuration
+        shell: bash -l {0}
         run: |
+          conda activate pele-env
+          echo "=== Python Configuration Debug ==="
+          python debug_python_config.py
+          echo ""
+          echo "=== Conda Environment ==="
+          conda info --envs
+          which python
+          echo ""
+          echo "=== Linking Test ==="
+          echo 'int main(){return 0;}' > test.c
+          gcc test.c -lpython3.10 -v 2>&1 || echo "Direct linking failed"
+          rm -f test.c a.out
+
+      - name: Install omp-thread-count (with compiler)
+        shell: bash -l {0}
+        run: |
+          conda activate pele-env
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             CC=gcc-13 pip install omp-thread-count
           else
@@ -70,7 +97,7 @@ jobs:
         run: git submodule update --init --recursive
 
       - name: Install sundials (Linux)
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           cd extern
           chmod +x sun_inst.sh
@@ -90,11 +117,11 @@ jobs:
           cd extern
           cp -r eigen/Eigen install/include
 
-      - name: Build C++ tests (Linux)
-        if: matrix.os == 'ubuntu-22.04'
+      - name: Build C++ tests with coverage (Linux)
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           cd cpp_tests/source 
-          cmake -DCMAKE_BUILD_TYPE=Debug .
+          cmake -DCMAKE_BUILD_TYPE=Coverage -DCMAKE_CXX_FLAGS_COVERAGE="-g -O0 --coverage -fprofile-arcs -ftest-coverage" -DCMAKE_C_FLAGS_COVERAGE="-g -O0 --coverage -fprofile-arcs -ftest-coverage" .
           make -j4
 
       - name: Build C++ tests (macOS)
@@ -109,20 +136,41 @@ jobs:
           cd cpp_tests/source
           ./test_main
 
-      - name: Compile python library (Linux)
-        if: matrix.os == 'ubuntu-22.04'
+      - name: Generate C++ coverage (Linux)
+        if: matrix.os == 'ubuntu-24.04'
         run: |
+          cd cpp_tests/source
+          # Use CMake coverage target which handles all filtering
+          make pele_tests_coverage
+          lcov --list coverage.info.cleaned
+
+      - name: Compile python library (Linux)
+        if: matrix.os == 'ubuntu-24.04'
+        shell: bash -l {0}
+        run: |
+          conda activate pele-env
           python setup_with_cmake.py build_ext -i
 
       - name: Compile python library (macOS)
         if: matrix.os == 'macos-latest'
+        shell: bash -l {0}
         run: |
+          conda activate pele-env
           MACOSX_DEPLOYMENT_TARGET=12.0 python setup_with_cmake.py build_ext -i
 
-      - name: Run python tests
+      - name: Run python tests with coverage
+        shell: bash -l {0}
         run: |
+          conda activate pele-env
           export OMP_NUM_THREADS=1
-          pytest pele/ -v
+          pytest pele/ -v --cov=pele --cov-report=xml --cov-report=term-missing
 
-
-
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        if: matrix.os == 'ubuntu-24.04'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml,./cpp_tests/source/coverage.info.cleaned
+          flags: python,cpp
+          name: codecov-umbrella
+          fail_ci_if_error: false

@@ -56,15 +56,6 @@ IF(NOT CMAKE_COMPILER_IS_GNUCXX)
 		MESSAGE(FATAL_ERROR "Compiler is not GNU gcc! Aborting...")
 	ENDIF()
 ENDIF() # NOT CMAKE_COMPILER_IS_GNUCXX
-
-SET(CMAKE_CXX_FLAGS_COVERAGE
-    "-g -O0 --coverage -fprofile-arcs -ftest-coverage"
-    CACHE STRING "Flags used by the C++ compiler during coverage builds."
-    FORCE )
-SET(CMAKE_C_FLAGS_COVERAGE
-    "-g -O0 --coverage -fprofile-arcs -ftest-coverage"
-    CACHE STRING "Flags used by the C compiler during coverage builds."
-    FORCE )
 SET(CMAKE_EXE_LINKER_FLAGS_COVERAGE
     ""
     CACHE STRING "Flags used for linking binaries during coverage builds."
@@ -112,10 +103,11 @@ FUNCTION(SETUP_TARGET_FOR_COVERAGE _targetname _testrunner _outputname)
 		COMMAND ${_testrunner} ${ARGV3}
 		
 		# Capturing lcov counters and generating report
-		COMMAND ${LCOV_PATH} --directory . --capture --output-file ${_outputname}.info
-		COMMAND ${LCOV_PATH} --remove ${_outputname}.info 'tests/*' '/usr/*' --output-file ${_outputname}.info.cleaned
-		COMMAND ${GENHTML_PATH} -o ${_outputname} ${_outputname}.info.cleaned
-		COMMAND ${CMAKE_COMMAND} -E remove ${_outputname}.info ${_outputname}.info.cleaned
+		COMMAND ${LCOV_PATH} --directory . --capture --output-file ${_outputname}.info --ignore-errors usage,inconsistent,empty,count,mismatch --rc geninfo_unexecuted_blocks=1
+		COMMAND ${LCOV_PATH} --remove ${_outputname}.info "${CMAKE_SOURCE_DIR}/cpp_tests/*" "${CMAKE_SOURCE_DIR}/extern/*" "/usr/*" "*/cpp_tests/*" "*/extern/*" "*/Eigen/*" "*gtest*" "*gmock*" "*test_*" "*/source/test_*" --output-file ${_outputname}.info.cleaned --ignore-errors unused,empty,count,mismatch
+		COMMAND ${LCOV_PATH} --list ${_outputname}.info.cleaned || echo "Listing coverage files failed"
+		COMMAND ${GENHTML_PATH} -o ${_outputname} ${_outputname}.info.cleaned --ignore-errors empty
+		COMMAND ${CMAKE_COMMAND} -E remove ${_outputname}.info
 		
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMENT "Resetting code coverage counters to zero.\nProcessing code coverage counters and generating report."
