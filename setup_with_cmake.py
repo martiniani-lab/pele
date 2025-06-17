@@ -581,10 +581,9 @@ def get_ldflags(opt="--ldflags"):
         # add the prefix/lib/pythonX.Y/config dir, but only if there is no
         # shared library in prefix/lib/.
         if opt == "--ldflags":
-
-            libdir = getvar("LIBDIR")
-            if libdir:
-                libs.insert(0, "-L" + libdir)
+            if not getvar("Py_ENABLE_SHARED"):
+                # libdir does this for centOS and more importantly conda environments
+                libs.insert(0, "-L" + getvar("LIBDIR"))
             if not getvar("PYTHONFRAMEWORK"):
                 # See https://github.com/kovidgoyal/kitty/issues/289#issuecomment-416040645
                 libs.extend(

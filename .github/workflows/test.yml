@@ -34,6 +34,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc g++ gfortran libblas-dev liblapack-dev liblapacke-dev cmake libsuitesparse-dev lcov
+          # Add Python development libraries for linking
+          sudo apt-get install -y python3.10-dev libpython3.10-dev
 
       - name: Install system dependencies (macOS)
         if: matrix.os == 'macos-latest'
@@ -56,6 +58,19 @@ jobs:
           pip install pytest future pyyaml packaging
           # Install coverage tools
           pip install pytest-cov coverage
+
+      - name: Debug Python Configuration
+        run: |
+          echo "=== Python Configuration Debug ==="
+          python debug_python_config.py
+          echo ""
+          echo "=== System Python Libraries ==="
+          find /opt/hostedtoolcache/Python -name "*python*" -type f 2>/dev/null | head -20
+          echo ""
+          echo "=== Linking Test ==="
+          echo 'int main(){return 0;}' > test.c
+          gcc test.c -lpython3.10 -v 2>&1 || echo "Direct linking failed"
+          rm -f test.c a.out
 
       - name: Install omp-thread-count (with compiler)
         run: |
