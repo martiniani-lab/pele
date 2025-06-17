@@ -16,17 +16,19 @@ import numpy as np
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext as old_build_ext
 
+
 # Create compatibility layer for distutils.sysconfig using standard sysconfig
 class SysconfigCompat:
     @staticmethod
     def get_python_inc(plat_specific=False):
         if plat_specific:
-            return sysconfig.get_path('platinclude')
-        return sysconfig.get_path('include')
-    
+            return sysconfig.get_path("platinclude")
+        return sysconfig.get_path("include")
+
     @staticmethod
     def get_config_var(name):
         return sysconfig.get_config_var(name)
+
 
 # Use the compatibility layer
 sysconfig_compat = SysconfigCompat()
@@ -36,6 +38,7 @@ try:
     # Modern numpy with setuptools integration
     from numpy.f2py import setup as f2py_setup
     from numpy.f2py.setuptools_extension import NumpyExtension as FortranExtension
+
     fortran_support = True
     print("INFO: Using numpy.f2py for Fortran support")
 except ImportError:
@@ -43,11 +46,14 @@ except ImportError:
         # Legacy numpy.distutils for older numpy/python versions
         from numpy.distutils.core import setup as f2py_setup
         from numpy.distutils.core import Extension as FortranExtension
+
         fortran_support = True
         print("INFO: Using numpy.distutils for Fortran support (legacy)")
     except ImportError:
         # No fortran support
-        print("WARNING: No Fortran support available. Fortran extensions may not be built.")
+        print(
+            "WARNING: No Fortran support available. Fortran extensions may not be built."
+        )
         fortran_support = False
         f2py_setup = setup
         FortranExtension = Extension
@@ -411,7 +417,7 @@ def get_compiler_env(compiler_id):
         cmake_compiler_args_str += " -D CMAKE_AR={AR}"
     if "LD" in env:
         cmake_compiler_args_str += " -D CMAKE_LINKER={LD}"
-    
+
     cmake_compiler_args = shlex.split(cmake_compiler_args_str.format(**env))
 
     # Add search path for brew installed openblas on MacOs.
@@ -569,17 +575,22 @@ def get_ldflags(opt="--ldflags"):
             # On MacOs, explicitly including the python library leads to a
             # segmentation fault when libraries created by cython are
             # imported
-            libs.append("-lpython" + pyver)  # need to add m depending on the installation
+            libs.append(
+                "-lpython" + pyver
+            )  # need to add m depending on the installation
         # add the prefix/lib/pythonX.Y/config dir, but only if there is no
         # shared library in prefix/lib/.
         if opt == "--ldflags":
-            if not getvar("Py_ENABLE_SHARED"):
-                # libdir does this for centOS and more importantly conda environments
-                libs.insert(0, "-L" + getvar("LIBDIR"))
+
+            libdir = getvar("LIBDIR")
+            if libdir:
+                libs.insert(0, "-L" + libdir)
             if not getvar("PYTHONFRAMEWORK"):
                 # See https://github.com/kovidgoyal/kitty/issues/289#issuecomment-416040645
                 libs.extend(
-                    getvar("LINKFORSHARED").replace("-Wl,-stack_size,1000000", "").split()
+                    getvar("LINKFORSHARED")
+                    .replace("-Wl,-stack_size,1000000", "")
+                    .split()
                 )
         return " ".join(libs)
     except (AttributeError, TypeError):
@@ -588,12 +599,12 @@ def get_ldflags(opt="--ldflags"):
         libs = []
         if not sys.platform.startswith("darwin"):
             libs.append(f"-lpython{pyver}")
-        
+
         # Add library directory
         libdir = sysconfig.get_config_var("LIBDIR")
         if libdir:
             libs.insert(0, f"-L{libdir}")
-            
+
         return " ".join(libs)
 
 
@@ -608,7 +619,7 @@ try:
     ]
 except (AttributeError, TypeError):
     # Fallback for modern Python versions
-    python_includes = [sysconfig.get_path('include')]
+    python_includes = [sysconfig.get_path("include")]
 cmake_txt = cmake_txt.replace("__PYTHON_INCLUDE__", " ".join(python_includes))
 
 if with_cvode:
