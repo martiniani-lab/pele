@@ -24,18 +24,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: ${{ matrix.python-version }}
+          auto-update-conda: true
+          auto-activate-base: false
+          
+      - name: Create conda environment
+        shell: bash -l {0}
+        run: |
+          conda create -n pele-env python=${{ matrix.python-version }} -y
+          conda activate pele-env
+          python --version
 
       - name: Install system dependencies (Linux)
         if: matrix.os == 'ubuntu-24.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc g++ gfortran libblas-dev liblapack-dev liblapacke-dev cmake libsuitesparse-dev lcov
-          # Add Python development libraries for linking
-          sudo apt-get install -y python3.10-dev libpython3.10-dev
 
       - name: Install system dependencies (macOS)
         if: matrix.os == 'macos-latest'
@@ -47,7 +53,9 @@ jobs:
           brew list suite-sparse || brew install suite-sparse
 
       - name: Install Python dependencies
+        shell: bash -l {0}
         run: |
+          conda activate pele-env
           python -m pip install --upgrade pip wheel
           # Use modern setuptools and avoid any legacy dependencies
           pip install "setuptools>=65" "build>=0.8"
@@ -60,12 +68,15 @@ jobs:
           pip install pytest-cov coverage
 
       - name: Debug Python Configuration
+        shell: bash -l {0}
         run: |
+          conda activate pele-env
           echo "=== Python Configuration Debug ==="
           python debug_python_config.py
           echo ""
-          echo "=== System Python Libraries ==="
-          find /opt/hostedtoolcache/Python -name "*python*" -type f 2>/dev/null | head -20
+          echo "=== Conda Environment ==="
+          conda info --envs
+          which python
           echo ""
           echo "=== Linking Test ==="
           echo 'int main(){return 0;}' > test.c
@@ -73,7 +84,9 @@ jobs:
           rm -f test.c a.out
 
       - name: Install omp-thread-count (with compiler)
+        shell: bash -l {0}
         run: |
+          conda activate pele-env
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             CC=gcc-13 pip install omp-thread-count
           else
@@ -133,16 +146,22 @@ jobs:
 
       - name: Compile python library (Linux)
         if: matrix.os == 'ubuntu-24.04'
+        shell: bash -l {0}
         run: |
+          conda activate pele-env
           python setup_with_cmake.py build_ext -i
 
       - name: Compile python library (macOS)
         if: matrix.os == 'macos-latest'
+        shell: bash -l {0}
         run: |
+          conda activate pele-env
           MACOSX_DEPLOYMENT_TARGET=12.0 python setup_with_cmake.py build_ext -i
 
       - name: Run python tests with coverage
+        shell: bash -l {0}
         run: |
+          conda activate pele-env
           export OMP_NUM_THREADS=1
           pytest pele/ -v --cov=pele --cov-report=xml --cov-report=term-missing
 
