@@ -107,7 +107,7 @@ FUNCTION(SETUP_TARGET_FOR_COVERAGE _targetname _testrunner _outputname)
 		COMMAND ${LCOV_PATH} --remove ${_outputname}.info "${CMAKE_SOURCE_DIR}/cpp_tests/*" "${CMAKE_SOURCE_DIR}/extern/*" "/usr/*" "*/cpp_tests/*" "*/extern/*" "*/Eigen/*" "*gtest*" "*gmock*" "*test_*" "*/source/test_*" --output-file ${_outputname}.info.cleaned --ignore-errors unused,empty,count,mismatch
 		COMMAND ${LCOV_PATH} --list ${_outputname}.info.cleaned || echo "Listing coverage files failed"
 		COMMAND ${GENHTML_PATH} -o ${_outputname} ${_outputname}.info.cleaned --ignore-errors empty
-		COMMAND ${CMAKE_COMMAND} -E remove ${_outputname}.info ${_outputname}.info.cleaned
+		COMMAND ${CMAKE_COMMAND} -E remove ${_outputname}.info
 		
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMENT "Resetting code coverage counters to zero.\nProcessing code coverage counters and generating report."
