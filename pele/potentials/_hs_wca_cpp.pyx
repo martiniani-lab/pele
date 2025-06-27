@@ -122,6 +122,9 @@ cdef class HS_WCA(_pele.PairwisePotentialInterface):
         if use_cell_lists and boxvec is None:
             raise Exception("HS_WCA: illegal input")
         bv = None
+        if use_cell_lists and boxvec is not None:
+            bv = np.array(boxvec, dtype=float)
+            assert bv.size == ndim
         self.periodic = distance_method is Distance.PERIODIC
         self.leesedwards = distance_method is Distance.LEES_EDWARDS
         cdef cbool balance_omp
