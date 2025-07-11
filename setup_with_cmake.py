@@ -277,8 +277,40 @@ cython_flags = ["-I"] + [os.path.abspath("pele/potentials")] + ["-v"]
 def generate_cython():
     cwd = os.path.abspath(os.path.dirname(__file__))
     print("Cythonizing sources")
+
+    # Add debug flags for Cython
+    debug_flags = []
+    if build_type in ["Debug", "RelWithDebInfo", "MemCheck"]:
+        debug_flags.extend(
+            [
+                "--gdb",  # Generate debug symbols for gdb
+                "--annotate",  # Generate .html annotation files
+                "-X",
+                "linetrace=True",  # Enable line tracing
+                "-X",
+                "boundscheck=True",  # Enable bounds checking
+                "-X",
+                "wraparound=False",  # Disable wraparound for array indexing
+                "-X",
+                "cdivision=False",  # Use Python division semantics
+            ]
+        )
+
+    # Add Cython 3 compatibility flags for string handling
+    cython3_flags = [
+        "-X",
+        "language_level=3",  # Use Python 3 language level
+        "-X",
+        "c_string_type=unicode",  # Use unicode for C strings
+        "-X",
+        "c_string_encoding=utf-8",  # Use UTF-8 encoding
+    ]
+
     p = subprocess.call(
-        [sys.executable, os.path.join(cwd, "cythonize.py"), "pele"] + cython_flags,
+        [sys.executable, os.path.join(cwd, "cythonize.py"), "pele"]
+        + cython_flags
+        + debug_flags
+        + cython3_flags,
         cwd=cwd,
     )
     if p != 0:
