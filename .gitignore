@@ -106,3 +106,5 @@ dist/
 bin/act
 
 **/*.sqlite
+
+**/cython_debug/
