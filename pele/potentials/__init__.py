@@ -67,6 +67,7 @@ from ._inversepower_cpp import InversePower
 from ._inversepower_stillinger_cpp import InversePowerStillinger
 from ._inversepower_stillinger_cut_cpp import InversePowerStillingerCut
 from ._inversepower_stillinger_cut_quad import InversePowerStillingerCutQuad
+from ._inversepower_hs_cpp import InversePowerHS
 from .combine_potentials import CombinedPotential
 from ._wca_cpp import *
 from ._harmonic_cpp import Harmonic
