@@ -682,6 +682,15 @@ def run_cmake(compiler_id="unix"):
     print("\nrunning cmake in directory", cmake_build_dir)
     cwd = os.path.abspath(os.path.dirname(__file__))
     env, cmake_compiler_args = get_compiler_env(compiler_id)
+    # Optional GMIN bridge: set PELE_WITH_GMIN=1 and (optionally)
+    # PELE_GMIN_BUILD_DIR=/path/to/gmin/build to build pele/optimize/_gmin_lbfgs.so.
+    # Requires GMIN to have been built with -fPIC (CMAKE_POSITION_INDEPENDENT_CODE=ON).
+    if os.environ.get("PELE_WITH_GMIN", "0") == "1":
+        cmake_compiler_args.append("-DWITH_GMIN=ON")
+        if "PELE_GMIN_BUILD_DIR" in os.environ:
+            cmake_compiler_args.append(
+                "-DGMIN_BUILD_DIR=" + os.environ["PELE_GMIN_BUILD_DIR"]
+            )
     print(env, "-------")
     p = subprocess.call(["sh", "./opt/intel/oneapi/setvars.sh"], env=env)
     p = subprocess.call(

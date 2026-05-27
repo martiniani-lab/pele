@@ -204,6 +204,100 @@ function(make_cython_lib cython_cxx_source)
   message("making library ${library_name} from source ${cython_cxx_source}")
 endfunction(make_cython_lib)
 
+# ##################### optional: GMIN native-optimizer interface #####################
+# Builds pele/optimize/_gmin_lbfgs.so which exposes GMIN's MYLBFGS as a
+# Python callable that takes a pele BasePotential. See
+# source/gmin/pele_gmin_shim.f90 for the POTENTIAL replacement and
+# source/gmin/pele_gmin_wrapper.f90 for the C-callable MYLBFGS entry.
+option(WITH_GMIN "Build the GMIN-MYLBFGS bridge (requires a pre-built GMIN with -fPIC)" OFF)
+set(GMIN_BUILD_DIR "/home/praharsh/softwarewales/GMIN/build_pic"
+    CACHE PATH "Path to a PIC-enabled GMIN build directory (containing libgminlib.a)")
+
+if(WITH_GMIN)
+  message(STATUS "WITH_GMIN=ON; using GMIN_BUILD_DIR=${GMIN_BUILD_DIR}")
+  if(NOT EXISTS "${GMIN_BUILD_DIR}/libgminlib.a")
+    message(FATAL_ERROR "WITH_GMIN=ON but ${GMIN_BUILD_DIR}/libgminlib.a not found. "
+                        "Build GMIN with -DCMAKE_POSITION_INDEPENDENT_CODE=ON first, "
+                        "or set -DGMIN_BUILD_DIR=...")
+  endif()
+
+  # System libfftw3.so satisfies the dfftw_* symbols referenced by libgminlib.a.
+  # We never actually invoke FFT from MYLBFGS, but the linker needs the symbols
+  # resolved. A shared lib is fine (and is PIC).
+  find_library(GMIN_FFTW3 NAMES fftw3 libfftw3.so.3
+               PATHS /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib)
+  if(NOT GMIN_FFTW3)
+    message(FATAL_ERROR "WITH_GMIN=ON requires libfftw3 on the system to resolve "
+                        "dfftw_* symbols referenced by libgminlib.a")
+  endif()
+
+  # Archive surgery: copy libgminlib.a and remove potential.f90.o so the
+  # linker resolves POTENTIAL to our shim instead of GMIN's stock one.
+  set(GMIN_LIB_NOPOT "${CMAKE_BINARY_DIR}/libgminlib_nopot.a")
+  add_custom_command(
+    OUTPUT ${GMIN_LIB_NOPOT}
+    COMMAND ${CMAKE_COMMAND} -E copy ${GMIN_BUILD_DIR}/libgminlib.a ${GMIN_LIB_NOPOT}
+    COMMAND ar d ${GMIN_LIB_NOPOT} potential.f90.o
+    DEPENDS ${GMIN_BUILD_DIR}/libgminlib.a
+    COMMENT "Producing libgminlib_nopot.a (dropping potential.f90.o)"
+    VERBATIM
+  )
+  add_custom_target(gmin_lib_nopot DEPENDS ${GMIN_LIB_NOPOT})
+
+  set(GMIN_MOD_DIRS
+    ${GMIN_BUILD_DIR}/CMakeFiles/gminlib.dir/modules
+    ${GMIN_BUILD_DIR}/CMakeFiles/extralib.dir/modules
+  )
+
+  set(_gmin_lbfgs_cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/pele/optimize/_gmin_lbfgs.cxx)
+  set(_gmin_lbfgs_bridge
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/gmin/pele_gmin_bridge.cpp)
+  set(_gmin_lbfgs_fortran
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/gmin/pele_gmin_shim.f90
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/gmin/pele_gmin_wrapper.f90)
+
+  add_library(_gmin_lbfgs SHARED
+    ${_gmin_lbfgs_cxx}
+    ${_gmin_lbfgs_bridge}
+    ${_gmin_lbfgs_fortran})
+  add_dependencies(_gmin_lbfgs gmin_lib_nopot)
+  set_target_properties(_gmin_lbfgs PROPERTIES PREFIX "" SUFFIX ".so")
+  set_target_properties(_gmin_lbfgs PROPERTIES
+    Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/gmin_modules)
+
+  # Our Fortran sources need GMIN's pre-built .mod files for USE COMMONS, USE PREC, etc.
+  target_compile_options(_gmin_lbfgs PRIVATE
+    $<$<COMPILE_LANGUAGE:Fortran>:-ffree-line-length-0>
+    $<$<COMPILE_LANGUAGE:Fortran>:-I${GMIN_BUILD_DIR}/CMakeFiles/gminlib.dir/modules>
+    $<$<COMPILE_LANGUAGE:Fortran>:-I${GMIN_BUILD_DIR}/CMakeFiles/extralib.dir/modules>
+  )
+  target_include_directories(_gmin_lbfgs PRIVATE
+    ${PYTHON_INCLUDE_DIRS}
+    ${numpy_include}
+  )
+
+  if(UNIX AND NOT APPLE)
+    target_link_options(_gmin_lbfgs PRIVATE
+      "LINKER:--unresolved-symbols=ignore-all")
+  endif()
+
+  # Intentionally not linking pele_lib: the energy/gradient callback flows
+  # through Python attribute access, not C++ symbols. Keeps this target
+  # buildable even if pele_lib has unrelated compile errors.
+  target_link_libraries(_gmin_lbfgs PRIVATE
+    ${GMIN_LIB_NOPOT}
+    ${GMIN_BUILD_DIR}/libextralib.a
+    ${GMIN_BUILD_DIR}/libmylapack.a
+    ${GMIN_BUILD_DIR}/libmyblas.a
+    ${GMIN_BUILD_DIR}/liblibmbpol.a
+    ${GMIN_FFTW3}
+    gfortran
+    stdc++
+  )
+endif()
+# #####################################################################################
+
 function(make_fortran_lib fortran_source)
   get_filename_component(library_name ${fortran_source} NAME)
   string(REGEX REPLACE "\\.f90$" "" library_name ${library_name})
