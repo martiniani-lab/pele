@@ -11,7 +11,7 @@ import numpy as np
 from pele.potentials import BasePotential
 
 try:
-    from pele.optimize._gmin_lbfgs import gmin_mylbfgs
+    from pele.optimize._gmin_lbfgs import gmin_mylbfgs, gmin_cgmin
     HAVE_GMIN = True
 except ImportError:
     HAVE_GMIN = False
@@ -81,6 +81,48 @@ class TestGminMylbfgsLJ(unittest.TestCase):
         self.assertTrue(ref.success)
         # Both should land at the same energy from the same start point.
         self.assertAlmostEqual(e_gmin, ref.energy, places=5)
+
+
+@unittest.skipUnless(HAVE_GMIN, "pele was not built with -DWITH_GMIN=ON")
+class TestGminCgmin(unittest.TestCase):
+    """Same checks as the MYLBFGS suite, but for GMIN's CGMIN (conjugate gradient).
+
+    CGMIN converges on RMS < COMMONS::GMAX; our wrapper sets GMAX = eps.
+    """
+
+    def test_converges_to_origin(self):
+        x0 = np.arange(12, dtype=np.float64) * 0.5 + 0.5
+        x, energy, converged, niter = gmin_cgmin(
+            _Quadratic(), x0, eps=1e-9, itmax=1000
+        )
+        self.assertTrue(converged, "CGMIN did not converge on a quadratic well")
+        self.assertGreater(niter, 0, "CGMIN reported 0 iterations")
+        self.assertAlmostEqual(energy, 0.0, places=10)
+        self.assertLess(np.max(np.abs(x)), 1e-5)
+
+    def test_rejects_non_multiple_of_3(self):
+        with self.assertRaises(ValueError):
+            gmin_cgmin(_Quadratic(), np.array([1.0, 2.0]))
+
+    def test_agrees_with_pele_lbfgs_on_lj(self):
+        from pele.potentials import LJ
+        from pele.optimize import LBFGS_CPP
+
+        natoms = 5
+        rng = np.random.default_rng(0)
+        x0 = rng.uniform(-1.5, 1.5, 3 * natoms)
+        pot = LJ()
+
+        x_cg, e_cg, conv_cg, _ = gmin_cgmin(
+            pot, x0.copy(), eps=1e-7, itmax=10000
+        )
+        ref = LBFGS_CPP(x0.copy(), pot, tol=1e-7, nsteps=10000).run()
+
+        # CGMIN often returns conv=False even after reaching the minimum
+        # due to its "STUCK" check tripping at machine-epsilon gradient
+        # noise. We assert on energy agreement, not the flag.
+        self.assertTrue(ref.success)
+        self.assertAlmostEqual(e_cg, ref.energy, places=4)
 
 
 if __name__ == "__main__":

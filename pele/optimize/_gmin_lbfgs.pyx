@@ -41,6 +41,9 @@ cdef extern from *:
         void pele_gmin_mylbfgs(int natoms, int n, int m, double* xcoords,
                                double eps, int itmax,
                                int* mflag, double* energy, int* itdone);
+        void pele_gmin_cgmin(int natoms, int n, double* xcoords,
+                             double eps, int itmax,
+                             int* mflag, double* energy, int* itdone);
     }
     """
     ctypedef void (*pele_gmin_cb_t)(int n, const double* x, double* grad,
@@ -49,6 +52,9 @@ cdef extern from *:
     void pele_gmin_mylbfgs(int natoms, int n, int m, double* xcoords,
                            double eps, int itmax,
                            int* mflag, double* energy, int* itdone)
+    void pele_gmin_cgmin(int natoms, int n, double* xcoords,
+                         double eps, int itmax,
+                         int* mflag, double* energy, int* itdone)
 
 
 @cython.boundscheck(False)
@@ -140,6 +146,62 @@ def gmin_mylbfgs(potential, x0, int M=4, double eps=1e-7, int itmax=10000):
     try:
         pele_gmin_mylbfgs(natoms, n, M, &x[0], eps, itmax,
                           &mflag, &energy, &itdone)
+    finally:
+        _current_potential = None
+
+    return x, energy, bool(mflag), itdone
+
+
+def gmin_cgmin(potential, x0, double eps=1e-7, int itmax=10000):
+    """Minimize `potential` from `x0` using GMIN's native CGMIN (conjugate gradient).
+
+    Parameters
+    ----------
+    potential : pele BasePotential
+        Must implement getEnergyGradient(x) -> (energy, grad).
+    x0 : array-like of float, shape (3*N,)
+        Initial coordinates (flattened). Length must be a multiple of 3.
+    eps : float
+        Convergence threshold on RMS gradient force (maps to COMMONS::GMAX).
+    itmax : int
+        Maximum iterations.
+
+    Returns
+    -------
+    x : ndarray, shape (3*N,)
+        Minimized coordinates.
+    energy : float
+        Final energy.
+    converged : bool
+        True if CGMIN reported convergence (RMS < eps).
+    niter : int
+        Iterations performed.
+    """
+    global _current_potential
+    if _current_potential is not None:
+        raise RuntimeError(
+            "gmin_cgmin is not reentrant — a previous call did not "
+            "clear the potential registration"
+        )
+
+    cdef np.ndarray[double, ndim=1, mode='c'] x = np.ascontiguousarray(
+        np.asarray(x0, dtype=np.float64).ravel()
+    )
+    cdef int n = x.shape[0]
+    if n % 3 != 0:
+        raise ValueError(
+            "x0 length must be a multiple of 3 (GMIN expects 3*NATOMS coordinates), "
+            "got length %d" % n
+        )
+    cdef int natoms = n // 3
+    cdef double energy = 0.0
+    cdef int mflag = 0
+    cdef int itdone = 0
+
+    _current_potential = potential
+    try:
+        pele_gmin_cgmin(natoms, n, &x[0], eps, itmax,
+                        &mflag, &energy, &itdone)
     finally:
         _current_potential = None
 

@@ -54,3 +54,62 @@ SUBROUTINE pele_gmin_mylbfgs(natoms_c, n_c, m_c, xcoords, eps_c, itmax_c, &
    itdone_c = itdone
    energy_c = energy
 END SUBROUTINE pele_gmin_mylbfgs
+
+
+! C-callable wrapper around GMIN's CGMIN (conjugate gradient).
+!
+! CGMIN's convergence is controlled by COMMONS::GMAX (compared against RMS).
+! There is no explicit eps argument to the subroutine. We also need to keep
+! DEBUG and DUMPT false to skip the trajectory-dump branch that reads
+! the NQ array (which our barebones init doesn't allocate).
+
+SUBROUTINE pele_gmin_cgmin(natoms_c, n_c, xcoords, eps_c, itmax_c, &
+                           mflag_c, energy_c, itdone_c) &
+      BIND(C, name='pele_gmin_cgmin')
+   USE PREC, ONLY: REAL64
+   USE ISO_C_BINDING, ONLY: c_int, c_double
+   USE COMMONS, ONLY: NATOMS, WHICH_POT, MYUNIT, DEBUG, DUMPT, GMAX, RMS, &
+                       FIXCOM, FIXIMAGE, SEEDT
+   USE F1COM, ONLY: PCOM, XICOM
+   IMPLICIT NONE
+   INTEGER(c_int), VALUE :: natoms_c
+   INTEGER(c_int), VALUE :: n_c     ! unused for CGMIN (uses NATOMS); kept for API symmetry
+   REAL(c_double) :: xcoords(*)
+   REAL(c_double), VALUE :: eps_c
+   INTEGER(c_int), VALUE :: itmax_c
+   INTEGER(c_int), INTENT(OUT) :: mflag_c
+   REAL(c_double), INTENT(OUT) :: energy_c
+   INTEGER(c_int), INTENT(OUT) :: itdone_c
+
+   LOGICAL :: cflag
+   INTEGER :: itdone
+   REAL(KIND=REAL64) :: energy
+
+   NATOMS = natoms_c
+   WHICH_POT = -1         ! sentinel — does not match any GMIN ENUMERATOR
+   MYUNIT = 6
+   DEBUG = .FALSE.
+   DUMPT = .FALSE.        ! skip trajectory dump (would access unallocated NQ)
+   FIXCOM = .FALSE.
+   FIXIMAGE = .FALSE.
+   SEEDT = .FALSE.
+   GMAX = eps_c           ! CGMIN compares RMS against this
+   RMS = 1.0_REAL64       ! placeholder; shim sets it on each call
+
+   ! LINMIN (called by CGMIN) uses module-allocatable scratch arrays from
+   ! F1COM; in stock GMIN these are allocated by the keyword parser, which
+   ! we bypass. Allocate them here, big enough for 3*NATOMS.
+   IF (ALLOCATED(PCOM)) DEALLOCATE(PCOM)
+   IF (ALLOCATED(XICOM)) DEALLOCATE(XICOM)
+   ALLOCATE(PCOM(3*natoms_c), XICOM(3*natoms_c))
+
+   cflag = .FALSE.
+   itdone = 0
+   energy = 0.0_REAL64
+
+   CALL CGMIN(itmax_c, xcoords, cflag, itdone, energy, 1)
+
+   mflag_c = MERGE(1_c_int, 0_c_int, cflag)
+   itdone_c = itdone
+   energy_c = energy
+END SUBROUTINE pele_gmin_cgmin
