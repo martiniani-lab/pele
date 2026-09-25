@@ -24,6 +24,9 @@ jobs:
     env:
       CMAKE_C_COMPILER_LAUNCHER: ccache
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      # Release builds use -march=native; hash the resolved target so objects
+      # cached on one runner CPU are never reused on a different CPU
+      CCACHE_COMPILERCHECK: "%compiler% -v;%compiler% -march=native -Q --help=target"
     defaults:
       run:
         shell: bash
