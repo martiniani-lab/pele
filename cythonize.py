@@ -166,8 +166,20 @@ def normpath(path):
     return path
 
 
+def toolchain_version():
+    """generated sources depend on the Cython and NumPy versions too, so building
+    in a different environment must regenerate them"""
+    versions = []
+    for mod in ("Cython", "numpy"):
+        try:
+            versions.append(__import__(mod).__version__)
+        except ImportError:
+            versions.append("none")
+    return " ".join(versions)
+
+
 def get_hash(frompath, topath):
-    from_hash = sha1_of_file(frompath)
+    from_hash = hashlib.sha1((sha1_of_file(frompath) + toolchain_version()).encode()).hexdigest()
     to_hash = sha1_of_file(topath) if os.path.exists(topath) else None
     return (from_hash, to_hash)
 
