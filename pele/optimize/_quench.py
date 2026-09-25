@@ -67,7 +67,7 @@ def lbfgs_scipy(coords, pot, iprint=-1, tol=1e-3, nsteps=15000):
     res.coords, res.energy, dictionary = scipy.optimize.fmin_l_bfgs_b(
         pot.getEnergyGradient,
         coords,
-        iprint=iprint,
+        # iprint was removed from fmin_l_bfgs_b in scipy 1.18; kept in our signature for callers
         pgtol=tol,
         maxfun=nsteps,
         factr=10.0,
