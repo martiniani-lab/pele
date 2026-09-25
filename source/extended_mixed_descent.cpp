@@ -479,10 +479,24 @@ void ExtendedMixedOptimizer::compute_phase_2_step() {
   // hessian.diagonal().array() += 1e-11;
   q.setZero();
   eig_eq_pele(r, step);
-  // print eigenvalues
-  Eigen::EigenSolver<Eigen::MatrixXd> es(hessian);
 
-  q = -hessian.householderQr().solve(r);
+  if (info == 0) {
+    // convexity_check() just Cholesky-factored this hessian; reuse the factor
+    // instead of a fresh O(n^3) QR
+    q = -r;
+    int N_int = q.size();
+    int nrhs = 1;
+    int solve_info;
+    dpotrs_(&uplo, &N_int, &nrhs, hessian_copy_for_cholesky.data(), &N_int,
+            q.data(), &N_int, &solve_info
+#ifdef LAPACK_FORTRAN_STRLEN_END
+            ,
+            1
+#endif
+    );
+  } else {
+    q = -hessian.householderQr().solve(r);
+  }
   pele_eq_eig(step, q);
 }
 
