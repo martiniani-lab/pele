@@ -20,6 +20,7 @@ import sysconfig
 
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext as old_build_ext
+from setuptools.command.build_py import build_py
 
 encoding = "utf-8"
 parser = argparse.ArgumentParser(add_help=False)
@@ -300,6 +301,16 @@ class build_ext_precompiled(old_build_ext):
         shutil.copy2(pre_compiled_library, ext_path)
 
 
+class build_py_with_source(build_py):
+    """also install the C++ sources/headers as pele/source, see pele.get_include()"""
+
+    def run(self):
+        super().run()
+        dest = os.path.join(self.build_lib, "pele", "source")
+        shutil.rmtree(dest, ignore_errors=True)
+        shutil.copytree("source", dest, ignore=shutil.ignore_patterns("*.rst", "gmin"))
+
+
 def module_name(fname):
     return os.path.splitext(fname)[0].replace("/", ".")
 
@@ -318,7 +329,7 @@ ext_modules = [
 # metadata lives in pyproject.toml
 setup(
     packages=find_packages(include=["pele", "pele.*"]),
-    package_data={"": ["*.xyz", "*.xyzdr", "*.data", "*.sqlite", "points*"]},
+    package_data={"": ["*.xyz", "*.xyzdr", "*.data", "*.sqlite", "points*", "*.pxd", "*.pxi"]},
     ext_modules=ext_modules,
-    cmdclass=dict(build_ext=build_ext_precompiled),
+    cmdclass=dict(build_ext=build_ext_precompiled, build_py=build_py_with_source),
 )
