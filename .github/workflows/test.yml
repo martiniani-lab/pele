@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-latest]
-        python-version: ["3.10"]
+        python-version: ["3.12"]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -65,7 +65,7 @@ jobs:
           pip install "numpy>=1.24" "scipy>=1.9"
           pip install matplotlib networkx "cython>=3.0"
           pip install "sqlalchemy>=1.4,<2.0" munkres scikit-sparse
-          pip install pytest future pyyaml packaging
+          pip install pytest future pyyaml packaging meson ninja
           # Install coverage tools
           pip install pytest-cov coverage
 
@@ -82,7 +82,7 @@ jobs:
           echo ""
           echo "=== Linking Test ==="
           echo 'int main(){return 0;}' > test.c
-          gcc test.c -lpython3.10 -v 2>&1 || echo "Direct linking failed"
+          gcc test.c -lpython${{ matrix.python-version }} -v 2>&1 || echo "Direct linking failed"
           rm -f test.c a.out
 
       - name: Install omp-thread-count (with compiler)
