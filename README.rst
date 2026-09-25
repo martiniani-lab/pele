@@ -1,8 +1,8 @@
 pele : Python Energy Landscape Explorer
 +++++++++++++++++++++++++++++++++++++++
 
-.. image:: https://github.com/martiniani-lab/pele/workflows/Tests/badge.svg
-   :target: https://github.com/martiniani-lab/pele/actions
+.. image:: https://github.com/martiniani-lab/pele/actions/workflows/test.yml/badge.svg?branch=master
+   :target: https://github.com/martiniani-lab/pele/actions/workflows/test.yml
    :alt: Build Status
 
 .. image:: https://codecov.io/gh/martiniani-lab/pele/branch/master/graph/badge.svg

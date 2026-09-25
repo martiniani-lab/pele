@@ -46,8 +46,6 @@ def lbfgs_scipy(coords, pot, iprint=-1, tol=1e-3, nsteps=15000):
     """
     a wrapper function for lbfgs routine in scipy
 
-    `iprint` is ignored (removed from scipy's fmin_l_bfgs_b in scipy 1.18)
-
     .. warn::
         the scipy version of lbfgs uses linesearch based only on energy
         which can make the minimization stop early.  When the step size
@@ -69,6 +67,7 @@ def lbfgs_scipy(coords, pot, iprint=-1, tol=1e-3, nsteps=15000):
     res.coords, res.energy, dictionary = scipy.optimize.fmin_l_bfgs_b(
         pot.getEnergyGradient,
         coords,
+        # iprint was removed from fmin_l_bfgs_b in scipy 1.18; kept in our signature for callers
         pgtol=tol,
         maxfun=nsteps,
         factr=10.0,

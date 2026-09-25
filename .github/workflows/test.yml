@@ -3,6 +3,7 @@ name: Tests
 on:
   push:
     branches: ["master"]
+  workflow_dispatch:
   pull_request:
     branches: ["master"]
 
@@ -12,9 +13,10 @@ env:
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-latest]
-        python-version: ["3.10"]
+        python-version: ["3.12"]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -46,7 +48,7 @@ jobs:
       - name: Install system dependencies (macOS)
         if: matrix.os == 'macos-latest'
         run: |
-          brew list gcc@13 || brew install gcc@13
+          brew list gcc@15 || brew install gcc@15
           brew list cmake || brew install cmake
           brew list openblas || brew install openblas
           brew list gettext || brew install gettext
@@ -63,7 +65,7 @@ jobs:
           pip install "numpy>=1.24" "scipy>=1.9"
           pip install matplotlib networkx "cython>=3.0"
           pip install "sqlalchemy>=1.4,<2.0" munkres scikit-sparse
-          pip install pytest future pyyaml packaging
+          pip install pytest future pyyaml packaging meson ninja
           # Install coverage tools
           pip install pytest-cov coverage
 
@@ -80,7 +82,7 @@ jobs:
           echo ""
           echo "=== Linking Test ==="
           echo 'int main(){return 0;}' > test.c
-          gcc test.c -lpython3.10 -v 2>&1 || echo "Direct linking failed"
+          gcc test.c -lpython${{ matrix.python-version }} -v 2>&1 || echo "Direct linking failed"
           rm -f test.c a.out
 
       - name: Install omp-thread-count (with compiler)
@@ -88,7 +90,7 @@ jobs:
         run: |
           conda activate pele-env
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            CC=gcc-13 pip install omp-thread-count
+            CC=gcc-15 pip install omp-thread-count
           else
             pip install omp-thread-count
           fi
@@ -109,7 +111,7 @@ jobs:
         run: |
           cd extern
           chmod +x sun_inst.sh
-          MACOSX_DEPLOYMENT_TARGET=12.0 CC=gcc-13 CXX=g++-13 ./sun_inst.sh Debug
+          MACOSX_DEPLOYMENT_TARGET=12.0 CC=gcc-15 CXX=g++-15 ./sun_inst.sh Debug
           cd ..
 
       - name: Install Eigen
@@ -128,7 +130,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           cd cpp_tests/source
-          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_PREFIX_PATH=$(brew --prefix openblas) .
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_PREFIX_PATH=$(brew --prefix openblas) .
           make -j4
 
       - name: Run C++ tests
@@ -157,6 +159,9 @@ jobs:
         run: |
           conda activate pele-env
           MACOSX_DEPLOYMENT_TARGET=12.0 python setup_with_cmake.py build_ext -i
+          # ponytail: temporary diagnostic for macOS import abort, remove once green
+          otool -L pele/accept_tests/_spherical_container*.so || true
+          python -X faulthandler -c "import pele.accept_tests._spherical_container" || true
 
       - name: Run python tests with coverage
         shell: bash -l {0}

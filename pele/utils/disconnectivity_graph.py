@@ -381,9 +381,9 @@ class ColorDGraphByGroups(object):
 
     def get_list_of_colors_mpl(self, number):
         """return a list of colors for the groups.  Use matplotlib colormap"""
-        from matplotlib import cm
+        import matplotlib
 
-        colormap = cm.get_cmap("Dark2", lut=number)
+        colormap = matplotlib.colormaps["Dark2"].resampled(number)
         colors = [colormap(i) for i in np.linspace(0.0, 1.0, number)]
         return colors
 
@@ -497,9 +497,9 @@ class ColorDGraphByValue(object):
         self.tree_graph = tree_graph
         self.minimum_to_value = minimum_to_value
         if colormap is None:
-            from matplotlib import cm
+            import matplotlib
 
-            self.colormap = cm.get_cmap("winter")
+            self.colormap = matplotlib.colormaps["winter"]
         else:
             self.colormap = colormap
 
