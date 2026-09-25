@@ -159,6 +159,9 @@ jobs:
         run: |
           conda activate pele-env
           MACOSX_DEPLOYMENT_TARGET=12.0 python setup_with_cmake.py build_ext -i
+          # ponytail: temporary diagnostic for macOS import abort, remove once green
+          otool -L pele/accept_tests/_spherical_container*.so || true
+          python -X faulthandler -c "import pele.accept_tests._spherical_container" || true
 
       - name: Run python tests with coverage
         shell: bash -l {0}
