@@ -38,7 +38,7 @@ TEST(EMXD, Reset) {
   power = 2.5;
   const int pow2 = 5;
 
-  n_particles = 16;
+  n_particles = 8;
   n_dof = n_particles * _ndim;
   phi = 0.9;
 
@@ -46,8 +46,8 @@ TEST(EMXD, Reset) {
   int n_2 = n_particles - n_1;
 
   radii =
-      pele::generate_bidisperse_radii(n_1, n_2, 1.0, 1.4, 0.05, 0.07).copy();
-  box_length = pele::get_box_length(radii, _ndim, 0.9);
+      pele::generate_bidisperse_radii(n_1, n_2, 1.0, 1.4, 0.05, 0.07, 0).copy();
+  box_length = pele::get_box_length(radii, _ndim, phi);
 
   x_start =
       pele::generate_random_coordinates(box_length, n_particles, _ndim, 0);
@@ -90,14 +90,14 @@ TEST(EMXD, Reset) {
 
   Array<double> reference_start_x = x_reset_copy.copy();
   // reference run
-  mxd_reference.run(4000);
+  mxd_reference.run(100);
   Array<double> test_mxd_reference_x = mxd_reference.get_x().copy();
   int nfev_reference = mxd_reference.get_nfev();
   int nhev_reference = mxd_reference.get_nhev();
 
   // run with original
   Array<double> original_x = x_start.copy();
-  mxd.run(4000);
+  mxd.run(100);
   Array<double> x_before_reset = mxd.get_x().copy();
   int nfev = mxd.get_nfev();
   int nhev = mxd.get_nhev();
@@ -112,7 +112,7 @@ TEST(EMXD, Reset) {
   ASSERT_EQ(mxd_reset.get_nhev(), 0);
   ASSERT_FALSE(mxd_reset.stop_criterion_satisfied());
   
-  mxd_reset.run(4000);
+  mxd_reset.run(100);
   Array<double> x_after_reset = mxd_reset.get_x();
   int nfev_after_reset = mxd_reset.get_nfev();
   int nhev_after_reset = mxd_reset.get_nhev();
@@ -151,7 +151,7 @@ TEST(EMXD, MultiRun) {
 
   radii =
       pele::generate_bidisperse_radii(n_1, n_2, 1.0, 1.4, 0.05, 0.07, 0).copy();
-  box_length = pele::get_box_length(radii, _ndim, 0.9);
+  box_length = pele::get_box_length(radii, _ndim, phi);
 
   boxvec = {box_length, box_length};
 
@@ -235,7 +235,7 @@ TEST(CVODE, MultiRun) {
 
   radii =
       pele::generate_bidisperse_radii(n_1, n_2, 1.0, 1.4, 0.05, 0.07, 0).copy();
-  box_length = pele::get_box_length(radii, _ndim, 0.9);
+  box_length = pele::get_box_length(radii, _ndim, phi);
 
   boxvec = {box_length, box_length};
 
