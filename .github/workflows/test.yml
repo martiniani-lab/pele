@@ -13,6 +13,7 @@ env:
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-latest]
         python-version: ["3.10"]
@@ -47,7 +48,7 @@ jobs:
       - name: Install system dependencies (macOS)
         if: matrix.os == 'macos-latest'
         run: |
-          brew list gcc@13 || brew install gcc@13
+          brew list gcc@15 || brew install gcc@15
           brew list cmake || brew install cmake
           brew list openblas || brew install openblas
           brew list gettext || brew install gettext
@@ -89,7 +90,7 @@ jobs:
         run: |
           conda activate pele-env
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            CC=gcc-13 pip install omp-thread-count
+            CC=gcc-15 pip install omp-thread-count
           else
             pip install omp-thread-count
           fi
@@ -110,7 +111,7 @@ jobs:
         run: |
           cd extern
           chmod +x sun_inst.sh
-          MACOSX_DEPLOYMENT_TARGET=12.0 CC=gcc-13 CXX=g++-13 ./sun_inst.sh Debug
+          MACOSX_DEPLOYMENT_TARGET=12.0 CC=gcc-15 CXX=g++-15 ./sun_inst.sh Debug
           cd ..
 
       - name: Install Eigen
@@ -129,7 +130,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           cd cpp_tests/source
-          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_PREFIX_PATH=$(brew --prefix openblas) .
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_PREFIX_PATH=$(brew --prefix openblas) .
           make -j4
 
       - name: Run C++ tests
