@@ -147,8 +147,9 @@ target_include_directories(pele_lib PUBLIC
     ${numpy_include}
 )
 
-
-target_link_libraries(pele_lib PUBLIC stdc++)
+# Don't link the C++ runtime by hand: the C++ compiler driver adds the right
+# one (libstdc++ for g++, libc++ for clang). Never link it statically into
+# Python extensions, since two runtimes in one process crash (see #42).
 
 if(INCLUDE_SUNDIALS)
   target_link_libraries(pele_lib PUBLIC ${SUNDIALS_LIBRARIES})
