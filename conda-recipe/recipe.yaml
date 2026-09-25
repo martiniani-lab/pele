@@ -1,0 +1,92 @@
+# rattler-build recipe, intended for conda-forge/staged-recipes.
+# local test: rattler-build build -r conda-recipe/recipe.yaml -c conda-forge
+context:
+  name: pele
+  version: "0.1.0"
+
+package:
+  name: ${{ name }}
+  version: ${{ version }}
+
+source:
+  # TODO(release): switch to the tagged tarball + sha256 for conda-forge
+  # url: https://github.com/martiniani-lab/pele/archive/refs/tags/v${{ version }}.tar.gz
+  path: ..
+
+build:
+  number: 0
+  skip:
+    - win
+  script:
+    env:
+      PELE_NATIVE: "0"  # portable binaries, no -march=native
+    content: ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+
+requirements:
+  build:
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - ${{ compiler('fortran') }}
+    - ${{ stdlib('c') }}
+    - cmake >=3.18
+    - ninja
+    - meson
+    - if: build_platform != target_platform
+      then:
+        - python
+        - cross-python_${{ target_platform }}
+        - numpy
+        - cython >=3
+  host:
+    - python
+    - pip
+    - setuptools >=65
+    - wheel
+    - cython >=3
+    - numpy
+    - meson
+    - ninja
+    - sundials >=6.2
+    - eigen
+    - libblas
+    - liblapack
+    - blas-devel  # lapack.h / lapacke.h
+    - if: osx
+      then: llvm-openmp
+  run:
+    - python
+    - scipy
+    - networkx
+    - matplotlib-base
+    - sqlalchemy >=1.4,<2
+    - munkres
+    - pyro4
+    - future
+
+tests:
+  - python:
+      imports:
+        - pele
+        - pele.optimize.cvode_opt
+        - pele.optimize._lbfgs_cpp
+        - pele.potentials._lj_cpp
+        - pele.mindist.minperm
+      pip_check: false
+  - requirements:
+      run:
+        - pytest
+    script:
+      env:
+        OMP_NUM_THREADS: "1"
+      content: pytest --pyargs pele.optimize.tests pele.potentials.tests -q
+
+about:
+  homepage: https://github.com/martiniani-lab/pele
+  summary: Python energy landscape explorer (global optimization, minimization, basins of attraction)
+  license: GPL-3.0-or-later
+  license_file: LICENSE
+  repository: https://github.com/martiniani-lab/pele
+
+extra:
+  recipe-maintainers:
+    - spraharsh

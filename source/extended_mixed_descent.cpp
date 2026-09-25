@@ -107,7 +107,7 @@ void ExtendedMixedOptimizer::setup_cvode() {
   int ret = 0;
 
   sunctx = NULL;
-  ret = SUNContext_Create(NULL, &sunctx);
+  ret = SUNContext_Create(SUN_COMM_NULL, &sunctx);
   if (check_sundials_retval(&ret, "SUNContext_Create", 1)) {
     throw std::runtime_error("SUNContext_Create failed");
   }

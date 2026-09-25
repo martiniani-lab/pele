@@ -77,7 +77,7 @@ void CVODEBDFOptimizer::setup_cvode() {
 #endif
 
   sunctx = NULL;
-  ret = SUNContext_Create(NULL, &sunctx);
+  ret = SUNContext_Create(SUN_COMM_NULL, &sunctx);
   if (check_sundials_retval(&ret, "SUNContext_Create", 1)) {
     throw std::runtime_error("SUNContext_Create failed");
   }
@@ -336,7 +336,7 @@ int f(double, N_Vector y, N_Vector ydot, void *user_data) {
   return 0;
 }
 
-int Jac(realtype, N_Vector y, N_Vector, SUNMatrix J, void *user_data, N_Vector,
+int Jac(sunrealtype, N_Vector y, N_Vector, SUNMatrix J, void *user_data, N_Vector,
         N_Vector, N_Vector) {
   UserData udata = (UserData)user_data;
 

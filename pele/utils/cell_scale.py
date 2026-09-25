@@ -1,14 +1,24 @@
 """
 A set of utilities functions that determines the appropriate arguments for putting particles in a box.
 """
-import omp_thread_count
+import os
+
 import numpy as np
+
+
+def _omp_thread_count():
+    """what omp_get_max_threads() returns: OMP_NUM_THREADS, else the usable cores"""
+    if os.environ.get("OMP_NUM_THREADS"):
+        return int(os.environ["OMP_NUM_THREADS"].split(",")[0])
+    if hasattr(os, "sched_getaffinity"):
+        return len(os.sched_getaffinity(0))
+    return os.cpu_count()
 
 
 def get_ncellsx_scale(radii, boxv, omp_threads=None):
     """gets the cell scale for given radii and boxv"""
     if omp_threads is None:
-        omp_threads = omp_thread_count.get_thread_count()
+        omp_threads = _omp_thread_count()
     ndim = len(boxv)
     ncellsx_max = max(omp_threads, int(np.power(radii.size, 1.0 / ndim)))
     rcut = np.amax(radii) * 2
