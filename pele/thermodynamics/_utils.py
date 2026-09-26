@@ -43,17 +43,17 @@ class _ThermoWorker(
         return True when the stop sentinel (None) is received, raise any
         exception that occurs
         """
-        # Don't test input_queue.empty() before get(): with several workers,
-        # two can see the last job, one takes it and the other blocks in get()
-        # forever, so join() in finish() hangs. Stop on a sentinel instead.
-        job = self.input_queue.get()
-        if job is None:
+        # run until the parent sends the None sentinel. Checking
+        # input_queue.empty() instead races: a worker could exit before jobs
+        # were flushed, or block forever in get() after another took the last job
+        item = self.input_queue.get()
+        if item is None:
             if self.verbose:
                 print("worker ending")
             return True
 
-        # the next minima / ts to evaluate
-        mts, mid, coords = job
+        # get the next minima / ts to evaluate
+        mts, mid, coords = item
         if mts == "ts":
             nnegative = 1
         # print "computing thermodynamics for ts", mid
@@ -173,6 +173,9 @@ class GetThermodynamicInfoParallel(object):
                 self.njobs += 1
                 self.send_queue.put(("ts", ts.id(), ts.coords))
                 nts += 1
+        # one stop sentinel per worker
+        for _ in self.workers:
+            self.send_queue.put(None)
         if self.verbose:
             print(
                 "computing thermodynamic info for {} minima and {} transition states".format(
@@ -255,12 +258,8 @@ class GetThermodynamicInfoParallel(object):
         for worker in self.workers:
             worker.start()
 
-        # populate the queue
+        # populate the queue (jobs, then one stop sentinel per worker)
         self._populate_queue()
-
-        # one stop sentinel per worker, after all the jobs
-        for _ in self.workers:
-            self.send_queue.put(None)
 
         # process the results as they come back
         self._get_results()

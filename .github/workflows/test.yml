@@ -17,7 +17,18 @@ jobs:
       matrix:
         os: [ubuntu-24.04, macos-latest]
         python-version: ["3.12"]
+        # C++ and Python suites run as separate parallel jobs
+        part: [cpp, python]
+    name: ${{ matrix.part }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    # fail fast on hangs instead of the 6h default
+    timeout-minutes: 30
+    env:
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      # Release builds use -march=native; hash the resolved target so objects
+      # cached on one runner CPU are never reused on a different CPU
+      CCACHE_COMPILERCHECK: "%compiler% -v;%compiler% -march=native -Q --help=target"
     defaults:
       run:
         shell: bash
@@ -25,6 +36,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.part }}
+          max-size: 1G
 
       - name: Set up Conda
         uses: conda-incubator/setup-miniconda@v3
@@ -55,6 +72,7 @@ jobs:
           brew list suite-sparse || brew install suite-sparse
 
       - name: Install Python dependencies
+        if: matrix.part == 'python'
         shell: bash -l {0}
         run: |
           conda activate pele-env
@@ -70,6 +88,7 @@ jobs:
           pip install pytest-cov coverage
 
       - name: Debug Python Configuration
+        if: matrix.part == 'python'
         shell: bash -l {0}
         run: |
           conda activate pele-env
@@ -86,6 +105,7 @@ jobs:
           rm -f test.c a.out
 
       - name: Install omp-thread-count (with compiler)
+        if: matrix.part == 'python'
         shell: bash -l {0}
         run: |
           conda activate pele-env
@@ -120,50 +140,49 @@ jobs:
           cp -r eigen/Eigen install/include
 
       - name: Build C++ tests with coverage (Linux)
-        if: matrix.os == 'ubuntu-24.04'
+        if: matrix.os == 'ubuntu-24.04' && matrix.part == 'cpp'
         run: |
           cd cpp_tests/source 
           cmake -DCMAKE_BUILD_TYPE=Coverage -DCMAKE_CXX_FLAGS_COVERAGE="-g -O0 --coverage -fprofile-arcs -ftest-coverage" -DCMAKE_C_FLAGS_COVERAGE="-g -O0 --coverage -fprofile-arcs -ftest-coverage" .
           make -j4
 
       - name: Build C++ tests (macOS)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && matrix.part == 'cpp'
         run: |
           cd cpp_tests/source
           cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_PREFIX_PATH=$(brew --prefix openblas) .
           make -j4
 
-      - name: Run C++ tests
+      - name: Run C++ tests (macOS)
+        if: matrix.os == 'macos-latest' && matrix.part == 'cpp'
         run: |
           cd cpp_tests/source
           ./test_main
 
-      - name: Generate C++ coverage (Linux)
-        if: matrix.os == 'ubuntu-24.04'
+      - name: Run C++ tests with coverage (Linux)
+        if: matrix.os == 'ubuntu-24.04' && matrix.part == 'cpp'
         run: |
           cd cpp_tests/source
-          # Use CMake coverage target which handles all filtering
+          # The coverage target runs test_main (failing on test failure) and filters the report
           make pele_tests_coverage
           lcov --list coverage.info.cleaned
 
       - name: Compile python library (Linux)
-        if: matrix.os == 'ubuntu-24.04'
+        if: matrix.os == 'ubuntu-24.04' && matrix.part == 'python'
         shell: bash -l {0}
         run: |
           conda activate pele-env
           python setup_with_cmake.py build_ext -i
 
       - name: Compile python library (macOS)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && matrix.part == 'python'
         shell: bash -l {0}
         run: |
           conda activate pele-env
           MACOSX_DEPLOYMENT_TARGET=12.0 python setup_with_cmake.py build_ext -i
-          # ponytail: temporary diagnostic for macOS import abort, remove once green
-          otool -L pele/accept_tests/_spherical_container*.so || true
-          python -X faulthandler -c "import pele.accept_tests._spherical_container" || true
 
       - name: Run python tests with coverage
+        if: matrix.part == 'python'
         shell: bash -l {0}
         run: |
           conda activate pele-env
@@ -175,8 +194,8 @@ jobs:
         if: matrix.os == 'ubuntu-24.04'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml,./cpp_tests/source/coverage.info.cleaned
-          flags: python,cpp
+          files: ${{ matrix.part == 'cpp' && './cpp_tests/source/coverage.info.cleaned' || './coverage.xml' }}
+          flags: ${{ matrix.part }}
           name: codecov-umbrella
           fail_ci_if_error: false
 
