@@ -10,13 +10,18 @@ on:
 env:
   BUILD_TYPE: Release
 
+# a new push to a branch/PR cancels its older, still running workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-latest]
-        python-version: ["3.12"]
+        python-version: ["3.14"]  # only used by the python part
         # C++ and Python suites run as separate parallel jobs
         part: [cpp, python]
     name: ${{ matrix.part }} (${{ matrix.os }})
@@ -43,13 +48,16 @@ jobs:
           key: ${{ matrix.os }}-${{ matrix.part }}
           max-size: 1G
 
+      # the C++ tests need no Python: conda only for the python part
       - name: Set up Conda
+        if: matrix.part == 'python'
         uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           auto-activate-base: false
           
       - name: Create conda environment
+        if: matrix.part == 'python'
         shell: bash -l {0}
         run: |
           conda create -n pele-env python=${{ matrix.python-version }} -y
@@ -103,17 +111,6 @@ jobs:
           echo 'int main(){return 0;}' > test.c
           gcc test.c -lpython${{ matrix.python-version }} -v 2>&1 || echo "Direct linking failed"
           rm -f test.c a.out
-
-      - name: Install omp-thread-count (with compiler)
-        if: matrix.part == 'python'
-        shell: bash -l {0}
-        run: |
-          conda activate pele-env
-          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            CC=gcc-15 pip install omp-thread-count
-          else
-            pip install omp-thread-count
-          fi
 
       - name: Get submodules
         run: git submodule update --init --recursive
@@ -199,16 +196,21 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
 
-  # pip install into a conda-forge environment (the path users and the conda
-  # recipe take), then test the installed package from outside the source tree
+  # the README install: conda for the C/C++ libraries, `pip install .` for the rest,
+  # then the tests against the installed package from outside the source tree
   pip-install:
     # fail fast on hangs instead of the 6h default
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-latest]
+        # only the newest Python (unpinned, so new releases are picked up automatically);
+        # Ubuntu uses the system compilers, macOS (no gfortran) conda's
+        include:
+          - {os: ubuntu-24.04, python: latest, compilers: ""}
+          - {os: macos-latest, python: latest, compilers: compilers}
     runs-on: ${{ matrix.os }}
+    name: pip-install (${{ matrix.os }}, python ${{ matrix.python }}${{ matrix.compilers && ', conda compilers' || '' }})
     defaults:
       run:
         shell: bash -l {0}
@@ -216,23 +218,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up conda-forge environment
+      - name: Set up conda
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
-          activate-environment: pele-pip
-          python-version: "3.12"
+          activate-environment: ""
 
-      - name: Install build dependencies
-        run: >
-          conda install -y -c conda-forge compilers cmake ninja meson "sundials>=6.2"
-          eigen blas-devel llvm-openmp numpy "cython>=3" setuptools pip pytest
-          scipy networkx matplotlib-base "sqlalchemy>=1.4,<2" munkres pyro4 future
+      - name: Create environment
+        run: |
+          if [ "${{ matrix.python }}" = latest ]; then pin=""; else pin="=${{ matrix.python }}"; fi
+          conda create -y -n pele -c conda-forge "python$pin" sundials eigen blas-devel ${{ matrix.compilers }}
 
       - name: pip install
-        run: PELE_NATIVE=0 python -m pip install . -v --no-deps --no-build-isolation
+        run: |
+          conda activate pele
+          python --version
+          PELE_NATIVE=0 python -m pip install . -v
 
       - name: Test installed package
         run: |
+          conda activate pele
+          python -m pip install pytest
           cd "$RUNNER_TEMP"
           OMP_NUM_THREADS=1 python -m pytest --pyargs pele -q
