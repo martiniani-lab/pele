@@ -21,8 +21,9 @@ IF(APPLE)
 ENDIF(APPLE)
 
 set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/extern/install")
-# prefer sundials/eigen from the environment (conda, system), fall back to extern/install
-list(APPEND CMAKE_PREFIX_PATH ${EXT_INSTALL_PATH})
+# a source checkout's extern/install (sun_inst.sh) is preferred over sundials/eigen
+# found in the environment (setup.py adds the active conda env)
+list(PREPEND CMAKE_PREFIX_PATH ${EXT_INSTALL_PATH})
 
 find_package(Eigen3 CONFIG QUIET)
 if(TARGET Eigen3::Eigen)

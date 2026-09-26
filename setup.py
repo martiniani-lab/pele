@@ -192,6 +192,9 @@ def get_compiler_env(compiler_id):
     """
     env = os.environ.copy()
     cmake_args = ["-DCMAKE_EXPORT_COMPILE_COMMANDS=1"]
+    # CMake only finds headers/libraries (sundials, eigen, lapack) under the active
+    # conda env by itself when conda's own compilers are used
+    prefixes = [env["CONDA_PREFIX"]] if env.get("CONDA_PREFIX") else []
     if compiler_id == "unix":
         if sys.platform.startswith("darwin") and "CC" not in env:
             version = next((v for v in range(20, 9, -1) if shutil.which(f"gcc-{v}")), None)
@@ -204,9 +207,8 @@ def get_compiler_env(compiler_id):
             env["CXX"] = which(f"g++-{version}")
             # f2py looks at F90, cmake at FC
             env["F90"] = env["FC"] = which(f"gfortran-{version}")
-            prefixes = [subprocess.check_output(["brew", "--prefix", p]).decode(encoding).strip()
-                        for p in ("openblas", "gettext")]
-            cmake_args.append("-DCMAKE_PREFIX_PATH=" + ";".join(prefixes))
+            prefixes += [subprocess.check_output(["brew", "--prefix", p]).decode(encoding).strip()
+                         for p in ("openblas", "gettext")]
         env.setdefault("CC", "gcc")
         env.setdefault("CXX", "g++")
     elif compiler_id == "intel":
@@ -214,6 +216,8 @@ def get_compiler_env(compiler_id):
         cmake_args.append("-DCMAKE_AR=" + env["AR"])
     else:
         raise Exception("compiler id not known")
+    if prefixes:
+        cmake_args.append("-DCMAKE_PREFIX_PATH=" + ";".join(prefixes))
     cmake_args += ["-DCMAKE_C_COMPILER=" + env["CC"], "-DCMAKE_CXX_COMPILER=" + env["CXX"]]
     if "FC" in env:
         cmake_args.append("-DCMAKE_Fortran_COMPILER=" + env["FC"])
