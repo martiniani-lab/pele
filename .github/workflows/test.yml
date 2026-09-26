@@ -183,7 +183,7 @@ jobs:
   # pip install into a conda-forge environment (the path users and the conda
   # recipe take), then test the installed package from outside the source tree
   pip-install:
-    # test_normalmodes has a known intermittent multiprocessing hang; fail fast
+    # fail fast if anything hangs (a full run takes ~10 min)
     timeout-minutes: 45
     strategy:
       fail-fast: false

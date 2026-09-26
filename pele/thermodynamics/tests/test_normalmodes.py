@@ -56,8 +56,8 @@ class TestNormalModes(unittest.TestCase):
         self.check(m.fvib, m.coords, 6, 0, metric=mt)
 
     def test_get_thermo_info(self):
-        # note, there is an intermittant error in this test
-        # it causes the system to lock, and has to do with multiprocessing
+        # this used to hang intermittently in the multiprocessing workers,
+        # see GetThermodynamicInfoParallel.start
         sys.stderr.write("test_get_thermo_info: seed {}\n".format(self.seed))
         newdb = self.system.create_database()
         new2old = dict()
