@@ -42,14 +42,17 @@ class _ThermoWorker(
 
         return True if the queue is empty, raise any exception that occurs
         """
-        # run until the input queue is empty
-        if self.input_queue.empty():
+        # run until the parent sends the None sentinel. Checking
+        # input_queue.empty() instead races: a worker could exit before jobs
+        # were flushed, or block forever in get() after another took the last job
+        item = self.input_queue.get()
+        if item is None:
             if self.verbose:
                 print("worker ending")
             return True
 
         # get the next minima / ts to evaluate
-        mts, mid, coords = self.input_queue.get()
+        mts, mid, coords = item
         if mts == "ts":
             nnegative = 1
         # print "computing thermodynamics for ts", mid
@@ -169,6 +172,9 @@ class GetThermodynamicInfoParallel(object):
                 self.njobs += 1
                 self.send_queue.put(("ts", ts.id(), ts.coords))
                 nts += 1
+        # one stop sentinel per worker
+        for _ in self.workers:
+            self.send_queue.put(None)
         if self.verbose:
             print(
                 "computing thermodynamic info for {} minima and {} transition states".format(
