@@ -54,6 +54,7 @@ the algorithms implemented are:
 
 Installation
 ============
+We recommend creating a conda environment to work with the package
 
 ::
 
@@ -61,11 +62,9 @@ Installation
   $ conda activate pele
   $ pip install git+https://github.com/martiniani-lab/pele
 
-That's it: conda provides the compilers and C/C++ libraries, pip builds pele and
-installs its Python dependencies. Python 3.10 and newer are supported, on Linux and macOS.
 
 If the machine already has gcc, g++ and gfortran (e.g. :code:`sudo apt install gcc g++ gfortran`),
-leave out :code:`compilers` for a much smaller environment (about 0.4 GB instead of 1.4 GB).
+leave out :code:`compilers` for a much smaller environment. 
 
 Optional: :code:`scikit-sparse` (sparse Cholesky for rate calculations) and
 :code:`pymol-open-source` (viewing structures). The GUI (:code:`pele.gui`) still uses
