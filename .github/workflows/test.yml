@@ -10,6 +10,11 @@ on:
 env:
   BUILD_TYPE: Release
 
+# a new push to a branch/PR cancels its older, still running workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
@@ -210,14 +215,15 @@ jobs:
         os: [ubuntu-24.04]
         # "latest" leaves python unpinned, so a new release is tested as soon as
         # conda-forge has it
-        python: ["3.10", "3.11", "3.12", "3.13", "3.14", "latest"]
+        python: ["3.11", "3.12", "3.13", "3.14", "latest"]
         # system compilers; the include entries below add conda's (as separate jobs)
         compilers: [""]
         include:
           # the README's first command, with conda's compilers
           - {os: ubuntu-24.04, python: latest, compilers: compilers}
           # macOS runners have no gfortran: use conda's compilers
-          - {os: macos-latest, python: "3.10", compilers: compilers}
+          - {os: macos-latest, python: "3.11", compilers: compilers}
+          - {os: macos-latest, python: "3.14", compilers: compilers}
           - {os: macos-latest, python: latest, compilers: compilers}
           # the next Python while it is a release candidate; allowed to fail
           - {os: ubuntu-24.04, python: "3.15", prerelease: true}

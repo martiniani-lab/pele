@@ -208,7 +208,9 @@ function(make_fortran_lib fortran_source)
 
   add_custom_command(
     OUTPUT ${output_lib}
-    COMMAND ${PYTHON_EXECUTABLE} -m numpy.f2py -c ${fortran_source} -m ${library_name} --quiet
+    # meson backend: on Python < 3.12 f2py otherwise defaults to numpy.distutils,
+    # which is broken with current setuptools
+    COMMAND ${PYTHON_EXECUTABLE} -m numpy.f2py -c ${fortran_source} -m ${library_name} --backend meson --quiet
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS ${fortran_source}
     COMMENT "Building Fortran module ${library_name} with f2py"
