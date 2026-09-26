@@ -40,16 +40,20 @@ class _ThermoWorker(
     def process_input(self):
         """get input from queue and process it
 
-        return True if the queue is empty, raise any exception that occurs
+        return True when the stop sentinel (None) is received, raise any
+        exception that occurs
         """
-        # run until the input queue is empty
-        if self.input_queue.empty():
+        # Don't test input_queue.empty() before get(): with several workers,
+        # two can see the last job, one takes it and the other blocks in get()
+        # forever, so join() in finish() hangs. Stop on a sentinel instead.
+        job = self.input_queue.get()
+        if job is None:
             if self.verbose:
                 print("worker ending")
             return True
 
-        # get the next minima / ts to evaluate
-        mts, mid, coords = self.input_queue.get()
+        # the next minima / ts to evaluate
+        mts, mid, coords = job
         if mts == "ts":
             nnegative = 1
         # print "computing thermodynamics for ts", mid
@@ -245,12 +249,18 @@ class GetThermodynamicInfoParallel(object):
 
         this should be called after __init__
         """
+        # start (fork) the workers before anything is put on the queue:
+        # put() starts a feeder thread, and forking while it runs can copy
+        # a held lock into the child, which then deadlocks
+        for worker in self.workers:
+            worker.start()
+
         # populate the queue
         self._populate_queue()
 
-        # start the workers
-        for worker in self.workers:
-            worker.start()
+        # one stop sentinel per worker, after all the jobs
+        for _ in self.workers:
+            self.send_queue.put(None)
 
         # process the results as they come back
         self._get_results()
