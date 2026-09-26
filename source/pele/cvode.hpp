@@ -13,6 +13,15 @@
 #include <memory>
 #include <stdexcept>
 #include <sundials/sundials_context.h>
+#include <sundials/sundials_types.h>
+
+// pele's CVODE code passes double buffers straight to N_Vectors
+static_assert(sizeof(sunrealtype) == sizeof(double),
+              "SUNDIALS must be built with double precision (SUNDIALS_PRECISION=double)");
+
+#if SUNDIALS_VERSION_MAJOR < 7
+#define SUN_COMM_NULL NULL  // sundials 6 takes a void* comm
+#endif
 #include <vector>
 
 #include "array.hpp"
@@ -124,8 +133,8 @@ class CVODEBDFOptimizer : public ODEBasedOptimizer {
 
  public:
   void one_iteration();
-  // int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-  // static int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+  // int f(sunrealtype t, N_Vector y, N_Vector ydot, void *user_data);
+  // static int Jac(sunrealtype t, N_Vector y, N_Vector fy, SUNMatrix J,
   //                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector
   //                tmp3);
   CVODEBDFOptimizer(std::shared_ptr<pele::BasePotential> potential,
@@ -206,12 +215,12 @@ inline pele::Array<double> pele_eq_N_Vector(N_Vector x) {
   return pele::Array<double>(NV_DATA_S(x), N_VGetLength(x)).copy();
 }
 
-int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
+int f(sunrealtype t, N_Vector y, N_Vector ydot, void *user_data);
+int Jac(sunrealtype t, N_Vector y, N_Vector fy, SUNMatrix J, void *user_data,
         N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-static int Jac2(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+static int Jac2(sunrealtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-static int f2(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+static int f2(sunrealtype t, N_Vector y, N_Vector ydot, void *user_data);
 
 /**
  * @brief Checks sundials error code and prints out error message. Copied from

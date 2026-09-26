@@ -1,5 +1,6 @@
 # Script to install sundials for pele
-# first argument is the build type (debug or release)
+# first argument is the CMake build type: Release (default), Debug, RelWithDebInfo.
+# Note: a Debug sundials is built without optimization and makes the CVODE optimizers several times slower.
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 c_d=$SCRIPT_DIR/install
@@ -12,7 +13,7 @@ cd build
 # note the newlines are important
 
 cmake -DCMAKE_INSTALL_PREFIX=$c_d \
-      -DCMAKE_BUILD_TYPE=$1 \
+      -DCMAKE_BUILD_TYPE=${1:-Release} \
       -DBUILD_ARKODE=OFF \
       -DBUILD_CVODES=OFF \
       -DBUILD_IDA=OFF \

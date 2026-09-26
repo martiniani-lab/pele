@@ -40,7 +40,8 @@ class _ThermoWorker(
     def process_input(self):
         """get input from queue and process it
 
-        return True if the queue is empty, raise any exception that occurs
+        return True when the stop sentinel (None) is received, raise any
+        exception that occurs
         """
         # run until the parent sends the None sentinel. Checking
         # input_queue.empty() instead races: a worker could exit before jobs
@@ -251,12 +252,14 @@ class GetThermodynamicInfoParallel(object):
 
         this should be called after __init__
         """
-        # populate the queue
-        self._populate_queue()
-
-        # start the workers
+        # start (fork) the workers before anything is put on the queue:
+        # put() starts a feeder thread, and forking while it runs can copy
+        # a held lock into the child, which then deadlocks
         for worker in self.workers:
             worker.start()
+
+        # populate the queue (jobs, then one stop sentinel per worker)
+        self._populate_queue()
 
         # process the results as they come back
         self._get_results()

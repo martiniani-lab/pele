@@ -166,36 +166,45 @@ def normpath(path):
     return path
 
 
+def toolchain_version():
+    """generated sources depend on the Cython and NumPy versions too, so building
+    in a different environment must regenerate them"""
+    versions = []
+    for mod in ("Cython", "numpy"):
+        try:
+            versions.append(__import__(mod).__version__)
+        except ImportError:
+            versions.append("none")
+    return " ".join(versions)
+
+
 def get_hash(frompath, topath):
-    from_hash = sha1_of_file(frompath)
+    from_hash = hashlib.sha1((sha1_of_file(frompath) + toolchain_version()).encode()).hexdigest()
     to_hash = sha1_of_file(topath) if os.path.exists(topath) else None
     return (from_hash, to_hash)
 
 
 def process(path, fromfile, tofile, processor_function, hash_db):
+    """cythonize one file if it changed; returns (key, new hash) or None"""
     fullfrompath = os.path.join(path, fromfile)
     fulltopath = os.path.join(path, tofile)
     current_hash = get_hash(fullfrompath, fulltopath)
     if current_hash == hash_db.get(normpath(fullfrompath), None):
         print("%s has not changed" % fullfrompath)
-        return
-
-    orig_cwd = os.getcwd()
-    try:
-        os.chdir(path)
-        print("Processing %s" % fullfrompath)
-        processor_function(fromfile, tofile)
-    finally:
-        os.chdir(orig_cwd)
+        return None
+    print("Processing %s" % fullfrompath)
+    # absolute paths instead of chdir, so files can be processed in parallel
+    processor_function(os.path.abspath(fullfrompath), os.path.abspath(fulltopath))
     # changed target file, recompute hash
-    current_hash = get_hash(fullfrompath, fulltopath)
-    # store hash in db
-    hash_db[normpath(fullfrompath)] = current_hash
+    return normpath(fullfrompath), get_hash(fullfrompath, fulltopath)
 
 
 def find_process_files(root_dir):
-    """loop through subdirectories finding pyx files and converting them"""
+    """find pyx files under root_dir and cythonize the changed ones in parallel"""
+    from concurrent.futures import ThreadPoolExecutor
+
     hash_db = load_hashes(HASH_FILE)
+    jobs = []
     for cur_dir, dirs, files in os.walk(root_dir):
         for filename in files:
             for fromext, function in list(rules.items()):
@@ -210,10 +219,19 @@ def find_process_files(root_dir):
                         )
                         if m:
                             toext = ".cxx"
-                    fromfile = filename
                     tofile = filename[: -len(fromext)] + toext
-                    process(cur_dir, fromfile, tofile, function, hash_db)
-                    save_hashes(hash_db, HASH_FILE)
+                    jobs.append((cur_dir, filename, tofile, function))
+    # threads are enough: each job is a cython subprocess
+    with ThreadPoolExecutor(max_workers=int(os.environ.get("PELE_JOBS", os.cpu_count() or 4))) as pool:
+        futures = [pool.submit(process, *job, hash_db) for job in jobs]
+        try:
+            for fut in futures:
+                res = fut.result()
+                if res is not None:
+                    hash_db[res[0]] = res[1]
+        finally:
+            # keep hashes of the files that did succeed
+            save_hashes(hash_db, HASH_FILE)
 
 
 def main():

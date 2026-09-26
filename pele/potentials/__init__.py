@@ -19,7 +19,7 @@ All potentials are derived from the base class
     BasePotential
 
 When creating your own potential, only member function which must absolutely
-be overloaded is getEnergy().  Many routines in pele 
+be overloaded is getEnergy().  Many routines in pele
 also use gradient information, so it is highly recommended to also
 implement getEnergyGradient().  Otherwise the gradients will be calculated
 numerically and your system will run a lot slower.
@@ -53,6 +53,7 @@ other external potentials
 to be written
 
 """
+
 from __future__ import absolute_import
 
 
@@ -68,6 +69,7 @@ from ._inversepower_stillinger_cpp import InversePowerStillinger
 from ._inversepower_stillinger_cut_cpp import InversePowerStillingerCut
 from ._inversepower_stillinger_cut_quad import InversePowerStillingerCutQuad
 from .combine_potentials import CombinedPotential
+from ._inversepower_hs_cpp import InversePowerHS
 from ._wca_cpp import *
 from ._harmonic_cpp import Harmonic
 from ._radial_gaussian_cpp import RadialGaussian

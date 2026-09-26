@@ -23,7 +23,7 @@ Source code: https://github.com/martiniani-lab/pele
 
 pele started as a python partial-rewriting of GMIN, OPTIM, and PATHSAMPLE: fortran
 programs written by David Wales of Cambridge University and collaborators
-(http://www-wales.ch.cam.ac.uk/software.html).
+(http://www-wales.ch.cam.ac.uk/software.html). The version started here https://github.com/pele-python/pele (documentation: http://pele-python.github.io/pele/)
 
 The current version is being developed by the Martiniani group at New York University.
 
@@ -54,6 +54,28 @@ the algorithms implemented are:
 
 INSTALLATION
 ============
+
+Quick install (conda + pip)
+---------------------------
+
+All build dependencies (compilers, SUNDIALS, Eigen, LAPACK) come from conda-forge::
+
+  $ conda create -n pele -c conda-forge python=3.12 compilers cmake ninja meson \
+        "sundials>=6.2" eigen blas-devel numpy "cython>=3" setuptools pip
+  $ conda activate pele
+  $ pip install --no-build-isolation .   # or: pip install --no-build-isolation git+https://github.com/martiniani-lab/pele
+
+Build options are environment variables, e.g.
+:code:`PELE_BUILD_TYPE=Debug`, :code:`PELE_WITH_CVODE=0`, :code:`PELE_JOBS=8`, and
+:code:`PELE_NATIVE=0` (disable :code:`-march=native` when the build must run on other machines).
+SUNDIALS must be built in double precision (the build checks this).
+
+Note that an existing :code:`CPATH`/:code:`PYTHONPATH` pointing at a pele checkout takes
+precedence over the installed package.
+
+For development, the in-place build below still works
+(:code:`python setup.py build_ext -i`, or the old :code:`python setup_with_cmake.py build_ext -i`).
+If :code:`extern/install` exists it is preferred over SUNDIALS/Eigen found in the environment.
 
 Required packages
 -----------------
@@ -107,7 +129,7 @@ Run::
 
   $ git submodule update --init --recursive
   $ cd extern
-  $ ./sun_inst.sh release
+  $ ./sun_inst.sh Release
   $ cp -r eigen/Eigen install/include/
   $ cd ..
 
@@ -250,6 +272,7 @@ If building fails, run the following command to remove cached files
 before building again::
 
   $ rm -rf build cythonize.dat CMakeCache.txt cmake_install.cmake
+
 Tests
 =====
 

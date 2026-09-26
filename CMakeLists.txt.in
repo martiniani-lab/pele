@@ -21,38 +21,29 @@ IF(APPLE)
 ENDIF(APPLE)
 
 set(EXT_INSTALL_PATH "${CMAKE_SOURCE_DIR}/extern/install")
+# prefer sundials/eigen from the environment (conda, system), fall back to extern/install
+list(APPEND CMAKE_PREFIX_PATH ${EXT_INSTALL_PATH})
 
-# #################################### sundials #######################################
-set(EXT_INCLUDE_DIR
-  ${EXT_INSTALL_PATH}/include
-  CACHE PATH "Location of header files")
+find_package(Eigen3 CONFIG QUIET)
+if(TARGET Eigen3::Eigen)
+  get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+else()
+  set(EIGEN3_INCLUDE_DIR ${EXT_INSTALL_PATH}/include)
+endif()
+message("eigen include dir: ${EIGEN3_INCLUDE_DIR}")
 
 if(INCLUDE_SUNDIALS)
-  if(EXISTS "${EXT_INSTALL_PATH}/lib")
-    set(SUNDIALS_LIBRARY_DIR
-      ${EXT_INSTALL_PATH}/lib
-      CACHE PATH "Location of SUNDIALS libraries")
-  else()
-    set(SUNDIALS_LIBRARY_DIR
-      ${EXT_INSTALL_PATH}/lib64
-      CACHE PATH "Location of SUNDIALS libraries")
+  # plain find_library rather than SUNDIALS' exported targets: those can carry
+  # absolute paths of the toolchain sundials was built with
+  find_path(SUNDIALS_INCLUDE_DIR cvode/cvode.h REQUIRED)
+  find_library(SUNDIALS_CVODE_LIB sundials_cvode REQUIRED)
+  find_library(SUNDIALS_NVEC_LIB sundials_nvecserial REQUIRED)
+  find_library(SUNDIALS_CORE_LIB sundials_core)  # split out in sundials 7
+  set(SUNDIALS_LIBRARIES ${SUNDIALS_CVODE_LIB} ${SUNDIALS_NVEC_LIB})
+  if(SUNDIALS_CORE_LIB)
+    list(APPEND SUNDIALS_LIBRARIES ${SUNDIALS_CORE_LIB})
   endif()
-
-  # Find the SUNDIALS libraries
-  find_library(SUNDIALS_SOLVER_LIB
-    sundials_cvode PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
-    DOC "CVODE library")
-
-  find_library(SUNDIALS_NVEC_LIB
-    sundials_nvecserial PATHS ${SUNDIALS_LIBRARY_DIR} NO_DEFAULT_PATH
-    DOC "NVECTOR_SERIAL library")
-
-  set(SUNDIALS_LIBRARIES
-    -L${SUNDIALS_LIBRARY_DIR}
-    ${SUNDIALS_SOLVER_LIB}
-    ${SUNDIALS_NVEC_LIB}
-    ${SUNDIALS_MANYVEC_LIB}
-    ${SUNDIALS_EXTRA_LIBS})
+  message("SUNDIALS: ${SUNDIALS_INCLUDE_DIR} ${SUNDIALS_LIBRARIES}")
 endif()
 
 # ####################################################################################
@@ -65,8 +56,12 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 # note: We set CMAKE_SHARED_LINKER_FLAGS because I couldn't get it to work using
 # target_link_librarires().  CMake kept interpreting the flag CoreFoundation
 # as a library and appending -l to it and the compiler would complain
+# On Linux extensions must not link libpython (symbols resolve at import, and
+# conda-forge's python is static). macOS needs the flags for libintl.
 unset(CMAKE_SHARED_LINKER_FLAGS CACHE)
-set(CMAKE_SHARED_LINKER_FLAGS ${PYTHON_LDFLAGS} CACHE STRING flags)
+if(APPLE)
+  set(CMAKE_SHARED_LINKER_FLAGS ${PYTHON_LDFLAGS} CACHE STRING flags)
+endif()
 
 # LAPACK (this also searches for BLAS automatically)
 find_package(LAPACK REQUIRED)
@@ -83,13 +78,11 @@ endif(APPLE)
 # message(${BLAS_LIBRARIES})
 
 # lapacke.h comes with Eigen
-set(LAPACKE_INCLUDE_DIR
-  ${CMAKE_SOURCE_DIR}/extern/install/include/Eigen/src/misc
-  CACHE PATH "Location of lapacke include")
+set(LAPACKE_INCLUDE_DIR ${EIGEN3_INCLUDE_DIR}/Eigen/src/misc)
 
 enable_language(CXX)
 enable_language(Fortran)
-find_package(PythonInterp REQUIRED)
+# PYTHON_EXECUTABLE is passed in by setup.py
 
 SET(CMAKE_CXX_FLAGS __COMPILER_EXTRA_ARGS__)
 
@@ -134,14 +127,17 @@ if(INCLUDE_SUNDIALS)
 endif()
 
 include_directories(BEFORE SYSTEM ${pele_include})
-include_directories(BEFORE SYSTEM ${EXT_INCLUDE_DIR})
+include_directories(BEFORE SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 if(INCLUDE_SUNDIALS)
+  include_directories(BEFORE SYSTEM ${SUNDIALS_INCLUDE_DIR})
   include_directories(BEFORE SYSTEM ${LAPACKE_INCLUDE_DIR})
   message("SUNDIALS LIBRARIES " ${SUNDIALS_LIBRARIES})
 endif()
 
-add_library(pele_lib SHARED ${pele_sources})
+# static so the installed extensions don't depend on a libpele_lib.so in the build dir
+add_library(pele_lib STATIC ${pele_sources})
+set_target_properties(pele_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(pele_lib PUBLIC
     ${PYTHON_INCLUDE_DIRS}
     ${numpy_include}
@@ -191,11 +187,6 @@ function(make_cython_lib cython_cxx_source)
 
   target_link_libraries(${library_name} PUBLIC pele_lib)
 
-  if(INCLUDE_SUNDIALS)
-    target_link_libraries(${library_name} PUBLIC ${SUNDIALS_LIBRARIES})
-  endif()
-
-  target_link_libraries(${library_name} PUBLIC ${LAPACK_LIBRARIES})
   set_target_properties(${library_name} PROPERTIES PREFIX "")
   set_target_properties(${library_name} PROPERTIES SUFFIX ".so")
   message("making library ${library_name} from source ${cython_cxx_source}")
