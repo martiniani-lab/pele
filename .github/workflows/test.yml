@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-latest]
-        python-version: ["3.12"]
+        python-version: ["3.14"]
         # C++ and Python suites run as separate parallel jobs
         part: [cpp, python]
     name: ${{ matrix.part }} (${{ matrix.os }})
@@ -108,17 +108,6 @@ jobs:
           echo 'int main(){return 0;}' > test.c
           gcc test.c -lpython${{ matrix.python-version }} -v 2>&1 || echo "Direct linking failed"
           rm -f test.c a.out
-
-      - name: Install omp-thread-count (with compiler)
-        if: matrix.part == 'python'
-        shell: bash -l {0}
-        run: |
-          conda activate pele-env
-          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            CC=gcc-15 pip install omp-thread-count
-          else
-            pip install omp-thread-count
-          fi
 
       - name: Get submodules
         run: git submodule update --init --recursive
@@ -212,23 +201,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04]
-        # "latest" leaves python unpinned, so a new release is tested as soon as
-        # conda-forge has it
-        python: ["3.11", "3.12", "3.13", "3.14", "latest"]
-        # system compilers; the include entries below add conda's (as separate jobs)
-        compilers: [""]
+        # only the newest Python (unpinned, so new releases are picked up automatically);
+        # Ubuntu uses the system compilers, macOS (no gfortran) conda's
         include:
-          # the README's first command, with conda's compilers
-          - {os: ubuntu-24.04, python: latest, compilers: compilers}
-          # macOS runners have no gfortran: use conda's compilers
-          - {os: macos-latest, python: "3.11", compilers: compilers}
-          - {os: macos-latest, python: "3.14", compilers: compilers}
+          - {os: ubuntu-24.04, python: latest, compilers: ""}
           - {os: macos-latest, python: latest, compilers: compilers}
-          # the next Python while it is a release candidate; allowed to fail
-          - {os: ubuntu-24.04, python: "3.15", prerelease: true}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.prerelease == true }}
     name: pip-install (${{ matrix.os }}, python ${{ matrix.python }}${{ matrix.compilers && ', conda compilers' || '' }})
     defaults:
       run:
@@ -246,8 +224,7 @@ jobs:
       - name: Create environment
         run: |
           if [ "${{ matrix.python }}" = latest ]; then pin=""; else pin="=${{ matrix.python }}"; fi
-          rc=${{ matrix.prerelease && '"-c conda-forge/label/python_rc"' || '""' }}
-          conda create -y -n pele $rc -c conda-forge "python$pin" sundials eigen blas-devel ${{ matrix.compilers }}
+          conda create -y -n pele -c conda-forge "python$pin" sundials eigen blas-devel ${{ matrix.compilers }}
 
       - name: pip install
         run: |

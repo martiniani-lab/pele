@@ -62,7 +62,7 @@ We recommend creating a conda environment to work with the package
   $ conda activate pele
   $ pip install git+https://github.com/martiniani-lab/pele
 
-Python 3.11 or newer is required; 3.11 to 3.14 are tested on Linux and macOS.
+Python 3.11 or newer is required. CI tests the latest Python release (currently 3.14) on Linux and macOS.
 
 If the machine already has gcc, g++ and gfortran (e.g. :code:`sudo apt install gcc g++ gfortran`),
 leave out :code:`compilers` for a much smaller environment. 
