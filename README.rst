@@ -23,14 +23,9 @@ Source code: https://github.com/martiniani-lab/pele
 
 pele started as a python partial-rewriting of GMIN, OPTIM, and PATHSAMPLE: fortran
 programs written by David Wales of Cambridge University and collaborators
-(http://www-wales.ch.cam.ac.uk/software.html).
+(http://www-wales.ch.cam.ac.uk/software.html). The version started here https://github.com/pele-python/pele (documentation: http://pele-python.github.io/pele/)
 
 The current version is being developed by the Martiniani group at New York University.
-
-This repository is a divergent branch of the original pele-python version,
-https://github.com/pele-python/pele (documentation: http://pele-python.github.io/pele/).
-The two code bases have diverged, so code and documentation written for one may not
-apply to the other.
 
 Description
 ===========
