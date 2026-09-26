@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-latest]
-        python-version: ["3.14"]
+        python-version: ["3.14"]  # only used by the python part
         # C++ and Python suites run as separate parallel jobs
         part: [cpp, python]
     name: ${{ matrix.part }} (${{ matrix.os }})
@@ -48,13 +48,16 @@ jobs:
           key: ${{ matrix.os }}-${{ matrix.part }}
           max-size: 1G
 
+      # the C++ tests need no Python: conda only for the python part
       - name: Set up Conda
+        if: matrix.part == 'python'
         uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           auto-activate-base: false
           
       - name: Create conda environment
+        if: matrix.part == 'python'
         shell: bash -l {0}
         run: |
           conda create -n pele-env python=${{ matrix.python-version }} -y
