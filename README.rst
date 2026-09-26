@@ -58,12 +58,17 @@ INSTALLATION
 Quick install (conda + pip)
 ---------------------------
 
-All build dependencies (compilers, SUNDIALS, Eigen, LAPACK) come from conda-forge::
+conda provides the C/C++ libraries (SUNDIALS, Eigen, LAPACK); pip fetches the
+build tools and Python dependencies itself::
 
-  $ conda create -n pele -c conda-forge python=3.12 compilers cmake ninja meson \
-        "sundials>=6.2" eigen blas-devel numpy "cython>=3" setuptools pip
+  $ conda create -n pele -c conda-forge python sundials eigen blas-devel
   $ conda activate pele
-  $ pip install --no-build-isolation .   # or: pip install --no-build-isolation git+https://github.com/martiniani-lab/pele
+  $ pip install .    # or: pip install git+https://github.com/martiniani-lab/pele
+
+This uses the system C, C++ and Fortran compilers (on Ubuntu:
+:code:`sudo apt install gcc g++ gfortran`). Without them (e.g. on macOS), add
+:code:`compilers` to the :code:`conda create` line; that makes the environment
+about 1.4 GB instead of about 0.4 GB. Python 3.10 and newer are supported.
 
 Build options are environment variables, e.g.
 :code:`PELE_BUILD_TYPE=Debug`, :code:`PELE_WITH_CVODE=0`, :code:`PELE_JOBS=8`, and

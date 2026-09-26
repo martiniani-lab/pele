@@ -199,16 +199,27 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
 
-  # pip install into a conda-forge environment (the path users and the conda
-  # recipe take), then test the installed package from outside the source tree
+  # the README install: conda for the C/C++ libraries, `pip install .` for the rest,
+  # then the tests against the installed package from outside the source tree
   pip-install:
     # fail fast on hangs instead of the 6h default
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-latest]
+        os: [ubuntu-24.04]
+        # "latest" leaves python unpinned, so a new release is tested as soon as
+        # conda-forge has it
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14", "latest"]
+        include:
+          # macOS runners have no gfortran: use conda's compilers
+          - {os: macos-latest, python: "3.10", compilers: compilers}
+          - {os: macos-latest, python: latest, compilers: compilers}
+          # the next Python while it is a release candidate; allowed to fail
+          - {os: ubuntu-24.04, python: "3.15", prerelease: true}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.prerelease == true }}
+    name: pip-install (${{ matrix.os }}, python ${{ matrix.python }})
     defaults:
       run:
         shell: bash -l {0}
@@ -216,23 +227,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up conda-forge environment
+      - name: Set up conda
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
-          activate-environment: pele-pip
-          python-version: "3.12"
+          activate-environment: ""
 
-      - name: Install build dependencies
-        run: >
-          conda install -y -c conda-forge compilers cmake ninja meson "sundials>=6.2"
-          eigen blas-devel llvm-openmp numpy "cython>=3" setuptools pip pytest
-          scipy networkx matplotlib-base "sqlalchemy>=1.4,<2" munkres pyro4 future
+      - name: Create environment
+        run: |
+          if [ "${{ matrix.python }}" = latest ]; then pin=""; else pin="=${{ matrix.python }}"; fi
+          rc=${{ matrix.prerelease && '"-c conda-forge/label/python_rc"' || '""' }}
+          conda create -y -n pele $rc -c conda-forge "python$pin" sundials eigen blas-devel ${{ matrix.compilers }}
 
       - name: pip install
-        run: PELE_NATIVE=0 python -m pip install . -v --no-deps --no-build-isolation
+        run: |
+          conda activate pele
+          python --version
+          PELE_NATIVE=0 python -m pip install . -v
 
       - name: Test installed package
         run: |
+          conda activate pele
+          python -m pip install pytest
           cd "$RUNNER_TEMP"
           OMP_NUM_THREADS=1 python -m pytest --pyargs pele -q
