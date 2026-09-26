@@ -52,236 +52,54 @@ the algorithms implemented are:
 
 #. Transition rates analysis
 
-INSTALLATION
+Installation
 ============
 
-Quick install (conda + pip)
----------------------------
+::
 
-conda provides the C/C++ libraries (SUNDIALS, Eigen, LAPACK); pip fetches the
-build tools and Python dependencies itself::
-
-  $ conda create -n pele -c conda-forge python sundials eigen blas-devel
+  $ conda create -n pele -c conda-forge python compilers sundials eigen blas-devel
   $ conda activate pele
-  $ pip install .    # or: pip install git+https://github.com/martiniani-lab/pele
+  $ pip install git+https://github.com/martiniani-lab/pele
 
-This uses the system C, C++ and Fortran compilers (on Ubuntu:
-:code:`sudo apt install gcc g++ gfortran`). Without them (e.g. on macOS), add
-:code:`compilers` to the :code:`conda create` line; that makes the environment
-about 1.4 GB instead of about 0.4 GB. Python 3.10 and newer are supported.
+That's it: conda provides the compilers and C/C++ libraries, pip builds pele and
+installs its Python dependencies. Python 3.10 and newer are supported, on Linux and macOS.
 
-Build options are environment variables, e.g.
-:code:`PELE_BUILD_TYPE=Debug`, :code:`PELE_WITH_CVODE=0`, :code:`PELE_JOBS=8`, and
-:code:`PELE_NATIVE=0` (disable :code:`-march=native` when the build must run on other machines).
-SUNDIALS must be built in double precision (the build checks this).
+If the machine already has gcc, g++ and gfortran (e.g. :code:`sudo apt install gcc g++ gfortran`),
+leave out :code:`compilers` for a much smaller environment (about 0.4 GB instead of 1.4 GB).
 
-Note that an existing :code:`CPATH`/:code:`PYTHONPATH` pointing at a pele checkout takes
-precedence over the installed package.
+Optional: :code:`scikit-sparse` (sparse Cholesky for rate calculations) and
+:code:`pymol-open-source` (viewing structures). The GUI (:code:`pele.gui`) still uses
+PyQt4, which is not available for current Python versions.
 
-For development, the in-place build below still works
-(:code:`python setup.py build_ext -i`, or the old :code:`python setup_with_cmake.py build_ext -i`).
-If :code:`extern/install` exists it is preferred over SUNDIALS/Eigen found in the environment.
-
-Required packages
------------------
-
-For compilation
-^^^^^^^^^^^^^^^
-
-#. fortran compiler
-#. c compiler (gcc preferably)
-#. c++ compiler (g++ preferably)
-#. CMake (version 3.5 or higher)
-
-Commands for Ubuntu
-"""""""""""""""""""""""""""
-On Ubuntu, the necessary software for compilation can be installed with :code:`sudo apt-get install gfortran gcc g++ cmake`.
-On older versions of Ubuntu you may need to provide a version number, and set the version used::
-
-     $ sudo apt install -y gcc-10 g++-10 gfortran-10 cmake # any gcc>5
-     $ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
-     $ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
-     $ sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-10 100
-
-Commands for MacOs
-""""""""""""""""""""""""""""""""""""""""""
-On Macs (for both Intel and Apple silicon), we recommend using
-`homebrew <https://brew.sh>`_ to install the necessary software
-and libraries for compilation. Once homebrew is installed, use::
-
-   $ brew install gcc@13 cmake openblas gettext
-
-Among other things, this will install version 13 of gcc and give you
-access to the gcc-13 and g++-13 commands. Be aware that Apple
-provides its own compilers under the commands gcc and g++ which,
-however, just run clang and not the GNU compilers. Since we do not
-support using the clang compilers at the moment, we have to make
-sure that the compilers installed by homebrew are used in the
-following. If you installed a different version of gcc, make sure to
-replace the gcc-13 and g++-13 parts accordingly.
-
-C/C++ packages:
-^^^^^^^^^^^^^^^^^
-#. Eigen (http://eigen.tuxfamily.org)
-#. SUNDIALS (https://computing.llnl.gov/projects/sundials)
-
-SUNDIALS and Eigen are automatically downloaded with :code:`git submodule update --init --recursive` (which will also download GoogleTest for C++ tests)
-an install script `sun_inst.sh` is provided for sundials in the install folder. Eigen can be installed by running the command :code:`cp -r eigen/Eigen install/include/` in the `extern` folder.
-
-Commands for Ubuntu
-"""""""""""""""""""""""""""
-Run::
-
-  $ git submodule update --init --recursive
-  $ cd extern
-  $ ./sun_inst.sh Release
-  $ cp -r eigen/Eigen install/include/
-  $ cd ..
-
-Commands for MacOs
-""""""""""""""""""""""""""""""""""""""""""
-Use the commands for Ubuntu, however, set the correct compilers when
-running the install script `sun_inst.sh` by setting the CC and CXX
-environment variables. Also, make sure to use your current MacOs
-version as the deployment target::
-
-  $ MACOSX_DEPLOYMENT_TARGET=14.3 CC=gcc-13 CXX=g++-13 ./sun_inst.sh release
-
-Python packages:
-^^^^^^^^^^^^^^^^
-pele requires python 3.9 and the following packages
-
-1. numpy:
-     We use numpy everywhere for doing numerical work.  It also installs f2py which
-     is used to compile fortran code into modules callable by python.
-
-#. scipy:
-     For some of the optimizers and various scientific tools
-
-#. networkx:
-     For graph functionality. https://networkx.lanl.gov
-
-#. cython:
-     For calling C++ code from python for speed
-
-#. pyyaml:
-     For reading and writing yaml files
-
-#. future:
-     Used for upgrading from python 2 to python 3
-
-#. omp-thread-count:
-     used to set the number of threads used by openmp
-
-#. matplotlib:
-     For making plots (e.g. disconnectivity graphs)
-
-#. SQLAlchemy (version 1.4.51):
-     For managing database of stationary points.  http://www.sqlalchemy.org/
-
-#. munkres:
-     For permutational alignment
-
-#. pyro4:
-     For parallel jobs
-
-#. scikits.sparse: optional
-     For use of sparse Cholesky decomposition methods when calculating rates
-
-#. pymol: optional
-     For viewing molecular structures
-
-#. pytest: optional
-     For running tests
-
-We recommend installing all the above packages in a conda environment.
-
-If you want to use the gui you will additionally need:
-
-1. qt4 and qt4 python bindings
-
-#. opengl python bindings
-
-The Ubuntu packages (apt-get) for these are: python-qt4, python-opengl, and python-qt4-gl
-
-In fedora Fedora (yum) you will want the packages: PyQt4, and PyOpenGl
-
-
-Commands using Conda
-""""""""""""""""""""""""""
-We recommend to install `Anaconda <https://docs.anaconda.com>`_.
-On Ubuntu, set up a new conda environment using::
-
-  $ conda create -n myenv python=3.9
-  $ conda activate myenv
-  $ conda install numpy scipy networkx matplotlib cython
-  $ conda install -c conda-forge sqlalchemy=1.4.51 munkres pyro4 scikit-sparse
-  $ conda install -c conda-forge -c schrodinger pymol-bundle
-  $ pip install pyyaml
-  $ pip install omp-thread-count # for multi-threading
-  $ pip install future # used for upgrading to python 3
-  $ pip install pytest # in case you want to ensure library runs correctly (optional)
-
-On MacOs, follow the same commands but make sure that the
-installation of omp-thread-count uses the correct compiler by setting
-the CC environment variable::
-
-  $ CC=gcc-13 pip install omp-thread-count # for multi-threading
-
-Also, note that the pymol-bundle package is not available on Apple
-silicon.
-
-Compilation
+Development
 -----------
 
-Compilation is required as many of the computationally intensive parts (especially potentials)
-are written in fortran and c++.  Theoretically you should be able to use any compilers,
-but we mostly use gfortran and GCC, so it's the least likely to have problems.  This
-package uses the standard python setup utility (`setuptools`). The current installation procedure
-requires a working C, C++, and Fortran compiler (e.g. gcc, g++, gfortran).
+From a clone, in the same environment::
 
-This package uses the standard python setup utility (`setuptools`). The current installation procedure
-on Ubuntu is::
+  $ pip install .                  # install, or
+  $ python setup.py build_ext -i   # build in place; then put the clone on PYTHONPATH
 
-  $ python setup_with_cmake.py develop
+Build options are environment variables (or flags to :code:`setup.py`, e.g. :code:`-j 8`):
+:code:`PELE_BUILD_TYPE=Debug`, :code:`PELE_WITH_CVODE=0` (no CVODE / attractor
+identification; some tests will fail), :code:`PELE_JOBS=8`, and :code:`PELE_NATIVE=0`
+(no :code:`-march=native`, for binaries that run on other machines).
 
-On MacOs, one has to set the deployment target according to the
-MacOs version again (the CC and CXX environment variables are set
-by the Python script)::
+SUNDIALS must be built in double precision (the build checks this). Instead of conda's
+SUNDIALS and Eigen you can build them from the submodules; :code:`extern/install` is then
+preferred over the environment::
 
-  $ MACOSX_DEPLOYMENT_TARGET=14.3 python3 setup_with_cmake.py develop
+  $ git submodule update --init --recursive
+  $ cd extern && ./sun_inst.sh Release && cp -r eigen/Eigen install/include/ && cd ..
 
-This compiles the extension modules and ensures that the python
-interpreter can find pele. You can also just compile the extension
-modules by using the command (possibly including the deployment
-target, if on MacOs)::
+A :code:`CPATH`/:code:`PYTHONPATH` pointing at a pele clone takes precedence over the
+installed package. If a build fails, remove cached files before trying again::
 
-  $ python setup_with_cmake.py build_ext -i
-
-Afterwards, make sure to add the install directory to your
-PYTHONPATH environment variable. To test whether your installation has worked correctly, run::
-
-  $ OMP_NUM_THREADS=1 pytest pele/
-
-from the base directory. In order to install pele without attractor
-identification support (i.e., without CVODE) use the
-:code:`--with-cvode` command-line option. For example, run::
-
-  $ python setup_with_cmake.py build_ext -i --with-cvode 0
-
-Note that this will make some of the tests fail.
-To check whether the code you're interested in works correctly you can run `pytest`
-in the module you're interested in, for example, to check whether `pele/utils` is working correctly, run `pytest pele/utils`.
-
-If building fails, run the following command to remove cached files
-before building again::
-
-  $ rm -rf build cythonize.dat CMakeCache.txt cmake_install.cmake
+  $ rm -rf build cythonize.dat CMakeLists.txt
 
 Tests
 =====
 
-The project uses GitHub Actions for continuous integration (CI) testing on both Linux and macOS. 
+The project uses GitHub Actions for continuous integration (CI) testing on both Linux and macOS.
 The badges at the top of this README show the current build status and code coverage.
 
 The C++ tests use GoogleTest. To run the tests, after running `git submodule update --init --recursive` to get the GoogleTest submodule if you haven't already, run::
@@ -296,15 +114,10 @@ the correct GNU compilers and the OpenBLAS library::
 
   $ cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_PREFIX_PATH=$(brew --prefix openblas) .
 
-The python tests have originally been written using nose. But we have transitioned to using pytests.
-To run the tests, run::
+To run the Python tests on an installed pele::
 
-  $ pytest pele/
+  $ pip install pytest
+  $ OMP_NUM_THREADS=1 pytest --pyargs pele
 
-from the base directory.
-
-To run the tests with coverage reporting (as done in CI), run::
-
-  $ pytest pele/ --cov=pele --cov-report=xml --cov-report=term-missing
-
-This will generate a `coverage.xml` file for Python coverage and display coverage statistics in the terminal.
+or :code:`pytest pele/` from a clone with an in-place build. For coverage reporting (as in CI),
+add :code:`--cov=pele --cov-report=term-missing`.
