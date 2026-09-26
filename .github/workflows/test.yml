@@ -202,8 +202,8 @@ jobs:
   # pip install into a conda-forge environment (the path users and the conda
   # recipe take), then test the installed package from outside the source tree
   pip-install:
-    # fail fast if anything hangs (a full run takes ~10 min)
-    timeout-minutes: 45
+    # fail fast on hangs instead of the 6h default
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:

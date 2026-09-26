@@ -27,6 +27,11 @@ programs written by David Wales of Cambridge University and collaborators
 
 The current version is being developed by the Martiniani group at New York University.
 
+This repository is a divergent branch of the original pele-python version,
+https://github.com/pele-python/pele (documentation: http://pele-python.github.io/pele/).
+The two code bases have diverged, so code and documentation written for one may not
+apply to the other.
+
 Description
 ===========
 pele has tools for energy minimization, global optimization, saddle point
@@ -272,6 +277,7 @@ If building fails, run the following command to remove cached files
 before building again::
 
   $ rm -rf build cythonize.dat CMakeCache.txt cmake_install.cmake
+
 Tests
 =====
 
