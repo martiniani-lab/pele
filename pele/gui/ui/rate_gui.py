@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Form implementation generated from reading ui file 'rate_gui.ui'
 #
 # Created: Fri Jan 17 16:24:05 2014
@@ -12,8 +14,7 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
-
-class Ui_Form:
+class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
         Form.resize(618, 513)
@@ -59,28 +60,9 @@ class Ui_Form:
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(
-            QtGui.QApplication.translate(
-                "Form", "Form", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.btn_compute.setText(
-            QtGui.QApplication.translate(
-                "Form", "Compute Rates", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label_2.setText(
-            QtGui.QApplication.translate(
-                "Form", "Product State", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label.setText(
-            QtGui.QApplication.translate(
-                "Form", "Reactant State", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
-        self.label_3.setText(
-            QtGui.QApplication.translate(
-                "Form", "Temperature", None, QtGui.QApplication.UnicodeUTF8
-            )
-        )
+        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_compute.setText(QtGui.QApplication.translate("Form", "Compute Rates", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("Form", "Product State", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("Form", "Reactant State", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(QtGui.QApplication.translate("Form", "Temperature", None, QtGui.QApplication.UnicodeUTF8))
+
